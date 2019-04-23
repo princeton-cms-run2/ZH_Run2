@@ -13,6 +13,8 @@ def getArgs() :
     parser.add_argument("-y","--year",default=2017,type=int,help="Year for data.")
     parser.add_argument("-l","--LTcut",default=0.,type=float,help="H_LTcut")
     parser.add_argument("-s","--sign",default='OS',help="Opposite or same sign (OS or SS).")
+    parser.add_argument("--looseCuts",action='store_true',help="Loose cuts") 
+    
     return parser.parse_args()
 
 class dupeDetector() :
@@ -42,6 +44,7 @@ groups = ['Signal','Reducible','Rare','ZZ4L','data']
 lumi = 1000.*41.8 
 cats = { 1:'eeet', 2:'eemt', 3:'eett', 4:'mmet', 5:'mmmt', 6:'mmtt', 7:'et', 8:'mt', 9:'tt' }
 groups = ['Signal','Reducible','Rare','ZZ4L','data']
+tightCuts = not args.looseCuts 
 
 # use this utility class to screen out duplicate events
 DD = {}
@@ -90,7 +93,13 @@ for era in ['2017B','2017C','2017D','2017E','2017F'] :
         sampleWeight[nickName] = 1.
         nickNames['data'].append(nickName) 
 
-outFileName = 'allGroups_{0:d}_{1:s}_LT{2:02d}.root'.format(args.year,args.sign,int(args.LTcut)) 
+
+print("tightCuts={0}".format(tightCuts))
+if tightCuts :
+    outFileName = 'allGroups_{0:d}_{1:s}_LT{2:02d}.root'.format(args.year,args.sign,int(args.LTcut))
+else :
+    outFileName = 'allGroups_{0:d}_{1:s}_LT{2:02d}_loose.root'.format(args.year,args.sign,int(args.LTcut))
+    
 print("Opening {0:s} as output.".format(outFileName))
 fOut = TFile( outFileName, 'recreate' )
 
@@ -129,9 +138,21 @@ for group in groups :
                 if WJets  : sw = sampleWeight['W{0:d}JetsToLNu'.format(e.LHE_Njets)] 
             weight = e.weight*sw
             cat = cats[e.cat]
-            # impose tight tau selection 
-            if e.iso_2_ID < 16 : continue 
-            if cat[2:] == 'tt' and e.iso_1_ID < 16 : continue
+
+            if tightCuts :
+                # for 'et' modes, tighten electron selection
+           
+                if cat[2:] == 'et' and e.iso_1 < 0.5 : continue
+            
+                # for 'mt' modes, tighten muon selection
+                if cat[2:] == 'mt' :
+                    if e.iso_1 > 0.25 : continue
+                    if e.iso_1_ID < 1 : continue
+                
+                # impose tight tau selection 
+                if e.iso_2_ID < 16 : continue 
+                if cat[2:] == 'tt' and e.iso_1_ID < 16 : continue
+            
             if args.sign == 'SS':
                 if e.q_1*e.q_2 < 0. : continue
             else :
@@ -144,8 +165,8 @@ for group in groups :
             if cat == 'mmtt' :
                 totalWeight += weight
                 nEvents += 1
-                if nickName == 'TTTo2L2Nu' :
-                    print("Good event e.weight={0:f} sw={1:f} weight={2:f}".format(e.weight,sw,weight))
+                #if nickName == 'TTTo2L2Nu' :
+                #    print("Good event e.weight={0:f} sw={1:f} weight={2:f}".format(e.weight,sw,weight))
                     
             hMC[group][cat].Fill(e.m_sv,weight)
 

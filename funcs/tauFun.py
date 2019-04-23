@@ -30,7 +30,6 @@ def getTauList(channel, entry, pairList=[]) :
             DR0, DR1 =  lTauDR(eta1,phi1,pairList[0]), lTauDR(eta1,phi1,pairList[1]) 
             if DR0 < 0.5 or DR1 < 0.5 : continue
         tauList.append(j)
-
     return tauList
 
 def tauDR(entry, j1,j2) :
@@ -116,7 +115,7 @@ def getMuTauPairs(entry,cat='mt',pairList=[],printOn=False) :
     if entry.nMuon < 1 or entry.nTau < 1 : return muTauPairs
     if cat == 'mmmt' and entry.nMuon < 3 : return muTauPairs
     for i in range(entry.nMuon) :
-        if not entry.Muon_mediumId[i] : continue
+        #if not entry.Muon_mediumId[i] : continue
         if abs(entry.Muon_dxy[i]) > 0.045 : continue
         if abs(entry.Muon_dz[i]) > 0.2 : continue
         eta1, phi1 = entry.Muon_eta[i], entry.Muon_phi[i] 
@@ -185,13 +184,14 @@ def getETauPairs(entry,cat='et',pairList=[],printOn=False) :
     for i in range(entry.nElectron) :
         if abs(entry.Electron_dxy[i]) > 0.045 : continue
         if abs(entry.Electron_dz[i]) > 0.2 : continue
-        if not entry.Electron_mvaFall17V2noIso_WP90[i] : continue
+        #if not entry.Electron_mvaFall17V2noIso_WP90[i] : continue
         if ord(entry.Electron_lostHits[i]) > 1 : continue 
         if not entry.Electron_convVeto[i] : continue
         eta1, phi1 = entry.Electron_eta[i], entry.Electron_phi[i]
         if cat == 'et' :
             if entry.Electron_pt[i] < 25. : continue
             if abs(eta1) > 2.1 : continue
+            if not entry.Electron_mvaFall17V2noIso_WP90[i] : continue
         else :
             if entry.Electron_pt[i] < 9.5 : continue
             if abs(eta1) > 2.5 : continue

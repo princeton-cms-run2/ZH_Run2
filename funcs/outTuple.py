@@ -382,7 +382,10 @@ class outTuple() :
             self.d0_1[0] = entry.Electron_dxy[jt1]
             self.dZ_1[0] = entry.Electron_dz[jt1]
             #self.iso_1[0] = entry.Electron_mvaFall17noIso[jt1]
-            self.iso_1[0] = entry.Electron_mvaFall17V2noIso[jt1]
+            #self.iso_1[0] = entry.Electron_mvaFall17V2noIso[jt1]
+            #self.iso_1[0] = 0.
+            self.iso_1[0] = 0. 
+            if entry.Electron_mvaFall17V2noIso_WP90[jt1] : self.iso_1[0] = 1.
             tau1.SetPtEtaPhiM(entry.Electron_pt[jt1],entry.Electron_eta[jt1], entry.Electron_phi[jt1], tauMass)
             tau2.SetPtEtaPhiM(entry.Tau_pt[jt2],entry.Tau_eta[jt2],entry.Tau_phi[jt2],tauMass) 
         elif channel == 'mt' :
@@ -394,6 +397,8 @@ class outTuple() :
             self.d0_1[0] = entry.Muon_dxy[jt1]
             self.dZ_1[0] = entry.Muon_dz[jt1]
             self.iso_1[0] = entry.Muon_pfRelIso04_all[jt1]
+            self.iso_1_ID[0] = 0
+            if entry.Muon_mediumId[jt1] : self.iso_1_ID[0] = 1
             tau1.SetPtEtaPhiM(entry.Muon_pt[jt1],entry.Muon_eta[jt1], entry.Muon_phi[jt1], tauMass)
             tau2.SetPtEtaPhiM(entry.Tau_pt[jt2],entry.Tau_eta[jt2],entry.Tau_phi[jt2],tauMass) 
         elif channel == 'tt' :
