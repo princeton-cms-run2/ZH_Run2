@@ -16,7 +16,7 @@ def getArgs() :
     parser.add_argument("-v","--verbose",default=0,type=int,help="Print level.")
     parser.add_argument("-f","--inFileName",default='ZHtoTauTau_test.root',help="File to be analyzed.")
     #parser.add_argument("-f","--inFileName",default='DY1JetsToLL_test.root',help="File to be analyzed.")
-    parser.add_argument("-c","--category",default='mmtt',help="Event category to analyze.")
+    parser.add_argument("-c","--category",default='mmem',help="Event category to analyze.")
     parser.add_argument("--nickName",default='',help="MC sample nickname") 
     parser.add_argument("-o","--outFileName",default='',help="File to be used for output.")
     parser.add_argument("-n","--nEvents",default=0,type=int,help="Number of events to process.")
@@ -68,7 +68,8 @@ print("args={0:s}".format(str(args)))
 maxPrint = args.maxPrint 
 
 cutCounter = {}
-cats = ['eeet','eemt','eett','mmet','mmmt','mmtt'] 
+cats = ['eeet','eemt','eett','eeem','mmet','mmmt','mmtt','mmem'] 
+#cats = ['mmmt','eeem','mmem'] 
 for cat in cats : cutCounter[cat] = GF.cutCounter()
 
 inFileName = args.inFileName
@@ -89,6 +90,11 @@ if MC :
 outFileName = GF.getOutFileName(args).replace(".root",".ntup")
 print("Opening {0:s} as output.".format(outFileName))
 outTuple = outTuple.outTuple(outFileName)
+
+
+#HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v 29/fb for 2017
+#HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL
+#HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_
 
 tStart = time.time()
 for count, e in enumerate(inTree) :
@@ -132,6 +138,7 @@ for count, e in enumerate(inTree) :
             for cat in cats[:3]: cutCounter[cat].count('LeptonPair')
         if lepMode == 'mm' :
             for cat in cats[3:]: cutCounter[cat].count('LeptonPair')
+   
             
         LepP, LepM = pairList[0], pairList[1]
         M = (LepM + LepP).M()
@@ -141,16 +148,19 @@ for count, e in enumerate(inTree) :
         if lepMode == 'mm' :
             for cat in cats[3:]: cutCounter[cat].count('FoundZ')
         
-        for tauMode in ['et','mt','tt'] :
+        for tauMode in ['et','mt','tt','em'] :
             cat = lepMode + tauMode
             if tauMode == 'tt' :
                 tauList = tauFun.getTauList(cat, e, pairList=pairList)
                 bestTauPair = tauFun.getBestTauPair(cat, e, tauList )
+                #print "==================================", lepMode, tauMode, tauList
                                     
             elif tauMode == 'et' :
                 bestTauPair = tauFun.getBestETauPair(e,cat=cat,pairList=pairList)
             elif tauMode == 'mt' :
                 bestTauPair = tauFun.getBestMuTauPair(e,cat=cat,pairList=pairList)
+            elif tauMode == 'em' :
+                bestTauPair = tauFun.getBestEMuTauPair(e,cat=cat,pairList=pairList)
 
             if len(bestTauPair) < 1 :
                 if False and maxPrint > 0 and (tauMode == GF.eventID(e)[2:4]) :
@@ -164,8 +174,10 @@ for count, e in enumerate(inTree) :
                     GF.printMC(e)
                 continue
 
+            #if tauMode != 'em' : cutCounter[cat].count("GoodTauPair")
             cutCounter[cat].count("GoodTauPair")
-            
+            #else : cutCounter[cat].count("GoodEMuPair")
+
             if tauMode == 'tt' and args.testMode.lower() == "vvtight" :
                 j1, j2 = bestTauPair[0], bestTauPair[1]
                 #print("tau_id_1 = {0:d}".format(ord(e.Tau_idMVAnewDM2017v2[j1])))
@@ -182,7 +194,7 @@ for count, e in enumerate(inTree) :
 
             if MC : outTuple.setWeight(PU.getWeight(e.Pileup_nPU))
         
-            SVFit = True
+            SVFit = False
             outTuple.Fill(e,SVFit,cat,jt1,jt2,LepP,LepM) 
 
             if maxPrint > 0 :

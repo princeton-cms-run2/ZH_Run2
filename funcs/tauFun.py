@@ -175,6 +175,72 @@ def getBestMuTauPair(entry,cat='mt',pairList=[],printOn=False) :
 
     if len(tauPairList) == 0 : return []
     return tauPairList[0]
+##################
+
+def getEMuTauPairs(entry,cat='em',pairList=[],printOn=False) :
+
+    elmuTauPairs = [] 
+    if entry.nMuon < 1 or entry.nElectron < 1 : return elmuTauPairs
+    if cat == 'mmem' and entry.nMuon < 3 : return elmuTauPairs
+    if cat == 'eeem' and entry.nElectron < 3 : return elmuTauPairs
+    for i in range(entry.nMuon) :
+        #if not entry.Muon_mediumId[i] : continue
+        if abs(entry.Muon_dxy[i]) > 0.045 : continue
+        if abs(entry.Muon_dz[i]) > 0.2 : continue
+        eta2, phi2 = entry.Muon_eta[i], entry.Muon_phi[i] 
+        if entry.Muon_pt[i] < 13. : continue
+        if abs(eta2) > 2.4 : continue   
+        if entry.Muon_pfRelIso04_all[i] > 0.25 : continue 
+        # make sure that the muon does not match one of the pair leptons
+        DR0, DR1 =  lTauDR(eta2,phi2,pairList[0]), lTauDR(eta2,phi2,pairList[1]) 
+        if DR0 < 0.5 or DR1 < 0.5 : continue
+                        
+        for j in range(entry.nElectron) :
+            if abs(entry.Electron_dxy[j]) > 0.045 : continue
+            if abs(entry.Electron_dz[j]) > 0.2 : continue
+            eta1, phi1 = entry.Electron_eta[j], entry.Electron_phi[j] 
+            if entry.Electron_pt[j] < 13. : continue
+            if abs(eta1) > 2.5 : continue
+            if ord(entry.Electron_lostHits[j]) > 1 : continue 
+            if not entry.Electron_convVeto[j] : continue
+            if not entry.Electron_mvaFall17V2noIso_WP90[j] : continue
+            if entry.Electron_pfRelIso03_all[j] > 0.5 : continue
+
+            dPhi = min(abs(phi2-phi1),2.*pi-abs(phi2-phi1))
+            DR = sqrt(dPhi**2 + (eta2-eta1)**2)
+            if DR < 0.3 : continue
+            DR0, DR1 =  lTauDR(eta1,phi1,pairList[0]), lTauDR(eta1,phi1,pairList[1]) 
+            if DR0 < 0.5 or DR1 < 0.5 : continue
+            elmuTauPairs.append([j,i])
+    return elmuTauPairs
+
+def compareEMuTauPair(entry,pair1,pair2) :
+    # a return value of True means that pair2 is "better" than pair 1 
+    i1, i2, j1, j2 = pair1[0], pair2[0], pair1[1], pair2[1]
+    #if entry.Electron_mvaFall17Iso[i2]  < entry.Electron_mvaFall17Iso[i2] : return True
+    if entry.Electron_mvaFall17V2Iso[i2]  < entry.Electron_mvaFall17V2Iso[i1] : return True
+    #if entry.Electron_mvaFall17Iso[i2] == entry.Electron_mvaFall17Iso[i2] :
+    if entry.Electron_mvaFall17V2Iso[i1] == entry.Electron_mvaFall17V2Iso[i2] : 
+        if entry.Electron_pt[i2]  > entry.Electron_pt[i1] : return True 
+        if entry.Electron_pt[i2] == entry.Electron_pt[i1] : 
+            if entry.Muon_pt[j2] < entry.Muon_pt[j1] : return True   
+    return False 
+
+def getBestEMuTauPair(entry,cat,pairList=[],printOn=False) :
+
+    if printOn : print("Entering getBestEMuTauPair")
+    # form all possible pairs that satisfy DR requirement
+    tauPairList = getEMuTauPairs(entry,cat=cat,pairList=pairList,printOn=printOn) 
+
+    # Sort the pair list using a bubble sort
+    # The list is not fully sorted, since only the top pairing is needed
+    for i in range(len(tauPairList)-1,0,-1) :
+        if compareEMuTauPair(entry, tauPairList[i],tauPairList[i-1]) : 
+            tauPairList[i-1], tauPairList[i] = tauPairList[i], tauPairList[i-1] 
+
+    if len(tauPairList) == 0 : return []
+    return tauPairList[0]
+
 
 
 def getETauPairs(entry,cat='et',pairList=[],printOn=False) :
@@ -229,9 +295,9 @@ def compareETauPair(entry,pair1,pair2) :
     # a return value of True means that pair2 is "better" than pair 1 
     i1, i2, j1, j2 = pair1[0], pair2[0], pair1[1], pair2[1]
     #if entry.Electron_mvaFall17Iso[i2]  < entry.Electron_mvaFall17Iso[i2] : return True
-    if entry.Electron_mvaFall17V2Iso[i2]  < entry.Electron_mvaFall17V2Iso[i2] : return True
+    if entry.Electron_mvaFall17V2Iso[i2]  < entry.Electron_mvaFall17V2Iso[i1] : return True
     #if entry.Electron_mvaFall17Iso[i2] == entry.Electron_mvaFall17Iso[i2] :
-    if entry.Electron_mvaFall17V2Iso[i2] == entry.Electron_mvaFall17V2Iso[i2] : 
+    if entry.Electron_mvaFall17V2Iso[i1] == entry.Electron_mvaFall17V2Iso[i2] : 
         if entry.Electron_pt[i2]  > entry.Electron_pt[i1] : return True 
         if entry.Electron_pt[i2] == entry.Electron_pt[i1] : 
             if entry.Tau_rawMVAoldDM2017v2[j2] < entry.Tau_rawMVAoldDM2017v2[j1] : return True   
@@ -415,11 +481,11 @@ def findZee(goodElectronList, entry) :
     return pairList
 
 def catToNumber(cat) :
-    number = { 'eeet':1, 'eemt':2, 'eett':3, 'mmet':4, 'mmmt':5, 'mmtt':6, 'et':7, 'mt':8, 'tt':9 }
+    number = { 'eeet':1, 'eemt':2, 'eett':3, 'eeem':4, 'mmet':5, 'mmmt':6, 'mmtt':7, 'mmem':8, 'et':9, 'mt':10, 'tt':11 }
     return number[cat]
 
 def numberToCat(number) :
-    cat = { 1:'eeet', 2:'eemt', 3:'eett', 4:'mmet', 5:'mmmt', 6:'mmtt', 7:'et', 8:'mt', 9:'tt' }
+    cat = { 1:'eeet', 2:'eemt', 3:'eett', 4:'eeem', 5:'mmet', 6:'mmmt', 7:'mmtt', 8:'mmem', 9:'et', 10:'mt', 11:'tt' }
     return cat[number]
     
 
