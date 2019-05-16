@@ -309,22 +309,25 @@ class outTuple() :
         #covMET[1][0] = entry.MET_covXY
         #covMET[0][1] = entry.MET_covXY
         #covMET[1][1] = entry.MET_covYY
-        covMET[0][0] = 3088.
-        covMET[1][0] = 0.
-        covMET[0][1] = 0.
-        covMET[1][1] = 3088.
+        covMET[0][0] = 787.352
+        covMET[1][0] = -178.63
+        covMET[0][1] = -178.63
+        covMET[1][1] = 179.545
 
         #self.kUndefinedDecayType, self.kTauToHadDecay,  self.kTauToElecDecay, self.kTauToMuDecay = 0, 1, 2, 3
 
-        if channel == 'et' or channel == 'em' :
+        if channel == 'et' :
             measTau1 = ROOT.MeasuredTauLepton(self.kTauToElecDecay, tau1.Pt(), tau1.Eta(), tau1.Phi(), 0.000511) 
         elif channel == 'mt' :
             measTau1 = ROOT.MeasuredTauLepton(self.kTauToMuDecay, tau1.Pt(), tau1.Eta(), tau1.Phi(), 0.106) 
         elif channel == 'tt' :
             measTau1 = ROOT.MeasuredTauLepton(self.kTauToHadDecay, tau1.Pt(), tau1.Eta(), tau1.Phi(), entry.Tau_mass[jt1])
                         
-        measTau2 = ROOT.MeasuredTauLepton(self.kTauToHadDecay, tau2.Pt(), tau2.Eta(), tau2.Phi(), entry.Tau_mass[jt2])
+	if channel != 'em' :
+            measTau2 = ROOT.MeasuredTauLepton(self.kTauToHadDecay, tau2.Pt(), tau2.Eta(), tau2.Phi(), entry.Tau_mass[jt2])
+
 	if channel == 'em' :
+            measTau1 = ROOT.MeasuredTauLepton(self.kTauToElecDecay, tau1.Pt(), tau1.Eta(), tau1.Phi(), 0.000511)
             measTau2 = ROOT.MeasuredTauLepton(self.kTauToMuDecay, tau2.Pt(), tau2.Eta(), tau2.Phi(), 0.106)
 
         VectorOfTaus = ROOT.std.vector('MeasuredTauLepton')
@@ -459,7 +462,7 @@ class outTuple() :
             tau2.SetPtEtaPhiM(entry.Tau_pt[jt2],entry.Tau_eta[jt2],entry.Tau_phi[jt2],tauMass)
             
         else :
-            print("Invalidddddddddd channel={0:s} in outTuple(). Exiting.".format(channel))
+            print("Invalid channel={0:s} in outTuple(). Exiting.".format(channel))
             exit()
 
         self.mt_1[0] = self.get_mt('MVAMet',entry,tau1)
@@ -531,10 +534,10 @@ class outTuple() :
         #self.metcov10[0] = entry.MET_covXY	
         #self.metcov11[0] = entry.MET_covYY
 
-        self.metcov00[0] = 772. # 3088, 772
-        self.metcov01[0] = 0. 
-        self.metcov10[0] = 0. 
-        self.metcov11[0] = 772.
+        self.metcov00[0] = 787.352
+        self.metcov01[0] = -178.63 
+        self.metcov10[0] = -178.63 
+        self.metcov11[0] = 179.545
 
         # jet variables
         nJet30, jetList, bJetList = self.getJets(entry,tau1,tau2) 

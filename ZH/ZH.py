@@ -104,10 +104,12 @@ for count, e in enumerate(inTree) :
 
     #evID = GF.eventID(e)
     #if evID == '' : continue 
-    #cutCounter[evID].count('Valid Mode') 
+    #cutCounter[evID].count('Valid Mode')
+    #print "=======================", e.nTrigObj
     for lepMode in ['ee','mm'] :
         if lepMode == 'ee'  :
             if not e.HLT_Ele35_WPTight_Gsf : continue
+
             for cat in cats[:3] : cutCounter[cat].count('Trigger')
         if lepMode == 'mm' :
             if not e.HLT_IsoMu27 : continue
@@ -122,17 +124,29 @@ for count, e in enumerate(inTree) :
             for cat in cats[3:] : cutCounter[cat].count('LeptonCount')
 
         goodElectronList = tauFun.makeGoodElectronList(e)
+	#TriggeredElectronList = tauFun.findETrigger(goodElectronList,e)
         goodMuonList = tauFun.makeGoodMuonList(e)
         goodElectronList, goodMuonList = tauFun.eliminateCloseLeptons(e, goodElectronList, goodMuonList)
+	TrigListEE=[]
+	TrigListMuMu=[]
 
         if lepMode == 'ee' :
             if len(goodElectronList) < 2 :  continue
+            TrigListEE = tauFun.findETrigger(goodElectronList, e)
+	    TrigListEE = list(dict.fromkeys(TrigListEE))
             pairList = tauFun.findZ(goodElectronList,[], e)
         
         if lepMode == 'mm' :
             if len(goodMuonList) < 2 : continue
+            TrigListMuMu = tauFun.findMuTrigger(goodMuonList, e)
+	    TrigListMuMu = list(dict.fromkeys(TrigListMuMu))
             pairList = tauFun.findZ([],goodMuonList, e)
-
+	
+        if lepMode == 'ee' and len(TrigListEE)<1 : continue
+        if lepMode == 'mm' and len(TrigListMuMu)<1 : continue
+	#print 'goodEl',len(goodElectronList),'trigEl',len(TrigListEE),len(goodMuonList),len(TrigListMuMu),lepMode
+	#print goodElectronList, TrigListEE
+        
         if len(pairList) < 1 : continue
         if lepMode == 'ee' :
             for cat in cats[:3]: cutCounter[cat].count('LeptonPair')
@@ -194,7 +208,7 @@ for count, e in enumerate(inTree) :
 
             if MC : outTuple.setWeight(PU.getWeight(e.Pileup_nPU))
         
-            SVFit = False
+            SVFit = True
             outTuple.Fill(e,SVFit,cat,jt1,jt2,LepP,LepM) 
 
             if maxPrint > 0 :
