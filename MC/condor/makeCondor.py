@@ -51,7 +51,7 @@ for nFile, file in enumerate(files) :
 
     outFileName = "{0:s}_{1:03d}.root".format(args.nickName,nFile+1)
     outLines.append("xrdcp root://cms-xrd-global.cern.ch/{0:s} inFile.root\n".format(fileName)) 
-    outLines.append("python ZH.py -f inFile.root -o {0:s}\n".format(outFileName))
+    outLines.append("python ZH.py -f inFile.root -o {0:s} --nickName {1:s}\n".format(outFileName,args.nickName))
     outLines.append("mv inFile.csv {0:s}\n".format(outFileName.replace(".root",".csv")))
     outLines.append("rm inFile.root\n")
     outLines.append("rm *.pyc\nrm *.so\nrm *.pcm\nrm *cc.d\n")

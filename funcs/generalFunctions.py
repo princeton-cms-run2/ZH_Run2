@@ -246,7 +246,7 @@ class pileUpWeight() :
         # get MC cross section values
         for line in open('MCsamples.csv','r').readlines() :
             if nickName == line.split(',')[0].strip() :
-                xSec = 1000.*float(line.split(',')[1])
+                xSec = 1000.*float(line.split(',')[2])
                  
         # get MC pileup histograms
         fMC = TFile('MC_{0:d}.root'.format(year))
