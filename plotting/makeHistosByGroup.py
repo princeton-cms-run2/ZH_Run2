@@ -13,7 +13,10 @@ def getArgs() :
     parser.add_argument("-y","--year",default=2017,type=int,help="Year for data.")
     parser.add_argument("-l","--LTcut",default=0.,type=float,help="H_LTcut")
     parser.add_argument("-s","--sign",default='OS',help="Opposite or same sign (OS or SS).")
-    parser.add_argument("--looseCuts",action='store_true',help="Loose cuts") 
+    parser.add_argument("--MConly",action='store_true',help="MC only") 
+    parser.add_argument("--looseCuts",action='store_true',help="Loose cuts")
+    parser.add_argument("--unBlind",action='store_true',help="Unblind signal region for OS")
+    
     
     return parser.parse_args()
 
@@ -38,6 +41,12 @@ class dupeDetector() :
         print("Duplicate Event Summary: Calls={0:d} Unique Events={1:d}".format(self.nCalls,len(self.runEventList)))
         return
 
+def getFakeWeights(f1,f2) :
+    w1 = f1/(1.-f1)
+    w2 = f2/(1.-f2)
+    w0 = w1*w2
+    return w1, w2, w0
+
 args = getArgs()
 nBins, xMin, xMax = 10, 0., 200.
 groups = ['Signal','Reducible','Rare','ZZ4L','data']
@@ -45,6 +54,7 @@ lumi = 1000.*41.8
 cats = { 1:'eeet', 2:'eemt', 3:'eett', 4:'mmet', 5:'mmmt', 6:'mmtt', 7:'et', 8:'mt', 9:'tt' }
 groups = ['Signal','Reducible','Rare','ZZ4L','data']
 tightCuts = not args.looseCuts 
+dataDriven = not args.MConly
 
 # use this utility class to screen out duplicate events
 DD = {}
@@ -64,7 +74,7 @@ for group in groups :
 # GluGluHToTauTau	Signal	48.58	9259000	198813970.4	 	/GluGluHToTauTau_...
 
 # make a first pass to get the weights 
-for line in open('MCsamples.csv','r').readlines() :
+for line in open('./MC/MCsamples.csv','r').readlines() :
     vals = line.split(',')
     nickName = vals[0]
     group = vals[1]
@@ -93,7 +103,6 @@ for era in ['2017B','2017C','2017D','2017E','2017F'] :
         sampleWeight[nickName] = 1.
         nickNames['data'].append(nickName) 
 
-
 print("tightCuts={0}".format(tightCuts))
 if tightCuts :
     outFileName = 'allGroups_{0:d}_{1:s}_LT{2:02d}.root'.format(args.year,args.sign,int(args.LTcut))
@@ -102,6 +111,14 @@ else :
     
 print("Opening {0:s} as output.".format(outFileName))
 fOut = TFile( outFileName, 'recreate' )
+
+#fe, fm, ft_et, ft_mt, f1_tt, f2_tt   = 0.0456, 0.0935, 0.1391, 0.1284, 0.0715, 0.0609
+# values with nbtag = 0 cut 
+fe, fm, ft_et, ft_mt, f1_tt, f2_tt   = 0.0390, 0.0794, 0.1397, 0.1177, 0.0756, 0.0613
+fW1, fW2, fW0 = {}, {}, {}
+fW1['et'], fW2['et'], fW0['et'] = getFakeWeights(fe,ft_et)
+fW1['mt'], fW2['mt'], fW0['mt'] = getFakeWeights(fm,ft_mt)
+fW1['tt'], fW2['tt'], fW0['tt'] = getFakeWeights(f1_tt,f2_tt)
 
 for group in groups :
     fOut.cd()
@@ -112,10 +129,11 @@ for group in groups :
     print("\nInstantiating TH1D {0:s}".format(hName))
     print("      Nickname                 Entries    Wt/Evt  Ngood   Tot Wt")
     for nickName in nickNames[group] :
-        #if nickName == 'TTTo2L2Nu' : continue
-        #if nickName == 'TTToSemiLeptonic' : continue 
-        inFileName = './MC/{0:s}/{0:s}.root'.format(nickName)
-        if group == 'data' : inFileName = './data/{0:s}/{0:s}.root'.format(nickName)
+        isData = False 
+        inFileName = './MC/condor/{0:s}/{0:s}.root'.format(nickName)
+        if group == 'data' :
+            isData = True
+            inFileName = './data/{0:s}/{0:s}.root'.format(nickName)
         try :
             inFile = TFile.Open(inFileName)
             inFile.cd()
@@ -132,43 +150,61 @@ for group in groups :
         WJets  = (nickName == 'WJetsToLNu')
         
         for i, e in enumerate(inTree) :
+            hGroup = group
+            #if e.nbtag > 0 : continue
             sw = sWeight
             if e.LHE_Njets > 0 :
                 if DYJets : sw = sampleWeight['DY{0:d}JetsToLL'.format(e.LHE_Njets)]
                 if WJets  : sw = sampleWeight['W{0:d}JetsToLNu'.format(e.LHE_Njets)] 
             weight = e.weight*sw
+            ww = weight
             cat = cats[e.cat]
 
             if tightCuts :
-                # for 'et' modes, tighten electron selection
-           
-                if cat[2:] == 'et' and e.iso_1 < 0.5 : continue
-            
-                # for 'mt' modes, tighten muon selection
-                if cat[2:] == 'mt' :
-                    if e.iso_1 > 0.25 : continue
-                    if e.iso_1_ID < 1 : continue
-                
-                # impose tight tau selection 
-                if e.iso_2_ID < 16 : continue 
-                if cat[2:] == 'tt' and e.iso_1_ID < 16 : continue
-            
+                if cat[2:] == 'et' : tight1 = e.iso_1 > 0.5 
+                if cat[2:] == 'mt' : tight1 = e.iso_1 < 0.25 and e.iso_1_ID > 0.5
+                if cat[2:] == 'tt' : tight1 = e.iso_1_ID > 15 
+                tight2 = e.iso_2_ID > 15
+                if group == 'data' :
+                    if dataDriven :
+                        hGroup = 'Reducible'
+                        if not tight1 and tight2 : ww = fW1[cat[2:]]
+                        elif tight1 and not tight2 : ww = fW2[cat[2:]]
+                        elif not (tight1 or tight2) : ww = -fW0[cat[2:]]
+                        else :
+                            ww = 1.
+                            hGroup = 'data'
+                    else :
+                        hGroup = 'data'
+                        #print("group = data  cat={0:s} tight1={1} tight2={2} ww={3:f}".format(cat,tight1,tight2,ww))
+                        if not (tight1 and tight2) : continue 
+                        
+                elif group == 'Reducible' :
+                    if not (tight1 and tight2) : continue
+                    if dataDriven :   # include only events with MC matching
+                        if not e.gen_match_2 == 5 : continue
+                        if cat[2:] == 'et' or cat[2:] == 'mt' :
+                            if not (e.gen_match_1 == 1 or e.gen_match_1 == 15) : continue
+                        else : 
+                            if not e.gen_match_1 == 5 : continue
+                                        
+                elif group == 'Rare' or group == 'ZZ4L' or group == 'Signal' :
+                    if not (tight1 and tight2) : continue         
+                                        
             if args.sign == 'SS':
                 if e.q_1*e.q_2 < 0. : continue
             else :
                 if e.q_1*e.q_2 > 0. : continue
-                
+                if hGroup == 'data' and not args.unBlind and e.m_sv > 80. and e.m_sv < 140. : continue                 
             H_LT = e.pt_1 + e.pt_2
             if H_LT < args.LTcut : continue
             if group == 'data' :
                 if DD[cat].checkEvent(e) : continue 
             if cat == 'mmtt' :
-                totalWeight += weight
+                totalWeight += ww
                 nEvents += 1
-                #if nickName == 'TTTo2L2Nu' :
-                #    print("Good event e.weight={0:f} sw={1:f} weight={2:f}".format(e.weight,sw,weight))
                     
-            hMC[group][cat].Fill(e.m_sv,weight)
+            hMC[hGroup][cat].Fill(e.m_sv,ww)
 
         print("{0:30s} {1:7d} {2:10.6f} {3:5d} {4:8.3f}".format(nickName,nentries,sampleWeight[nickName],nEvents,totalWeight))
         inFile.Close()
