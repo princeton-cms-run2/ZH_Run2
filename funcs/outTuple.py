@@ -312,22 +312,25 @@ class outTuple() :
         #covMET[1][0] = entry.MET_covXY
         #covMET[0][1] = entry.MET_covXY
         #covMET[1][1] = entry.MET_covYY
-        covMET[0][0] = 3088.
-        covMET[1][0] = 0.
-        covMET[0][1] = 0.
-        covMET[1][1] = 3088.
+        covMET[0][0] = 787.352
+        covMET[1][0] = -178.63
+        covMET[0][1] = -178.63
+        covMET[1][1] = 179.545
 
         #self.kUndefinedDecayType, self.kTauToHadDecay,  self.kTauToElecDecay, self.kTauToMuDecay = 0, 1, 2, 3
 
-        if channel == 'et' or channel == 'em' :
+        if channel == 'et' :
             measTau1 = ROOT.MeasuredTauLepton(self.kTauToElecDecay, tau1.Pt(), tau1.Eta(), tau1.Phi(), 0.000511) 
         elif channel == 'mt' :
             measTau1 = ROOT.MeasuredTauLepton(self.kTauToMuDecay, tau1.Pt(), tau1.Eta(), tau1.Phi(), 0.106) 
         elif channel == 'tt' :
             measTau1 = ROOT.MeasuredTauLepton(self.kTauToHadDecay, tau1.Pt(), tau1.Eta(), tau1.Phi(), entry.Tau_mass[jt1])
                         
-        measTau2 = ROOT.MeasuredTauLepton(self.kTauToHadDecay, tau2.Pt(), tau2.Eta(), tau2.Phi(), entry.Tau_mass[jt2])
+	if channel != 'em' :
+            measTau2 = ROOT.MeasuredTauLepton(self.kTauToHadDecay, tau2.Pt(), tau2.Eta(), tau2.Phi(), entry.Tau_mass[jt2])
+
 	if channel == 'em' :
+            measTau1 = ROOT.MeasuredTauLepton(self.kTauToElecDecay, tau1.Pt(), tau1.Eta(), tau1.Phi(), 0.000511)
             measTau2 = ROOT.MeasuredTauLepton(self.kTauToMuDecay, tau2.Pt(), tau2.Eta(), tau2.Phi(), 0.106)
 
         VectorOfTaus = ROOT.std.vector('MeasuredTauLepton')
@@ -390,7 +393,8 @@ class outTuple() :
             #self.iso_1[0] = 0.
             self.iso_1[0] = 0. 
             if entry.Electron_mvaFall17V2noIso_WP90[jt1] : self.iso_1[0] = 1.
-            self.gen_match_1[0] = ord(entry.Electron_genPartFlav[jt1])
+            try: self.gen_match_1[0] = ord(entry.Electron_genPartFlav[jt1])
+            except AttributeError: self.gen_match_1[0] = -1
             tau1.SetPtEtaPhiM(entry.Electron_pt[jt1],entry.Electron_eta[jt1], entry.Electron_phi[jt1], tauMass)
             tau2.SetPtEtaPhiM(entry.Tau_pt[jt2],entry.Tau_eta[jt2],entry.Tau_phi[jt2],tauMass) 
 
@@ -408,7 +412,8 @@ class outTuple() :
             #self.iso_1[0] = 0.
             self.iso_1[0] = 0. 
             if entry.Electron_mvaFall17V2noIso_WP90[jt1] : self.iso_1[0] = 1.
-            self.gen_match_1[0] = ord(entry.Electron_genPartFlav[jt1])
+            try : self.gen_match_1[0] = ord(entry.Electron_genPartFlav[jt1])
+            except AttributeError : self.gen_match_1[0] = -1
             tau1.SetPtEtaPhiM(entry.Electron_pt[jt1],entry.Electron_eta[jt1], entry.Electron_phi[jt1], tauMass)
 
             self.pt_2[0] = entry.Muon_pt[jt2]
@@ -421,7 +426,8 @@ class outTuple() :
             self.iso_2[0] = entry.Muon_pfRelIso04_all[jt2]
             self.iso_2_ID[0] = 0
             if entry.Muon_mediumId[jt2] : self.iso_2_ID[0] = 1
-            self.gen_match_2[0] = ord(entry.Muon_genPartFlav[jt2]) 
+            try : self.gen_match_2[0] = ord(entry.Muon_genPartFlav[jt2]) 
+            except AttributeError : self.gen_match_2[0] = -1
             tau2.SetPtEtaPhiM(entry.Muon_pt[jt2],entry.Muon_eta[jt2], entry.Muon_phi[jt2], tauMass) ######### should this be tauMass ???
 
         elif channel == 'mt' :
@@ -435,7 +441,8 @@ class outTuple() :
             self.iso_1[0] = entry.Muon_pfRelIso04_all[jt1]
             self.iso_1_ID[0] = 0
             if entry.Muon_mediumId[jt1] : self.iso_1_ID[0] = 1
-            self.gen_match_1[0] = ord(entry.Muon_genPartFlav[jt1]) 
+            try : self.gen_match_1[0] = ord(entry.Muon_genPartFlav[jt1]) 
+            except AttributeError : self.gen_match_1[0] = -1
             tau1.SetPtEtaPhiM(entry.Muon_pt[jt1],entry.Muon_eta[jt1], entry.Muon_phi[jt1], tauMass)
             tau2.SetPtEtaPhiM(entry.Tau_pt[jt2],entry.Tau_eta[jt2],entry.Tau_phi[jt2],tauMass) 
         elif channel == 'tt' :
@@ -456,13 +463,14 @@ class outTuple() :
             self.againstMuonLoose3_1[0] = self.getAntiMu(entry,jt1,1)
             self.againstMuonTight3_1[0] = self.getAntiMu(entry,jt1,2)                            
             self.byIsolationMVA3oldDMwLTraw_1[0] = 0.    # does not seem to exist in nanoAOD
-            self.gen_match_1[0] = ord(entry.Tau_genPartFlav[jt1])
+            try : self.gen_match_1[0] = ord(entry.Tau_genPartFlav[jt1])
+            except AttributeError : self.gen_match_1[0] = -1
 
             tau1.SetPtEtaPhiM(entry.Tau_pt[jt1],entry.Tau_eta[jt1], entry.Tau_phi[jt1], tauMass)
             tau2.SetPtEtaPhiM(entry.Tau_pt[jt2],entry.Tau_eta[jt2],entry.Tau_phi[jt2],tauMass)
             
         else :
-            print("Invalidddddddddd channel={0:s} in outTuple(). Exiting.".format(channel))
+            print("Invalid channel={0:s} in outTuple(). Exiting.".format(channel))
             exit()
 
         self.mt_1[0] = self.get_mt('MVAMet',entry,tau1)
@@ -496,7 +504,8 @@ class outTuple() :
             self.againstMuonTight3_2[0] = self.getAntiMu(entry,jt2,2)
 
             self.byIsolationMVA3oldDMwLTraw_2[0] = float(ord(entry.Tau_idMVAoldDMdR032017v2[jt2]))  # check this
-	    self.gen_match_2[0] = ord(entry.Tau_genPartFlav[jt2])
+	    try : self.gen_match_2[0] = ord(entry.Tau_genPartFlav[jt2])
+	    except AttributeError :self.gen_match_2[0] = -1
             self.trigweight_2[0] = -999.    # requires sf need help from Sam on these
             self.idisoweight_2[0] = -999.   # requires sf need help from Sam on these
 
@@ -534,10 +543,10 @@ class outTuple() :
         #self.metcov10[0] = entry.MET_covXY	
         #self.metcov11[0] = entry.MET_covYY
 
-        self.metcov00[0] = 772. # 3088, 772
-        self.metcov01[0] = 0. 
-        self.metcov10[0] = 0. 
-        self.metcov11[0] = 772.
+        self.metcov00[0] = 787.352
+        self.metcov01[0] = -178.63 
+        self.metcov10[0] = -178.63 
+        self.metcov11[0] = 179.545
 
         # jet variables
         nJet30, jetList, bJetList = self.getJets(entry,tau1,tau2) 

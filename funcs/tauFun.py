@@ -44,6 +44,10 @@ def lTauDR(eta1,phi1,Lep) :
     dPhi = min(abs(phi2-phi1),2.*pi-abs(phi2-phi1))
     return sqrt(dPhi**2 + (eta2-eta1)**2)
 
+def DRobj(eta1,phi1,eta2,phi2) :
+    dPhi = min(abs(phi2-phi1),2.*pi-abs(phi2-phi1))
+    return sqrt(dPhi**2 + (eta2-eta1)**2)
+
 def getTauPointer(entry, eta1, phi1) :
     # find the j value that most closely matches the specified eta or phi value
     bestMatch, jBest = 999., -1
@@ -190,9 +194,9 @@ def getEMuTauPairs(entry,cat='em',pairList=[],printOn=False) :
         if abs(entry.Muon_dxy[i]) > 0.045 : continue
         if abs(entry.Muon_dz[i]) > 0.2 : continue
         eta2, phi2 = entry.Muon_eta[i], entry.Muon_phi[i] 
-        if entry.Muon_pt[i] < 13. : continue
+        if entry.Muon_pt[i] < 9.5 : continue
         if abs(eta2) > 2.4 : continue   
-        if entry.Muon_pfRelIso04_all[i] > 0.25 : continue 
+        #if entry.Muon_pfRelIso04_all[i] > 0.25 : continue 
         # make sure that the muon does not match one of the pair leptons
         DR0, DR1 =  lTauDR(eta2,phi2,pairList[0]), lTauDR(eta2,phi2,pairList[1]) 
         if DR0 < 0.5 or DR1 < 0.5 : continue
@@ -201,12 +205,12 @@ def getEMuTauPairs(entry,cat='em',pairList=[],printOn=False) :
             if abs(entry.Electron_dxy[j]) > 0.045 : continue
             if abs(entry.Electron_dz[j]) > 0.2 : continue
             eta1, phi1 = entry.Electron_eta[j], entry.Electron_phi[j] 
-            if entry.Electron_pt[j] < 13. : continue
+            if entry.Electron_pt[j] < 9.5 : continue
             if abs(eta1) > 2.5 : continue
             if ord(entry.Electron_lostHits[j]) > 1 : continue 
             if not entry.Electron_convVeto[j] : continue
-            if not entry.Electron_mvaFall17V2noIso_WP90[j] : continue
-            if entry.Electron_pfRelIso03_all[j] > 0.5 : continue
+            #if not entry.Electron_mvaFall17V2noIso_WP90[j] : continue
+            #if entry.Electron_pfRelIso03_all[j] > 0.5 : continue
 
             dPhi = min(abs(phi2-phi1),2.*pi-abs(phi2-phi1))
             DR = sqrt(dPhi**2 + (eta2-eta1)**2)
@@ -394,6 +398,45 @@ def eliminateCloseLeptons(entry, goodElectronList, goodMuonList) :
     for badmu in badMuon : goodMuonList.remove(badmu)
 
     return goodElectronList, goodMuonList
+
+def findETrigger(goodElectronList,entry):
+    EltrigList =[]
+    nElectron = len(goodElectronList)
+    
+    if nElectron > 1 :
+	if not entry.HLT_Ele35_WPTight_Gsf : return EltrigList
+        for i in range(nElectron) :
+	    
+            ii = goodElectronList[i] 
+            #e1 = TLorentzVector()
+            #e1.SetPtEtaPhiM(entry.Electron_pt[ii],entry.Electron_eta[ii],entry.Electron_phi[ii],0.0005)
+
+            for iobj in range(0,entry.nTrigObj) :
+	        dR = DRobj(entry.Electron_eta[ii],entry.Electron_phi[ii], entry.TrigObj_eta[iobj], entry.TrigObj_phi[iobj])
+		if entry.TrigObj_filterBits[iobj] & 2  and dR < 0.5: ##that corresponds 0 WPTight
+		    EltrigList.append(ii)
+                    #print "======================= iobj", iobj, "entry_Trig",entry.TrigObj_id[iobj], "Bits", entry.TrigObj_filterBits[iobj]," dR", dR, "electron",i,"ii",ii,entry.TrigObj_id[iobj]
+
+    return EltrigList
+
+
+def findMuTrigger(goodMuonList,entry):
+    MutrigList =[]
+    nMuon = len(goodMuonList)
+    
+    if nMuon > 1 :
+	if not entry.HLT_IsoMu27 : return MutrigList
+        for i in range(nMuon) :
+	    
+            ii = goodMuonList[i] 
+
+            for iobj in range(0,entry.nTrigObj) :
+	        dR = DRobj(entry.Muon_eta[ii],entry.Muon_phi[ii], entry.TrigObj_eta[iobj], entry.TrigObj_phi[iobj])
+		if entry.TrigObj_filterBits[iobj] & 8 and entry.TrigObj_filterBits[iobj] & 2 and dR < 0.5: ##that corresponds to Muon Trigger
+		    MutrigList.append(ii)
+                #print "======================= and === iobj", iobj, entry.TrigObj_id[iobj], "Bits", entry.TrigObj_filterBits[iobj]," dR", dR, "electron",i
+
+    return MutrigList
 
 def findZ(goodElectronList, goodMuonList, entry) :
     pairList, mZ, bestDiff = [], 91.19, 99999. 

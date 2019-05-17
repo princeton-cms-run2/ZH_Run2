@@ -18,6 +18,7 @@ def getArgs() :
     #parser.add_argument("-f","--inFileName",default='DY1JetsToLL_test.root',help="File to be analyzed.")
     parser.add_argument("-c","--category",default='mmem',help="Event category to analyze.")
     parser.add_argument("--nickName",default='',help="MC sample nickname") 
+    parser.add_argument("-d","--dataType",default='MC',help="Data or MC") 
     parser.add_argument("-o","--outFileName",default='',help="File to be used for output.")
     parser.add_argument("-n","--nEvents",default=0,type=int,help="Number of events to process.")
     parser.add_argument("-m","--maxPrint",default=0,type=int,help="Maximum number of events to print.")
@@ -82,19 +83,24 @@ nMax = nentries
 print("nentries={0:d} nMax={1:d}".format(nentries,nMax))
 if args.nEvents > 0 : nMax = min(args.nEvents-1,nentries)
 
+
 MC = len(args.nickName) > 0 
-if MC : 
+if args.dataType != 'Data' and args.dataType != 'data' : MC = True
+if args.dataType == 'MC' or args.dataType == 'mc' : MC = True
+
+if MC :
+    print "this is MC, will get PU etc"
     PU = GF.pileUpWeight()
     PU.calculateWeights(args.nickName,args.year)
+
+else :     print "Will run on Data...."
 
 outFileName = GF.getOutFileName(args).replace(".root",".ntup")
 print("Opening {0:s} as output.".format(outFileName))
 outTuple = outTuple.outTuple(outFileName)
 
+#print "nickname============== ",args.nickName,'isMC',MC
 
-#HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v 29/fb for 2017
-#HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL
-#HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_
 
 tStart = time.time()
 for count, e in enumerate(inTree) :
@@ -102,16 +108,12 @@ for count, e in enumerate(inTree) :
     if count % 1000 == 0 : print("Count={0:d}".format(count))
     if count == nMax : break
 
+
     #evID = GF.eventID(e)
     #if evID == '' : continue 
-    #cutCounter[evID].count('Valid Mode') 
+    #cutCounter[evID].count('Valid Mode')
+    #print "=======================", e.nTrigObj
     for lepMode in ['ee','mm'] :
-        if lepMode == 'ee'  :
-            if not e.HLT_Ele35_WPTight_Gsf : continue
-            for cat in cats[:3] : cutCounter[cat].count('Trigger')
-        if lepMode == 'mm' :
-            if not e.HLT_IsoMu27 : continue
-            for cat in cats[3:] : cutCounter[cat].count('Trigger')
 
         if e.nTau < 1 : continue 
         if lepMode == 'ee' :
@@ -122,17 +124,36 @@ for count, e in enumerate(inTree) :
             for cat in cats[3:] : cutCounter[cat].count('LeptonCount')
 
         goodElectronList = tauFun.makeGoodElectronList(e)
+	#TriggeredElectronList = tauFun.findETrigger(goodElectronList,e)
         goodMuonList = tauFun.makeGoodMuonList(e)
         goodElectronList, goodMuonList = tauFun.eliminateCloseLeptons(e, goodElectronList, goodMuonList)
+	TrigListEE=[]
+	TrigListMuMu=[]
 
         if lepMode == 'ee' :
+            if not e.HLT_Ele35_WPTight_Gsf : continue
             if len(goodElectronList) < 2 :  continue
+            TrigListEE = tauFun.findETrigger(goodElectronList, e)
+	    TrigListEE = list(dict.fromkeys(TrigListEE))
+            if  len(TrigListEE)<1 : continue
             pairList = tauFun.findZ(goodElectronList,[], e)
+            for cat in cats[:3] : cutCounter[cat].count('Trigger')
         
         if lepMode == 'mm' :
+            if not e.HLT_IsoMu27 : continue
             if len(goodMuonList) < 2 : continue
+            TrigListMuMu = tauFun.findMuTrigger(goodMuonList, e)
+	    TrigListMuMu = list(dict.fromkeys(TrigListMuMu))
+            if len(TrigListMuMu)<1 : continue
             pairList = tauFun.findZ([],goodMuonList, e)
+	
 
+        for cat in cats[3:] : cutCounter[cat].count('Trigger')
+
+
+	#print 'goodEl',len(goodElectronList),'trigEl',len(TrigListEE),len(goodMuonList),len(TrigListMuMu),lepMode
+	#print goodElectronList, TrigListEE
+        
         if len(pairList) < 1 : continue
         if lepMode == 'ee' :
             for cat in cats[:3]: cutCounter[cat].count('LeptonPair')
@@ -191,10 +212,15 @@ for count, e in enumerate(inTree) :
                 jt1, jt2 = bestTauPair[0], bestTauPair[1]
             else :
                 continue
-
+	
             if MC : outTuple.setWeight(PU.getWeight(e.Pileup_nPU))
-        
-            SVFit = False
+	    
+            if args.dataType != "MC" or not MC:
+                isInJSON = GF.checkJSON(e.luminosityBlock,e.run)
+                #print 'this is data....',lepMode,tauMode,isInJSON
+            if not MC and not isInJSON : continue
+            
+            SVFit = True
             outTuple.Fill(e,SVFit,cat,jt1,jt2,LepP,LepM) 
 
             if maxPrint > 0 :

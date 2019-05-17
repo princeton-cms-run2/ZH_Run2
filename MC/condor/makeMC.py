@@ -24,7 +24,7 @@ for line in open(args.inFile,'r').readlines() :
     mode = 'anaXRD'
     
     outLines.append("mkdir {0:s}\ncd {0:s}\n".format(nickname))
-    outLines.append("python ../makeCondor.py --dataSet {0:s} --nickName {1:s} --mode {2:s}\n".format(dataset,nickname, mode))
+    outLines.append("python ../makeCondor.py --dataSet {0:s} --nickName {1:s} --mode {2:s} \n".format(dataset,nickname, mode))
     outLines.append("cd {0:s}\n".format(cwd))
 
 open('runMC.csh','w').writelines(outLines)

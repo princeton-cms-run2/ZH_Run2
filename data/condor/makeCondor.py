@@ -62,10 +62,19 @@ for nFile, file in enumerate(files) :
             
 
 # now that .csh files have been generated make a list of corresponding .jdl files
-
+'''
 dir = '/uscms_data/d2/marlow/CMSSW_10_2_9/src/data/'
 funcsDir = '/uscms_data/d2/marlow/CMSSW_10_2_9/src/funcs/'
 SVFitDir = '/uscms_data/d2/marlow/CMSSW_10_2_9/src/SVFit/'
+'''
+
+dir = os.getenv("CMSSW_BASE")+"/src/MC/"
+dirData = os.getenv("CMSSW_BASE")+"/src/data/"
+funcsDir = os.getenv("CMSSW_BASE")+"/src/funcs/"
+SVFitDir = os.getenv("CMSSW_BASE")+"/src/SVFit/"
+
+
+
 
 for file in scriptList :
     base = file[:-4] 
@@ -77,7 +86,8 @@ for file in scriptList :
     outLines.append('transfer_input_files = {0:s}ZH.py,'.format(dir))
     outLines.append('{0:s}tauFun.py, {0:s}generalFunctions.py, {0:s}outTuple.py,'.format(funcsDir))
     outLines.append('{0:s}FastMTT.h, {0:s}MeasuredTauLepton.h, {0:s}svFitAuxFunctions.h,'.format(SVFitDir)) 
-    outLines.append('{0:s}FastMTT.cc, {0:s}MeasuredTauLepton.cc, {0:s}svFitAuxFunctions.cc \n'.format(SVFitDir))
+    outLines.append('{0:s}FastMTT.cc, {0:s}MeasuredTauLepton.cc, {0:s}svFitAuxFunctions.cc, \n'.format(SVFitDir))
+    outLines.append('{0:s}Cert_294927-306462_13TeV_EOY2017ReReco_Collisions17_JSON.txt \n'.format(dirData))
     outLines.append('should_transfer_files = YES\n')
     outLines.append('when_to_transfer_output = ON_EXIT\n')
     outLines.append('x509userproxy = $ENV(X509_USER_PROXY)\n')
