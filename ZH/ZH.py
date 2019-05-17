@@ -18,6 +18,7 @@ def getArgs() :
     #parser.add_argument("-f","--inFileName",default='DY1JetsToLL_test.root',help="File to be analyzed.")
     parser.add_argument("-c","--category",default='mmem',help="Event category to analyze.")
     parser.add_argument("--nickName",default='',help="MC sample nickname") 
+    parser.add_argument("-d","--dataType",default='MC',help="Data or MC") 
     parser.add_argument("-o","--outFileName",default='',help="File to be used for output.")
     parser.add_argument("-n","--nEvents",default=0,type=int,help="Number of events to process.")
     parser.add_argument("-m","--maxPrint",default=0,type=int,help="Maximum number of events to print.")
@@ -82,8 +83,11 @@ nMax = nentries
 print("nentries={0:d} nMax={1:d}".format(nentries,nMax))
 if args.nEvents > 0 : nMax = min(args.nEvents-1,nentries)
 
+
 MC = len(args.nickName) > 0 
-if MC : 
+if args.dataType != 'Data' and args.dataType != 'data' : MC = True
+if MC :
+    print "this is MC, will get PU etc"
     PU = GF.pileUpWeight()
     PU.calculateWeights(args.nickName,args.year)
 
@@ -91,16 +95,19 @@ outFileName = GF.getOutFileName(args).replace(".root",".ntup")
 print("Opening {0:s} as output.".format(outFileName))
 outTuple = outTuple.outTuple(outFileName)
 
+#print "nickname============== ",args.nickName,'isMC',MC
 
-#HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v 29/fb for 2017
-#HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL
-#HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_
 
 tStart = time.time()
 for count, e in enumerate(inTree) :
     for cat in cats : cutCounter[cat].count('All')
     if count % 1000 == 0 : print("Count={0:d}".format(count))
     if count == nMax : break
+
+    if args.dataType != "MC" or not MC:
+	#print 'this is data....'
+        isInJSON = GF.checkJSON(e.luminosityBlock,e.run)
+        if not isInJSON : continue
 
     #evID = GF.eventID(e)
     #if evID == '' : continue 
@@ -205,7 +212,7 @@ for count, e in enumerate(inTree) :
                 jt1, jt2 = bestTauPair[0], bestTauPair[1]
             else :
                 continue
-
+	
             if MC : outTuple.setWeight(PU.getWeight(e.Pileup_nPU))
         
             SVFit = True
