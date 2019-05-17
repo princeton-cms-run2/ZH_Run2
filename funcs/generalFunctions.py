@@ -4,6 +4,7 @@ from ROOT import TLorentzVector
 from ROOT import TFile, TH1D, TCanvas, TGraph, kRed, kBlue, TLegend
 from math import sqrt
 import numpy as np
+import json
 
 def printEvent(entry) :
     print("** Run={0:d} LS={1:d} Event={2:d} MET={3:.1f}".format(entry.run,entry.luminosityBlock,entry.event,entry.MET_pt))
@@ -371,6 +372,35 @@ def eventID(e) :
     cat = cat.replace('tm','mt')
     return cat
 
+
+
+
+def checkJSON(lumi,run,filein='Cert_294927-306462_13TeV_EOY2017ReReco_Collisions17_JSON.txt') :
+
+    input_file = open (filein)
+    json_array = json.load(input_file)
+
+
+    for k, v in json_array.items():
+        if k == str(run): 
+            for list_of_ints in v:
+                #print len(list_of_ints),'start',list_of_ints[0],'end',list_of_ints[1]
+		#if int(lumi) >= int(list_of_ints[0]) and int(lumi)<= int(list_of_ints[1]) :
+		#print "run",run," and you lumi is good! block ",v,"running on lumi",lumi,"first",list_of_ints[0],"last",list_of_ints[1]
+                #else :
+		#    print "run",run," and you lumi is bad ? ",v,"running on lumi",lumi,"first",list_of_ints[0],"last",list_of_ints[1]
+		
+		    #print len(list_of_ints),'vvvvvvvvvvv',v,len(k),list_of_ints[len(k)-1]
+		        #print "run",run," and you lumi is not good, Sorry ",v,'lumi ',lumi,"first",list_of_ints[0][0],"last",list_of_ints[1][0],'all ?',v,len(v)
+		        #return False
+		a = np.array(list_of_ints)
+		#print a
+                #for integer in list_of_ints:
+		#lumi=193
+                if (a >= int(lumi)).any() and (a <= int(lumi)).any() :
+	            #print '=============',a.all(), a,lumi,list_of_ints, run
+                    return True
+                else : return False
 
     
     

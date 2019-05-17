@@ -86,10 +86,14 @@ if args.nEvents > 0 : nMax = min(args.nEvents-1,nentries)
 
 MC = len(args.nickName) > 0 
 if args.dataType != 'Data' and args.dataType != 'data' : MC = True
+if args.dataType == 'MC' or args.dataType == 'mc' : MC = True
+
 if MC :
     print "this is MC, will get PU etc"
     PU = GF.pileUpWeight()
     PU.calculateWeights(args.nickName,args.year)
+
+else :     print "Will run on Data...."
 
 outFileName = GF.getOutFileName(args).replace(".root",".ntup")
 print("Opening {0:s} as output.".format(outFileName))
@@ -104,23 +108,12 @@ for count, e in enumerate(inTree) :
     if count % 1000 == 0 : print("Count={0:d}".format(count))
     if count == nMax : break
 
-    if args.dataType != "MC" or not MC:
-	#print 'this is data....'
-        isInJSON = GF.checkJSON(e.luminosityBlock,e.run)
-        if not isInJSON : continue
 
     #evID = GF.eventID(e)
     #if evID == '' : continue 
     #cutCounter[evID].count('Valid Mode')
     #print "=======================", e.nTrigObj
     for lepMode in ['ee','mm'] :
-        if lepMode == 'ee'  :
-            if not e.HLT_Ele35_WPTight_Gsf : continue
-
-            for cat in cats[:3] : cutCounter[cat].count('Trigger')
-        if lepMode == 'mm' :
-            if not e.HLT_IsoMu27 : continue
-            for cat in cats[3:] : cutCounter[cat].count('Trigger')
 
         if e.nTau < 1 : continue 
         if lepMode == 'ee' :
@@ -138,19 +131,26 @@ for count, e in enumerate(inTree) :
 	TrigListMuMu=[]
 
         if lepMode == 'ee' :
+            if not e.HLT_Ele35_WPTight_Gsf : continue
             if len(goodElectronList) < 2 :  continue
             TrigListEE = tauFun.findETrigger(goodElectronList, e)
 	    TrigListEE = list(dict.fromkeys(TrigListEE))
+            if  len(TrigListEE)<1 : continue
             pairList = tauFun.findZ(goodElectronList,[], e)
+            for cat in cats[:3] : cutCounter[cat].count('Trigger')
         
         if lepMode == 'mm' :
+            if not e.HLT_IsoMu27 : continue
             if len(goodMuonList) < 2 : continue
             TrigListMuMu = tauFun.findMuTrigger(goodMuonList, e)
 	    TrigListMuMu = list(dict.fromkeys(TrigListMuMu))
+            if len(TrigListMuMu)<1 : continue
             pairList = tauFun.findZ([],goodMuonList, e)
 	
-        if lepMode == 'ee' and len(TrigListEE)<1 : continue
-        if lepMode == 'mm' and len(TrigListMuMu)<1 : continue
+
+        for cat in cats[3:] : cutCounter[cat].count('Trigger')
+
+
 	#print 'goodEl',len(goodElectronList),'trigEl',len(TrigListEE),len(goodMuonList),len(TrigListMuMu),lepMode
 	#print goodElectronList, TrigListEE
         
@@ -214,7 +214,12 @@ for count, e in enumerate(inTree) :
                 continue
 	
             if MC : outTuple.setWeight(PU.getWeight(e.Pileup_nPU))
-        
+	    
+            if args.dataType != "MC" or not MC:
+                isInJSON = GF.checkJSON(e.luminosityBlock,e.run)
+                #print 'this is data....',lepMode,tauMode,isInJSON
+            if not MC and not isInJSON : continue
+            
             SVFit = True
             outTuple.Fill(e,SVFit,cat,jt1,jt2,LepP,LepM) 
 
