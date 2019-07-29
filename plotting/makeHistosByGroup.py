@@ -17,7 +17,6 @@ def getArgs() :
     parser.add_argument("--looseCuts",action='store_true',help="Loose cuts")
     parser.add_argument("--unBlind",action='store_true',help="Unblind signal region for OS")
     
-    
     return parser.parse_args()
 
 class dupeDetector() :
@@ -47,11 +46,81 @@ def getFakeWeights(f1,f2) :
     w0 = w1*w2
     return w1, w2, w0
 
+def trigweight(e,cat)
+    trigw = 1.
+    if cat == 'eeet' or cat == 'mmmt' :
+	if e.trig_Lp_MC != 0. and  e.trig_Lm_MC == 0. : 
+	    if trig_T1_MC == 0. : trigw = float(e.trig_Lp_Data/e.trig_Lp_MC)
+	    if trig_T1_MC != 0. : trigw = float(      (1 - (1-e.trig_Lp_Data)*(1-e.trig_T1_Data)) /  (1 - (1-e.trig_Lp_MC)*(1-e.trig_T1_MC) ))
+
+	if e.trig_Lp_MC == 0. and  e.trig_Lm_MC != 0. : 
+	    if trig_T1_MC == 0. : trigw = float(e.trig_Lm_Data/e.trig_Lm_MC)
+	    if trig_T1_MC != 0. : trigw = float(      (1 - (1-e.trig_Lm_Data)*(1-e.trig_T1_Data)) /  (1 - (1-e.trig_Lm_MC)*(1-e.trig_T1_MC) ))
+
+	if e.trig_Lp_MC != 0. and  e.trig_Lm_MC != 0. : 
+	    trigw = float(      (1 - (1-e.trig_Lp_Data)*(1-e.trig_Lm_Data)*(1-e.trig_T1_Data)) /  (1 - (1-e.trig_Lp_MC)*(1-e.trig_Lm_MC)*(1-e.trig_T1_MC) ))
+
+    if cat == 'eemt' or cat == 'mmet' :
+	if e.trig_Lp_MC != 0. and  e.trig_Lm_MC == 0. : 
+	    if trig_T1_MC = 0. : trigw = float(e.trig_Lp_Data/e.trig_Lp_MC)
+	    if trig_T1_MC != 0. : trigw = float(   (e.trig_Lp_Data/e.trig_Lp_MC) * (e.trig_Lp_Data/e.trig_Lp_MC)   )
+	if e.trig_Lp_MC == 0. and  e.trig_Lm_MC != 0. : 
+	    if trig_T1_MC = 0. : trigw = float(e.trig_Lm_Data/e.trig_Lm_MC)
+	    if trig_T1_MC != 0. : trigw = float(   (e.trig_Lm_Data/e.trig_Lm_MC) * (e.trig_Lm_Data/e.trig_Lm_MC)   )
+	if e.trig_Lp_MC != 0. and  e.trig_Lm_MC != 0. : 
+	    if trig_T1_MC == 0. : trigw = float(      (1 - (1-e.trig_Lp_Data)*(1-e.trig_Lm_Data)) /  (1 - (1-e.trig_Lp_MC)*(1-e.trig_Lm_MC) ) )
+	    if trig_T1_MC != 0. : trigw = float(      (1 - (1-e.trig_Lp_Data)*(1-e.trig_Lm_Data)) /  (1 - (1-e.trig_Lp_MC)*(1-e.trig_Lm_MC) )  * float(e.trig_T1_Data/e.trig_T1_MC) )
+
+    if cat == 'eeem' :
+	if e.trig_Lp_MC != 0. and  e.trig_Lm_MC == 0. : 
+	    if trig_T1_MC == 0. and trig_T2_MC == 0.: trigw = float(e.trig_Lp_Data/e.trig_Lp_MC)
+	    if trig_T1_MC == 0. and trig_T2_MC != 0.: trigw = float(e.trig_Lp_Data/e.trig_Lp_MC) * float(e.trig_T2_Data/e.trig_T2_MC)
+	    if trig_T1_MC != 0. and trig_T2_MC == 0. : trigw = float(      (1 - (1-e.trig_Lp_Data)*(1-e.trig_T1_Data)) /  (1 - (1-e.trig_Lp_MC)*(1-e.trig_T1_MC) ))
+	    if trig_T1_MC != 0. and trig_T2_MC != 0. : trigw = float(      (1 - (1-e.trig_Lp_Data)*(1-e.trig_T1_Data)) /  (1 - (1-e.trig_Lp_MC)*(1-e.trig_T1_MC) ) * float(e.trig_T2_Data/e.trig_T2_MC))
+
+	if e.trig_Lp_MC == 0. and  e.trig_Lm_MC != 0. : 
+	    if trig_T1_MC == 0. and trig_T2_MC == 0.: trigw = float(e.trig_Lm_Data/e.trig_Lm_MC)
+	    if trig_T1_MC == 0. and trig_T2_MC != 0.: trigw = float(e.trig_Lm_Data/e.trig_Lm_MC) * float(e.trig_T2_Data/e.trig_T2_MC)
+	    if trig_T1_MC != 0. and trig_T2_MC == 0. : trigw = float(      (1 - (1-e.trig_Lm_Data)*(1-e.trig_T1_Data)) /  (1 - (1-e.trig_Lm_MC)*(1-e.trig_T1_MC) ))
+	    if trig_T1_MC != 0. and trig_T2_MC != 0. : trigw = float(      (1 - (1-e.trig_Lm_Data)*(1-e.trig_T1_Data)) /  (1 - (1-e.trig_Lm_MC)*(1-e.trig_T1_MC) ) * float(e.trig_T2_Data/e.trig_T2_MC))
+
+	if e.trig_Lp_MC != 0. and  e.trig_Lm_MC != 0. : 
+	    if trig_T1_MC == 0. and trig_T2_MC == 0.: trigw = float(  (1 - (1-e.trig_Lp_Data)*(1-e.trig_Lm_Data)) /  (1 - (1-e.trig_Lp_MC)*(1-e.trig_Lm_MC) ))
+	    if trig_T1_MC == 0. and trig_T2_MC != 0.: trigw = float(  (1 - (1-e.trig_Lp_Data)*(1-e.trig_Lm_Data)) /  (1 - (1-e.trig_Lp_MC)*(1-e.trig_Lm_MC) ) * float(e.trig_T2_Data/e.trig_T2_MC))
+	    if trig_T1_MC != 0. and trig_T2_MC == 0.: trigw = float(  (1 - (1-e.trig_Lp_Data)*(1-e.trig_Lm_Data)*(1-e.trig_T1_Data)) /  (1 - (1-e.trig_Lp_MC)*(1-e.trig_Lm_MC)*(1-e.trig_T1_MC) ) 
+	    if trig_T1_MC != 0. and trig_T2_MC != 0.: trigw = float(  (1 - (1-e.trig_Lp_Data)*(1-e.trig_Lm_Data)*(1-e.trig_T1_Data)) /  (1 - (1-e.trig_Lp_MC)*(1-e.trig_Lm_MC)*(1-e.trig_T1_MC) ) * float(e.trig_T2_Data/e.trig_T2_MC))
+
+    if cat == 'mmem' :
+	if e.trig_Lp_MC != 0. and  e.trig_Lm_MC == 0. : 
+	    if trig_T1_MC == 0. and trig_T2_MC == 0.: trigw = float(e.trig_Lp_Data/e.trig_Lp_MC)
+	    if trig_T1_MC != 0. and trig_T2_MC == 0.: trigw = float(e.trig_Lp_Data/e.trig_Lp_MC) * float(e.trig_T2_Data/e.trig_T2_MC)
+	    if trig_T1_MC == 0. and trig_T2_MC != 0. : trigw = float(      (1 - (1-e.trig_Lp_Data)*(1-e.trig_T2_Data)) /  (1 - (1-e.trig_Lp_MC)*(1-e.trig_T2_MC) ))
+	    if trig_T1_MC != 0. and trig_T2_MC != 0. : trigw = float(      (1 - (1-e.trig_Lp_Data)*(1-e.trig_T2_Data)) /  (1 - (1-e.trig_Lp_MC)*(1-e.trig_T2_MC) ) * float(e.trig_T1_Data/e.trig_T1_MC))
+
+	if e.trig_Lp_MC == 0. and  e.trig_Lm_MC != 0. : 
+	    if trig_T1_MC == 0. and trig_T2_MC == 0.: trigw = float(e.trig_Lm_Data/e.trig_Lm_MC)
+	    if trig_T1_MC != 0. and trig_T2_MC == 0.: trigw = float(e.trig_Lm_Data/e.trig_Lm_MC) * float(e.trig_T2_Data/e.trig_T2_MC)
+	    if trig_T1_MC == 0. and trig_T2_MC != 0. : trigw = float(      (1 - (1-e.trig_Lm_Data)*(1-e.trig_T2_Data)) /  (1 - (1-e.trig_Lm_MC)*(1-e.trig_T2_MC) ))
+	    if trig_T1_MC != 0. and trig_T2_MC != 0. : trigw = float(      (1 - (1-e.trig_Lm_Data)*(1-e.trig_T2_Data)) /  (1 - (1-e.trig_Lm_MC)*(1-e.trig_T2_MC) ) * float(e.trig_T1_Data/e.trig_T1_MC))
+
+	if e.trig_Lp_MC != 0. and  e.trig_Lm_MC != 0. : 
+	    if trig_T1_MC == 0. and trig_T2_MC == 0.: trigw = float(  (1 - (1-e.trig_Lp_Data)*(1-e.trig_Lm_Data)) /  (1 - (1-e.trig_Lp_MC)*(1-e.trig_Lm_MC) ))
+	    if trig_T1_MC != 0. and trig_T2_MC == 0.: trigw = float(  (1 - (1-e.trig_Lp_Data)*(1-e.trig_Lm_Data)) /  (1 - (1-e.trig_Lp_MC)*(1-e.trig_Lm_MC) ) * float(e.trig_T1_Data/e.trig_T1_MC))
+	    if trig_T1_MC == 0. and trig_T2_MC != 0.: trigw = float(  (1 - (1-e.trig_Lp_Data)*(1-e.trig_Lm_Data)*(1-e.trig_T2_Data)) /  (1 - (1-e.trig_Lp_MC)*(1-e.trig_Lm_MC)*(1-e.trig_T2_MC) ) 
+	    if trig_T1_MC != 0. and trig_T2_MC != 0.: trigw = float(  (1 - (1-e.trig_Lp_Data)*(1-e.trig_Lm_Data)*(1-e.trig_T2_Data)) /  (1 - (1-e.trig_Lp_MC)*(1-e.trig_Lm_MC)*(1-e.trig_T2_MC) ) * float(e.trig_T1_Data/e.trig_T1_MC))
+
+    return trigw
+
+
+
+
+
 args = getArgs()
 nBins, xMin, xMax = 10, 0., 200.
 groups = ['Signal','Reducible','Rare','ZZ4L','data']
 lumi = 1000.*41.8 
-cats = { 1:'eeet', 2:'eemt', 3:'eett', 4:'mmet', 5:'mmmt', 6:'mmtt', 7:'et', 8:'mt', 9:'tt' }
+#cats = { 1:'eeet', 2:'eemt', 3:'eett', 4:'mmet', 5:'mmmt', 6:'mmtt', 7:'et', 8:'mt', 9:'tt' }
+cats = { 1:'eeet', 2:'eemt', 3:'eett', 4:'eeem', 5:'mmet', 6:'mmmt', 7:'mmtt', 8:'mmem', 9:'et', 10:'mt', 11:'tt' }
 groups = ['Signal','Reducible','Rare','ZZ4L','data']
 tightCuts = not args.looseCuts 
 dataDriven = not args.MConly
@@ -106,6 +175,9 @@ for era in ['2017B','2017C','2017D','2017E','2017F'] :
 print("tightCuts={0}".format(tightCuts))
 if tightCuts :
     outFileName = 'allGroups_{0:d}_{1:s}_LT{2:02d}.root'.format(args.year,args.sign,int(args.LTcut))
+    if args.MConly :
+        print("args.MConly is TRUE")
+        outFileName = outFileName.replace('.root','_MC.root') 
 else :
     outFileName = 'allGroups_{0:d}_{1:s}_LT{2:02d}_loose.root'.format(args.year,args.sign,int(args.LTcut))
     
@@ -119,11 +191,13 @@ fW1, fW2, fW0 = {}, {}, {}
 fW1['et'], fW2['et'], fW0['et'] = getFakeWeights(fe,ft_et)
 fW1['mt'], fW2['mt'], fW0['mt'] = getFakeWeights(fm,ft_mt)
 fW1['tt'], fW2['tt'], fW0['tt'] = getFakeWeights(f1_tt,f2_tt)
+fW1['em'], fW2['em'], fW0['em'] = getFakeWeights(fe,fm)
 
+global getsf,sf
 for group in groups :
     fOut.cd()
     hMC[group] = {}
-    for cat in cats.values()[0:6] :
+    for cat in cats.values()[0:8] :
         hName = 'h{0:s}_{1:s}_Mtt'.format(group,cat)
         hMC[group][cat] = TH1D(hName,hName,nBins,xMin,xMax)
     print("\nInstantiating TH1D {0:s}".format(hName))
@@ -143,12 +217,12 @@ for group in groups :
             print("  Failure on file {0:s}".format(inFileName))
             exit()
 
-        # resume here 
-        nEvents, totalWeight = 0, 0.
+        # resume here
+        nEvents, trigw, totalWeight = 0, 1., 0.
         sWeight = sampleWeight[nickName]
         DYJets = (nickName == 'DYJetsToLL')
         WJets  = (nickName == 'WJetsToLNu')
-        
+
         for i, e in enumerate(inTree) :
             hGroup = group
             #if e.nbtag > 0 : continue
@@ -157,14 +231,20 @@ for group in groups :
                 if DYJets : sw = sampleWeight['DY{0:d}JetsToLL'.format(e.LHE_Njets)]
                 if WJets  : sw = sampleWeight['W{0:d}JetsToLNu'.format(e.LHE_Njets)] 
             weight = e.weight*sw
-            ww = weight
-            cat = cats[e.cat]
 
+            ww = weight
+            #s = sf.checkFile()
+
+            cat = cats[e.cat]
             if tightCuts :
                 if cat[2:] == 'et' : tight1 = e.iso_1 > 0.5 
                 if cat[2:] == 'mt' : tight1 = e.iso_1 < 0.25 and e.iso_1_ID > 0.5
-                if cat[2:] == 'tt' : tight1 = e.iso_1_ID > 15 
+                if cat[2:] == 'tt' : tight1 = e.iso_1_ID > 15
                 tight2 = e.iso_2_ID > 15
+                if cat[2:] == 'em' :
+                    tight1 = e.iso_1 > 0.5
+                    tight2 = e.iso_2 < 0.25 and e.iso_2_ID > 0.5
+                    
                 if group == 'data' :
                     if dataDriven :
                         hGroup = 'Reducible'
@@ -179,17 +259,22 @@ for group in groups :
                         #print("group = data  cat={0:s} tight1={1} tight2={2} ww={3:f}".format(cat,tight1,tight2,ww))
                         if not (tight1 and tight2) : continue 
                         
-                elif group == 'Reducible' :
+                else : 
                     if not (tight1 and tight2) : continue
+                    #print("Good MC event: group={0:s} nickName={1:s} cat={2:s} gen_match_1={3:d} gen_match_2={4:d}".format(
+                    #    group,nickName,cat,e.gen_match_1,e.gen_match_2))
                     if dataDriven :   # include only events with MC matching
-                        if not e.gen_match_2 == 5 : continue
-                        if cat[2:] == 'et' or cat[2:] == 'mt' :
+                        if cat[2] == 'e' or cat[2] == 'm':
                             if not (e.gen_match_1 == 1 or e.gen_match_1 == 15) : continue
-                        else : 
+                        else :
                             if not e.gen_match_1 == 5 : continue
+                        if cat[3] == 'e' or cat[3] == 'm' :
+                            if not (e.gen_match_2 == 1 or e.gen_match_2 == 15) : continue
+                        else : 
+                            if not e.gen_match_2 == 5 : continue
                                         
-                elif group == 'Rare' or group == 'ZZ4L' or group == 'Signal' :
-                    if not (tight1 and tight2) : continue         
+                #elif group == 'Rare' or group == 'ZZ4L' or group == 'Signal' :
+                #    if not (tight1 and tight2) : continue         
                                         
             if args.sign == 'SS':
                 if e.q_1*e.q_2 < 0. : continue
@@ -203,8 +288,11 @@ for group in groups :
             if cat == 'mmtt' :
                 totalWeight += ww
                 nEvents += 1
-                    
-            hMC[hGroup][cat].Fill(e.m_sv,ww)
+
+
+            trigw_ = trigweight(e,cat)
+
+            if e.is_trig ==1 :  hMC[hGroup][cat].Fill(e.m_sv,ww*trigw_)
 
         print("{0:30s} {1:7d} {2:10.6f} {3:5d} {4:8.3f}".format(nickName,nentries,sampleWeight[nickName],nEvents,totalWeight))
         inFile.Close()

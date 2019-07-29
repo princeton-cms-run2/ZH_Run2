@@ -10,13 +10,15 @@ import generalFunctions as GF
 import outTuple
 import time
 
+
+
 def getArgs() :
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("-v","--verbose",default=0,type=int,help="Print level.")
     parser.add_argument("-f","--inFileName",default='ZHtoTauTau_test.root',help="File to be analyzed.")
     #parser.add_argument("-f","--inFileName",default='DY1JetsToLL_test.root',help="File to be analyzed.")
-    parser.add_argument("-c","--category",default='mmem',help="Event category to analyze.")
+    parser.add_argument("-c","--category",default='none',help="Event category to analyze.")
     parser.add_argument("--nickName",default='',help="MC sample nickname") 
     parser.add_argument("-d","--dataType",default='MC',help="Data or MC") 
     parser.add_argument("-o","--outFileName",default='',help="File to be used for output.")
@@ -69,8 +71,12 @@ print("args={0:s}".format(str(args)))
 maxPrint = args.maxPrint 
 
 cutCounter = {}
-cats = ['eeet','eemt','eett','eeem','mmet','mmmt','mmtt','mmem'] 
-#cats = ['mmmt','eeem','mmem'] 
+
+if args.category != 'none' :
+    cats = [args.category]
+else :
+    cats = ['eeet','eemt','eett','eeem','mmet','mmmt','mmtt','mmem']
+
 for cat in cats : cutCounter[cat] = GF.cutCounter()
 
 inFileName = args.inFileName
@@ -92,89 +98,76 @@ if MC :
     print "this is MC, will get PU etc"
     PU = GF.pileUpWeight()
     PU.calculateWeights(args.nickName,args.year)
-
-else :     print "Will run on Data...."
+else :
+    print "Will run on Data...."
+    CJ = GF.checkJSON(filein='Cert_294927-306462_13TeV_EOY2017ReReco_Collisions17_JSON.txt')
 
 outFileName = GF.getOutFileName(args).replace(".root",".ntup")
 print("Opening {0:s} as output.".format(outFileName))
 outTuple = outTuple.outTuple(outFileName)
 
-#print "nickname============== ",args.nickName,'isMC',MC
 
+        
 
 tStart = time.time()
+countMod = 1000
+isMC = True
 for count, e in enumerate(inTree) :
     for cat in cats : cutCounter[cat].count('All')
-    if count % 1000 == 0 : print("Count={0:d}".format(count))
+    if count % countMod == 0 :
+        print("Count={0:d}".format(count))
+        if count >= 10000 : countMod = 10000
     if count == nMax : break
 
-
-    #evID = GF.eventID(e)
-    #if evID == '' : continue 
-    #cutCounter[evID].count('Valid Mode')
-    #print "=======================", e.nTrigObj
     for lepMode in ['ee','mm'] :
 
         if e.nTau < 1 : continue 
         if lepMode == 'ee' :
             if e.nElectron < 2 : continue
-            for cat in cats[:3] : cutCounter[cat].count('LeptonCount')
+            for cat in cats[:4] : cutCounter[cat].count('LeptonCount')
         if lepMode == 'mm' :
             if e.nMuon < 2 : continue 
-            for cat in cats[3:] : cutCounter[cat].count('LeptonCount')
+            for cat in cats[4:] : cutCounter[cat].count('LeptonCount')
 
         goodElectronList = tauFun.makeGoodElectronList(e)
-	#TriggeredElectronList = tauFun.findETrigger(goodElectronList,e)
         goodMuonList = tauFun.makeGoodMuonList(e)
         goodElectronList, goodMuonList = tauFun.eliminateCloseLeptons(e, goodElectronList, goodMuonList)
-	TrigListEE=[]
-	TrigListMuMu=[]
+	lepList=[]
 
         if lepMode == 'ee' :
             if not e.HLT_Ele35_WPTight_Gsf : continue
             if len(goodElectronList) < 2 :  continue
-            TrigListEE = tauFun.findETrigger(goodElectronList, e)
-	    TrigListEE = list(dict.fromkeys(TrigListEE))
-            if  len(TrigListEE)<1 : continue
-            pairList = tauFun.findZ(goodElectronList,[], e)
-            for cat in cats[:3] : cutCounter[cat].count('Trigger')
+
+            pairList, lepList = tauFun.findZ(goodElectronList,[], e)
+            #protect from the case that you dont get back 2 leptons
+            if len(lepList) != 2 : continue
+            for cat in cats[:4] : cutCounter[cat].count('Trigger')
         
         if lepMode == 'mm' :
             if not e.HLT_IsoMu27 : continue
             if len(goodMuonList) < 2 : continue
-            TrigListMuMu = tauFun.findMuTrigger(goodMuonList, e)
-	    TrigListMuMu = list(dict.fromkeys(TrigListMuMu))
-            if len(TrigListMuMu)<1 : continue
-            pairList = tauFun.findZ([],goodMuonList, e)
-	
-
-        for cat in cats[3:] : cutCounter[cat].count('Trigger')
-
-
-	#print 'goodEl',len(goodElectronList),'trigEl',len(TrigListEE),len(goodMuonList),len(TrigListMuMu),lepMode
-	#print goodElectronList, TrigListEE
+            pairList, lepList = tauFun.findZ([],goodMuonList, e)
+	    for cat in cats[4:] : cutCounter[cat].count('Trigger')
         
         if len(pairList) < 1 : continue
         if lepMode == 'ee' :
-            for cat in cats[:3]: cutCounter[cat].count('LeptonPair')
+            for cat in cats[:4]: cutCounter[cat].count('LeptonPair')
         if lepMode == 'mm' :
-            for cat in cats[3:]: cutCounter[cat].count('LeptonPair')
+            for cat in cats[4:]: cutCounter[cat].count('LeptonPair')
    
-            
         LepP, LepM = pairList[0], pairList[1]
         M = (LepM + LepP).M()
         if M < 60. or M > 120. : continue
         if lepMode == 'ee' :
-            for cat in cats[:3]: cutCounter[cat].count('FoundZ')
+            for cat in cats[:4]: cutCounter[cat].count('FoundZ')
         if lepMode == 'mm' :
-            for cat in cats[3:]: cutCounter[cat].count('FoundZ')
+            for cat in cats[4:]: cutCounter[cat].count('FoundZ')
         
         for tauMode in ['et','mt','tt','em'] :
             cat = lepMode + tauMode
             if tauMode == 'tt' :
                 tauList = tauFun.getTauList(cat, e, pairList=pairList)
                 bestTauPair = tauFun.getBestTauPair(cat, e, tauList )
-                #print "==================================", lepMode, tauMode, tauList
                                     
             elif tauMode == 'et' :
                 bestTauPair = tauFun.getBestETauPair(e,cat=cat,pairList=pairList)
@@ -182,7 +175,7 @@ for count, e in enumerate(inTree) :
                 bestTauPair = tauFun.getBestMuTauPair(e,cat=cat,pairList=pairList)
             elif tauMode == 'em' :
                 bestTauPair = tauFun.getBestEMuTauPair(e,cat=cat,pairList=pairList)
-
+		
             if len(bestTauPair) < 1 :
                 if False and maxPrint > 0 and (tauMode == GF.eventID(e)[2:4]) :
                     maxPrint -= 1
@@ -195,14 +188,10 @@ for count, e in enumerate(inTree) :
                     GF.printMC(e)
                 continue
 
-            #if tauMode != 'em' : cutCounter[cat].count("GoodTauPair")
             cutCounter[cat].count("GoodTauPair")
-            #else : cutCounter[cat].count("GoodEMuPair")
 
             if tauMode == 'tt' and args.testMode.lower() == "vvtight" :
                 j1, j2 = bestTauPair[0], bestTauPair[1]
-                #print("tau_id_1 = {0:d}".format(ord(e.Tau_idMVAnewDM2017v2[j1])))
-                #print("tau_id_2 = {0:d}".format(ord(e.Tau_idMVAnewDM2017v2[j2])))
                 if ord(e.Tau_idMVAnewDM2017v2[j1]) < 64 : continue
                 if ord(e.Tau_idMVAnewDM2017v2[j2]) < 64 : continue
 
@@ -212,16 +201,21 @@ for count, e in enumerate(inTree) :
                 jt1, jt2 = bestTauPair[0], bestTauPair[1]
             else :
                 continue
-	
-            if MC : outTuple.setWeight(PU.getWeight(e.Pileup_nPU))
-	    
-            if args.dataType != "MC" or not MC:
-                isInJSON = GF.checkJSON(e.luminosityBlock,e.run)
-                #print 'this is data....',lepMode,tauMode,isInJSON
-            if not MC and not isInJSON : continue
-            
+	    #print  lepList[0], lepList[1], bestTauPair[0],bestTauPair[1],cat
+
+            if MC :
+                outTuple.setWeight(PU.getWeight(e.Pileup_nPU))
+	    else :
+                isInJSON = CJ.checkJSON(e.luminosityBlock,e.run)
+                if not isInJSON :
+                    print("Event not in JSON: Run:{0:d} LS:{1:d}".format(e.run,e.luminosityBlock))
+                    continue
+                cutCounter[cat].count("InJSON")
+                        
             SVFit = True
-            outTuple.Fill(e,SVFit,cat,jt1,jt2,LepP,LepM) 
+	    
+            if not MC : isMC = False
+            outTuple.Fill(e,SVFit,cat,jt1,jt2,LepP,LepM,lepList,isMC) 
 
             if maxPrint > 0 :
                 maxPrint -= 1
@@ -231,8 +225,8 @@ for count, e in enumerate(inTree) :
                 print("Lep1.pt() = {0:.1f} Lep2.pt={1:.1f}".format(pairList[0].Pt(),pairList[1].Pt()))
                 GF.printEvent(e)
                 print("Event ID={0:s} cat={1:s}".format(GF.eventID(e),cat))
-                #GF.printMC(e)
                 
+
 dT = time.time() - tStart
 print("Run time={0:.2f} s  time/event={1:.1f} us".format(dT,1000000.*dT/count))
 
@@ -240,7 +234,10 @@ outTuple.writeTree()
 for cat in cats :
     print('\nSummary for {0:s}'.format(cat))
     cutCounter[cat].printSummary()
-    
+
+if not MC : CJ.printJSONsummary()
+
+
 
 
 

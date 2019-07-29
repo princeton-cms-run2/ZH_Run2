@@ -407,12 +407,16 @@ def findETrigger(goodElectronList,entry):
 	if not entry.HLT_Ele35_WPTight_Gsf : return EltrigList
         for i in range(nElectron) :
 	    
-            ii = goodElectronList[i] 
+            ii = goodElectronList[i]
+            if entry.Electron_pt[ii] < 37 : continue
+            #print("Electron: pt={0:.1f} eta={1:.2f} phi={2:.2f}".format(entry.Electron_pt[ii], entry.Electron_eta[ii], entry.Electron_phi[ii]))
             #e1 = TLorentzVector()
             #e1.SetPtEtaPhiM(entry.Electron_pt[ii],entry.Electron_eta[ii],entry.Electron_phi[ii],0.0005)
 
             for iobj in range(0,entry.nTrigObj) :
 	        dR = DRobj(entry.Electron_eta[ii],entry.Electron_phi[ii], entry.TrigObj_eta[iobj], entry.TrigObj_phi[iobj])
+                #print("    Trg Obj: eta={0:.2f} phi={1:.2f} dR={2:.2f} bits={3:x}".format(
+                    #entry.TrigObj_eta[iobj], entry.TrigObj_phi[iobj], dR, entry.TrigObj_filterBits[iobj]))
 		if entry.TrigObj_filterBits[iobj] & 2  and dR < 0.5: ##that corresponds 0 WPTight
 		    EltrigList.append(ii)
                     #print "======================= iobj", iobj, "entry_Trig",entry.TrigObj_id[iobj], "Bits", entry.TrigObj_filterBits[iobj]," dR", dR, "electron",i,"ii",ii,entry.TrigObj_id[iobj]
@@ -428,10 +432,14 @@ def findMuTrigger(goodMuonList,entry):
 	if not entry.HLT_IsoMu27 : return MutrigList
         for i in range(nMuon) :
 	    
-            ii = goodMuonList[i] 
 
+            ii = goodMuonList[i] 
+	    if entry.Muon_pt[ii] < 29 : continue
+            #print("Muon: pt={0:.1f} eta={1:.4f} phi={2:.4f}".format(entry.Muon_pt[ii], entry.Muon_eta[ii], entry.Muon_phi[ii]))
             for iobj in range(0,entry.nTrigObj) :
 	        dR = DRobj(entry.Muon_eta[ii],entry.Muon_phi[ii], entry.TrigObj_eta[iobj], entry.TrigObj_phi[iobj])
+                #print("    Trg Obj: eta={0:.4f} phi={1:.4f} dR={2:.4f} bits={3:x}".format(
+                #    entry.TrigObj_eta[iobj], entry.TrigObj_phi[iobj], dR, entry.TrigObj_filterBits[iobj]))
 		if entry.TrigObj_filterBits[iobj] & 8 and entry.TrigObj_filterBits[iobj] & 2 and dR < 0.5: ##that corresponds to Muon Trigger
 		    MutrigList.append(ii)
                 #print "======================= and === iobj", iobj, entry.TrigObj_id[iobj], "Bits", entry.TrigObj_filterBits[iobj]," dR", dR, "electron",i
@@ -439,7 +447,7 @@ def findMuTrigger(goodMuonList,entry):
     return MutrigList
 
 def findZ(goodElectronList, goodMuonList, entry) :
-    pairList, mZ, bestDiff = [], 91.19, 99999. 
+    selpair,pairList, mZ, bestDiff = [],[], 91.19, 99999. 
     nElectron = len(goodElectronList)
     if nElectron > 1 :
         for i in range(nElectron) :
@@ -457,8 +465,10 @@ def findZ(goodElectronList, goodMuonList, entry) :
                         bestDiff = abs(mass-mZ)
                         if entry.Electron_charge[ii] > 0. :
                             pairList = [e1,e2]
+                            selpair = [ii,jj]
                         else : 
                             pairList = [e2,e1]
+                            selpair = [jj,ii]
                             
     nMuon = len(goodMuonList)
     if nMuon > 1 : 
@@ -478,11 +488,14 @@ def findZ(goodElectronList, goodMuonList, entry) :
                         bestDiff = abs(mass-mZ)
                         if entry.Muon_charge[ii] > 0. :
                             pairList = [mu1,mu2]
+                            selpair = [ii,jj]
                         else :
                             pairList = [mu2,mu1]
+                            selpair = [jj,ii]
 
-    # first particle of pair is positive 
-    return pairList
+    # first particle of pair is positive
+    #print selpair
+    return pairList, selpair
                     
                     
 def findZmumu(goodMuonList, entry) :
