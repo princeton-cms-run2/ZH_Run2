@@ -36,8 +36,12 @@ class dupeDetector() :
         return
 
 args = getArgs()
+era=str(args.year)
 nBins, xMin, xMax = 10, 0., 200.
-lumi = 1000.*41.8 
+lumi = 1000.
+if era == '2016' : lumi *= 35.92
+if era == '2017' : lumi *= 41.53
+if era == '2018' : lumi *= 59.74
 cats = { 1:'eeet', 2:'eemt', 3:'eett', 4:'mmet', 5:'mmmt', 6:'mmtt', 7:'et', 8:'mt', 9:'tt' }
 
 # use this utility class to screen out duplicate events
@@ -45,7 +49,7 @@ DD = dupeDetector()
 
 
 # open an output file
-fOut = TFile('FakeRates.root', 'recreate' )
+fOut = TFile('FakeRates_'+era+.'root', 'recreate' )
 
 # create histograms
 hBase, hTight = {}, {}

@@ -249,10 +249,12 @@ class pileUpWeight() :
                 xSec = 1000.*float(line.split(',')[2])
                  
         # get MC pileup histograms
-        fMC = TFile('MC_{0:d}.root'.format(year))
+        MCfile = "MC_{0:d}.root".format(year)
+        print("Opening MC pileup file = {0:s}".format(MCfile))
+        fMC = TFile(MCfile)
+        print("fMC={0:s}".format(str(fMC)))
         hMC = fMC.Get('h{0:s}'.format(nickName))
         print("hMC={0:s}".format(str(hMC)))
-
         # check to be sure that data and MC histograms are commensurate
         if hData.GetBinWidth(1) != hMC.GetBinWidth(1) or hData.GetBinLowEdge(1) != hMC.GetBinLowEdge(1) or hData.GetNbinsX() != hMC.GetNbinsX() :
             print("Error in generalFunctions.pileUpWeight().calculateWeights()\nData and MC histograms not commensurate.") 
@@ -373,34 +375,30 @@ def eventID(e) :
     return cat
 
 
-
-
-def checkJSON(lumi,run,filein='Cert_294927-306462_13TeV_EOY2017ReReco_Collisions17_JSON.txt') :
-
-    input_file = open (filein)
-    json_array = json.load(input_file)
-
-
-    for k, v in json_array.items():
-        if k == str(run): 
-            for list_of_ints in v:
-                #print len(list_of_ints),'start',list_of_ints[0],'end',list_of_ints[1]
-		#if int(lumi) >= int(list_of_ints[0]) and int(lumi)<= int(list_of_ints[1]) :
-		#print "run",run," and you lumi is good! block ",v,"running on lumi",lumi,"first",list_of_ints[0],"last",list_of_ints[1]
-                #else :
-		#    print "run",run," and you lumi is bad ? ",v,"running on lumi",lumi,"first",list_of_ints[0],"last",list_of_ints[1]
-		
-		    #print len(list_of_ints),'vvvvvvvvvvv',v,len(k),list_of_ints[len(k)-1]
-		        #print "run",run," and you lumi is not good, Sorry ",v,'lumi ',lumi,"first",list_of_ints[0][0],"last",list_of_ints[1][0],'all ?',v,len(v)
-		        #return False
-		a = np.array(list_of_ints)
-		#print a
-                #for integer in list_of_ints:
-		#lumi=193
-                if (a >= int(lumi)).any() and (a <= int(lumi)).any() :
-	            #print '=============',a.all(), a,lumi,list_of_ints, run
+class checkJSON() :
+    
+    def __init__(self,filein='Cert_294927-306462_13TeV_EOY2017ReReco_Collisions17_JSON.txt') :
+        self.good, self.bad  = 0, 0  
+        input_file = open (filein)
+        self.json_array = json.load(input_file)        
+        
+    def checkJSON(self,LS,run) :
+        try :
+            LSlist = self.json_array[str(run)]
+            for LSrange in LSlist :
+                if LS >= LSrange[0] and LS <= LSrange[1] :
+                    self.good += 1
                     return True
-                else : return False
+        except KeyError :
+            pass
+        
+        self.bad += 1
+        return False
+        
+    def printJSONsummary(self) :
+        print("check JSON summary:  nCalls={0:d} nGood={1:d} nBad={2:d}".format(self.good+self.bad,self.good,self.bad))
+        return
+    
 
     
     

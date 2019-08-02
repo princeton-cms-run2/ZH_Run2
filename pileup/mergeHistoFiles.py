@@ -9,10 +9,12 @@ def getArgs() :
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("-v","--verbose",default=0,type=int,help="Print level.")
-    parser.add_argument("-f","--inFileName",default='./MCsamples.csv',help="File to be analyzed.")
+    parser.add_argument("-f","--inFileName",default='./MCsamples_2017.csv',help="File to be analyzed.")
+    parser.add_argument("-y","--year",default=2017,type=str,help="Data taking period, 2016, 2017 or 2018")
     return parser.parse_args()
 
 args = getArgs()
+era=str(args.year)
 
 # get list of nickNames from input file
 nickNames = []
@@ -28,8 +30,8 @@ print("len(nickNames)={0:d}".format(len(nickNames)))
     
 hIn, hW = {}, {}
 for nickName in nickNames :
-    os.system("hadd -f ./{0:s}/temp.root ./{0:s}/{0:s}_*.root".format(nickName))
-    inFile = TFile.Open("./{0:s}/temp.root".format(nickName))
+    os.system("hadd -f ./{0:s}_{1:s}/temp.root ./{0:s}_{1:s}/{0:s}_*.root".format(nickName,era))
+    inFile = TFile.Open("./{0:s}_{1:s}/temp.root".format(nickName,era))
     inFile.cd()
     hh = inFile.Get("hMC")
     h2 = inFile.Get("hWeight")

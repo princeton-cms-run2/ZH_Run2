@@ -14,6 +14,7 @@ def getArgs() :
     return parser.parse_args()
 
 args = getArgs()
+era = str(args.year)
 cats = { 1:'eeet', 2:'eemt', 3:'eett', 4:'mmet', 5:'mmmt', 6:'mmtt', 7:'et', 8:'mt', 9:'tt' }
 hList = ['e_et','m_mt','t_et','t_mt','t1_tt','t2_tt']
 
@@ -75,7 +76,7 @@ if True :
         c11.Update()
     
     c11.Draw()
-    c11.SaveAs("Tight_Base_Data_Hist.png")
+    c11.SaveAs("Tight_Base_Data_Hist_"+era+".png")
     raw_input()
 
 if True :
@@ -114,7 +115,7 @@ if True :
         c12.Update()
     
     c12.Draw()
-    c12.SaveAs("Tight_Base_MC_Hist.png")
+    c12.SaveAs("Tight_Base_MC_Hist_"+era+".png")
     raw_input()
 
 if True :
@@ -153,7 +154,7 @@ if True :
         c13.Update()
     
     c13.Draw()
-    c13.SaveAs("Tight_Base_MC_Hist.png")
+    c13.SaveAs("Tight_Base_MC_Hist_"+era+".png")
     raw_input()
 
 
@@ -207,7 +208,7 @@ if True :
         c1.Update()
     
     c1.Draw()
-    c1.SaveAs("Tight_Base_Data.png")
+    c1.SaveAs("Tight_Base_Data_"+era+".png")
     raw_input()
 
 if True :
@@ -252,7 +253,7 @@ if True :
         c2.Update()
     
     c2.Draw()
-    c2.SaveAs("Tight_Base_MC.png")
+    c2.SaveAs("Tight_Base_MC_"+era+".png")
     raw_input()
 
 if True :
@@ -297,7 +298,7 @@ if True :
         c3.Update()
     
     c3.Draw()
-    c3.SaveAs("Tight_MC_Tight_Data.png")
+    c3.SaveAs("Tight_MC_Tight_Data_"+era+".png")
     raw_input()
 
 
@@ -358,7 +359,7 @@ for i, h in enumerate(hList) :
     c4.Update()
     
 c4.Draw()
-c4.SaveAs("Corrected_Fake.png")
+c4.SaveAs("Corrected_Fake_"+era+".png")
 raw_input()
 
 

@@ -11,9 +11,9 @@ def getArgs() :
 def beginBatchScript(baseFileName) :
     outLines = ['#!/bin/tcsh\n']
     outLines.append("source /cvmfs/cms.cern.ch/cmsset_default.csh\n")
-    outLines.append("setenv SCRAM_ARCH slc6_amd64_gcc630\n")
-    outLines.append("eval `scramv1 project CMSSW CMSSW_9_4_12`\n")
-    outLines.append("cd CMSSW_9_4_12/src/\n")
+    outLines.append("setenv SCRAM_ARCH slc6_amd64_gcc700\n")
+    outLines.append("eval `scramv1 project CMSSW CMSSW_10_2_9`\n")
+    outLines.append("cd CMSSW_10_2_9/src/\n")
     outLines.append("eval `scramv1 runtime -csh`\n")
     outLines.append("echo ${_CONDOR_SCRATCH_DIR}\n")
     outLines.append("cd ${_CONDOR_SCRATCH_DIR}\n")
@@ -63,8 +63,8 @@ for nFile, file in enumerate(files) :
 
 # now that .csh files have been generated make a list of corresponding .jdl files
 
-dir = '/uscms_data/d2/marlow/CMSSW_10_2_9/src/pileup/'
-funcsDir = '/uscms_data/d2/marlow/CMSSW_10_2_9/src/funcs/'
+dir = '/uscms_data/d3/alkaloge/ZH/CMSSW_10_2_9/src/pileup/'
+funcsDir = '/uscms_data/d3/alkaloge/ZH/CMSSW_10_2_9/src/funcs/'
 
 for file in scriptList :
     base = file[:-4] 

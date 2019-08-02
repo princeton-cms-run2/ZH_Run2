@@ -36,6 +36,7 @@ class dupeDetector() :
         return
 
 args = getArgs()
+era = str(args.year)
 nBins, xMin, xMax = 10, 0., 200.
 lumi = 1000.*41.8 
 cats = { 1:'eeet', 2:'eemt', 3:'eett', 4:'mmet', 5:'mmmt', 6:'mmtt', 7:'et', 8:'mt', 9:'tt' }
@@ -129,7 +130,7 @@ nickNames = []
 #       0                 1       2        3        4        5            6
 # GluGluHToTauTau	Signal	48.58	9259000	198813970.4	 	/GluGluHToTauTau_...
 # make a first pass to get the weights 
-for line in open('MCsamples.csv','r').readlines() :
+for line in open('MCsamples_'+era+'.csv','r').readlines() :
     vals = line.split(',')
     nickName = vals[0]
     group = vals[1]
