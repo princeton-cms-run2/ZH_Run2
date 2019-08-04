@@ -7,10 +7,12 @@ import os
 def getArgs() :
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument("-f","--inFile",default='MCsamples.csv',help="Input file name.") 
+    parser.add_argument("-f","--inFile",default='MCsamples_2017.csv',help="Input file name.") 
+    parser.add_argument("-y","--year",default=2017,type=int,help="Data taking period, 2016, 2017 or 2018")
     return parser.parse_args()
 
 args = getArgs() 
+era=str(args.year)
 outLines = []
 cwd = os.getcwd()
 for line in open(args.inFile,'r').readlines() :
@@ -23,8 +25,8 @@ for line in open(args.inFile,'r').readlines() :
 
     mode = 'anaXRD'
     
-    outLines.append("mkdir {0:s}\ncd {0:s}\n".format(nickname))
-    outLines.append("python ../makeCondor.py --dataSet {0:s} --nickName {1:s} --mode {2:s} \n".format(dataset,nickname, mode))
+    outLines.append("mkdir {0:s}_{1:s}\ncd {0:s}_{1:s}\n".format(nickname,era))
+    outLines.append("python ../makeCondor.py --dataSet {0:s} --nickName {1:s} --mode {2:s} --year {3:s} \n".format(dataset,nickname, mode,era))
     outLines.append("cd {0:s}\n".format(cwd))
 
 open('runMC.csh','w').writelines(outLines)

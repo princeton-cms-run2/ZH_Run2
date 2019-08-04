@@ -2,7 +2,7 @@ import sys
 import glob
 import os
 
-files = glob.glob('*')
+files = glob.glob('ZHTo*')
 print("files={0:s}".format(str(files)))
 for file in files :
     print("file={0:s} isDir={1}".format(file,os.path.isdir(file)))

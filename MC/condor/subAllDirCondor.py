@@ -2,7 +2,7 @@ import sys
 import glob
 import os
 
-files = glob.glob('*')
+files = glob.glob('ZHTo*')
 for file in files :
     if not os.path.isdir(file) : continue
     os.chdir('./{0:s}'.format(file))

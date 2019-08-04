@@ -6,6 +6,7 @@ def getArgs() :
     parser.add_argument("--dataSet",default=defDS,help="Data set name.") 
     parser.add_argument("--nickName",default='MCpileup',help="Data set nick name.") 
     parser.add_argument("-m","--mode",default='anaXRD',help="Mode (script to run).")
+    parser.add_argument("-y","--year",default=2017,type=str,help="Data taking period, 2016, 2017 or 2018")
     return parser.parse_args()
 
 def beginBatchScript(baseFileName) :
@@ -27,6 +28,7 @@ def getFileName(line) :
 import os
 
 args = getArgs()
+era = str(args.year)
 
 # sample query 
 # dasgoclient --query="file dataset=/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8*/*/NANOAOD*" --limit=0   
@@ -83,7 +85,7 @@ for file in scriptList :
     outLines.append('Output = {0:s}.out\n'.format(base))
     outLines.append('Error = {0:s}.err\n'.format(base))
     outLines.append('Log = {0:s}.log\n'.format(base))
-    outLines.append('transfer_input_files = {0:s}ZH.py, {0:s}MC_2017.root, {0:s}data_pileup_2017.root, {0:s}MCsamples.csv,'.format(dir))
+    outLines.append('transfer_input_files = {0:s}ZH.py, {0:s}MC_2017.root, {0:s}data_pileup_2017.root, {0:s}MCsamples_'+era+'.csv,'.format(dir))
     outLines.append('{0:s}tauFun.py, {0:s}generalFunctions.py, {0:s}outTuple.py,'.format(funcsDir))
     outLines.append('{0:s}FastMTT.h, {0:s}MeasuredTauLepton.h, {0:s}svFitAuxFunctions.h,'.format(SVFitDir)) 
     outLines.append('{0:s}FastMTT.cc, {0:s}MeasuredTauLepton.cc, {0:s}svFitAuxFunctions.cc\n'.format(SVFitDir))
