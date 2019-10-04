@@ -105,9 +105,12 @@ else :
     if args.year== '2017' : CJ = GF.checkJSON(filein='Cert_294927-306462_13TeV_EOY2017ReReco_Collisions17_JSON.txt')
     if args.year== '2018' : CJ = GF.checkJSON(filein='Cert_314472-325175_13TeV_17SeptEarlyReReco2018ABC_PromptEraD_Collisions18_JSON.txt')
 
+
+era=str(args.year)
+
 outFileName = GF.getOutFileName(args).replace(".root",".ntup")
 print("Opening {0:s} as output.".format(outFileName))
-outTuple = outTuple.outTuple(outFileName)
+outTuple = outTuple.outTuple(outFileName, era)
 
 
 tStart = time.time()
@@ -218,7 +221,7 @@ for count, e in enumerate(inTree) :
             SVFit = True
 	    
             if not MC : isMC = False
-            outTuple.Fill(e,SVFit,cat,jt1,jt2,LepP,LepM,lepList,isMC) 
+            outTuple.Fill(e,SVFit,cat,jt1,jt2,LepP,LepM,lepList,isMC,era) 
 
             if maxPrint > 0 :
                 maxPrint -= 1

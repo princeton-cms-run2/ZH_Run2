@@ -53,6 +53,8 @@ for nFile, file in enumerate(files) :
 
     outFileName = "{0:s}_{1:03d}.root".format(args.nickName,nFile+1)
     outLines.append("xrdcp root://cms-xrd-global.cern.ch/{0:s} inFile.root\n".format(fileName)) 
+    outLines.append("tar -zxvf SFs.tar.gz\n")
+    outLines.append("cp MCsamples_*csv MCsamples.csv\n")
     outLines.append("python ZH.py -f inFile.root -o {0:s} --nickName {1:s}\n".format(outFileName,args.nickName))
     outLines.append("mv inFile.csv {0:s}\n".format(outFileName.replace(".root",".csv")))
     outLines.append("rm inFile.root\n")
@@ -82,7 +84,7 @@ for file in scriptList :
     outLines.append('Error = {0:s}.err\n'.format(base))
     outLines.append('Log = {0:s}.log\n'.format(base))
     print("dir={0:s}".format(dir))
-    outLines.append('transfer_input_files = {0:s}ZH.py, {0:s}MC_2017.root, {0:s}data_pileup_2017.root, {0:s}MCsamples_{1:s}.csv,'.format(dir,args.year))
+    outLines.append('transfer_input_files = {0:s}ZH.py, {0:s}MC_2017.root, {0:s}data_pileup_2017.root, {0:s}MCsamples_{1:s}.csv, {0:s}ScaleFactor.py, {0:s}SFs.tar.gz, '.format(dir,args.year))
     outLines.append('{0:s}tauFun.py, {0:s}generalFunctions.py, {0:s}outTuple.py,'.format(funcsDir))
     outLines.append('{0:s}FastMTT.h, {0:s}MeasuredTauLepton.h, {0:s}svFitAuxFunctions.h,'.format(SVFitDir)) 
     outLines.append('{0:s}FastMTT.cc, {0:s}MeasuredTauLepton.cc, {0:s}svFitAuxFunctions.cc\n'.format(SVFitDir))

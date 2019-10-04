@@ -2,6 +2,7 @@ import sys
 import glob
 import os
 
+#files = glob.glob('ZH*2017*')
 files = glob.glob('*2017*')
 for file in files :
     if not os.path.isdir(file) : continue
