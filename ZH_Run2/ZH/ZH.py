@@ -146,7 +146,7 @@ for count, e in enumerate(inTree) :
             for cat in cats[:4] : cutCounter[cat].count('Trigger')
         
         if lepMode == 'mm' :
-            if args.year == '2016' and not e.HLT_IsoMu24 and not e.HLT IsoTkMu24 and not e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ : continue
+            if args.year == '2016' and not e.HLT_IsoMu24 and not e.HLT_IsoTkMu24 and not e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ : continue
             if args.year == '2017' and not e.HLT_IsoMu27 : continue
             if len(goodMuonList) < 2 : continue
             pairList, lepList = tauFun.findZ([],goodMuonList, e)
