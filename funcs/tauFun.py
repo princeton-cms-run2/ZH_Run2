@@ -399,16 +399,18 @@ def eliminateCloseLeptons(entry, goodElectronList, goodMuonList) :
 
     return goodElectronList, goodMuonList
 
-def findETrigger(goodElectronList,entry):
+def findETrigger(goodElectronList,entry,era):
     EltrigList =[]
     nElectron = len(goodElectronList)
     
     if nElectron > 1 :
-	if not entry.HLT_Ele35_WPTight_Gsf : return EltrigList
+	if era == '2016' and not entry.HLT_Ele27_WPTight_Gsf : return EltrigList
+	if era == '2017' and not entry.HLT_Ele35_WPTight_Gsf : return EltrigList
         for i in range(nElectron) :
 	    
             ii = goodElectronList[i]
-            if entry.Electron_pt[ii] < 37 : continue
+            if era == '2016' and entry.Electron_pt[ii] < 29 : continue
+            if era == '2017' and entry.Electron_pt[ii] < 37 : continue
             #print("Electron: pt={0:.1f} eta={1:.2f} phi={2:.2f}".format(entry.Electron_pt[ii], entry.Electron_eta[ii], entry.Electron_phi[ii]))
             #e1 = TLorentzVector()
             #e1.SetPtEtaPhiM(entry.Electron_pt[ii],entry.Electron_eta[ii],entry.Electron_phi[ii],0.0005)
@@ -424,23 +426,25 @@ def findETrigger(goodElectronList,entry):
     return EltrigList
 
 
-def findMuTrigger(goodMuonList,entry):
+def findMuTrigger(goodMuonList,entry,era):
     MutrigList =[]
     nMuon = len(goodMuonList)
     
     if nMuon > 1 :
-	if not entry.HLT_IsoMu27 : return MutrigList
+	if era == '2016' and not entry.HLT_IsoMu24 : return MutrigList
+	if era == '2017' and not entry.HLT_IsoMu27 : return MutrigList
         for i in range(nMuon) :
 	    
 
             ii = goodMuonList[i] 
-	    if entry.Muon_pt[ii] < 29 : continue
+	    if era == '2016' and entry.Muon_pt[ii] < 26 : continue
+	    if era == '2017' and entry.Muon_pt[ii] < 29 : continue
             #print("Muon: pt={0:.1f} eta={1:.4f} phi={2:.4f}".format(entry.Muon_pt[ii], entry.Muon_eta[ii], entry.Muon_phi[ii]))
             for iobj in range(0,entry.nTrigObj) :
 	        dR = DRobj(entry.Muon_eta[ii],entry.Muon_phi[ii], entry.TrigObj_eta[iobj], entry.TrigObj_phi[iobj])
                 #print("    Trg Obj: eta={0:.4f} phi={1:.4f} dR={2:.4f} bits={3:x}".format(
                 #    entry.TrigObj_eta[iobj], entry.TrigObj_phi[iobj], dR, entry.TrigObj_filterBits[iobj]))
-		if entry.TrigObj_filterBits[iobj] & 8 and entry.TrigObj_filterBits[iobj] & 2 and dR < 0.5: ##that corresponds to Muon Trigger
+		if entry.TrigObj_filterBits[iobj] & 8 or entry.TrigObj_filterBits[iobj] & 2 and dR < 0.5: ##that corresponds to Muon Trigger
 		    MutrigList.append(ii)
                 #print "======================= and === iobj", iobj, entry.TrigObj_id[iobj], "Bits", entry.TrigObj_filterBits[iobj]," dR", dR, "electron",i
 

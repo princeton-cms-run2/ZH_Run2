@@ -12,9 +12,9 @@ def getArgs() :
 def beginBatchScript(baseFileName) :
     outLines = ['#!/bin/tcsh\n']
     outLines.append("source /cvmfs/cms.cern.ch/cmsset_default.csh\n")
-    outLines.append("setenv SCRAM_ARCH slc6_amd64_gcc630\n")
-    outLines.append("eval `scramv1 project CMSSW CMSSW_9_4_12`\n")
-    outLines.append("cd CMSSW_9_4_12/src/\n")
+    outLines.append("setenv SCRAM_ARCH slc6_amd64_gcc700\n")
+    outLines.append("eval `scramv1 project CMSSW CMSSW_10_2_16_patch1`\n")
+    outLines.append("cd CMSSW_10_2_16_patch1/src\n")
     outLines.append("eval `scramv1 runtime -csh`\n")
     outLines.append("echo ${_CONDOR_SCRATCH_DIR}\n")
     outLines.append("cd ${_CONDOR_SCRATCH_DIR}\n")
@@ -32,8 +32,8 @@ era = str(args.year)
 
 # sample query 
 # dasgoclient --query="file dataset=/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8*/*/NANOAOD*" --limit=0   
-query = '"file dataset={0:s}"'.format(args.dataSet)
-command = "dasgoclient --query={0:s} --limit=0 > fileList.txt".format(query)
+query = '"file dataset={0:s}"'.format(args.dataSet+" instance=prod/phys03")
+command = "dasgoclient --query={0:s} --limit=0  > fileList.txt".format(query)
 print("Running in {0:s} mode.  Command={1:s}".format(args.mode,command))
 os.system(command)
     
@@ -53,6 +53,8 @@ for nFile, file in enumerate(files) :
 
     outFileName = "{0:s}_{1:03d}.root".format(args.nickName,nFile+1)
     outLines.append("xrdcp root://cms-xrd-global.cern.ch/{0:s} inFile.root\n".format(fileName)) 
+    outLines.append("tar -zxvf SFs.tar.gz\n")
+    outLines.append("cp MCsamples_*csv MCsamples.csv\n")
     outLines.append("python ZH.py -f inFile.root -o {0:s} --nickName {1:s}\n".format(outFileName,args.nickName))
     outLines.append("mv inFile.csv {0:s}\n".format(outFileName.replace(".root",".csv")))
     outLines.append("rm inFile.root\n")
@@ -67,16 +69,12 @@ for nFile, file in enumerate(files) :
 
 #dir = '/uscms_data/d3/alkaloge/ZH/CMSSW_10_2_9/src/MC/'
 
-dir = os.getenv("CMSSW_BASE")+"/src/MC/"
-dirData = os.getenv("CMSSW_BASE")+"/src/data/"
-funcsDir = os.getenv("CMSSW_BASE")+"/src/funcs/"
-SVFitDir = os.getenv("CMSSW_BASE")+"/src/SVFit/"
+dir = os.getenv("CMSSW_BASE")+"/src/ZH_Run2/MC/"
+dirData = os.getenv("CMSSW_BASE")+"/src/ZH_Run2/data/"
+funcsDir = os.getenv("CMSSW_BASE")+"/src/ZH_Run2/funcs/"
+SVFitDir = os.getenv("CMSSW_BASE")+"/src/ZH_Run2/SVFit/"
 
-'''
-#dirData = '/uscms_data/d3/alkaloge/ZH/CMSSW_10_2_9/src/data/'
-funcsDir = '/uscms_data/d3/alkaloge/ZH/CMSSW_10_2_9/src/funcs/'
-SVFitDir = '/uscms_data/d3/alkaloge/ZH/CMSSW_10_2_9/src/SVFit/'
-'''
+print("dir={0:s}".format(dir))
 
 for file in scriptList :
     base = file[:-4] 
@@ -85,7 +83,8 @@ for file in scriptList :
     outLines.append('Output = {0:s}.out\n'.format(base))
     outLines.append('Error = {0:s}.err\n'.format(base))
     outLines.append('Log = {0:s}.log\n'.format(base))
-    outLines.append('transfer_input_files = {0:s}ZH.py, {0:s}MC_2017.root, {0:s}data_pileup_2017.root, {0:s}MCsamples_'+era+'.csv,'.format(dir))
+    print("dir={0:s}".format(dir))
+    outLines.append('transfer_input_files = {0:s}ZH.py, {0:s}MC_2017.root, {0:s}data_pileup_2017.root, {0:s}MCsamples_{1:s}.csv, {0:s}ScaleFactor.py, {0:s}SFs.tar.gz, '.format(dir,args.year))
     outLines.append('{0:s}tauFun.py, {0:s}generalFunctions.py, {0:s}outTuple.py,'.format(funcsDir))
     outLines.append('{0:s}FastMTT.h, {0:s}MeasuredTauLepton.h, {0:s}svFitAuxFunctions.h,'.format(SVFitDir)) 
     outLines.append('{0:s}FastMTT.cc, {0:s}MeasuredTauLepton.cc, {0:s}svFitAuxFunctions.cc\n'.format(SVFitDir))
@@ -94,10 +93,6 @@ for file in scriptList :
     outLines.append('x509userproxy = $ENV(X509_USER_PROXY)\n')
     outLines.append('Queue 1\n')
     open('{0:s}.jdl'.format(base),'w').writelines(outLines)
-
-    
-
-
 
 
     

@@ -1,7 +1,4 @@
 # output ntuple for H->tautau analysis for CMSSW_10_2_X
-# output ntuple for H->tautau analysis for CMSSW_10_2_X
-# output ntuple for H->tautau analysis for CMSSW_10_2_X
-# output ntuple for H->tautau analysis for CMSSW_10_2_X
 
 from ROOT import TLorentzVector
 from math import sqrt, sin, cos, pi
@@ -14,7 +11,7 @@ import ScaleFactor as SF
 
 class outTuple() :
     
-    def __init__(self,fileName):
+    def __init__(self,fileName, era):
         from array import array
         from ROOT import TFile, TTree
 
@@ -32,7 +29,7 @@ class outTuple() :
         self.sf_EleTrig35.ScaleFactor("SFs/LeptonEfficiencies/Electron/Run2017/Electron_Ele35.root")
         #self.SF_muonIdIso = SF.SFs()
         #self.sf_SF_muonIdIso.ScaleFactor("SFs/LeptonEfficiencies/Muon/Run2017/Muon_IsoMu27.root")
-
+        print 'ERAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',era
      
         self.f = TFile( fileName, 'recreate' )
         self.t = TTree( 'Events', 'Output tree' )
@@ -385,7 +382,7 @@ class outTuple() :
         ttP4 = FMTT.getBestP4()
         return ttP4.M(), ttP4.Mt() 
     
-    def Fill(self,entry,SVFit,cat,jt1,jt2,LepP,LepM,lepList,isMC) :
+    def Fill(self,entry,SVFit,cat,jt1,jt2,LepP,LepM,lepList,isMC,era) :
 
         # jt1 and jt2 point to the selected tau candidates according to the table below.
         # if e.g., channel = 'et', the jt1 points to the electron list and jt2 points to the tau list.
@@ -403,8 +400,8 @@ class outTuple() :
 
         chanl = cat[:-2]
         if isMC :
-		if 'ee' in chanl : TrigListLep = tauFun.findETrigger(lepList, entry)
-		if 'mm' in chanl : TrigListLep = tauFun.findMuTrigger(lepList, entry)
+		if 'ee' in chanl : TrigListLep = tauFun.findETrigger(lepList, entry, era)
+		if 'mm' in chanl : TrigListLep = tauFun.findMuTrigger(lepList, entry, era)
 		TrigListLep = list(dict.fromkeys(TrigListLep))
 
 		if len(TrigListLep) == 1 :
@@ -492,7 +489,7 @@ class outTuple() :
             if isMC: 
 		    tauListE=[jt1]
 		    TrigListETau=[]
-		    TrigListETau = tauFun.findETrigger(tauListE, entry)
+		    TrigListETau = tauFun.findETrigger(tauListE, entry, era)
 
 		    if len(TrigListETau) == 1 :
 			sf_T1_MC = self.sf_EleTrig35.get_EfficiencyMC(entry.Electron_pt[jt1],entry.Electron_eta[jt1])
@@ -535,9 +532,9 @@ class outTuple() :
 		    tauListE=[jt1]
 		    tauListMu=[jt2]
 		    TrigListETau=[]
-		    TrigListETau = tauFun.findETrigger(tauListE, entry)
+		    TrigListETau = tauFun.findETrigger(tauListE, entry, era)
 		    TrigListMuTau=[]
-		    TrigListMuTau = tauFun.findETrigger(tauListMu, entry)
+		    TrigListMuTau = tauFun.findETrigger(tauListMu, entry, era)
 
 		    if len(TrigListETau) == 1 :
 			sf_T1_MC = self.sf_EleTrig35.get_EfficiencyMC(entry.Electron_pt[jt1],entry.Electron_eta[jt1])
@@ -566,7 +563,7 @@ class outTuple() :
 		    tauListMu=[]
 		    tauListMu=[jt1]
 		    TrigListMuTau=[]
-		    TrigListMuTau = tauFun.findETrigger(tauListMu, entry)
+		    TrigListMuTau = tauFun.findETrigger(tauListMu, entry, era)
 
 		    if len(TrigListMuTau) == 1 :
 			sf_T1_MC = self.sf_MuonTrigIso27.get_EfficiencyMC(entry.Muon_pt[jt1],entry.Muon_eta[jt1])
