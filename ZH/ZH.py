@@ -1,10 +1,15 @@
-#
-# make sync ntuple for ZH tau tau analysis
-# takes nanoAOD file as input 
-#
-from ROOT import TFile, TTree, TH1D, TCanvas, TLorentzVector  
+#!/usr/bin/env python
+
+""" ZH.py: makes an nTuple for the ZH->tautau analysis """
+
+__author__ = "Dan Marlow, Alexis Kalogeropoulos, Gage DeZoort" 
+__version__ = "GageDev_v1.1"
+
+import sys
 import numpy as np
+from ROOT import TFile, TTree, TH1D, TCanvas, TLorentzVector  
 from math import sqrt, pi
+sys.path.insert(1,'../funcs/')
 import tauFun
 import generalFunctions as GF 
 import outTuple
