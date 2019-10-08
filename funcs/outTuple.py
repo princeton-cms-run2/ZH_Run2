@@ -9,6 +9,7 @@ import sys
 sys.path.append('SFs')
 import ScaleFactor as SF
 
+
 class outTuple() :
     
     def __init__(self,fileName, era):
@@ -29,7 +30,7 @@ class outTuple() :
         self.sf_EleTrig35.ScaleFactor("SFs/LeptonEfficiencies/Electron/Run2017/Electron_Ele35.root")
         #self.SF_muonIdIso = SF.SFs()
         #self.sf_SF_muonIdIso.ScaleFactor("SFs/LeptonEfficiencies/Muon/Run2017/Muon_IsoMu27.root")
-        print 'ERAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',era
+        #print 'ERAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',era
      
         self.f = TFile( fileName, 'recreate' )
         self.t = TTree( 'Events', 'Output tree' )
@@ -72,6 +73,7 @@ class outTuple() :
         self.byIsolationMVA3oldDMwLTraw_1 = array('f',[0])
         self.trigweight_1 = array('f',[0])
         self.idisoweight_1 = array('f',[0])
+        self.decayMode_1 = array('l',[0])
 
         self.pt_2 = array('f',[0])
         self.phi_2 = array('f',[0])
@@ -96,6 +98,7 @@ class outTuple() :
         self.byIsolationMVA3oldDMwLTraw_2 = array('f',[0])
         self.trigweight_2 = array('f',[0])
         self.idisoweight_2 = array('f',[0])
+        self.decayMode_2 = array('l',[0])
 
         # di-tau variables
         self.pt_tt  = array('f',[0])
@@ -196,6 +199,7 @@ class outTuple() :
         self.t.Branch('byIsolationMVA3oldDMwLTraw_1', self.byIsolationMVA3oldDMwLTraw_1, 'byIsolationMVA3oldDMwLTraw_1/F')
         self.t.Branch('trigweight_1', self.trigweight_1, 'trigweight_1/F')
         self.t.Branch('idisoweight_1', self.idisoweight_1, 'idisoweight_1/F')
+        self.t.Branch('decayMode_1', self.decayMode_1, 'decayMode_1/I')
 
         self.t.Branch('pt_2', self.pt_2, 'pt_2/F')
         self.t.Branch('phi_2', self.phi_2, 'phi_2/F')
@@ -220,6 +224,7 @@ class outTuple() :
         self.t.Branch('byIsolationMVA3oldDMwLTraw_2', self.byIsolationMVA3oldDMwLTraw_2, 'byIsolationMVA3oldDMwLTraw_2/F')
         self.t.Branch('trigweight_2', self.trigweight_2, 'trigweight_2/F')
         self.t.Branch('idisoweight_2', self.idisoweight_2, 'idisoweight_2/F')
+        self.t.Branch('decayMode_2', self.decayMode_2, 'decayMode_2/I')
 
         # di-tau variables
         self.t.Branch('pt_tt', self.pt_tt, 'pt_tt/F')
@@ -318,7 +323,7 @@ class outTuple() :
     def getM_vis(self,entry,tau1,tau2) :
         return (tau1+tau2).M()
 
-    def getJets(self,entry,tau1,tau2) :
+    def getJets(self,entry,tau1,tau2,era) :
         nJet30, jetList, bJetList = 0, [], []
         phi2_1, eta2_1 = tau1.Phi(), tau1.Eta() 
         phi2_2, eta2_2 = tau2.Phi(), tau2.Eta() 
@@ -331,7 +336,10 @@ class outTuple() :
             dPhi = min(abs(phi2_2-phi1),2.*pi-abs(phi2_2-phi1))
             DR = min(DR,sqrt(dPhi**2 + (eta2_2-eta1)**2))
             if DR < 0.5 : continue
-            if True  and abs(entry.Jet_eta[j]) < 2.5 and entry.Jet_btagDeepB[j] > 0.4941 : bJetList.append(j)
+            bjet_discr = 0.6321
+            if str(era) == 2017 : bjet_discr = 0.4941
+            if str(era) == 2018 : bjet_discr = 0.4184
+            if True  and abs(entry.Jet_eta[j]) < 2.5 and entry.Jet_btagDeepB[j] > bjet_discr : bJetList.append(j)
             #if True and abs(entry.Jet_eta[j]) < 2.4 and entry.Jet_btagCSVV2[j] > 0.800 and entry.Jet_pt[j] > 30. : bJetList.append(j)
             if entry.Jet_jetId[j] & 2 == 0 : continue
             if entry.Jet_pt[j] < 30. : continue
@@ -436,7 +444,7 @@ class outTuple() :
 			sf_Lm_Data = self.sf_MuonTrigIso27.get_EfficiencyData(LepM.Pt(),LepM.Eta())
 
 
-		print '==========!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! TrigList',TrigListLep,'lepList',lepList,chanl,sf_Lp_MC, 'and Pt ?',LepP.Pt(), 'sf',sf_Lp_MC,'Pt m',LepM.Pt(),'sf',sf_Lm_MC
+		#print '==========!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! TrigList',TrigListLep,'lepList',lepList,chanl,sf_Lp_MC, 'and Pt ?',LepP.Pt(), 'sf',sf_Lp_MC,'Pt m',LepM.Pt(),'sf',sf_Lm_MC
 
         channel = cat[-2:]
         
@@ -466,6 +474,16 @@ class outTuple() :
         self.againstMuonLoose3_1[0] = -1.
         self.againstMuonTight3_1[0] = -1. 
         self.byIsolationMVA3oldDMwLTraw_1[0] = -1.
+        self.decayMode_1[0] = -1
+        self.againstElectronVLooseMVA6_2[0] = -1.
+        self.againstElectronLooseMVA6_2[0]  = -1.
+        self.againstElectronMediumMVA6_2[0] = -1.
+        self.againstElectronTightMVA6_2[0]  = -1.
+        self.againstElectronVTightMVA6_2[0] = -1.
+        self.againstMuonLoose3_2[0] = -1.
+        self.againstMuonTight3_2[0] = -1. 
+        self.byIsolationMVA3oldDMwLTraw_2[0] = -1.
+        self.decayMode_2[0] = -1
 
         tauMass = 1.7768 
         tau1, tau2 = TLorentzVector(), TLorentzVector()
@@ -592,6 +610,9 @@ class outTuple() :
             try : self.gen_match_1[0] = ord(entry.Tau_genPartFlav[jt1])
             except AttributeError : self.gen_match_1[0] = -1
 
+            try : self.decayMode_1[0] = int(entry.Tau_decayMode[jt1])
+            except AttributeError : self.decayMode_1[0] = -1
+
             tau1.SetPtEtaPhiM(entry.Tau_pt[jt1],entry.Tau_eta[jt1], entry.Tau_phi[jt1], tauMass)
             tau2.SetPtEtaPhiM(entry.Tau_pt[jt2],entry.Tau_eta[jt2],entry.Tau_phi[jt2],tauMass)
             
@@ -632,6 +653,10 @@ class outTuple() :
             self.byIsolationMVA3oldDMwLTraw_2[0] = float(ord(entry.Tau_idMVAoldDMdR032017v2[jt2]))  # check this
 	    try : self.gen_match_2[0] = ord(entry.Tau_genPartFlav[jt2])
 	    except AttributeError :self.gen_match_2[0] = -1
+
+            try : self.decayMode_2[0] = int(entry.Tau_decayMode[jt2])
+            except AttributeError : self.decayMode_2[0] = -1
+
             self.trigweight_2[0] = -999.    # requires sf need help from Sam on these
             self.idisoweight_2[0] = -999.   # requires sf need help from Sam on these
 
@@ -690,7 +715,7 @@ class outTuple() :
         if (sf_Lp_MC != 0. or sf_Lm_MC != 0.) and (sf_T1_MC != 0. or sf_T2_MC != 0.) :   self.is_trigZH[0] = 1
 
         # jet variables
-        nJet30, jetList, bJetList = self.getJets(entry,tau1,tau2) 
+        nJet30, jetList, bJetList = self.getJets(entry,tau1,tau2,era) 
         self.njetspt20[0] = len(jetList)
         self.njets[0] = nJet30
         self.nbtag[0] = len(bJetList)
@@ -701,7 +726,7 @@ class outTuple() :
             self.jpt_1[0] = entry.Jet_pt[jj1]
             self.jeta_1[0] = entry.Jet_eta[jj1]
             self.jphi_1[0] = entry.Jet_phi[jj1]
-            self.jcsv_1[0] = entry.Jet_btagCSVV2[jj1]
+            self.jcsv_1[0] = entry.Jet_btagDeepB[jj1]
 
         self.jpt_2[0], self.jeta_2[0], self.jphi_2[0], self.jcsv_2[0] = -9.99, -9.99, -9.99, -9.99 
         if len(jetList) > 1 :
@@ -709,7 +734,7 @@ class outTuple() :
             self.jpt_2[0] = entry.Jet_pt[jj2]
             self.jeta_2[0] = entry.Jet_eta[jj2]
             self.jphi_2[0] = entry.Jet_phi[jj2]
-            self.jcsv_2[0] = entry.Jet_btagCSVV2[jj2]
+            self.jcsv_2[0] = entry.Jet_btagDeepB[jj2]
 
         self.bpt_1[0], self.beta_1[0], self.bphi_1[0], self.bcsv_1[0] = -9.99, -9.99, -9.99, -9.99
         if len(bJetList) > 0 :
@@ -717,7 +742,7 @@ class outTuple() :
             self.bpt_1[0] = entry.Jet_pt[jbj1]
             self.beta_1[0] = entry.Jet_eta[jbj1]
             self.bphi_1[0] = entry.Jet_phi[jbj1]
-            self.bcsv_1[0] = entry.Jet_btagCSVV2[jbj1] 
+            self.bcsv_1[0] = entry.Jet_btagDeepB[jbj1] 
 
         self.bpt_2[0], self.beta_2[0], self.bphi_2[0], self.bcsv_2[0] = -9.99, -9.99, -9.99, -9.99
         if len(bJetList) > 1 :
@@ -725,7 +750,7 @@ class outTuple() :
             self.bpt_2[0] = entry.Jet_pt[jbj2]
             self.beta_2[0] = entry.Jet_eta[jbj2]
             self.bphi_2[0] = entry.Jet_phi[jbj2]
-            self.bcsv_2[0] = entry.Jet_btagCSVV2[jbj2]
+            self.bcsv_2[0] = entry.Jet_btagDeepB[jbj2]
 
         self.t.Fill()
         #self.weight[0] = 1.

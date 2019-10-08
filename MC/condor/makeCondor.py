@@ -32,7 +32,11 @@ era = str(args.year)
 
 # sample query 
 # dasgoclient --query="file dataset=/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8*/*/NANOAOD*" --limit=0   
-query = '"file dataset={0:s}"'.format(args.dataSet+" instance=prod/phys03")
+
+query = '"file dataset={0:s}"'.format(args.dataSet)
+
+if "USER" in str(args.dataSet) : query = '"file dataset={0:s}"'.format(args.dataSet+" instance=prod/phys03")
+
 command = "dasgoclient --query={0:s} --limit=0  > fileList.txt".format(query)
 print("Running in {0:s} mode.  Command={1:s}".format(args.mode,command))
 os.system(command)
@@ -68,11 +72,18 @@ for nFile, file in enumerate(files) :
 # now that .csh files have been generated make a list of corresponding .jdl files
 
 #dir = '/uscms_data/d3/alkaloge/ZH/CMSSW_10_2_9/src/MC/'
-
+'''
 dir = os.getenv("CMSSW_BASE")+"/src/ZH_Run2/MC/"
 dirData = os.getenv("CMSSW_BASE")+"/src/ZH_Run2/data/"
 funcsDir = os.getenv("CMSSW_BASE")+"/src/ZH_Run2/funcs/"
 SVFitDir = os.getenv("CMSSW_BASE")+"/src/ZH_Run2/SVFit/"
+'''
+
+dir = os.getcwd()+"/../../../MC/"
+dirData = os.getcwd()+"/../../../data/"
+funcsDir = os.getcwd()+"/../../../funcs/"
+SVFitDir = os.getcwd()+"/../../../SVFit/"
+
 
 print("dir={0:s}".format(dir))
 
@@ -85,6 +96,7 @@ for file in scriptList :
     outLines.append('Log = {0:s}.log\n'.format(base))
     print("dir={0:s}".format(dir))
     outLines.append('transfer_input_files = {0:s}ZH.py, {0:s}MC_2017.root, {0:s}data_pileup_2017.root, {0:s}MCsamples_{1:s}.csv, {0:s}ScaleFactor.py, {0:s}SFs.tar.gz, '.format(dir,args.year))
+    outLines.append('{0:s}Cert_*txt, '.format(dirData))
     outLines.append('{0:s}tauFun.py, {0:s}generalFunctions.py, {0:s}outTuple.py,'.format(funcsDir))
     outLines.append('{0:s}FastMTT.h, {0:s}MeasuredTauLepton.h, {0:s}svFitAuxFunctions.h,'.format(SVFitDir)) 
     outLines.append('{0:s}FastMTT.cc, {0:s}MeasuredTauLepton.cc, {0:s}svFitAuxFunctions.cc\n'.format(SVFitDir))

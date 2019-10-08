@@ -116,9 +116,51 @@ def trigweight(e,cat)
 
 
 args = getArgs()
+era=str(args.year)
 nBins, xMin, xMax = 10, 0., 200.
 groups = ['Signal','Reducible','Rare','ZZ4L','data']
-lumi = 1000.*41.8 
+lumi = 1000.
+tauID_w = 1.
+
+weights= {''}
+weights_muTotauFR={''}
+weights_elTotauFR={''}
+
+
+if era == '2016' : 
+    weights = {'lumi':35.92, 'tauID_w' :0.87, 'tauES_DM0' : -0.6, 'tauES_DM1' : -0.5,'tauES_DM10' : 0.0, 'mutauES_DM0' : -0.2, 'mutauES_DM1' : 1.5, 'eltauES_DM0' : 0.0, 'eltauES_DM1' : 9.5}
+    weights_muTotauFR = {'lmuFR_lt0p4' : 1.22, 'lmuFR_0p4to0p8' : 1.12, 'lmuFR_0p8to1p2' : 1.26, 'lmuFR_1p2to1p7' : 1.22, 'lmuFR_1p7to2p3' : 2.39 , 'tmuFR_lt0p4' : 1.47, 'tmuFR_0p4to0p8' : 1.55, 'tmuFR_0p8to1p2' : 1.33, 'tmuFR_1p2to1p7' : 1.72, 'tmuFR_1p7to2p3' : 2.50 }
+    weights_muTotauFR = {'lmuFR_lt0p4' : 1.22, 'lmuFR_0p4to0p8' : 1.12, 'lmuFR_0p8to1p2' : 1.26, 'lmuFR_1p2to1p7' : 1.22, 'lmuFR_1p7to2p3' : 2.39 , 'tmuFR_lt0p4' : 1.47, 'tmuFR_0p4to0p8' : 1.55, 'tmuFR_0p8to1p2' : 1.33, 'tmuFR_1p2to1p7' : 1.72, 'tmuFR_1p7to2p3' : 2.50 }
+    weights_elTotauFR = {'lelFR_lt1p46' : 1.21, 'lelFR_gt1p559' : 1.38, 'telFR_lt1p46' : 1.40, 'telFR_gt1p559' : 1.90}
+
+
+
+if era == '2017' : 
+    weights = {'lumi':41.53, 'tauID_w' :0.89, 'tauES_DM0' : 0.7, 'tauES_DM1' : -0.2,'tauES_DM10' : 0.1, 'mutauES_DM0' : 0.0, 'mutauES_DM1' : 0.0, 'eltauES_DM0' : 0.3, 'eltauES_DM1' : 3.6}
+    weights_muTotauFR = { 'lmuFR_lt0p4' : 1.06, 'lmuFR_0p4to0p8' : 1.02, 'lmuFR_0p8to1p2' : 1.10, 'lmuFR_1p2to1p7' : 1.03, 'lmuFR_1p7to2p3' : 1.94 , 'tmuFR_lt0p4' : 1.17, 'tmuFR_0p4to0p8' : 1.29, 'tmuFR_0p8to1p2' : 1.14, 'tmuFR_1p2to1p7' : 0.94, 'tmuFR_1p7to2p3' : 1.61}
+    weights_elTotauFR = {'lelFR_lt1p46' : 1.09, 'lelFR_gt1p559' : 1.19, 'telFR_lt1p46' : 1.80, 'telFR_gt1p559' : 1.53}
+
+if era == '2018' : 
+    weights = {'lumi':59.74, 'tauID_w' :0.90, 'tauES_DM0' : -1.3, 'tauES_DM1' : -0.5,'tauES_DM10' : -1.2, 'mutauES_DM0' : 0.0, 'mutauES_DM1' : 0.0, 'eltauES_DM0' : 0.0, 'eltauES_DM1' : 0.0}
+    weights_muTotauFR = { 'lmuFR_lt0p4' : 1., 'lmuFR_0p4to0p8' : 1., 'lmuFR_0p8to1p2' : 1., 'lmuFR_1p2to1p7' : 1., 'lmuFR_1p7to2p3' : 1. , 'tmuFR_lt0p4' : 1., 'tmuFR_0p4to0p8' : 1., 'tmuFR_0p8to1p2' : 1., 'tmuFR_1p2to1p7' : 1., 'tmuFR_1p7to2p3' : 1.}
+    weights_elTotauFR = {'lelFR_lt1p46' : 1., 'lelFR_gt1p559' : 1., 'telFR_lt1p46' : 1., 'telFR_gt1p559' : 1.}
+
+
+'''
+if era == '2016' : 
+    lumi *= 35.92
+    tauID_w = 0.87
+
+if era == '2017' : 
+    lumi *= 41.53
+    tauID_w = 0.89
+
+if era == '2018' : 
+    lumi *= 59.74
+    tauID_w = 0.90
+'''
+
+
 #cats = { 1:'eeet', 2:'eemt', 3:'eett', 4:'mmet', 5:'mmmt', 6:'mmtt', 7:'et', 8:'mt', 9:'tt' }
 cats = { 1:'eeet', 2:'eemt', 3:'eett', 4:'eeem', 5:'mmet', 6:'mmmt', 7:'mmtt', 8:'mmem', 9:'et', 10:'mt', 11:'tt' }
 groups = ['Signal','Reducible','Rare','ZZ4L','data']
@@ -165,9 +207,9 @@ for i in range(1,4) :
     sampleWeight[nn] = lumi/(totalWeight['WJetsToLNu']/xsec['WJetsToLNu'] + totalWeight[nn]/xsec[nn])
     
 # now add the data 
-for era in ['2017B','2017C','2017D','2017E','2017F'] :
+for eras in ['2017B','2017C','2017D','2017E','2017F'] :
     for dataset in ['SingleElectron','SingleMuon','DoubleEG','DoubleMuon'] :
-        nickName = '{0:s}_Run{1:s}'.format(dataset,era)
+        nickName = '{0:s}_Run{1:s}'.format(dataset,eras)
         totalWeight[nickName] = 1.
         sampleWeight[nickName] = 1.
         nickNames['data'].append(nickName) 
@@ -236,6 +278,47 @@ for group in groups :
             #s = sf.checkFile()
 
             cat = cats[e.cat]
+            #apply tau-ID 
+            if cat[2:] == 'et' or cat[2:]  == 'mt' or  cat[2:] == 'tt' :
+
+                if e.gen_match_2 == 5 : weight *= weights['tauID_w'] # tauID SF
+                if  cat[2:] == 'tt' and  e.gen_match_1 == 5 : weight *= weights['tauID_w'] # tauID SF
+
+
+                    if e.decayMode_2 == 0 : pt_2 *= (1+ weights['tauES_DM0'])  #tau ES
+                    if e.decayMode_2 == 1 : pt_2 *= (1+ weights['tauES_DM1'])  ##TODO CHANGE MASS of TAU TO PION
+                    if e.decayMode_2 == 10 : pt_2 *= (1+ weights['tauES_DM10'])
+                    
+
+                if e.gen_match_2 == 2 or e.gen_match_2 == 4  :
+                    if cat[2:] == 'et' or cat[2:] == 'tt' :
+                        if abs(e.pt_eta_2) < 0.4 : weight *= weights['lmuFR_lt0p4']
+                        if abs(e.pt_eta_2) > 0.4 and abs(e.pt_eta_2 < 0.8) : weight *= weights_muTotauFR['lmuFR_0p4to0p8']
+                        if abs(e.pt_eta_2) > 0.8 and abs(e.pt_eta_2 < 1.2) : weight *= weights_muTotauFR['lmuFR_0p8to1p2']
+                        if abs(e.pt_eta_2) > 1.2 and abs(e.pt_eta_2 < 1.7) : weight *= weights_muTotauFR['lmuFR_1p2to1p7']
+                        if abs(e.pt_eta_2) > 1.7 and abs(e.pt_eta_2 < 2.3) : weight *= weights_muTotauFR['lmuFR_1p7to2p3']
+                    if cat[2:] == 'mt' :
+                        if abs(e.pt_eta_2 < 0.4) : weight *= weights['tmuFR_lt0p4']
+                        if abs(e.pt_eta_2) > 0.4 and abs(e.pt_eta_2 < 0.8) : weight *= weights_muTotauFR['tmuFR_0p4to0p8']
+                        if abs(e.pt_eta_2) > 0.8 and abs(e.pt_eta_2 < 1.2) : weight *= weights_muTotauFR['tmuFR_0p8to1p2']
+                        if abs(e.pt_eta_2) > 1.2 and abs(e.pt_eta_2 < 1.7) : weight *= weights_muTotauFR['tmuFR_1p2to1p7']
+                        if abs(e.pt_eta_2) > 1.7 and abs(e.pt_eta_2 < 2.3) : weight *= weights_muTotauFR['tmuFR_1p7to2p3']
+
+                if e.gen_match_2 == 1 or e.gen_match_2 == 3  :
+                    if cat[2:] == 'et' or cat[2:] == 'tt' :
+                        if abs(e.pt_eta_2 < 0.4) : weight *= weights['lmuFR_lt0p4']
+                        if abs(e.pt_eta_2 < 1.460) : weight *= weights_elTotauFR['lelFR_lt1p46']
+                        if abs(e.pt_eta_2) >= 1.559 : weight *= weights_elTotauFR['lelFR_gt1p559']
+                    if cat[2:] == 'mt' :
+                        if abs(e.pt_eta_2 < 0.4) : weight *= weights['tmuFR_lt0p4']
+                        if abs(e.pt_eta_2) < 1.460 : weight *= weights_elTotauFR['telFR_lt1p46']
+                        if abs(e.pt_eta_2) >= 1.559 : weight *= weights_elTotauFR['telFR_gt1p559']
+                        
+
+    weights_muTotauFR = {'lmuFR_lt0p4' : 1.22, 'lmuFR_0p4to0p8' : 1.12, 'lmuFR_0p8to1p2' : 1.26, 'lmuFR_1p2to1p7' : 1.22, 'lmuFR_1p7to2p3' : 2.39 , 'tmuFR_lt0p4' : 1.47, 'tmuFR_0p4to0p8' : 1.55, 'tmuFR_0p8to1p2' : 1.33, 'tmuFR_1p2to1p7' : 1.72, 'tmuFR_1p7to2p3' : 2.50 }
+
+    weights_elTotauFR = {'lelFR_lt1p46' : 1., 'lelFR_gt1p559' : 1., 'telFR_lt1p46' : 1., 'telFR_gt1p559' : 1.}
+
             if tightCuts :
                 if cat[2:] == 'et' : tight1 = e.iso_1 > 0.5 
                 if cat[2:] == 'mt' : tight1 = e.iso_1 < 0.25 and e.iso_1_ID > 0.5
