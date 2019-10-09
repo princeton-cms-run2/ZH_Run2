@@ -278,17 +278,64 @@ for group in groups :
             #s = sf.checkFile()
 
             cat = cats[e.cat]
-            #apply tau-ID 
+            #apply tau-ID
+            pfmet_tree = e.pfmet
+            puppimet_tree = e.puppimet
+
             if cat[2:] == 'et' or cat[2:]  == 'mt' or  cat[2:] == 'tt' :
+            
+                #tau energy scale
+                if  cat[2:] == 'tt' and  e.gen_match_1 == 5 : 
+                    weight *= weights['tauID_w'] # tauID SF
+                    if e.decayMode_1 == 0 : pt_1 *= (1+ weights['tauES_DM0'])  #tau ES
+                    if e.decayMode_1 == 1 : pt_1 *= (1+ weights['tauES_DM1'])  ##TODO CHANGE MASS of TAU TO PION
+                    if e.decayMode_1 == 10 : pt_1 *= (1+ weights['tauES_DM10'])
 
-                if e.gen_match_2 == 5 : weight *= weights['tauID_w'] # tauID SF
-                if  cat[2:] == 'tt' and  e.gen_match_1 == 5 : weight *= weights['tauID_w'] # tauID SF
-
+                if e.gen_match_2 == 5 : 
+                    weight *= weights['tauID_w'] # tauID SF
 
                     if e.decayMode_2 == 0 : pt_2 *= (1+ weights['tauES_DM0'])  #tau ES
                     if e.decayMode_2 == 1 : pt_2 *= (1+ weights['tauES_DM1'])  ##TODO CHANGE MASS of TAU TO PION
                     if e.decayMode_2 == 10 : pt_2 *= (1+ weights['tauES_DM10'])
-                    
+
+                #now shift the met as well - the problem is that we don't propagate that to m_tt
+                if e.gen_match_1 == 5 or e.gen_match_2 == 5 :
+                    pfmet_tree *= (1+
+                    if e.decayMode_1 == 0 or e.decayMode_2 == 0 : 
+                        pfmet_tree *= (1+ weights['tauES_DM0'])  #tau ES
+                        puppimet_tree *= (1+ weights['tauES_DM0'])
+                    if e.decayMode_1 == 1 or e.decayMode_2 == 1 : 
+                        pfmet_tree *= (1+ weights['tauES_DM1'])  #tau ES
+                        puppimet_tree *= (1+ weights['tauES_DM1'])
+                                            if e.decayMode_1 == 10 or e.decayMode_2 == 10 : 
+                        pfmet_tree *= (1+ weights['tauES_DM10'])  #tau ES
+                        puppimet_tree *= (1+ weights['tauES_DM10'])
+
+                #mu->tau FR
+                if e.gen_match_1 == 2 or e.gen_match_1 == 4  :
+                    if cat[2:] == 'et' or cat[2:] == 'tt' :
+                        if abs(e.pt_eta_1) < 0.4 : weight *= weights['lmuFR_lt0p4']
+                        if abs(e.pt_eta_1) > 0.4 and abs(e.pt_eta_1 < 0.8) : weight *= weights_muTotauFR['lmuFR_0p4to0p8']
+                        if abs(e.pt_eta_1) > 0.8 and abs(e.pt_eta_1 < 1.2) : weight *= weights_muTotauFR['lmuFR_0p8to1p2']
+                        if abs(e.pt_eta_1) > 1.2 and abs(e.pt_eta_1 < 1.7) : weight *= weights_muTotauFR['lmuFR_1p2to1p7']
+                        if abs(e.pt_eta_1) > 1.7 and abs(e.pt_eta_1 < 2.3) : weight *= weights_muTotauFR['lmuFR_1p7to2p3']
+                    if cat[2:] == 'mt' :
+                        if abs(e.pt_eta_1 < 0.4) : weight *= weights['tmuFR_lt0p4']
+                        if abs(e.pt_eta_1) > 0.4 and abs(e.pt_eta_1 < 0.8) : weight *= weights_muTotauFR['tmuFR_0p4to0p8']
+                        if abs(e.pt_eta_1) > 0.8 and abs(e.pt_eta_1 < 1.2) : weight *= weights_muTotauFR['tmuFR_0p8to1p2']
+                        if abs(e.pt_eta_1) > 1.2 and abs(e.pt_eta_1 < 1.7) : weight *= weights_muTotauFR['tmuFR_1p2to1p7']
+                        if abs(e.pt_eta_1) > 1.7 and abs(e.pt_eta_1 < 2.3) : weight *= weights_muTotauFR['tmuFR_1p7to2p3']
+                #e->tau FR
+                if e.gen_match_1 == 1 or e.gen_match_1 == 3  :
+                    if cat[2:] == 'et' or cat[2:] == 'tt' :
+                        if abs(e.pt_eta_1 < 0.4) : weight *= weights['lmuFR_lt0p4']
+                        if abs(e.pt_eta_1 < 1.460) : weight *= weights_elTotauFR['lelFR_lt1p46']
+                        if abs(e.pt_eta_1) >= 1.559 : weight *= weights_elTotauFR['lelFR_gt1p559']
+                    if cat[2:] == 'mt' :
+                        if abs(e.pt_eta_1 < 0.4) : weight *= weights['tmuFR_lt0p4']
+                        if abs(e.pt_eta_1) < 1.460 : weight *= weights_elTotauFR['telFR_lt1p46']
+                        if abs(e.pt_eta_1) >= 1.559 : weight *= weights_elTotauFR['telFR_gt1p559']
+
 
                 if e.gen_match_2 == 2 or e.gen_match_2 == 4  :
                     if cat[2:] == 'et' or cat[2:] == 'tt' :
