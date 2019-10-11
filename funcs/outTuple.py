@@ -495,6 +495,7 @@ class outTuple() :
             self.q_1[0] = entry.Electron_charge[jt1]
             self.d0_1[0] = entry.Electron_dxy[jt1]
             self.dZ_1[0] = entry.Electron_dz[jt1]
+            self.iso_1[0] = entry.Electron_pfRelIso03_all[jt1]
             #self.iso_1[0] = entry.Electron_mvaFall17noIso[jt1]
             #self.iso_1[0] = entry.Electron_mvaFall17V2noIso[jt1]
             #self.iso_1[0] = 0.
@@ -523,6 +524,7 @@ class outTuple() :
             self.q_1[0] = entry.Electron_charge[jt1]
             self.d0_1[0] = entry.Electron_dxy[jt1]
             self.dZ_1[0] = entry.Electron_dz[jt1]
+            self.iso_1[0] = entry.Electron_pfRelIso03_all[jt1]
             #self.iso_1[0] = entry.Electron_mvaFall17noIso[jt1]
             #self.iso_1[0] = entry.Electron_mvaFall17V2noIso[jt1]
             #self.iso_1[0] = 0.
