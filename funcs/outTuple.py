@@ -29,7 +29,6 @@ class outTuple() :
         self.sf_EleTrig35.ScaleFactor("SFs/LeptonEfficiencies/Electron/Run2017/Electron_Ele35.root")
         #self.SF_muonIdIso = SF.SFs()
         #self.sf_SF_muonIdIso.ScaleFactor("SFs/LeptonEfficiencies/Muon/Run2017/Muon_IsoMu27.root")
-        print 'ERAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',era
      
         self.f = TFile( fileName, 'recreate' )
         self.t = TTree( 'Events', 'Output tree' )
@@ -436,7 +435,7 @@ class outTuple() :
 			sf_Lm_Data = self.sf_MuonTrigIso27.get_EfficiencyData(LepM.Pt(),LepM.Eta())
 
 
-		print '==========!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! TrigList',TrigListLep,'lepList',lepList,chanl,sf_Lp_MC, 'and Pt ?',LepP.Pt(), 'sf',sf_Lp_MC,'Pt m',LepM.Pt(),'sf',sf_Lm_MC
+		#print '==========!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! TrigList',TrigListLep,'lepList',lepList,chanl,sf_Lp_MC, 'and Pt ?',LepP.Pt(), 'sf',sf_Lp_MC,'Pt m',LepM.Pt(),'sf',sf_Lm_MC
 
         channel = cat[-2:]
         
