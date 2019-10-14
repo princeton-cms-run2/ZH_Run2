@@ -243,8 +243,10 @@ class pileUpWeight() :
 
         # lumi placeholder values 
         lumi = { 2016:37.8, 2017:44.0, 2018:63.7 }
+        xSec = 1.
         # get MC cross section values
-        for line in open('MCsamples.csv','r').readlines() :
+        #for line in open('MCsamples.csv','r').readlines() :
+        for line in open('MCsamples_{0:d}.csv'.format(year),'r').readlines() :
             if nickName == line.split(',')[0].strip() :
                 xSec = 1000.*float(line.split(',')[2])
                  
