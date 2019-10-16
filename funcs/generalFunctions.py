@@ -2,7 +2,7 @@
 
 from ROOT import TLorentzVector
 from ROOT import TFile, TH1D, TCanvas, TGraph, kRed, kBlue, TLegend
-from math import sqrt
+from math import sqrt, sin, cos, pi
 import numpy as np
 import json
 
@@ -151,6 +151,126 @@ def getMCmatchString(eta, phi, entry) :
                 pID, smallestDeltaR,entry.GenPart_pt[jBest], entry.GenPart_eta[jBest], entry.GenPart_phi[jBest])
     if jBest == 999 : return '*'
     return '**'
+
+
+
+
+
+def findETrigger(goodElectronList,entry,era):
+    EltrigList =[]
+    nElectron = len(goodElectronList)
+    
+    if nElectron > 1 :
+	#if era == '2016' and not entry.HLT_Ele25_eta2p1_WPTight_Gsf and not entry.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ : return EltrigList ##for the moment use only Ele25 for 2016
+	if era == '2016' and not entry.HLT_Ele25_eta2p1_WPTight_Gsf : return EltrigList ##for the moment use only Ele25 for 2016
+	if era == '2017' and not entry.HLT_Ele35_WPTight_Gsf and not entry.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL : return EltrigList
+	if era == '2018' and not entry.HLT_Ele32_WPTight_Gsf and not entry.HLT_Ele35_WPTight_Gsf : return EltrigList
+
+        for i in range(nElectron) :
+	    
+            ii = goodElectronList[i]
+            '''
+            if era == '2016' and entry.HLT_Ele25_eta2p1_WPTight_Gsf and not entry.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ and (entry.Electron_pt[ii] < 26 or abs(entry.Electron_eta[ii]) > 2.1): continue
+            if era == '2016' and not entry.HLT_Ele25_eta2p1_WPTight_Gsf and entry.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ and (entry.Electron_pt[ii] < 13 or abs(entry.Electron_eta[ii]) > 2.1): continue
+            '''
+            if era == '2016' and entry.HLT_Ele25_eta2p1_WPTight_Gsf and (entry.Electron_pt[ii] < 26 or abs(entry.Electron_eta[ii]) > 2.1): continue
+
+
+            if era == '2017' and entry.HLT_Ele35_WPTight_Gsf and not entry.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL and (entry.Electron_pt[ii] < 36 or abs(entry.Electron_eta[ii]) > 2.5) : continue
+            if era == '2017' and not entry.HLT_Ele35_WPTight_Gsf and entry.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL and (entry.Electron_pt[ii] < 13 or abs(entry.Electron_eta[ii]) > 2.5) : continue
+
+            if era == '2018' and entry.HLT_Ele32_WPTight_Gsf and not entry.HLT_Ele35_WPTight_Gsf and (entry.Electron_pt[ii] < 33 or abs(entry.Electron_eta[ii]) > 2.5): continue
+            if era == '2018' and not entry.HLT_Ele32_WPTight_Gsf and entry.HLT_Ele35_WPTight_Gsf and (entry.Electron_pt[ii] < 34 or abs(entry.Electron_eta[ii]) > 2.5): continue
+
+            #print("Electron: pt={0:.1f} eta={1:.2f} phi={2:.2f}".format(entry.Electron_pt[ii], entry.Electron_eta[ii], entry.Electron_phi[ii]))
+            #e1 = TLorentzVector()
+            #e1.SetPtEtaPhiM(entry.Electron_pt[ii],entry.Electron_eta[ii],entry.Electron_phi[ii],0.0005)
+
+            for iobj in range(0,entry.nTrigObj) :
+	        dR = DRobj(entry.Electron_eta[ii],entry.Electron_phi[ii], entry.TrigObj_eta[iobj], entry.TrigObj_phi[iobj])
+                #print("    Trg Obj: eta={0:.2f} phi={1:.2f} dR={2:.2f} bits={3:x}".format(
+                    #entry.TrigObj_eta[iobj], entry.TrigObj_phi[iobj], dR, entry.TrigObj_filterBits[iobj]))
+		if entry.TrigObj_filterBits[iobj] & 2  and dR < 0.5 and abs(entry.TrigObj_id[iobj]) == 11: ##that corresponds 0 WPTight
+		    EltrigList.append(ii)
+                    print "======================= iobj", iobj, "entry_Trig",entry.TrigObj_id[iobj], "Bits", entry.TrigObj_filterBits[iobj]," dR", dR, "electron",i,"ii",ii,entry.TrigObj_id[iobj]
+
+    return EltrigList
+
+
+def findMuTrigger(goodMuonList,entry,era):
+    MutrigList =[]
+    nMuon = len(goodMuonList)
+    hltList = []
+
+    if nMuon > 1 :
+	if era == '2016' and not entry.HLT_IsoMu24 and not entry.HLT_IsoTkMu24 and not entry.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ and not entry.HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ : return MutrigList, hltList
+	if (era == '2017' or era == '2018') and not entry.HLT_IsoMu24 and not entry.HLT_IsoMu27 and not entry.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass8:  return MutrigList, hltList
+
+
+        if entry.Muon_pt[goodMuonList[0]] > entry.Muon_pt[goodMuonList[1]]: 
+            leadL = goodMuonList[0]
+            subleadL = goodMuonList[1]
+        else : 
+            leadL = goodMuonList[1]
+            subleadL = goodMuonList[0]
+
+        doubleLep = False
+        singleLep1 = False
+        singleLep2 = False
+        isLfired = False
+        issubLfired = False
+	
+	#for 2017, 2018 according to nAOD documentation  qualityBitsDoc = cms.string("1 = TrkIsoVVL, 2 = Iso, 4 = OverlapFilter PFTau, 8 = 1mu, 16 = 2mu, 32 = 1mu-1e, 64 = 1mu-1tau, 128 = 3mu, 256 = 2mu-1e, 512 =1mu-2e"),
+	## for 2016 in particular  "1 = TrkIsoVVL, 2 = Iso, 4 = OverlapFilter PFTau, 8 = IsoTkMu"
+
+	for iobj in range(0,entry.nTrigObj) :
+	    if abs(entry.TrigObj_id[iobj]) == 13 : 
+		dR = DRobj(entry.Muon_eta[leadL],entry.Muon_phi[leadL], entry.TrigObj_eta[iobj], entry.TrigObj_phi[iobj])
+		dRr = DRobj(entry.Muon_eta[subleadL],entry.Muon_phi[subleadL], entry.TrigObj_eta[iobj], entry.TrigObj_phi[iobj])
+                print dR, dRr
+
+		if dR < 0.5 : 
+		    if entry.TrigObj_filterBits[iobj] & 16 : 
+			isLfired = True
+		    if entry.TrigObj_filterBits[iobj] & 2 :  
+			isLfired = True
+			hltList.append("LIso")
+			
+		    if entry.TrigObj_filterBits[iobj] & 8 :  
+			isLfired = True
+			hltList.append("LTrk")
+
+		if dRr < 0.5 : 
+		    if entry.TrigObj_filterBits[iobj] & 16 : 
+			issubLfired = True
+
+		    if entry.TrigObj_filterBits[iobj] & 2 :  
+			issubLfired = True
+			hltList.append("subIso")
+			
+		    if entry.TrigObj_filterBits[iobj] & 8 :  
+			issubLfired = True
+			hltList.append("subTrk")
+
+        if isLfired == True : MutrigList.append(leadL)
+        if issubLfired == True : MutrigList.append(subleadL)
+
+	if isLfired == True and issubLfired == True : 
+	    doubleLep = True 
+	    hltList.append('DoubleLept')
+		 
+
+    #if len(hltList) == 0 : hltList.append('NoDoubleLept')
+    #if len(MutrigList) == 0 : MutrigList.append(-1)
+    #print ' lets see....', doubleLep, hltList, MutrigList, entry.Muon_pt[leadL], entry.Muon_pt[subleadL]
+
+    return MutrigList, hltList
+
+
+def DRobj(eta1,phi1,eta2,phi2) :
+    dPhi = min(abs(phi2-phi1),2.*pi-abs(phi2-phi1))
+    return sqrt(dPhi**2 + (eta2-eta1)**2)
+
 
 class cutCounter() :
 

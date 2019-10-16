@@ -144,26 +144,29 @@ for count, e in enumerate(inTree) :
         goodElectronList, goodMuonList = tauFun.eliminateCloseLeptons(e, goodElectronList, goodMuonList)
 	lepList=[]
 
+        
         if lepMode == 'ee' :
-            if args.year == '2016' and not e.HLT_Ele27_WPTight_Gsf and not e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ : continue
-            if args.year == '2017' and not e.HLT_Ele35_WPTight_Gsf : continue
-            if args.year == '2018' and not e.HLT_Ele32_WPTight_Gsf and not e.HLT_Ele35_WPTight_Gsf : continue #do we need to put the HLT_Ele24_eta2p1_WPTight_Gsf_LooseChargedIsoPFTauHPS30_eta2p1_CrossL1 as well ?
+            if args.year == '2016' and not e.HLT_Ele27_WPTight_Gsf and not e.HLT_Ele27_eta2p1_WPTight_Gsf and not e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ : continue
+            if args.year == '2017' and not e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ and not e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL and not e.HLT_Ele35_WPTight_Gsf : continue
+            if args.year == '2018' and not e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ and not e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL and not e.HLT_Ele32_WPTight_Gsf and not e.HLT_Ele35_WPTight_Gsf : continue 
 
             if len(goodElectronList) < 2 :  continue
-
             pairList, lepList = tauFun.findZ(goodElectronList,[], e)
             #protect from the case that you dont get back 2 leptons
             if len(lepList) != 2 : continue
             for cat in cats[:4] : cutCounter[cat].count('Trigger')
         
         if lepMode == 'mm' :
-            if args.year == '2016' and not e.HLT_IsoMu22 and not e.HLT_IsoMu24 and not e.HLT_IsoMu22_eta2p1 and not e.HLT_IsoTkMu22 and not e.HLT_IsoTkMu22_eta2p1 and not e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ : continue
-            if args.year == '2017' and not e.HLT_IsoMu24  and not e.HLT_IsoMu27 : continue
-            if args.year == '2018' and not e.HLT_IsoMu24 and not e.HLT_IsoMu27 and not e.HLT_IsoMu20_eta2p1_LooseChargedIsoPFTauHPS27_eta2p1_CrossL1 and not e.HLT_IsoMu20_eta2p1_LooseChargedIsoPFTauHPS27_eta2p1_TightID_CrossL1 : continue
+            if args.year == '2016' and not e.HLT_IsoMu24 and not e.HLT_IsoMu22_eta2p1 and not e.HLT_IsoTkMu22_eta2p1 and not e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ : continue
+            if args.year == '2017' and not e.HLT_IsoMu24  and not e.HLT_IsoMu27 and not e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass8 and not e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mas3s8 : continue
+            if args.year == '2018' and not e.HLT_IsoMu24 and not e.HLT_IsoMu27 and not e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass8 and not e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass3p8 and not e.HLT_IsoMu20_eta2p1_LooseChargedIsoPFTauHPS27_eta2p1_CrossL1 and not e.HLT_IsoMu20_eta2p1_LooseChargedIsoPFTauHPS27_eta2p1_TightID_CrossL1 : continue
+
+
 
             if len(goodMuonList) < 2 : continue
             pairList, lepList = tauFun.findZ([],goodMuonList, e)
-	    for cat in cats[4:] : cutCounter[cat].count('Trigger')
+            if len(lepList) != 2 : continue
+    	    for cat in cats[4:] : cutCounter[cat].count('Trigger')
         
         if len(pairList) < 1 : continue
         if lepMode == 'ee' :
@@ -217,7 +220,7 @@ for count, e in enumerate(inTree) :
                 jt1, jt2 = bestTauPair[0], bestTauPair[1]
             else :
                 continue
-	    #print  lepList[0], lepList[1], bestTauPair[0],bestTauPair[1],cat
+	    #print  lepList[0], lepList[1], LepP.Pt(), LepM.Pt(), bestTauPair[0],bestTauPair[1],cat
 
             if MC :
                 outTuple.setWeight(PU.getWeight(e.Pileup_nPU))
