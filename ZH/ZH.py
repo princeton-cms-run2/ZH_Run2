@@ -32,6 +32,7 @@ def getArgs() :
     parser.add_argument("-m","--maxPrint",default=0,type=int,help="Maximum number of events to print.")
     parser.add_argument("-t","--testMode",default='',help="tau MVA selection")
     parser.add_argument("-y","--year",default=2017,type=int,help="Data taking period, 2016, 2017 or 2018")
+    parser.add_argument("-f","--flavour",default='ZH',type=int,help="is this for the ZH or the AZH analysis?")
     
     return parser.parse_args()
 
@@ -114,6 +115,10 @@ else :
 
 era=str(args.year)
 
+isAZH=False
+if str(args.flavour) == 'AZH' : isAZH = True
+
+
 outFileName = GF.getOutFileName(args).replace(".root",".ntup")
 print("Opening {0:s} as output.".format(outFileName))
 outTuple = outTuple.outTuple(outFileName, era)
@@ -139,8 +144,8 @@ for count, e in enumerate(inTree) :
             if e.nMuon < 2 : continue 
             for cat in cats[4:] : cutCounter[cat].count('LeptonCount')
 
-        goodElectronList = tauFun.makeGoodElectronList(e)
-        goodMuonList = tauFun.makeGoodMuonList(e)
+        goodElectronList = tauFun.makeGoodElectronList(e,flavour)
+        goodMuonList = tauFun.makeGoodMuonList(e,flavour)
         goodElectronList, goodMuonList = tauFun.eliminateCloseLeptons(e, goodElectronList, goodMuonList)
 	lepList=[]
 
@@ -173,7 +178,7 @@ for count, e in enumerate(inTree) :
    
         LepP, LepM = pairList[0], pairList[1]
         M = (LepM + LepP).M()
-        if M < 60. or M > 120. : continue
+        if M < 60. or M > 120. : continue ##cut valid for both AZH and ZH
         if lepMode == 'ee' :
             for cat in cats[:4]: cutCounter[cat].count('FoundZ')
         if lepMode == 'mm' :
@@ -182,7 +187,8 @@ for count, e in enumerate(inTree) :
         for tauMode in ['et','mt','tt','em'] :
             cat = lepMode + tauMode
             if tauMode == 'tt' :
-                tauList = tauFun.getTauList(cat, e, pairList=pairList)
+                if flavour = 'ZH' : tauList = tauFun.getTauList(cat, e, pairList=pairList, flavour)
+                if flavour = 'AZH' : tauList = tauFun.getTauListAZH(cat, e, pairList=pairList, flavour)
                 bestTauPair = tauFun.getBestTauPair(cat, e, tauList )
                                     
             elif tauMode == 'et' :

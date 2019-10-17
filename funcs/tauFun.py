@@ -34,6 +34,33 @@ def getTauList(channel, entry, pairList=[]) :
         tauList.append(j)
     return tauList
 
+def getTauListAZH(channel, entry, pairList=[]) :
+    # make a list of taus that pass the basic selection cuts
+    if not channel in ['mmtt','eett','tt','mt','et'] :
+        print("Invalid channel={0:s} in tauFun.getTauList()".format(channel))
+        exit()
+    tauList = []
+    if entry.nTau == 0 : return tauList
+    for j in range(entry.nTau) :
+        if entry.Tau_pt[j] < 20. : continue
+        if abs(entry.Tau_eta[j]) > 2.3 : continue
+        if abs(entry.Tau_dz[j]) > 0.2 : continue
+        if ord(entry.Tau_idAntiMu[j]) != 1 : continue
+        if ord(entry.Tau_idAntiEle[j]) != 1 : continue
+        if not entry.Tau_idDecayMode[j] : continue
+        if ord(entry.Tau_Tau_idMVAoldDM[j]) != 4 : continue
+
+        chg = abs(entry.Tau_charge[j])
+        if chg < 0.5 or chg > 1.5 : continue
+        #for the moment this is not used
+        '''if channel[2:4] == 'tt' :
+            eta1, phi1 = entry.Tau_eta[j], entry.Tau_phi[j]
+            DR0, DR1 =  lTauDR(eta1,phi1,pairList[0]), lTauDR(eta1,phi1,pairList[1]) 
+            if DR0 < 0.5 or DR1 < 0.5 : continue
+        '''
+        tauList.append(j)
+    return tauList
+
 def tauDR(entry, j1,j2) :
     if j1 == j2 : return 0. 
     phi1, eta1, phi2, eta2 = entry.Tau_phi[j1], entry.Tau_eta[j1], entry.Tau_phi[j2], entry.Tau_eta[j2]
@@ -337,11 +364,31 @@ def goodMuon(entry, j) :
     if abs(entry.Muon_dz[j]) > 0.2 : return False
     return True 
 
-def makeGoodMuonList(entry) :
+def goodMuonAZH(entry, j) :
+    if entry.Muon_pt[j] < 10. : return False
+    if abs(entry.Muon_eta[j]) > 2.4 : return False
+    # drop this requirement for ZH
+    #if not (entry.Muon_mediumId[j] or entry.Muon_tightId[j]): return False
+    if not entry.Muon_mediumId[j] : return False
+    if entry.Muon_pfRelIso04_all[j] > 0.25 : return False
+    if abs(entry.Muon_dxy[j]) > 0.045 : return False 
+    if abs(entry.Muon_dz[j]) > 0.2 : return False
+    if not entry.Muon_isGlobal[j] and not entry.Muon_isTracker[j] : return False
+    return True 
+
+def makeGoodMuonList(entry, flavour) :
     goodMuonList = []
-    for i in range(entry.nMuon) :
-        if goodMuon(entry, i) : goodMuonList.append(i)
-    #print("In tauFun.makeGoodMuonList = {0:s}".format(str(goodMuonList)))
+    if flavour == 'ZH' :
+        for i in range(entry.nMuon) :
+            if goodMuon(entry, i) : goodMuonList.append(i)
+        #print("In tauFun.makeGoodMuonList = {0:s}".format(str(goodMuonList)))
+
+    if flavour == 'AZH' :
+        for i in range(entry.nMuon) :
+            if goodMuonAZH(entry, i) : goodMuonList.append(i)
+        #print("In tauFun.makeGoodMuonList = {0:s}".format(str(goodMuonList)))
+
+
     return goodMuonList
 
 # select an electron for the Z candidate
@@ -357,10 +404,29 @@ def goodElectron(entry, j) :
     if not entry.Electron_mvaFall17V2noIso_WP90[j] : return False
     return True 
 
-def makeGoodElectronList(entry) :
+def goodElectronAZH(entry, j) :
+
+
+    if entry.Electron_pt[j] < 10. : return False
+    if abs(entry.Electron_eta[j]) > 2.5 : return False
+    if abs(entry.Electron_dxy[j]) > 0.045 : return False
+    if abs(entry.Electron_dz[j]) > 0.2 : return False
+    if ord(entry.Electron_lostHits[j]) > 1 : return False
+    if not entry.Electron_convVeto[j]  : return False
+    if not entry.Electron_mvaFall17V2noIso_WP90[j] : return False
+    #if entry.Electron_pfRelIso03_all[j] > 0.3 : return False
+    return True 
+
+def makeGoodElectronList(entry, flavour) :
     goodElectronList = []
-    for i in range(entry.nElectron) :
-        if goodElectron(entry, i) : goodElectronList.append(i)
+    if flavour == 'ZH' :
+        for i in range(entry.nElectron) :
+            if goodElectron(entry, i) : goodElectronList.append(i)
+
+    if flavour == 'AZH' :
+        for i in range(entry.nElectron) :
+            if goodElectronAZH(entry, i) : goodElectronList.append(i)
+
     return goodElectronList
 
 def eliminateCloseLeptons(entry, goodElectronList, goodMuonList) :
