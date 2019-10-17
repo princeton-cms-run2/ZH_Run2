@@ -146,9 +146,8 @@ for count, e in enumerate(inTree) :
 
         
         if lepMode == 'ee' :
-            if args.year == '2016' and not e.HLT_Ele27_WPTight_Gsf and not e.HLT_Ele27_eta2p1_WPTight_Gsf and not e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ : continue
-            if args.year == '2017' and not e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ and not e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL and not e.HLT_Ele35_WPTight_Gsf : continue
-            if args.year == '2018' and not e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ and not e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL and not e.HLT_Ele32_WPTight_Gsf and not e.HLT_Ele35_WPTight_Gsf : continue 
+            if args.year == '2016' and not e.HLT_Ele27_eta2p1_WPTight_Gsf and not e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ : continue
+            if (args.year == '2017' or args.year == '2018') and not e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ and not e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL and not e.HLT_Ele35_WPTight_Gsf and not e.HLT_Ele32_WPTight_Gsf: continue
 
             if len(goodElectronList) < 2 :  continue
             pairList, lepList = tauFun.findZ(goodElectronList,[], e)
@@ -157,10 +156,8 @@ for count, e in enumerate(inTree) :
             for cat in cats[:4] : cutCounter[cat].count('Trigger')
         
         if lepMode == 'mm' :
-            if args.year == '2016' and not e.HLT_IsoMu24 and not e.HLT_IsoMu22_eta2p1 and not e.HLT_IsoTkMu22_eta2p1 and not e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ : continue
-            if args.year == '2017' and not e.HLT_IsoMu24  and not e.HLT_IsoMu27 and not e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass8 and not e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mas3s8 : continue
-            if args.year == '2018' and not e.HLT_IsoMu24 and not e.HLT_IsoMu27 and not e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass8 and not e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass3p8 and not e.HLT_IsoMu20_eta2p1_LooseChargedIsoPFTauHPS27_eta2p1_CrossL1 and not e.HLT_IsoMu20_eta2p1_LooseChargedIsoPFTauHPS27_eta2p1_TightID_CrossL1 : continue
-
+            if args.year == '2016' and not e.HLT_IsoMu24 and not e.HLT_IsoTkMu24 and not e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ and not e.HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ: continue
+            if (args.year == '2017' or args.year == '2018') and not e.HLT_IsoMu24  and not e.HLT_IsoMu27 and not e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass8 and not e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mas3s8 : continue
 
 
             if len(goodMuonList) < 2 : continue

@@ -8,7 +8,7 @@ import os
 import sys
 sys.path.append('SFs')
 import ScaleFactor as SF
-
+import generalFunctions as GF
 
 class outTuple() :
     
@@ -30,7 +30,6 @@ class outTuple() :
         self.sf_EleTrig35.ScaleFactor("SFs/LeptonEfficiencies/Electron/Run2017/Electron_Ele35.root")
         #self.SF_muonIdIso = SF.SFs()
         #self.sf_SF_muonIdIso.ScaleFactor("SFs/LeptonEfficiencies/Muon/Run2017/Muon_IsoMu27.root")
-        #print 'ERAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',era
      
         self.f = TFile( fileName, 'recreate' )
         self.t = TTree( 'Events', 'Output tree' )
@@ -405,28 +404,32 @@ class outTuple() :
         sf_T2_Data = 0.
         TrigListLep=[]
         TrigListTau=[]
+        hltListLep=[]
 
         chanl = cat[:-2]
+	#if chanl == 'mm' : TrigListLep, hltListLep = GF.findMuTrigger(lepList, entry, era)
+	TrigListLep, hltListLep  = GF.findLeptTrigger(lepList, entry, chanl, era)
+
+	TrigListLep = list(dict.fromkeys(TrigListLep))
+        print 'TrigerList ===========>', TrigListLep, hltListLep, chanl
+
         if isMC :
-		if 'ee' in chanl : TrigListLep = tauFun.findETrigger(lepList, entry, era)
-		if 'mm' in chanl : TrigListLep = tauFun.findMuTrigger(lepList, entry, era)
-		TrigListLep = list(dict.fromkeys(TrigListLep))
 
 		if len(TrigListLep) == 1 :
 
 		    if lepList[0] == TrigListLep[0] :
-			if 'ee' in chanl : 
+			if chanl == 'ee' : 
 			    sf_Lp_MC = self.sf_EleTrig35.get_EfficiencyMC(LepP.Pt(),LepP.Eta())
 			    sf_Lp_Data = self.sf_EleTrig35.get_EfficiencyData(LepP.Pt(),LepP.Eta())
-			if 'mm' in chanl : 
+			if chanl == 'mm' : 
 			    sf_Lp_MC = self.sf_MuonTrigIso27.get_EfficiencyMC(LepP.Pt(),LepP.Eta())
 			    sf_Lp_Data = self.sf_MuonTrigIso27.get_EfficiencyData(LepP.Pt(),LepP.Eta())
 
 		    if lepList[1] == TrigListLep[0] :
-			if 'ee' in chanl : 
+			if chanl == 'ee' : 
 			    sf_Lm_MC = self.sf_EleTrig35.get_EfficiencyMC(LepM.Pt(),LepM.Eta())
 			    sf_Lm_Data = self.sf_EleTrig35.get_EfficiencyData(LepM.Pt(),LepM.Eta())
-			if 'mm' in chanl : 
+			if chanl == 'mm' : 
 			    sf_Lm_MC = self.sf_MuonTrigIso27.get_EfficiencyMC(LepM.Pt(),LepM.Eta())
 			    sf_Lm_Data = self.sf_MuonTrigIso27.get_EfficiencyData(LepM.Pt(),LepM.Eta())
 
@@ -445,7 +448,6 @@ class outTuple() :
 
 
 		#print '==========!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! TrigList',TrigListLep,'lepList',lepList,chanl,sf_Lp_MC, 'and Pt ?',LepP.Pt(), 'sf',sf_Lp_MC,'Pt m',LepM.Pt(),'sf',sf_Lm_MC
-
         channel = cat[-2:]
         
         self.entries += 1
@@ -505,15 +507,16 @@ class outTuple() :
             except AttributeError: self.gen_match_1[0] = -1
             tau1.SetPtEtaPhiM(entry.Electron_pt[jt1],entry.Electron_eta[jt1], entry.Electron_phi[jt1], tauMass)
             tau2.SetPtEtaPhiM(entry.Tau_pt[jt2],entry.Tau_eta[jt2],entry.Tau_phi[jt2],tauMass)
-            if isMC: 
-		    tauListE=[jt1]
-		    TrigListETau=[]
-		    TrigListETau = tauFun.findETrigger(tauListE, entry, era)
+            tauListE=[jt1]
+	    '''TrigListETau=[]
+	    TrigListETau = GF.findETrigger(tauListE, entry, era)
 
-		    if len(TrigListETau) == 1 :
-			sf_T1_MC = self.sf_EleTrig35.get_EfficiencyMC(entry.Electron_pt[jt1],entry.Electron_eta[jt1])
-			sf_T1_Data = self.sf_EleTrig35.get_EfficiencyData(entry.Electron_pt[jt1],entry.Electron_eta[jt1])
+            if isMC: 
+                if len(TrigListETau) == 1 :
+		    sf_T1_MC = self.sf_EleTrig35.get_EfficiencyMC(entry.Electron_pt[jt1],entry.Electron_eta[jt1])
+		    sf_T1_Data = self.sf_EleTrig35.get_EfficiencyData(entry.Electron_pt[jt1],entry.Electron_eta[jt1])
   
+            '''
 
         elif 'em' in channel and jt1>-1 and jt2 >-1:
 	    self.pt_1[0] = entry.Electron_pt[jt1]
@@ -547,21 +550,23 @@ class outTuple() :
             try : self.gen_match_2[0] = ord(entry.Muon_genPartFlav[jt2]) 
             except AttributeError : self.gen_match_2[0] = -1
             tau2.SetPtEtaPhiM(entry.Muon_pt[jt2],entry.Muon_eta[jt2], entry.Muon_phi[jt2], tauMass) ######### should this be tauMass ???
-            if isMC :
-		    tauListMu=[]
-		    tauListE=[jt1]
-		    tauListMu=[jt2]
-		    TrigListETau=[]
-		    TrigListETau = tauFun.findETrigger(tauListE, entry, era)
-		    TrigListMuTau=[]
-		    TrigListMuTau = tauFun.findETrigger(tauListMu, entry, era)
+	    '''tauListMu=[]
+	    tauListE=[jt1]
+	    tauListMu=[jt2]
+	    TrigListETau=[]
+	    TrigListETau = GF.findETrigger(tauListE, entry, era)
+	    TrigListMuTau=[]
+	    TrigListMuTau = GF.findETrigger(tauListMu, entry, era)
 
-		    if len(TrigListETau) == 1 :
-			sf_T1_MC = self.sf_EleTrig35.get_EfficiencyMC(entry.Electron_pt[jt1],entry.Electron_eta[jt1])
-			sf_T1_Data = self.sf_EleTrig35.get_EfficiencyData(entry.Electron_pt[jt1],entry.Electron_eta[jt1])
-		    if len(TrigListMuTau) == 1 :
-			sf_T2_MC = self.sf_MuonTrigIso27.get_EfficiencyMC(entry.Muon_pt[jt2],entry.Muon_eta[jt2])
-			sf_T2_Data = self.sf_MuonTrigIso27.get_EfficiencyData(entry.Muon_pt[jt2],entry.Muon_eta[jt2])
+            if isMC :
+
+	        if len(TrigListETau) == 1 :
+		    sf_T1_MC = self.sf_EleTrig35.get_EfficiencyMC(entry.Electron_pt[jt1],entry.Electron_eta[jt1])
+		    sf_T1_Data = self.sf_EleTrig35.get_EfficiencyData(entry.Electron_pt[jt1],entry.Electron_eta[jt1])
+	        if len(TrigListMuTau) == 1 :
+		    sf_T2_MC = self.sf_MuonTrigIso27.get_EfficiencyMC(entry.Muon_pt[jt2],entry.Muon_eta[jt2])
+		    sf_T2_Data = self.sf_MuonTrigIso27.get_EfficiencyData(entry.Muon_pt[jt2],entry.Muon_eta[jt2])
+            '''
 
         elif channel == 'mt' :
             self.pt_1[0] = entry.Muon_pt[jt1]
@@ -579,18 +584,19 @@ class outTuple() :
             tau1.SetPtEtaPhiM(entry.Muon_pt[jt1],entry.Muon_eta[jt1], entry.Muon_phi[jt1], tauMass)
             tau2.SetPtEtaPhiM(entry.Tau_pt[jt2],entry.Tau_eta[jt2],entry.Tau_phi[jt2],tauMass) 
 
+	    '''tauListMu=[]
+	    tauListMu=[jt1]
+	    TrigListMuTau=[]
+	    TrigListMuTau = GF.findETrigger(tauListMu, entry, era)
+
             if isMC :
-		    tauListMu=[]
-		    tauListMu=[jt1]
-		    TrigListMuTau=[]
-		    TrigListMuTau = tauFun.findETrigger(tauListMu, entry, era)
 
 		    if len(TrigListMuTau) == 1 :
 			sf_T1_MC = self.sf_MuonTrigIso27.get_EfficiencyMC(entry.Muon_pt[jt1],entry.Muon_eta[jt1])
 			sf_T1_Data = self.sf_MuonTrigIso27.get_EfficiencyData(entry.Muon_pt[jt1],entry.Muon_eta[jt1])
 
 
-
+            '''
         elif channel == 'tt' :
             self.pt_1[0] = entry.Tau_pt[jt1]
             self.phi_1[0] = entry.Tau_phi[jt1]
@@ -626,8 +632,8 @@ class outTuple() :
         self.pfmt_1[0] = self.get_mt('PFMet',entry,tau1)
         self.puppimt_1[0] = self.get_mt('PUPPIMet',entry,tau1)
 
-        self.trigweight_1[0] =  -999.   # requires sf need help from Sam on these
-        self.idisoweight_1[0] = -999.   # requires sf need help from Sam on these 
+        self.trigweight_1[0] =  -999.   
+        self.idisoweight_1[0] = -999.   
 	if channel != 'em' :
 	    self.pt_2[0] = entry.Tau_pt[jt2]
             self.phi_2[0] = entry.Tau_phi[jt2]
@@ -710,11 +716,11 @@ class outTuple() :
         self.trig_T1_Data[0] = sf_T1_Data
         self.trig_T2_MC[0] = sf_T2_MC
         self.trig_T2_Data[0] = sf_T2_Data
-        if sf_Lp_MC != 0. or sf_Lm_MC != 0. or sf_T1_MC != 0. or sf_T2_MC != 0. :   self.is_trig[0] = 1
-        if sf_Lp_MC == 1. and sf_Lm_MC == 0. and sf_T1_MC == 0. and sf_T2_MC == 0. :   self.is_trig[0] = 0
-        if sf_Lp_MC == 0. and sf_Lm_MC == 0. and (sf_T1_MC != 0. or sf_T2_MC != 0.) :   self.is_trigH[0] = 1
-        if (sf_Lp_MC != 0. or sf_Lm_MC != 0.) and (sf_T1_MC == 0. and sf_T2_MC == 0.) :   self.is_trigZ[0] = 1
-        if (sf_Lp_MC != 0. or sf_Lm_MC != 0.) and (sf_T1_MC != 0. or sf_T2_MC != 0.) :   self.is_trigZH[0] = 1
+
+        if sf_Lp_MC != 0. or sf_Lm_MC != 0. or sf_T1_MC != 0. or sf_T2_MC != 0. :   self.is_trig[0] = 1 ##either Z or H or both
+        if sf_Lp_MC == 0. and sf_Lm_MC == 0. and (sf_T1_MC != 0. or sf_T2_MC != 0.) :   self.is_trigH[0] = 1 ## H fired the trigger
+        if (sf_Lp_MC != 0. or sf_Lm_MC != 0.) and (sf_T1_MC == 0. and sf_T2_MC == 0.) :   self.is_trigZ[0] = 1 # Z fired the trigger
+        if (sf_Lp_MC != 0. or sf_Lm_MC != 0.) and (sf_T1_MC != 0. or sf_T2_MC != 0.) :   self.is_trigZH[0] = 1 # either Z or H or both fired it
 
         # jet variables
         nJet30, jetList, bJetList = self.getJets(entry,tau1,tau2,era) 
