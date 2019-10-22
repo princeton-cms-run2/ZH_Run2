@@ -497,7 +497,9 @@ class pileUpWeight() :
         print("Opening MC pileup file = {0:s}".format(MCfile))
         fMC = TFile(MCfile)
         print("fMC={0:s}".format(str(fMC)))
-        hMC = fMC.Get('h{0:s}'.format(nickName))
+        hMC = fMC.Get('hMC_{0:s}'.format(nickName)) ##this is you would need to have one histo per process
+        #hMC = fMC.Get('h{0:s}'.format(nickName)) ##this is you would need to have one histo per process
+        #hMC = fMC.Get('pileup') ##this is you would need to have one histo per process
         print("hMC={0:s}".format(str(hMC)))
         # check to be sure that data and MC histograms are commensurate
         if hData.GetBinWidth(1) != hMC.GetBinWidth(1) or hData.GetBinLowEdge(1) != hMC.GetBinLowEdge(1) or hData.GetNbinsX() != hMC.GetNbinsX() :
@@ -545,6 +547,7 @@ class pileUpWeight() :
     def getWeight(self,PU) :
         iPU = int(PU)
         weight = self.sampleWeight*self.PUweights[iPU]
+        #print 'weights', weight, self.sampleWeight, self.PUweights[iPU]
         return weight 
         
     def displayWeights(self, bins, weights) :

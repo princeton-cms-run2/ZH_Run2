@@ -1,8 +1,8 @@
 import sys
 import glob
 import os
+import os.path
 
-era=str(2017)
 files = glob.glob('*_2017')
 for file in files :
     if not os.path.isdir(file) : continue
@@ -10,9 +10,14 @@ for file in files :
     print("cwd={0:s}".format(os.getcwd())) 
     jdls = glob.glob('*.jdl')
     for jdl in jdls :
-        command = "condor_submit {0:s}".format(jdl)
-        print("Command={0:s}".format(command))
-        os.system(command)
+        ff=jdl.replace('jdl','root')
+        #print("Command={0:s}".format(command))
+        cf = os.path.isfile('{0:s}'.format(ff))
+        if  cf : print 'The .root exists:', ff, ' I wont submit'
+        else: 
+            command = "condor_submit {0:s}".format(jdl)
+            print 'sending...', ff
+            os.system(command)
     os.chdir('..')
     print("cwd={0:s}".format(os.getcwd()))
 

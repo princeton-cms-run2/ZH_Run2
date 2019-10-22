@@ -1,6 +1,6 @@
 # output ntuple for H->tautau analysis for CMSSW_10_2_X
 
-from ROOT import TLorentzVector
+from ROOT import TLorentzVector, TH1
 from math import sqrt, sin, cos, pi
 import tauFun 
 import ROOT
@@ -30,6 +30,7 @@ class outTuple() :
         self.sf_EleTrig35.ScaleFactor("SFs/LeptonEfficiencies/Electron/Run2017/Electron_Ele35.root")
         #self.SF_muonIdIso = SF.SFs()
         #self.sf_SF_muonIdIso.ScaleFactor("SFs/LeptonEfficiencies/Muon/Run2017/Muon_IsoMu27.root")
+
      
         self.f = TFile( fileName, 'recreate' )
         self.t = TTree( 'Events', 'Output tree' )
@@ -412,7 +413,27 @@ class outTuple() :
 
 	TrigListLep = list(dict.fromkeys(TrigListLep))
         print 'TrigerList ===========>', TrigListLep, hltListLep, chanl
+        
+        leadLPt = 0.
+        subleadLPt = 0.
+        leadEta = -100.
+        subleadEta = -100.
+        isPLead = True
 
+	if LepP.Pt() > LepM.Pt() : 
+            leadLPt = LepP.Pt()
+            leadEta = LepP.Eta()
+            subleadLPt = LepM.Pt()
+            subleadEta = LepM.Eta()
+        else : 
+            leadLPt = LepM.Pt()
+            leadEta = LepM.Eta()
+            subleadLPt = LepP.Pt()
+            subleadEta = LepP.Eta()
+            isPLead = False
+        
+        '''
+        #we have to implement the different .root files depending on the different triggers
         if isMC :
 
 		if len(TrigListLep) == 1 :
@@ -435,17 +456,23 @@ class outTuple() :
 
 
 		if len(TrigListLep) == 2 :
+
+                    
 		    if 'ee' in chanl : 
-			sf_Lp_MC = self.sf_EleTrig35.get_EfficiencyMC(LepP.Pt(),LepP.Eta())
-			sf_Lp_Data = self.sf_EleTrig35.get_EfficiencyData(LepP.Pt(),LepP.Eta())
-			sf_Lm_MC = self.sf_EleTrig35.get_EfficiencyMC(LepM.Pt(),LepM.Eta())
-			sf_Lm_Data = self.sf_EleTrig35.get_EfficiencyData(LepM.Pt(),LepM.Eta())
+                        if leadPt > 28. and subleadPt > 28. :
+                            if 'DoubleLep' in hltListLep :
+                                sf_Lp_MC = self.sf_EleTrig35.get_EfficiencyMC(LepP.Pt(),LepP.Eta())
+			        sf_Lp_Data = self.sf_EleTrig35.get_EfficiencyData(LepP.Pt(),LepP.Eta())
+			        sf_Lm_MC = self.sf_EleTrig35.get_EfficiencyMC(LepM.Pt(),LepM.Eta())
+			        sf_Lm_Data = self.sf_EleTrig35.get_EfficiencyData(LepM.Pt(),LepM.Eta())
+
+
 		    if 'mm' in chanl : 
 			sf_Lp_MC = self.sf_MuonTrigIso27.get_EfficiencyMC(LepP.Pt(),LepP.Eta())
 			sf_Lp_Data = self.sf_MuonTrigIso27.get_EfficiencyData(LepP.Pt(),LepP.Eta())
 			sf_Lm_MC = self.sf_MuonTrigIso27.get_EfficiencyMC(LepM.Pt(),LepM.Eta())
 			sf_Lm_Data = self.sf_MuonTrigIso27.get_EfficiencyData(LepM.Pt(),LepM.Eta())
-
+         '''
 
 		#print '==========!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! TrigList',TrigListLep,'lepList',lepList,chanl,sf_Lp_MC, 'and Pt ?',LepP.Pt(), 'sf',sf_Lp_MC,'Pt m',LepM.Pt(),'sf',sf_Lm_MC
         channel = cat[-2:]

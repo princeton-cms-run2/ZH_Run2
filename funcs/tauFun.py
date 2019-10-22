@@ -48,16 +48,17 @@ def getTauListAZH(channel, entry, pairList=[]) :
         if ord(entry.Tau_idAntiMu[j]) != 1 : continue
         if ord(entry.Tau_idAntiEle[j]) != 1 : continue
         if not entry.Tau_idDecayMode[j] : continue
-        if ord(entry.Tau_Tau_idMVAoldDM[j]) != 4 : continue
+        #if ord(entry.Tau_Tau_idMVAoldDM[j]) != 4 : continue
+        if ord(entry.Tau_idMVAoldDM2017v2[j]) == 0 : continue ## has to be either loose of tight!
 
         chg = abs(entry.Tau_charge[j])
         if chg < 0.5 or chg > 1.5 : continue
         #for the moment this is not used
-        '''if channel[2:4] == 'tt' :
+        if channel[2:4] == 'tt' :
             eta1, phi1 = entry.Tau_eta[j], entry.Tau_phi[j]
             DR0, DR1 =  lTauDR(eta1,phi1,pairList[0]), lTauDR(eta1,phi1,pairList[1]) 
             if DR0 < 0.5 or DR1 < 0.5 : continue
-        '''
+        
         tauList.append(j)
     return tauList
 
@@ -376,17 +377,17 @@ def goodMuonAZH(entry, j) :
     if not entry.Muon_isGlobal[j] and not entry.Muon_isTracker[j] : return False
     return True 
 
-def makeGoodMuonList(entry, flavour) :
+def makeGoodMuonList(entry, isAZH) :
     goodMuonList = []
-    if flavour == 'ZH' :
+    if not isAZH :
         for i in range(entry.nMuon) :
             if goodMuon(entry, i) : goodMuonList.append(i)
         #print("In tauFun.makeGoodMuonList = {0:s}".format(str(goodMuonList)))
 
-    if flavour == 'AZH' :
+    if isAZH :
         for i in range(entry.nMuon) :
             if goodMuonAZH(entry, i) : goodMuonList.append(i)
-        #print("In tauFun.makeGoodMuonList = {0:s}".format(str(goodMuonList)))
+        #print("In tauFun.makeGoodMuonList = {0:s}".format(str(goodMuonList))), isAZH
 
 
     return goodMuonList
@@ -417,13 +418,13 @@ def goodElectronAZH(entry, j) :
     #if entry.Electron_pfRelIso03_all[j] > 0.3 : return False
     return True 
 
-def makeGoodElectronList(entry, flavour) :
+def makeGoodElectronList(entry, isAZH) :
     goodElectronList = []
-    if flavour == 'ZH' :
+    if not isAZH :
         for i in range(entry.nElectron) :
             if goodElectron(entry, i) : goodElectronList.append(i)
 
-    if flavour == 'AZH' :
+    if isAZH :
         for i in range(entry.nElectron) :
             if goodElectronAZH(entry, i) : goodElectronList.append(i)
 

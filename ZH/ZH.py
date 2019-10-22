@@ -32,7 +32,8 @@ def getArgs() :
     parser.add_argument("-m","--maxPrint",default=0,type=int,help="Maximum number of events to print.")
     parser.add_argument("-t","--testMode",default='',help="tau MVA selection")
     parser.add_argument("-y","--year",default=2017,type=int,help="Data taking period, 2016, 2017 or 2018")
-    parser.add_argument("-f","--flavour",default='ZH',type=int,help="is this for the ZH or the AZH analysis?")
+    parser.add_argument("-l","--flavour",default='ZH',help="is this for the ZH or the AZH analysis?")
+    parser.add_argument("-w","--weights",default=False,type=int,help="to re-estimate Sum of Weights")
     
     return parser.parse_args()
 
@@ -79,6 +80,7 @@ maxPrint = args.maxPrint
 
 cutCounter = {}
 
+
 if args.category != 'none' :
     cats = [args.category]
 else :
@@ -88,6 +90,11 @@ for cat in cats : cutCounter[cat] = GF.cutCounter()
 
 inFileName = args.inFileName
 print("Opening {0:s} as input.  Event category {1:s}".format(inFileName,cat))
+
+isAZH=False
+if str(args.flavour) == 'AZH' : isAZH = True
+if isAZH : print 'You are running on the AZH mode !!!'
+
 inFile = TFile.Open(inFileName)
 inFile.cd()
 inTree = inFile.Get("Events")
@@ -115,11 +122,22 @@ else :
 
 era=str(args.year)
 
-isAZH=False
-if str(args.flavour) == 'AZH' : isAZH = True
-
-
 outFileName = GF.getOutFileName(args).replace(".root",".ntup")
+
+if args.weights > 0 :
+    hWeight = TH1D("hWeights","hWeights",1,-0.5,0.5)
+    for count, e in enumerate(inTree) :
+        hWeight.Fill(0, e.genWeight)
+    
+    ext = outFileName.split("_")
+    fName = 'weights_'+str(ext[1])
+    fW = TFile( fName, 'recreate' )
+    print 'Will be saving the Weights in', fName
+    fW.cd()
+    hWeight.Write()
+
+#############end weights
+
 print("Opening {0:s} as output.".format(outFileName))
 outTuple = outTuple.outTuple(outFileName, era)
 
@@ -144,9 +162,12 @@ for count, e in enumerate(inTree) :
             if e.nMuon < 2 : continue 
             for cat in cats[4:] : cutCounter[cat].count('LeptonCount')
 
-        goodElectronList = tauFun.makeGoodElectronList(e,flavour)
-        goodMuonList = tauFun.makeGoodMuonList(e,flavour)
-        goodElectronList, goodMuonList = tauFun.eliminateCloseLeptons(e, goodElectronList, goodMuonList)
+        goodElectronList = tauFun.makeGoodElectronList(e, isAZH)
+        goodMuonList = tauFun.makeGoodMuonList(e, isAZH)
+        if not isAZH : goodElectronList, goodMuonList = tauFun.eliminateCloseLeptons(e, goodElectronList, goodMuonList)
+        if isAZH and lepMode == 'ee' and len(goodElectronList) > 2 : continue 
+        if isAZH and lepMode == 'mm' and len(goodMuonList) > 2 : continue 
+
 	lepList=[]
 
         
@@ -187,8 +208,8 @@ for count, e in enumerate(inTree) :
         for tauMode in ['et','mt','tt','em'] :
             cat = lepMode + tauMode
             if tauMode == 'tt' :
-                if flavour = 'ZH' : tauList = tauFun.getTauList(cat, e, pairList=pairList, flavour)
-                if flavour = 'AZH' : tauList = tauFun.getTauListAZH(cat, e, pairList=pairList, flavour)
+                if not isAZH : tauList = tauFun.getTauList(cat, e, pairList=pairList)
+                if isAZH : tauList = tauFun.getTauListAZH(cat, e, pairList=pairList)
                 bestTauPair = tauFun.getBestTauPair(cat, e, tauList )
                                     
             elif tauMode == 'et' :
@@ -226,7 +247,7 @@ for count, e in enumerate(inTree) :
 	    #print  lepList[0], lepList[1], LepP.Pt(), LepM.Pt(), bestTauPair[0],bestTauPair[1],cat
 
             if MC :
-                outTuple.setWeight(PU.getWeight(e.Pileup_nPU))
+                outTuple.setWeight(PU.getWeight(e.Pileup_nPU)) ## we store the GenWeight * PUweight ?
 	    else :
                 isInJSON = CJ.checkJSON(e.luminosityBlock,e.run)
                 if not isInJSON :

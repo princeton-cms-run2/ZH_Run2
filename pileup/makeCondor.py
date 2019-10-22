@@ -6,14 +6,15 @@ def getArgs() :
     parser.add_argument("--dataSet",default=defDS,help="Data set name.") 
     parser.add_argument("--nickName",default='MCpileup',help="Data set nick name.") 
     parser.add_argument("-m","--mode",default='anaXRD',help="Mode (script to run).")
+    parser.add_argument("-y","--year",default=2017,type=str,help="Data taking period, 2016, 2017 or 2018")
     return parser.parse_args()
 
 def beginBatchScript(baseFileName) :
     outLines = ['#!/bin/tcsh\n']
     outLines.append("source /cvmfs/cms.cern.ch/cmsset_default.csh\n")
     outLines.append("setenv SCRAM_ARCH slc6_amd64_gcc700\n")
-    outLines.append("eval `scramv1 project CMSSW CMSSW_10_2_9`\n")
-    outLines.append("cd CMSSW_10_2_9/src/\n")
+    outLines.append("eval `scramv1 project CMSSW CMSSW_10_2_16_patch1`\n")
+    outLines.append("cd CMSSW_10_2_16_patch1/src\n")
     outLines.append("eval `scramv1 runtime -csh`\n")
     outLines.append("echo ${_CONDOR_SCRATCH_DIR}\n")
     outLines.append("cd ${_CONDOR_SCRATCH_DIR}\n")
@@ -27,10 +28,13 @@ def getFileName(line) :
 import os
 
 args = getArgs()
+era = str(args.year)
 
 # sample query 
 # dasgoclient --query="file dataset=/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8*/*/NANOAOD*" --limit=0   
 query = '"file dataset={0:s}"'.format(args.dataSet)
+if "USER" in str(args.dataSet) : query = '"file dataset={0:s}"'.format(args.dataSet+" instance=prod/phys03")
+
 command = "dasgoclient --query={0:s} --limit=0 > fileList.txt".format(query)
 print("Running in {0:s} mode.  Command={1:s}".format(args.mode,command))
 os.system(command)
@@ -50,10 +54,10 @@ for nFile, file in enumerate(files) :
     fileName = getFileName(file)
 
     outFileName = "{0:s}_{1:03d}.root".format(args.nickName,nFile+1)
-    outLines.append("xrdcp root://cms-xrd-global.cern.ch/{0:s} inFile.root\n".format(fileName)) 
-    outLines.append("python makePileUpHisto.py -f inFile.root -o {0:s}\n".format(outFileName))
+    outLines.append("xrdcp root://cms-xrd-global.cern.ch/{0:s} inFile_{1:03d}.root\n".format(fileName,nFile+1)) 
+    outLines.append("python makePileUpHisto.py -f inFile_{0:03d}.root -o {1:s} -y {2:s}\n".format(nFile+1,outFileName, args.year))
     outLines.append("mv inFile.csv {0:s}\n".format(outFileName.replace(".root",".csv")))
-    outLines.append("rm inFile.root\n")
+    outLines.append("rm inFile_{0:03d}.root\n".format(nFile+1))
     outLines.append("rm *.pyc\nrm *.so\nrm *.pcm\nrm *cc.d\n")
     
     print("Writing out file = {0:s}".format(scriptName))
@@ -66,6 +70,10 @@ for nFile, file in enumerate(files) :
 dir = '/uscms_data/d3/alkaloge/ZH/CMSSW_10_2_9/src/pileup/'
 funcsDir = '/uscms_data/d3/alkaloge/ZH/CMSSW_10_2_9/src/funcs/'
 
+#dir = os.getcwd()+"/../../../pileup/"
+dir = os.getcwd()+"/../"
+funcsDir = os.getcwd()+"/../../funcs/"
+
 for file in scriptList :
     base = file[:-4] 
     outLines = ['universe = vanilla\n']
@@ -73,7 +81,7 @@ for file in scriptList :
     outLines.append('Output = {0:s}.out\n'.format(base))
     outLines.append('Error = {0:s}.err\n'.format(base))
     outLines.append('Log = {0:s}.log\n'.format(base))
-    outLines.append('transfer_input_files = {0:s}makePileUpHisto.py, {0:s}data_pileup_2017.root,'.format(dir))
+    outLines.append('transfer_input_files = {0:s}makePileUpHisto.py, {0:s}data_pileup_{1:s}.root,'.format(dir,args.year))
     outLines.append('{0:s}tauFun.py, {0:s}generalFunctions.py \n '.format(funcsDir))
     outLines.append('should_transfer_files = YES\n')
     outLines.append('when_to_transfer_output = ON_EXIT\n')
