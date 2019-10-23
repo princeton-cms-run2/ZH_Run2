@@ -33,19 +33,20 @@ hIn, hW = {}, {}
 for nickName in nickNames :
     cf = os.path.isfile("./{0:s}_{1:s}/temp.root".format(nickName,era))
     if not cf :
-	os.system("hadd -f -k ./{0:s}_{1:s}/temp.root ./{0:s}_{1:s}/{0:s}_*.root".format(nickName,era))
-        inFile = TFile.Open("./{0:s}_{1:s}/temp.root".format(nickName,era))
-        inFile.cd()
-	hh = inFile.Get("hMC")
-	h2 = inFile.Get("hWeight")
-	gROOT.cd() 
-	hIn[nickName] = hh.Clone("hMC_{0:s}".format(nickName))
-	hW[nickName]  = h2.Clone("hW_{0:s}".format(nickName))
-	print("Before close: hIn[{0:s}]={1:s}".format(nickName,str(hIn[nickName])))
-	hIn[nickName].Print() 
-	inFile.Close()
-	print(" After close: hIn[{0:s}]={1:s}".format(nickName,str(hIn[nickName])))
-        print("hIn.keys()={0:s}".format(str(hIn.keys())))
+	#os.system("hadd -f -k ./{0:s}_{1:s}/temp.root ./{0:s}_{1:s}/{0:s}_*.root".format(nickName,era))
+	os.system("hadd -f -k ./{0:s}_{1:s}/temp.root ./{0:s}_{1:s}/*_*.root".format(nickName,era))
+    inFile = TFile.Open("./{0:s}_{1:s}/temp.root".format(nickName,era))
+    inFile.cd()
+    hh = inFile.Get("hMC")
+    h2 = inFile.Get("hWeight")
+    gROOT.cd() 
+    hIn[nickName] = hh.Clone("hMC_{0:s}".format(nickName))
+    hW[nickName]  = h2.Clone("hW_{0:s}".format(nickName))
+    print("Before close: hIn[{0:s}]={1:s}".format(nickName,str(hIn[nickName])))
+    hIn[nickName].Print() 
+    inFile.Close()
+    print(" After close: hIn[{0:s}]={1:s}".format(nickName,str(hIn[nickName])))
+    print("hIn.keys()={0:s}".format(str(hIn.keys())))
 
 if False :
     c1 = TCanvas("c1","c1",1000,750)
@@ -58,7 +59,8 @@ if False :
 
 outLines = []
 print("Before opening f.")
-f = TFile('MC.root', 'recreate' )
+fOut= ("MC_{0:s}.root").format(args.year)
+f = TFile(fOut, 'recreate' )
 print("After opening f.")
 for nickName in hIn.keys() :
     print("Adding {0:s} and {1:s} to output file.".format(str(hIn[nickName]),str(hW[nickName])))

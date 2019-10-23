@@ -3,7 +3,7 @@ import glob
 import os
 import os.path
 
-files = glob.glob('*_2017')
+files = glob.glob('*_2016')
 for file in files :
     if not os.path.isdir(file) : continue
     os.chdir('./{0:s}'.format(file))
