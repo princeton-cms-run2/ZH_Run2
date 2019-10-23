@@ -3,19 +3,17 @@ DY2JetsToLL,Reducible,304.4,88895,88795, ,/DY2JetsToLL_M-50_TuneCP5_13TeV-madgra
 DY3JetsToLL,Reducible,111.5,1149467,1147725, ,/DY3JetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/RunIIFall17NanoAODv5_PU2017_12Apr2018_new_pmx_ext1_v2-DeepTauv2p1_TauPOG-v1/USER
 DY4JetsToLL,Reducible,44.03,4328648,4317756, ,/DY4JetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/RunIIFall17NanoAODv5_PU2017_12Apr2018_v2_v2-DeepTauv2p1_TauPOG-v1/USER
 DYJetsToLL,Reducible,6225.42,48675378,48632609, ,/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/RunIIFall17NanoAODv5_PU2017RECOSIMstep_12Apr2018_ext1_v1-DeepTauv2p1_TauPOG-v1/USER
-DYJetsToLLM10to50ext,Reducible,1,,, ,/DYJetsToLL_M-10to50_TuneCP5_13TeV-madgraphMLM-pythia8/RunIIFall17MiniAODv2-PU2017_12Apr2018_94X_mc2017_realistic_v14_ext1-v2/MINIAODSIM
-DYJetsToLLM10to50,Reducible,1,,, ,/DYJetsToLL_M-10to50_TuneCP5_13TeV-madgraphMLM-pythia8/RunIIFall17MiniAODv2-PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/MINIAODSIM
+DYJetsToLLM10to50,Reducible,18610, , , ,/DYJetsToLL_M-10to50_TuneCP5_13TeV-madgraphMLM-pythia8/alkaloge-Fall17_nAODv5_DeepTID_v2p1-72b4b5cc0cc1ac33fe3adb876613af24/USER
 EWKWPlus2Jets,Reducible,29.59,4358697,4354690, ,/EWKWPlus2Jets_WToLNu_M-50_TuneCP5_13TeV-madgraph-pythia8/alkaloge-Fall17_nAODv5_DeepTID_v2p1-72b4b5cc0cc1ac33fe3adb876613af24/USER
-EWKWMinus2Jets,Reducible,1,,, ,/EWKWMinus2Jets_WToLNu_M-50_TuneCP5_13TeV-madgraph-pythia8/RunIIFall17MiniAODv2-PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/MINIAODSIM
 EWKZ2JetsLL,Reducible,4.321,952504,951316, ,/EWKZ2Jets_ZToLL_M-50_TuneCP5_13TeV-madgraph-pythia8/alkaloge-Fall17_nAODv5_DeepTID_v2p1-72b4b5cc0cc1ac33fe3adb876613af24/USER
 EWKZ2JetsNuNu,Reducible,10.66,2949960,2943054, ,/EWKZ2Jets_ZToNuNu_TuneCP5_13TeV-madgraph-pythia8/alkaloge-Fall17_nAODv5_DeepTID_v2p1-72b4b5cc0cc1ac33fe3adb876613af24/USER
 GluGluHToTauTau,Signal,48.58,9259000,198813970.4, ,/GluGluHToTauTau_M125_13TeV_powheg_pythia8/RunIIFall17NanoAODv5_PU2017_12Apr2018_new_pmx_v2-DeepTauv2p1_TauPOG-v1/USER
-ST1,Rare,35.85,7977430,279005358.6, ,/ST_tW_antitop_5f_inclusiveDecays_TuneCP5_13TeV-powheg-pythia8/RunIIFall17NanoAODv5_PU2017_12Apr2018_v2-DeepTauv2p1_TauPOG-v1/USER
-ST2,Rare,35.85,7794186,272081065.4, ,/ST_tW_top_5f_inclusiveDecays_TuneCP5_13TeV-powheg-pythia8/RunIIFall17NanoAODv5_PU2017_12Apr2018_v2-DeepTauv2p1_TauPOG-v1/USER
-ST3,Rare,136.02,5982064,5982064, ,/ST_t-channel_top_4f_inclusiveDecays_TuneCP5_13TeV-powhegV2-madspin-pythia8/RunIIFall17NanoAODv5_PU2017_12Apr2018_new_pmx_v1-DeepTauv2p1_TauPOG-v1/USER
-ST4,Rare,80.95,3675910,3675910, ,/ST_t-channel_antitop_4f_inclusiveDecays_TuneCP5_13TeV-powhegV2-madspin-pythia8/RunIIFall17NanoAODv5_PU2017_12Apr2018_v2-DeepTauv2p1_TauPOG-v1/USER
-ST5,Reducible,1,,, ,/ST_s-channel_4f_leptonDecays_TuneCP5_PSweights_13TeV-amcatnlo-pythia8/RunIIFall17MiniAODv2-PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/MINIAODSIM
-ST6,Reducible,1,,, ,/ST_s-channel_4f_leptonDecays_TuneCP5_13TeV-amcatnlo-pythia8/RunIIFall17MiniAODv2-PU2017_12Apr2018_94X_mc2017_realistic_v14-v2/MINIAODSIM
+ST_tW_top,Reducible,35.85,7977430,279005358.6, ,/ST_tW_antitop_5f_inclusiveDecays_TuneCP5_13TeV-powheg-pythia8/RunIIFall17NanoAODv5_PU2017_12Apr2018_v2-DeepTauv2p1_TauPOG-v1/USER
+ST_tW_antitop,Reducible,35.85,7794186,272081065.4, ,/ST_tW_top_5f_inclusiveDecays_TuneCP5_13TeV-powheg-pythia8/RunIIFall17NanoAODv5_PU2017_12Apr2018_v2-DeepTauv2p1_TauPOG-v1/USER
+ST_t_top,Reducible,136.02,5982064,5982064, ,/ST_t-channel_top_4f_inclusiveDecays_TuneCP5_13TeV-powhegV2-madspin-pythia8/RunIIFall17NanoAODv5_PU2017_12Apr2018_new_pmx_v1-DeepTauv2p1_TauPOG-v1/USER
+ST_t_antitop,Reducible,80.95,3675910,3675910, ,/ST_t-channel_antitop_4f_inclusiveDecays_TuneCP5_13TeV-powhegV2-madspin-pythia8/RunIIFall17NanoAODv5_PU2017_12Apr2018_v2-DeepTauv2p1_TauPOG-v1/USER
+ST_s,Reducible,3.74, , , ,/ST_s-channel_4f_leptonDecays_TuneCP5_13TeV-amcatnlo-pythia8/alkaloge-Fall17_nAODv5_DeepTID_v2p1-72b4b5cc0cc1ac33fe3adb876613af24/USER
+ST_s_ext,Reducible,3.74, , , ,/ST_s-channel_4f_leptonDecays_TuneCP5_PSweights_13TeV-amcatnlo-pythia8/alkaloge-Fall17_nAODv5_DeepTID_v2p1-72b4b5cc0cc1ac33fe3adb876613af24/USER
 ttHToTauTau,Signal,0.031805312,21543570,11352998.2, ,/ttHToTauTau_M125_TuneCP5_13TeV-powheg-pythia8/alkaloge-Fall17_nAODv5_DeepTID_v2p1-72b4b5cc0cc1ac33fe3adb876613af24/USER
 TTTo2L2Nu,Reducible,88.29,9000000,648729903.8, ,/TTTo2L2Nu_TuneCP5_13TeV-powheg-pythia8/RunIIFall17NanoAODv5_PU2017_12Apr2018_new_pmx_v1-DeepTauv2p1_TauPOG-v1/USER
 TTToHadronic,Reducible,377.96,41646112,41646112, ,/TTToHadronic_TuneCP5_13TeV-powheg-pythia8/RunIIFall17NanoAODv5_PU2017_12Apr2018_new_pmx_v2-DeepTauv2p1_TauPOG-v1/USER
@@ -39,7 +37,8 @@ ZZ,Rare,12.14,1949768,1949768, ,/ZZ_TuneCP5_13TeV-pythia8/RunIIFall17NanoAODv4-P
 ZZTo2L2Nu,Rare,1.325,8744768,5254422.1, ,/ZZTo2L2Nu_13TeV_powheg_pythia8/alkaloge-Fall17_nAODv5_DeepTID_v2p1-72b4b5cc0cc1ac33fe3adb876613af24/USER
 ZZTo2L2Q,Rare,3.688,27757211,156501087.2, ,/ZZTo2L2Q_13TeV_amcatnloFXFX_madspin_pythia8/alkaloge-Fall17_nAODv5_DeepTID_v2p1-72b4b5cc0cc1ac33fe3adb876613af24/USER
 ZZTo4L,ZZ4L,1.325,98091559,129955906.3, ,/ZZTo4L_13TeV_powheg_pythia8/alkaloge-Fall17_nAODv5_DeepTID_v2p1-72b4b5cc0cc1ac33fe3adb876613af24/USER
-TTGamma_1LTbar, Reducible, 0.7659, , , ,/TTGamma_SingleLeptFromTbar_TuneCP5_PSweights_13TeV_madgraph_pythia8/RunIIFall17MiniAODv2-PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/MINIAODSIM
-TTGamma_1LT, Reducible, 0.7659, , , ,/TTGamma_SingleLeptFromT_TuneCP5_PSweights_13TeV_madgraph_pythia8/RunIIFall17MiniAODv2-PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/MINIAODSIM
-TTGamma_Hadr, Reducible, 0.7953, , , ,/TTGamma_Hadronic_TuneCP5_PSweights_13TeV_madgraph_pythia8/RunIIFall17MiniAODv2-PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/MINIAODSIM
-TTGamma_2L, Reducible, 0.6343, , , ,/TTGamma_Dilept_TuneCP5_PSweights_13TeV-madgraph-pythia8/alkaloge-Fall17_nAODv5_DeepTID_v2p1-72b4b5cc0cc1ac33fe3adb876613af24/USER
+TTGamma_2L, Rare, 0.6343, , , ,/TTGamma_Dilept_TuneCP5_PSweights_13TeV-madgraph-pythia8/alkaloge-Fall17_nAODv5_DeepTID_v2p1-72b4b5cc0cc1ac33fe3adb876613af24/USER
+TTGamma_1LTbar, Rare, 0.7659, , , ,/TTGamma_SingleLeptFromTbar_TuneCP5_PSweights_13TeV_madgraph_pythia8/alkaloge-Fall17_nAODv5_DeepTID_v2p1-72b4b5cc0cc1ac33fe3adb876613af24/USER
+TTGamma_1LT, Rare, 0.7659, , , ,/TTGamma_SingleLeptFromT_TuneCP5_PSweights_13TeV_madgraph_pythia8/alkaloge-Fall17_nAODv5_DeepTID_v2p1-72b4b5cc0cc1ac33fe3adb876613af24/USER
+TTGamma_Hadr, Rare, 0.7953, , , ,/TTGamma_Hadronic_TuneCP5_PSweights_13TeV_madgraph_pythia8/alkaloge-Fall17_nAODv5_DeepTID_v2p1-72b4b5cc0cc1ac33fe3adb876613af24/USER
+EWKWMinus2Jets,Rare,23.24, , , ,/EWKWMinus2Jets_WToLNu_M-50_TuneCP5_13TeV-madgraph-pythia8/alkaloge-Fall17_nAODv5_DeepTID_v2p1-72b4b5cc0cc1ac33fe3adb876613af24/USER

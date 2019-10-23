@@ -4,6 +4,7 @@
 # 
 from ROOT import TFile, gROOT, TCanvas
 import os
+import os.path
 
 def getArgs() :
     import argparse
@@ -30,20 +31,22 @@ print("len(nickNames)={0:d}".format(len(nickNames)))
     
 hIn, hW = {}, {}
 for nickName in nickNames :
-    os.system("hadd -f ./{0:s}_{1:s}/temp.root ./{0:s}_{1:s}/{0:s}_*.root".format(nickName,era))
-    inFile = TFile.Open("./{0:s}_{1:s}/temp.root".format(nickName,era))
-    inFile.cd()
-    hh = inFile.Get("hMC")
-    h2 = inFile.Get("hWeight")
-    gROOT.cd() 
-    hIn[nickName] = hh.Clone("hMC_{0:s}".format(nickName))
-    hW[nickName]  = h2.Clone("hW_{0:s}".format(nickName))
-    print("Before close: hIn[{0:s}]={1:s}".format(nickName,str(hIn[nickName])))
-    hIn[nickName].Print() 
-    inFile.Close()
-    print(" After close: hIn[{0:s}]={1:s}".format(nickName,str(hIn[nickName])))
+    cf = os.path.isfile("./{0:s}_{1:s}/temp.root".format(nickName,era))
+    if not cf :
+	os.system("hadd -f -k ./{0:s}_{1:s}/temp.root ./{0:s}_{1:s}/{0:s}_*.root".format(nickName,era))
+        inFile = TFile.Open("./{0:s}_{1:s}/temp.root".format(nickName,era))
+        inFile.cd()
+	hh = inFile.Get("hMC")
+	h2 = inFile.Get("hWeight")
+	gROOT.cd() 
+	hIn[nickName] = hh.Clone("hMC_{0:s}".format(nickName))
+	hW[nickName]  = h2.Clone("hW_{0:s}".format(nickName))
+	print("Before close: hIn[{0:s}]={1:s}".format(nickName,str(hIn[nickName])))
+	hIn[nickName].Print() 
+	inFile.Close()
+	print(" After close: hIn[{0:s}]={1:s}".format(nickName,str(hIn[nickName])))
+        print("hIn.keys()={0:s}".format(str(hIn.keys())))
 
-print("hIn.keys()={0:s}".format(str(hIn.keys())))
 if False :
     c1 = TCanvas("c1","c1",1000,750)
     for nickName in hIn.keys() :

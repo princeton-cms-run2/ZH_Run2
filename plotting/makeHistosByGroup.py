@@ -185,7 +185,7 @@ for group in groups :
 # GluGluHToTauTau	Signal	48.58	9259000	198813970.4	 	/GluGluHToTauTau_...
 
 # make a first pass to get the weights 
-for line in open('./MC/MCsamples.csv','r').readlines() :
+for line in open('./MC/MCsamples_'+era+'.csv','r').readlines() :
     vals = line.split(',')
     nickName = vals[0]
     group = vals[1]
@@ -272,14 +272,15 @@ for group in groups :
             if e.LHE_Njets > 0 :
                 if DYJets : sw = sampleWeight['DY{0:d}JetsToLL'.format(e.LHE_Njets)]
                 if WJets  : sw = sampleWeight['W{0:d}JetsToLNu'.format(e.LHE_Njets)] 
-            weight = e.weight*sw
+
+            weight = e.weight * e.PUweights * sw
 
             ww = weight
             #s = sf.checkFile()
 
             cat = cats[e.cat]
             #apply tau-ID
-            pfmet_tree = e.pfmet
+            pfmet_tree = e.met
             puppimet_tree = e.puppimet
 
             if cat[2:] == 'et' or cat[2:]  == 'mt' or  cat[2:] == 'tt' :
@@ -300,7 +301,6 @@ for group in groups :
 
                 #now shift the met as well - the problem is that we don't propagate that to m_tt
                 if e.gen_match_1 == 5 or e.gen_match_2 == 5 :
-                    pfmet_tree *= (1+
                     if e.decayMode_1 == 0 or e.decayMode_2 == 0 : 
                         pfmet_tree *= (1+ weights['tauES_DM0'])  #tau ES
                         puppimet_tree *= (1+ weights['tauES_DM0'])
