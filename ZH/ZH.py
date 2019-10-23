@@ -8,7 +8,7 @@ __version__ = "GageDev_v1.1"
 # import external modules 
 import sys
 import numpy as np
-from ROOT import TFile, TTree, TH1D, TCanvas, TLorentzVector  
+from ROOT import TFile, TTree, TH1, TH1D, TCanvas, TLorentzVector  
 from math import sqrt, pi
 
 # import from ZH_Run2/funcs/
@@ -126,11 +126,12 @@ outFileName = GF.getOutFileName(args).replace(".root",".ntup")
 
 if args.weights > 0 :
     hWeight = TH1D("hWeights","hWeights",1,-0.5,0.5)
+    hWeight.Sumw2()
+
     for count, e in enumerate(inTree) :
         hWeight.Fill(0, e.genWeight)
     
-    ext = outFileName.split("_")
-    fName = 'weights_'+str(ext[1])
+    fName = GF.getOutFileName(args).replace(".root",".weights")
     fW = TFile( fName, 'recreate' )
     print 'Will be saving the Weights in', fName
     fW.cd()
@@ -273,14 +274,33 @@ for count, e in enumerate(inTree) :
 dT = time.time() - tStart
 print("Run time={0:.2f} s  time/event={1:.1f} us".format(dT,1000000.*dT/count))
 
-outTuple.writeTree()
+
+
+hCutFlow=[]
+countt=0
 for cat in cats :
     print('\nSummary for {0:s}'.format(cat))
     cutCounter[cat].printSummary()
+    hName="hCutFlow_"+str(cat)
+    #print '======================', hName
+    #count
+    hCutFlow.append( TH1D(hName,hName,10,0.5,10.5))
+    lcount=len(cutCounter[cat].getYield())
+    for i in range(lcount) :
+        #hCutFlow[cat].Fill(1, float(cutCounter[cat].getYield()[i]))
+        yields = cutCounter[cat].getYield()[i]
+        hCutFlow[countt].Fill(i+1, float(yields))
+        hCutFlow[countt].GetXaxis().SetBinLabel(i+1,str(cutCounter[cat].getLabels()[i]))
+        #print cutCounter[cat].getYield()[i], i, cutCounter[cat].getLabels()[i]
+
+    
+    hCutFlow[countt].Sumw2()
+    countt+=1
 
 if not MC : CJ.printJSONsummary()
 
 
+outTuple.writeTree()
 
 
 

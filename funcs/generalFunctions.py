@@ -399,6 +399,8 @@ class cutCounter() :
     def __init__(self):
         self.counter = {}
         self.nickNames = []
+        self.yields = []
+        self.labels = []
 
     def count(self,nickName) :
         try :
@@ -420,6 +422,18 @@ class cutCounter() :
             print("{0:16s}{1:6d} {2:s}".format(nn,self.counter[nn],sFrac))
 
         return
+
+    def getYield(self) :
+        for nn in self.nickNames :
+            self.yields.append(self.counter[nn])
+
+        return self.yields
+
+    def getLabels(self) :
+        for nn in self.nickNames :
+            self.labels.append(nn)
+
+        return self.labels
 
     def writeCSV(self,args) :
         outLines = [] 
@@ -497,10 +511,14 @@ class pileUpWeight() :
         print("Opening MC pileup file = {0:s}".format(MCfile))
         fMC = TFile(MCfile)
         print("fMC={0:s}".format(str(fMC)))
+
+	#temp hack given that we dont have all histos
+        #hMC = fData.Get('pileup')
+
         hMC = fMC.Get('hMC_{0:s}'.format(nickName)) ##this is you would need to have one histo per process
         #hMC = fMC.Get('h{0:s}'.format(nickName)) ##this is you would need to have one histo per process
         #hMC = fMC.Get('pileup') ##this is you would need to have one histo per process
-        print("hMC={0:s}".format(str(hMC)))
+        #print("hMC={0:s}".format(str(hMC)))
         # check to be sure that data and MC histograms are commensurate
         if hData.GetBinWidth(1) != hMC.GetBinWidth(1) or hData.GetBinLowEdge(1) != hMC.GetBinLowEdge(1) or hData.GetNbinsX() != hMC.GetNbinsX() :
             print("Error in generalFunctions.pileUpWeight().calculateWeights()\nData and MC histograms not commensurate.") 
