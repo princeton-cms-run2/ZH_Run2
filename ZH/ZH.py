@@ -166,8 +166,6 @@ for count, e in enumerate(inTree) :
         goodElectronList = tauFun.makeGoodElectronList(e, isAZH)
         goodMuonList = tauFun.makeGoodMuonList(e, isAZH)
         if not isAZH : goodElectronList, goodMuonList = tauFun.eliminateCloseLeptons(e, goodElectronList, goodMuonList)
-        if isAZH and lepMode == 'ee' and len(goodElectronList) > 2 : continue 
-        if isAZH and lepMode == 'mm' and len(goodMuonList) > 2 : continue 
 
 	lepList=[]
 
@@ -208,9 +206,20 @@ for count, e in enumerate(inTree) :
         
         for tauMode in ['et','mt','tt','em'] :
             cat = lepMode + tauMode
+            if isAZH :
+                if cat =='eeet' and (len(goodMuonList) > 0 or len(goodElectronList) > 3) : continue 
+                if cat =='eemt' and (len(goodMuonList) > 1 or len(goodElectronList) > 2) : continue 
+                if cat =='eeet' and (len(goodMuonList) > 0 or len(goodElectronList) > 3) : continue 
+                if cat =='eett' and (len(goodMuonList) > 0 or len(goodElectronList) > 2) : continue 
+
+                if cat =='mmet' and (len(goodMuonList) > 2 or len(goodElectronList) > 1) : continue 
+                if cat =='mmmt' and (len(goodMuonList) > 3 or len(goodElectronList) > 0) : continue 
+                if cat =='mmem' and (len(goodMuonList) > 3 or len(goodElectronList) > 1) : continue 
+                if cat =='mmmt' and (len(goodMuonList) > 3 or len(goodElectronList) > 0) : continue 
+
             if tauMode == 'tt' :
-                if not isAZH : tauList = tauFun.getTauList(cat, e, pairList=pairList)
                 if isAZH : tauList = tauFun.getTauListAZH(cat, e, pairList=pairList)
+                else : tauList = tauFun.getTauList(cat, e, pairList=pairList)
                 bestTauPair = tauFun.getBestTauPair(cat, e, tauList )
                                     
             elif tauMode == 'et' :
