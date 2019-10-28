@@ -61,7 +61,7 @@ for nFiles, file in enumerate(files) :
     dataset.append(fileName)
 
 
-
+counter=0
 
 for nFile in range(0, len(dataset),mjobs) :
     #print("nFile={0:d} file[:80]={1:s}".format(nFile,file[:80]))
@@ -75,10 +75,12 @@ for nFile in range(0, len(dataset),mjobs) :
 
     fileName = getFileName(file)
     maxx = mjobs
-    if nFile+mjobs > len(dataset)  : maxx = nFile+mjobs - len(dataset)+1
+    if counter+mjobs > len(dataset) : 
+        #print 'should include', nFile, -nFile-mjobs + len(dataset)+1, 'from ', len(dataset), counter
+        maxx = len(dataset)-counter
         #for j in range(0,mjobs) :
     for j in range(0,maxx) :
-        print 'shoud see', nFile+maxx, maxx, len(dataset)
+        #print 'shoud see', nFile+maxx, maxx, len(dataset)
         fileloop=dataset[nFile:nFile+maxx][j]
         outLines.append("xrdcp root://cms-xrd-global.cern.ch/{0:s} inFile.root\n".format(fileloop)) 
         outFileName = "{0:s}_{1:03d}.root".format(args.nickName,nFile+j)
@@ -90,6 +92,7 @@ for nFile in range(0, len(dataset),mjobs) :
     print("Writing out file = {0:s}".format(scriptName))
     open(scriptName,'w').writelines(outLines)
     scriptList.append(scriptName)
+    counter += mjobs
             
 
 # now that .csh files have been generated make a list of corresponding .jdl files
