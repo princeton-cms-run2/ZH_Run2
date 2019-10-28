@@ -1,3 +1,6 @@
+
+import os
+
 def getArgs() :
     import argparse
     parser = argparse.ArgumentParser()
@@ -7,7 +10,7 @@ def getArgs() :
     parser.add_argument("--nickName",default='MCpileup',help="Data set nick name.") 
     parser.add_argument("-m","--mode",default='anaXRD',help="Mode (script to run).")
     parser.add_argument("-y","--year",default=2017,type=str,help="Data taking period, 2016, 2017 or 2018")
-    parser.add_argument("-c","--concatenate",default=4,type=int,help="On how many files to run on each job")
+    parser.add_argument("-c","--concatenate",default=5,type=int,help="On how many files to run on each job")
     return parser.parse_args()
 
 def beginBatchScript(baseFileName) :
@@ -26,7 +29,6 @@ def getFileName(line) :
     fileName = tmp.strip()
     return fileName
 
-import os
 
 args = getArgs()
 era = str(args.year)
@@ -59,6 +61,8 @@ for nFiles, file in enumerate(files) :
     dataset.append(fileName)
 
 
+
+
 for nFile in range(0, len(dataset),mjobs) :
     #print("nFile={0:d} file[:80]={1:s}".format(nFile,file[:80]))
 
@@ -68,16 +72,18 @@ for nFile in range(0, len(dataset),mjobs) :
 
     outLines.append("tar -zxvf SFs.tar.gz\n")
     outLines.append("cp MCsamples_*csv MCsamples.csv\n")
-        #print '===========================', fileloop, nFile, file
 
     fileName = getFileName(file)
-    if nFile+mjobs <= len(dataset)  :
-        for j in range(0,mjobs) :
-            fileloop=dataset[nFile:nFile+mjobs][j]
-            outLines.append("xrdcp root://cms-xrd-global.cern.ch/{0:s} inFile.root\n".format(fileloop)) 
-            outFileName = "{0:s}_{1:03d}.root".format(args.nickName,nFile+j)
-            outLines.append("python ZH.py -f inFile.root -o {0:s} --nickName {1:s} -y {2:s} -l AZH -w 1\n".format(outFileName,args.nickName, args.year))
-            outLines.append("rm inFile.root\n")
+    maxx = mjobs
+    if nFile+mjobs > len(dataset)  : maxx = nFile+mjobs - len(dataset)+1
+        #for j in range(0,mjobs) :
+    for j in range(0,maxx) :
+        print 'shoud see', nFile+maxx, maxx, len(dataset)
+        fileloop=dataset[nFile:nFile+maxx][j]
+        outLines.append("xrdcp root://cms-xrd-global.cern.ch/{0:s} inFile.root\n".format(fileloop)) 
+        outFileName = "{0:s}_{1:03d}.root".format(args.nickName,nFile+j)
+        outLines.append("python ZH.py -f inFile.root -o {0:s} --nickName {1:s} -y {2:s} -l AZH -w 1\n".format(outFileName,args.nickName, args.year))
+        outLines.append("rm inFile.root\n")
 
 
     outLines.append("rm *.pyc\nrm *.so\nrm *.pcm\nrm *cc.d\n")
