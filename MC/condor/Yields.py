@@ -1,5 +1,5 @@
 __author__ = "Alexis Kalogeropoulos"
-__description__ = "Simple script to make LaTex table from a given .root file"
+__description__ = "Simple script to make LaTex table from a given .root file - it needs 3 arguments 1:input file 2:channel (all is preferred) 3:scale to lumi (0, 1, True, False)"
 
 
 import sys
@@ -75,8 +75,6 @@ else:
         htest = inFile.Get(hist)
         for i in range(1,htest.GetNbinsX()) : 
             arr[count][i-1] = '{0:.2f}'.format(htest.GetBinContent(i)*product)
-            #arr[count][i-1]=round(arr[count][i-1],2)
-            #arr[count][i-1]=print '.2f'%arr[count][i-1]
             if cat == 'mmmt' : cuts.append(htest.GetXaxis().GetBinLabel(i))
         count+=1
 
@@ -96,7 +94,6 @@ with open(header+'_yields.txt', 'w') as f:
 	print >> f,'  \\begin{tabular}{l l l l l l l l l }  \hline'
 	for i in cats : print >> f, '{} &'.format(i),
 	print >> f, ''
-	#print '\hline\n'''.join([' & \t'.join([str(x[i]) if len(x) > i else ' ' for x in arr]) for i in range(len(max(arr)))])
         
 	lines = [' & \t'.join([str(x[i]) if len(x) > i else ' ' for x in arr]) for i in range(len(max(arr)))]
 	#lines = [' & \t'.join([str(x[i]) for x in arr]) for i in range(len(max(arr)))]
