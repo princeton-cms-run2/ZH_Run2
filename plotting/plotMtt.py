@@ -18,7 +18,8 @@ def getArgs() :
 
 args = getArgs()
 nBins, xMin, xMax = 10, 0., 200.
-cats = { 1:'eeet', 2:'eemt', 3:'eett', 4:'mmet', 5:'mmmt', 6:'mmtt', 7:'et', 8:'mt', 9:'tt' }
+#cats = { 1:'eeet', 2:'eemt', 3:'eett', 4:'mmet', 5:'mmmt', 6:'mmtt', 7:'et', 8:'mt', 9:'tt' }
+cats = { 1:'eeet', 2:'eemt', 3:'eett', 4:'eeem', 5:'mmet', 6:'mmmt', 7:'mmtt', 8:'mmem', 9:'et', 10:'mt', 11:'tt' }
 
 tdrstyle.setTDRStyle()
 
@@ -26,6 +27,8 @@ outFileName = 'Mtt_{0:d}_{1:s}_LT{2:02d}.root'.format(args.year,args.sign,int(ar
 print("Opening {0:s} as output.".format(outFileName))
 fOut = TFile( outFileName, 'recreate' )
 inFileName = './MC/ZHToTauTau/ZHToTauTau.root'
+inFileName = '../MC/condor/ZHToTauTau_2017/ZHToTauTau_000.ntup'
+
 inFile = TFile.Open(inFileName)
 
 inFile.cd()
@@ -37,7 +40,15 @@ for cat in cats.values()[0:6] :
     hMC[cat] = TH1D(hName,hName,nBins,xMin,xMax)
         
 for i, e in enumerate(inTree) :
+    if e.cat > 8 : continue 
     cat = cats[e.cat]
+    if False and cat == 'mmmt' :
+        if e.iso_1_ID < 1 : continue
+        if e.pt_1 < 20. : continue
+        if e.pt_2 < 30. : continue
+        if e.againstMuonTight3_2 < 1 : continue
+        if e.iso_2_ID < 30. : continue
+        
     # impose tight tau selection 
     if e.iso_2_ID < 16 : continue 
     if cat[2:] == 'tt' and e.iso_1_ID < 16 : continue
