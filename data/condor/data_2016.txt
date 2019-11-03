@@ -1,0 +1,7 @@
+/SingleMuon/Run2016B_17Jul2018_ver2_v1_NanoAODv5-DeepTauv2p1_TauPOG-v1/USER
+/SingleMuon/Run2016C_17Jul2018_v1_NanoAODv5-DeepTauv2p1_TauPOG-v1/USER
+/SingleMuon/Run2016D_17Jul2018_v1_NanoAODv5-DeepTauv2p1_TauPOG-v1/USER
+/SingleMuon/Run2016E_17Jul2018_v1_NanoAODv5-DeepTauv2p1_TauPOG-v1/USER
+/SingleMuon/Run2016F_17Jul2018_v1_NanoAODv5-DeepTauv2p1_TauPOG-v1/USER
+/SingleMuon/Run2016H_17Jul2018_v1_NanoAODv5-DeepTauv2p1_TauPOG-v1/USER
+/SingleMuon/Run2016G_17Jul2018_v1_NanoAODv5-DeepTauv2p1_TauPOG-v1/USER
