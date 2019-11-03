@@ -110,10 +110,10 @@ dirData = os.getcwd()+"/../../../data/"
 funcsDir = os.getcwd()+"/../../../funcs/"
 SVFitDir = os.getcwd()+"/../../../SVFit/"
 
-jsons={'Cert_271036-284044_13TeV_23Sep2016ReReco_Collisions16_JSON.txt', 'Cert_294927-306462_13TeV_EOY2017ReReco_Collisions17_JSON.txt','Cert_314472-325175_13TeV_17SeptEarlyReReco2018ABC_PromptEraD_Collisions18_JSON.txt'}
+jsons={'Cert_271036-284044_13TeV_ReReco_07Aug2017_Collisions16_JSON.txt', 'Cert_294927-306462_13TeV_EOY2017ReReco_Collisions17_JSON.txt','Cert_314472-325175_13TeV_17SeptEarlyReReco2018ABC_PromptEraD_Collisions18_JSON.txt'}
 
 fjson=''
-if args.year == '2016' : fjson = 'Cert_271036-284044_13TeV_23Sep2016ReReco_Collisions16_JSON.txt'
+if args.year == '2016' : fjson = 'Cert_271036-284044_13TeV_ReReco_07Aug2017_Collisions16_JSON.txt'
 if args.year == '2017' : fjson = 'Cert_294927-306462_13TeV_EOY2017ReReco_Collisions17_JSON.txt'
 if args.year == '2018' : fjson = 'Cert_314472-325175_13TeV_17SeptEarlyReReco2018ABC_PromptEraD_Collisions18_JSON.txt'
 

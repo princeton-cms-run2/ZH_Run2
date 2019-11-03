@@ -642,11 +642,13 @@ def eventID(e) :
 
 class checkJSON() :
     
-    def __init__(self,filein='Cert_294927-306462_13TeV_EOY2017ReReco_Collisions17_JSON.txt') :
-        self.good, self.bad  = 0, 0  
+    def __init__(self,filein) :
+        self.good, self.bad  = 0, 0
+        print 'inside json function : will use the JSON', filein
         input_file = open (filein)
-        self.json_array = json.load(input_file)        
-        
+        self.json_array = json.load(input_file)  
+      
+
     def checkJSON(self,LS,run) :
         try :
             LSlist = self.json_array[str(run)]
