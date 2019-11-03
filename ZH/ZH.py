@@ -105,11 +105,11 @@ if args.nEvents > 0 : nMax = min(args.nEvents-1,nentries)
 
 
 MC = len(args.nickName) > 0 
-if args.dataType != 'Data' and args.dataType != 'data' : MC = True
+if args.dataType == 'Data' or args.dataType == 'data' : MC = False
 if args.dataType == 'MC' or args.dataType == 'mc' : MC = True
 
 if MC :
-    print "this is MC, will get PU etc"
+    print "this is MC, will get PU etc", args.dataType
     PU = GF.pileUpWeight()
     PU.calculateWeights(args.nickName,args.year)
 else :
