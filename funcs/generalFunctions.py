@@ -518,7 +518,6 @@ class pileUpWeight() :
         hMC = fMC.Get('hMC_{0:s}'.format(nickName)) ##this is you would need to have one histo per process
         #hMC = fMC.Get('h{0:s}'.format(nickName)) ##this is you would need to have one histo per process
         #hMC = fMC.Get('pileup') ##this is you would need to have one histo per process
-        #print("hMC={0:s}".format(str(hMC)))
         # check to be sure that data and MC histograms are commensurate
         if hData.GetBinWidth(1) != hMC.GetBinWidth(1) or hData.GetBinLowEdge(1) != hMC.GetBinLowEdge(1) or hData.GetNbinsX() != hMC.GetNbinsX() :
             print("Error in generalFunctions.pileUpWeight().calculateWeights()\nData and MC histograms not commensurate.") 
