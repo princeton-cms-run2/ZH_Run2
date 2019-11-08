@@ -31,7 +31,7 @@ def getArgs() :
     parser.add_argument("-n","--nEvents",default=0,type=int,help="Number of events to process.")
     parser.add_argument("-m","--maxPrint",default=0,type=int,help="Maximum number of events to print.")
     parser.add_argument("-t","--testMode",default='',help="tau MVA selection")
-    parser.add_argument("-y","--year",default=2017,type=str,help="Data taking period, 2016, 2017 or 2018")
+    parser.add_argument("-y","--year",default=2017,type=int,help="Data taking period, 2016, 2017 or 2018")
     parser.add_argument("-l","--flavour",default='ZH',help="is this for the ZH or the AZH analysis?")
     parser.add_argument("-w","--weights",default=False,type=int,help="to re-estimate Sum of Weights")
     
@@ -114,9 +114,9 @@ if MC :
     PU.calculateWeights(args.nickName,args.year)
 else :
     CJ = ''#GF.checkJSON(filein='Cert_294927-306462_13TeV_EOY2017ReReco_Collisions17_JSON.txt')
-    if str(args.year) == '2016' : CJ = GF.checkJSON(filein='Cert_271036-284044_13TeV_ReReco_07Aug2017_Collisions16_JSON.txt')
-    if str(args.year) == '2017' : CJ = GF.checkJSON(filein='Cert_294927-306462_13TeV_EOY2017ReReco_Collisions17_JSON.txt')
-    if str(args.year) == '2018' : CJ = GF.checkJSON(filein='Cert_314472-325175_13TeV_17SeptEarlyReReco2018ABC_PromptEraD_Collisions18_JSON.txt')
+    if args.year == 2016 : CJ = GF.checkJSON(filein='Cert_271036-284044_13TeV_ReReco_07Aug2017_Collisions16_JSON.txt')
+    if args.year == 2017 : CJ = GF.checkJSON(filein='Cert_294927-306462_13TeV_EOY2017ReReco_Collisions17_JSON.txt')
+    if args.year == 2018 : CJ = GF.checkJSON(filein='Cert_314472-325175_13TeV_17SeptEarlyReReco2018ABC_PromptEraD_Collisions18_JSON.txt')
 
 
 era=str(args.year)
@@ -170,8 +170,8 @@ for count, e in enumerate(inTree) :
 
         
         if lepMode == 'ee' :
-            if args.year == '2016' and not e.HLT_Ele27_eta2p1_WPTight_Gsf and not e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ : continue
-            if (args.year == '2017' or args.year == '2018') and not e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ and not e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL and not e.HLT_Ele35_WPTight_Gsf and not e.HLT_Ele32_WPTight_Gsf: continue
+            if  args.year == 2016 and not e.HLT_Ele27_eta2p1_WPTight_Gsf and not e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ : continue
+            if (args.year == 2017 or args.year == 2018) and not e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ and not e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL and not e.HLT_Ele35_WPTight_Gsf and not e.HLT_Ele32_WPTight_Gsf: continue
 
             if len(goodElectronList) < 2 :  continue
             pairList, lepList = tauFun.findZ(goodElectronList,[], e)
@@ -180,8 +180,8 @@ for count, e in enumerate(inTree) :
             for cat in cats[:4] : cutCounter[cat].count('Trigger')
         
         if lepMode == 'mm' :
-            if args.year == '2016' and not e.HLT_IsoMu24 and not e.HLT_IsoTkMu24 and not e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ and not e.HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ: continue
-            if (args.year == '2017' or args.year == '2018') and not e.HLT_IsoMu24  and not e.HLT_IsoMu27 and not e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass8 and not e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mas3s8 : continue
+            if args.year == 2016 and not e.HLT_IsoMu24 and not e.HLT_IsoTkMu24 and not e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ and not e.HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ: continue
+            if (args.year == 2017 or args.year == 2018) and not e.HLT_IsoMu24  and not e.HLT_IsoMu27 and not e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass8 and not e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mas3s8 : continue
 
 
             if len(goodMuonList) < 2 : continue
