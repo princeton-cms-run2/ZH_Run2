@@ -412,7 +412,7 @@ class outTuple() :
 	TrigListLep, hltListLep  = GF.findLeptTrigger(lepList, entry, chanl, era)
 
 	TrigListLep = list(dict.fromkeys(TrigListLep))
-        print 'TrigerList ===========>', TrigListLep, hltListLep, chanl
+        #print 'TrigerList ===========>', TrigListLep, hltListLep, chanl
         
         leadLPt = 0.
         subleadLPt = 0.
