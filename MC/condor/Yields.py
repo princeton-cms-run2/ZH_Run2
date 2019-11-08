@@ -58,15 +58,11 @@ if ScaleToLumi : product = xsec*lumi*1000/hW.GetSumOfWeights()
 if 'all' not in channel :
     hist="hCutFlow_"+cat
     h1 = inFile.Get(hist)
-
-
+    
     for i in range(1,h1.GetNbinsX()) :
         print h1.GetXaxis().GetBinLabel(i), h1.GetBinContent(i)*product
 
 else:
-
-
-    
     count=0
     for cat in cats:
     
@@ -83,27 +79,42 @@ cats.insert(0,'Cuts')
 
 np.vstack([arr,cats])
 
-
-
 with open(header+'_yields.txt', 'w') as f:
 
+        print >> f,'\\documentclass[10pt]{report}'
+        print >> f,'\\begin{document}'
+	print >> f,'\\begin{table}[htp]'
+        hh = header.replace('_','\\_')
+	print >> f,'\\caption{' + '{0:s}'.format(hh) + '}'  
+	print >> f,'\\begin{center}'
+	print >> f,'\\begin{tabular}{l r r r r r r r r }  \hline'
+        line = cats[0]
+	for i in cats[1:] : line += ' & {}'.format(i) 
+	line += '\\'
+        line += '\\ \hline' 
+        print >> f,line
+        lines = []
+        for x in arr :
+            line = []
+            for i in range(len(x)) :
+                v = float(x[i])
+                if v > 99. :
+                    line.append("{0:.0f} ".format(v))
+                else :
+                    line.append("{0:.2f} ".format(v)) 
+            lines.append(line)
 
-	print >> f,'  \\begin{table}[htdp]'
-	print >> f,'  \caption{'+header+'}'
-	print >> f,'  \\begin{center}'
-	print >> f,'  \\begin{tabular}{l l l l l l l l l }  \hline'
-	for i in cats : print >> f, '{} &'.format(i),
-	print >> f, ''
-        
-	lines = [' & \t'.join([str(x[i]) if len(x) > i else ' ' for x in arr]) for i in range(len(max(arr)))]
-	#lines = [' & \t'.join([str(x[i]) for x in arr]) for i in range(len(max(arr)))]
-	for i in range(len(cuts)):
-	    print >> f,'{} & {} \hline'.format(cuts[i], lines[i])
+        for i in range(len(cuts)):
+            if len(cuts[i]) < 1 : continue 
+            line = cuts[i]
+            for j in range(8) : line += " & {0:s}".format(lines[i][j])
+            line += '\\\\ \\hline'
+	    print >> f,line
 
-
-
-	print >> f,'  \\end{tabular}  \hline'
-	print >> f,'  \\end{table}  \hline'
+	print >> f,'\\end{tabular}'
+        print >> f,'\\end{center}'
+	print >> f,'\\end{table}'
+        print >> f,'\\end{document}'
 
 
 	#np.savetxt('text.txt',arr, delimiter=' & ', fmt='%.2f', newline=' \n')
