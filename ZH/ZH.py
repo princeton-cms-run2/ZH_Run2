@@ -181,6 +181,10 @@ for count, e in enumerate(inTree) :
         
         for tauMode in ['et','mt','tt','em'] :
             cat = lepMode + tauMode
+            
+            # modified
+            if cat not in cats: continue
+            
             if tauMode == 'tt' :
                 tauList = tauFun.getTauList(cat, e, pairList=pairList)
                 bestTauPair = tauFun.getBestTauPair(cat, e, tauList )
