@@ -31,7 +31,7 @@ def getArgs() :
     parser.add_argument("-n","--nEvents",default=0,type=int,help="Number of events to process.")
     parser.add_argument("-m","--maxPrint",default=0,type=int,help="Maximum number of events to print.")
     parser.add_argument("-t","--testMode",default='',help="tau MVA selection")
-    parser.add_argument("-y","--year",default=2017,type=int,help="Data taking period, 2016, 2017 or 2018")
+    parser.add_argument("-y","--year",default=2017,type=str,help="Data taking period, 2016, 2017 or 2018")
     parser.add_argument("-l","--flavour",default='ZH',help="is this for the ZH or the AZH analysis?")
     parser.add_argument("-w","--weights",default=False,type=int,help="to re-estimate Sum of Weights")
     
@@ -105,19 +105,18 @@ if args.nEvents > 0 : nMax = min(args.nEvents-1,nentries)
 
 
 MC = len(args.nickName) > 0 
-if args.dataType != 'Data' and args.dataType != 'data' : MC = True
+if args.dataType == 'Data' or args.dataType == 'data' : MC = False
 if args.dataType == 'MC' or args.dataType == 'mc' : MC = True
 
 if MC :
-    print "this is MC, will get PU etc"
+    print "this is MC, will get PU etc", args.dataType
     PU = GF.pileUpWeight()
     PU.calculateWeights(args.nickName,args.year)
 else :
-    print "Will run on Data...."
-    CJ = GF.checkJSON(filein='Cert_294927-306462_13TeV_EOY2017ReReco_Collisions17_JSON.txt')
-    if args.year== '2016' : CJ = GF.checkJSON(filein='Cert_271036-284044_13TeV_ReReco_07Aug2017_Collisions16_JSON.txt')
-    if args.year== '2017' : CJ = GF.checkJSON(filein='Cert_294927-306462_13TeV_EOY2017ReReco_Collisions17_JSON.txt')
-    if args.year== '2018' : CJ = GF.checkJSON(filein='Cert_314472-325175_13TeV_17SeptEarlyReReco2018ABC_PromptEraD_Collisions18_JSON.txt')
+    CJ = ''#GF.checkJSON(filein='Cert_294927-306462_13TeV_EOY2017ReReco_Collisions17_JSON.txt')
+    if str(args.year) == '2016' : CJ = GF.checkJSON(filein='Cert_271036-284044_13TeV_ReReco_07Aug2017_Collisions16_JSON.txt')
+    if str(args.year) == '2017' : CJ = GF.checkJSON(filein='Cert_294927-306462_13TeV_EOY2017ReReco_Collisions17_JSON.txt')
+    if str(args.year) == '2018' : CJ = GF.checkJSON(filein='Cert_314472-325175_13TeV_17SeptEarlyReReco2018ABC_PromptEraD_Collisions18_JSON.txt')
 
 
 era=str(args.year)
