@@ -14,7 +14,7 @@ def getArgs() :
     parser.add_argument("-v","--verbose",default=0,type=int,help="Print level.")
     parser.add_argument("-f","--inFileName",default='./VBF_sync_input.root',help="File to be analyzed.")
     parser.add_argument("-o","--outFileName",default='',help="File to be used for output.")
-    parser.add_argument("-y","--year",default=2017,type=int,help="Year for data.")
+    parser.add_argument("-y","--year",default=2016,type=int,help="Year for data.")
     parser.add_argument("-l","--LTcut",default=0.,type=float,help="H_LTcut")
     parser.add_argument("-s","--sign",default='OS',help="Opposite or same sign (OS or SS).")
     parser.add_argument("--MConly",action='store_true',help="MC only") 
@@ -142,7 +142,7 @@ def trigweight(e,cat) :
 args = getArgs()
 era=str(args.year)
 
-groups = ['Signal','Reducible','Rare','ZZ4L','data']
+groups = ['Signal','Reducible','Rare','ZZ','data']
 lumi = 1000.
 tauID_w = 1.
 
@@ -186,7 +186,7 @@ if era == '2018' :
 
 #cats = { 1:'eeet', 2:'eemt', 3:'eett', 4:'mmet', 5:'mmmt', 6:'mmtt', 7:'et', 8:'mt', 9:'tt' }
 cats = { 1:'eeet', 2:'eemt', 3:'eett', 4:'eeem', 5:'mmet', 6:'mmmt', 7:'mmtt', 8:'mmem', 9:'et', 10:'mt', 11:'tt' }
-groups = ['Signal','Reducible','Rare','ZZ4L','data']
+groups = ['Signal','Reducible','Rare','ZZ','data']
 tightCuts = not args.looseCuts 
 dataDriven = not args.MConly
 
@@ -210,7 +210,7 @@ for group in groups :
 
 # make a first pass to get the weights
 #for line in open('./MC/MCsamples_small_'+era+'.csv','r').readlines() :
-for line in open('./MC/MCsamples_'+era+'.csv','r').readlines() :
+for line in open('./MC/MCplots_'+era+'.csv','r').readlines() :
     vals = line.split(',')
     nickName = vals[0]
     group = vals[1]
@@ -232,9 +232,11 @@ for i in range(1,4) :
     if 'WJetsToLNu' in totalWeight : sampleWeight[nn] = lumi/(totalWeight['WJetsToLNu']/xsec['WJetsToLNu'] + totalWeight[nn]/xsec[nn])
 
 # now add the data
-for eras in ['2017B','2017C','2017D','2017E','2017F'] :
+#for eras in ['2017B','2017C','2017D','2017E','2017F'] :
+for eras in ['2016'] :
     #for dataset in ['SingleElectron','SingleMuon','DoubleEG','DoubleMuon'] :
-    for dataset in ['SingleElectron','SingleMuon','DoubleEG','DoubleMuon'] :
+    #for dataset in ['SingleElectron','SingleMuon','DoubleEG','DoubleMuon'] :
+    for dataset in ['SingleMuon'] :
         nickName = '{0:s}_Run{1:s}'.format(dataset,eras)
         totalWeight[nickName] = 1.
         sampleWeight[nickName] = 1.
@@ -354,14 +356,17 @@ for group in groups :
             nBins = plotSettings[plotVar][0]
             xMin = plotSettings[plotVar][1]
             xMax = plotSettings[plotVar][2]
-            lTitle = plotSettings[plotVar][3]
+            units = plotSettings[plotVar][3]
+            lTitle = plotSettings[plotVar][4]
             hName = 'h{0:s}_{1:s}_{2:s}'.format(group,cat,plotVar)
             
             binwidth = (xMax - xMin)/nBins
             hMC[group][cat][plotVar] = TH1D(hName,hName,nBins,xMin,xMax)
             hMC[group][cat][plotVar].SetDefaultSumw2()
             hMC[group][cat][plotVar].GetXaxis().SetTitle(lTitle)
-            hMC[group][cat][plotVar].GetYaxis().SetTitle("Events / "+str(binwidth))
+            if 'GeV' in units : hMC[group][cat][plotVar].GetYaxis().SetTitle("Events / "+str(binwidth)+" {0:s}".format(units))
+            if 'GeV' not in units : hMC[group][cat][plotVar].GetYaxis().SetTitle("Events / "+str(binwidth))
+
             #print '=======', nBins, xMin, xMax, hMC[group][cat][plotVar].GetName(), hMC[group][cat][plotVar].GetTitle()
 
     print("\nInstantiating TH1D {0:s}".format(hName))
@@ -557,7 +562,7 @@ for group in groups :
         print("{0:30s} {1:7d} {2:10.6f} {3:5d} {4:8.3f}".format(nickName,nentries,sampleWeight[nickName],nEvents,totalWeight))
         inFile.Close()
     fOut.cd()
-    for cat in cats.values()[0:4] : 
+    for cat in cats.values()[0:8] : 
         for plotVar in plotSettings:
             OverFlow(hMC[group][cat][plotVar])
             hMC[group][cat][plotVar].Write()
