@@ -32,7 +32,7 @@ def getArgs() :
     parser.add_argument("-m","--maxPrint",default=0,type=int,help="Maximum number of events to print.")
     parser.add_argument("-t","--testMode",default='',help="tau MVA selection")
     parser.add_argument("-y","--year",default=2017,type=int,help="Data taking period, 2016, 2017 or 2018")
-    parser.add_argument("-l","--flavour",default='ZH',help="is this for the ZH or the AZH analysis?")
+    parser.add_argument("-s","--selection",default='ZH',help="is this for the ZH or the AZH analysis?")
     parser.add_argument("-w","--weights",default=False,type=int,help="to re-estimate Sum of Weights")
     
     return parser.parse_args()
@@ -92,7 +92,7 @@ inFileName = args.inFileName
 print("Opening {0:s} as input.  Event category {1:s}".format(inFileName,cat))
 
 isAZH=False
-if str(args.flavour) == 'AZH' : isAZH = True
+if str(args.selection) == 'AZH' : isAZH = True
 if isAZH : print 'You are running on the AZH mode !!!'
 
 inFile = TFile.Open(inFileName)
