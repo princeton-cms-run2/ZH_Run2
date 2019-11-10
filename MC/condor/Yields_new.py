@@ -44,7 +44,8 @@ for group in groups :
     nickNames[group] = []
 
 
-for line in open('./MCsamples_'+era+'_small.csv','r').readlines() :
+#for line in open('./MCsamples_'+era+'_small.csv','r').readlines() :
+for line in open('./MCsamples_'+era+'.csv','r').readlines() :
     vals = line.split(',')
     nickName = vals[0]
     group = vals[1]
