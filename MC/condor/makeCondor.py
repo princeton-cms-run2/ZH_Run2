@@ -11,6 +11,7 @@ def getArgs() :
     parser.add_argument("-m","--mode",default='anaXRD',help="Mode (script to run).")
     parser.add_argument("-y","--year",default=2017,type=str,help="Data taking period, 2016, 2017 or 2018")
     parser.add_argument("-c","--concatenate",default=5,type=int,help="On how many files to run on each job")
+    parser.add_argument("-s","--selection",default='ZH',type=str,help="select ZH or AZH")
     return parser.parse_args()
 
 def beginBatchScript(baseFileName) :
@@ -84,7 +85,7 @@ for nFile in range(0, len(dataset),mjobs) :
         fileloop=dataset[nFile:nFile+maxx][j]
         outLines.append("xrdcp root://cms-xrd-global.cern.ch/{0:s} inFile.root\n".format(fileloop)) 
         outFileName = "{0:s}_{1:03d}.root".format(args.nickName,nFile+j)
-        outLines.append("python ZH.py -f inFile.root -o {0:s} --nickName {1:s} -y {2:s} -l AZH -w 1\n".format(outFileName,args.nickName, args.year))
+        outLines.append("python ZH.py -f inFile.root -o {0:s} --nickName {1:s} -y {2:s} -s {3:s} -w 1\n".format(outFileName,args.nickName, args.year, args.selection))
         outLines.append("rm inFile.root\n")
 
 
@@ -105,10 +106,10 @@ funcsDir = os.getenv("CMSSW_BASE")+"/src/ZH_Run2/funcs/"
 SVFitDir = os.getenv("CMSSW_BASE")+"/src/ZH_Run2/SVFit/"
 '''
 
-dir = os.getcwd()+"/../../../MC/"
-dirData = os.getcwd()+"/../../../data/"
-funcsDir = os.getcwd()+"/../../../funcs/"
-SVFitDir = os.getcwd()+"/../../../SVFit/"
+dir = os.getcwd()+"/../../../../MC/"
+dirData = os.getcwd()+"/../../../../data/"
+funcsDir = os.getcwd()+"/../../../../funcs/"
+SVFitDir = os.getcwd()+"/../../../../SVFit/"
 
 
 print("dir={0:s}".format(dir))

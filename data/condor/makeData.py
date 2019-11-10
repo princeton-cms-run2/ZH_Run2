@@ -9,6 +9,7 @@ def getArgs() :
     parser = argparse.ArgumentParser()
     parser.add_argument("-f","--inFile",default='datasets.txt',help="Input file name.")
     parser.add_argument("-y","--year",default=2016,type=str,help="Data taking period, 2016, 2017 or 2018")
+    parser.add_argument("-s","--selection",default='ZH',type=str,help="Select ZH or AZH")
     return parser.parse_args()
 
 args = getArgs() 
@@ -23,11 +24,12 @@ for line in open(args.inFile,'r').readlines() :
     print("dataset={0:s} nickname={1:s}".format(dataset,nickname))
 
     mode = 'anaXRD'
-    outLines.append("mkdir {0:s}\ncd {0:s}\n".format(nickname))
-    outLines.append("python ../makeCondor.py --dataSet {0:s} --nickName {1:s} --mode {2:s} -y {3:s} \n".format(dataset,nickname, mode, args.year))
+    outLines.append("mkdir -p {0:s}/{1:s}\ncd {0:s}/{1:s}\n".format(args.selection, nickname))
+    outLines.append("python ../../makeCondor.py --dataSet {0:s} --nickName {1:s} --mode {2:s} -y {3:s} -s {4:s} \n".format(dataset,nickname, mode, args.year, args.selection))
     outLines.append("cd {0:s}\n".format(cwd))
     
-open('runData.csh','w').writelines(outLines)
+outF='runData_{0:s}_{1:s}.csh'.format(args.selection, args.year)
+open(outF,'w').writelines(outLines)
 
 
 
