@@ -398,6 +398,7 @@ class cutCounter() :
 
     def __init__(self):
         self.counter = {}
+        self.counterGenWeight = {}
         self.nickNames = []
         self.yields = []
         self.labels = []
@@ -408,6 +409,13 @@ class cutCounter() :
         except KeyError :
             self.nickNames.append(nickName) 
             self.counter[nickName] = 1
+
+    def countGenWeight(self,nickName,w) :
+        try :
+            self.counterGenWeight[nickName] += float(w)
+        except KeyError :
+            self.nickNames.append(nickName) 
+            self.counterGenWeight[nickName] = 1
             
     def printSummary(self) :
         #print("Cut summary:\n    Name      Events Fraction")
@@ -426,6 +434,12 @@ class cutCounter() :
     def getYield(self) :
         for nn in self.nickNames :
             self.yields.append(self.counter[nn])
+
+        return self.yields
+
+    def getYieldWeighted(self) :
+        for nn in self.nickNames :
+            self.yields.append(self.counterGenWeight[nn])
 
         return self.yields
 
@@ -498,7 +512,7 @@ class pileUpWeight() :
         nBins = hData.GetNbinsX()
 
         # lumi placeholder values 
-        lumi = { 2016:37.8, 2017:44.0, 2018:63.7 }
+        lumi = { 2016:35.9, 2017:41.5, 2018:59.7 }
         xSec = 1.
         # get MC cross section values
         #for line in open('MCsamples.csv','r').readlines() :
