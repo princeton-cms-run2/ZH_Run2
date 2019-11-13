@@ -16,6 +16,8 @@ args = getArgs()
 outLines = []
 cwd = os.getcwd()
 
+
+
 for line in open(args.inFile,'r').readlines() :
     dataset = line.strip() 
     if len(dataset) < 2 : continue

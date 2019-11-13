@@ -3,7 +3,7 @@ import glob
 import os
 import os.path
 
-files = glob.glob('*Run2017*')
+files = glob.glob('*Run2016*')
 #files = glob.glob('*2017*')
 for file in files :
     if not os.path.isdir(file) : continue
