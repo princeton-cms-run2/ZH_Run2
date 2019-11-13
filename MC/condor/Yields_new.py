@@ -1,7 +1,7 @@
 __author__ = "Alexis Kalogeropoulos"
 __description__ = "Simple script to make LaTex table from a given .root file - it needs arguments as described below. It will produce several txt a) per channel b) per process c) per group (ZZ4L, Reducible, etc). "
 
-
+import os
 import sys
 from ROOT import TFile, TTree, TH1, TH1D, TCanvas, TLorentzVector
 from array import *
@@ -22,7 +22,30 @@ def latex_with_lines(df, *args, **kwargs):
     res.replace('bottomrule', 'hline')
     return res.replace('\\\\\n', '\\\\ \\hline\n')
 
+def WriteLatexGroup (fileOut,array) :
+    f = open(fileOut,'w')
+    print >> f,'\\documentclass[10pt]{report}'
+    print >> f,'\\usepackage{adjustbox}'
+    print >> f,'\\begin{document}'
+    print >> f,'\\begin{table}[htp]'
+    print >> f,'\\caption{' + '{0:s} {1:s}'.format(args.selection, era) + '}'  
+    print >> f,'\\begin{center}'
+    #print >>f, cc.to_latex()
+    f.write(array.to_latex(column_format = "l | " + " | ".join(["r"] * len(array.columns))))
+    print >> f,'\\end{center}'
+    print >> f,'\\end{table}'
+    print >> f,'\\end{document}'
+    f.write(fileOut)
+    f.close()
 
+    s = open(fileOut).read()
+    s = s.replace('\\bottomrule','')
+    s = s.replace('\\midrule','')
+    s = s.replace('\\toprule','')
+    s = s.replace('\\\\','\\\\ \\hline')
+    fa = open(fileOut,'w')
+    fa.write(s)
+    fa.close()
 
 
 def column(matrix, i):
@@ -49,6 +72,10 @@ cats.insert(0,'Cuts')
 
 era=str(args.year)
 
+command = "mkdir txt"
+os.system(command)
+
+
 lumi = {'2016':35920, '2017':41530, '2018':59740}
 
 nickNames, xsec, totalWeight, sampleWeight = {}, {}, {}, {}
@@ -67,7 +94,7 @@ for line in open('./MCsamples_'+era+'_one.csv','r').readlines() :
     nickNames[group].append(nickName)
     xsec[nickName] = float(vals[2])
     totalWeight[nickName] = float(vals[4])
-    sampleWeight[nickName]= lumi[era]*xsec[nickName]/totalWeight[nickName]
+    sampleWeight[nickName]= float(lumi[era])*xsec[nickName]/totalWeight[nickName]
     print("group={0:10s} nickName={1:20s} xSec={2:10.3f} totalWeight={3:11.1f} sampleWeight={4:10.6f}".format(
         group,nickName,xsec[nickName],totalWeight[nickName],sampleWeight[nickName]))
 
@@ -75,11 +102,11 @@ for line in open('./MCsamples_'+era+'_one.csv','r').readlines() :
 
 for i in range(1,5) :
     nn = 'DY{0:d}JetsToLL'.format(i)
-    if 'DYJetsToLL' in totalWeight : sampleWeight[nn] = lumi[era]/(totalWeight['DYJetsToLL']/xsec['DYJetsToLL'] + totalWeight[nn]/xsec[nn])
+    if 'DYJetsToLL' in totalWeight : sampleWeight[nn] = float(lumi[era])/(totalWeight['DYJetsToLL']/xsec['DYJetsToLL'] + totalWeight[nn]/xsec[nn])
 
 for i in range(1,4) :
     nn = 'W{0:d}JetsToLNu'.format(i)
-    if 'WJetsToLNu' in totalWeight : sampleWeight[nn] = lumi[era]/(totalWeight['WJetsToLNu']/xsec['WJetsToLNu'] + totalWeight[nn]/xsec[nn])
+    if 'WJetsToLNu' in totalWeight : sampleWeight[nn] = float(lumi[era])/(totalWeight['WJetsToLNu']/xsec['WJetsToLNu'] + totalWeight[nn]/xsec[nn])
 
 # now add the data - presumably it should the merged data
 #for eras in ['2017B','2017C','2017D','2017E','2017F'] :
@@ -90,6 +117,7 @@ for dataset in ['SingleMuon'] :
     totalWeight[nickName] = 1.
     sampleWeight[nickName] = 1.
     nickNames['data'].append(nickName)
+    xsec[nickName] = 1.
 #####################################3
 
 
@@ -103,26 +131,27 @@ for group in groups :
 
     for nickName in nickNames[group]:
         if group != 'data' : fIn = '{0:s}/{1:s}_{2:s}/{1:s}_{2:s}.root'.format(args.selection, nickName, era)
-        else: fIn = '../../data/condor/{0:s}/{1:s}_{2:s}/{1:s}_{2:s}.root'.format(args.selection, nickName, era)
+        else: fIn = '../../data/condor/{0:s}/{1:s}/{1:s}.root'.format(args.selection, nickName)
         inFile = TFile.Open(fIn)
         inFile.cd()
-    
-        hW = inFile.Get("hWeights")
+        hW=''
+        if group != 'data' : hW = inFile.Get("hWeights")
         inTree = inFile.Get("Events")
     
         nentries = inTree.GetEntries()
 
         header=nickName
-        print ' opening ', fIn, nickName, group, nentries, hW.GetSumOfWeights()
+        if group != 'data' : print ' opening ', fIn, nickName, group, nentries, hW.GetSumOfWeights()
+        else : print ' opening data....', fIn, nickName, group, nentries
 
         scale=str(args.normalize)
         ScaleToLumi=False
 
         if scale=="1" or scale=="true" or scale=="True" or scale == "No" or scale == "no": 
             ScaleToLumi = True
-            header=header+'_'+'{0:.2f}'.format(float(lumi[era]/1000))+'invfb'
+            header=header+'_'+'{0:.3f}'.format(float(lumi[era]/1000))+'invfb'
 
-        if ScaleToLumi : print "Events scaled to {0:.2f}/fb for xsec = {1:.3f} pb".format(float(lumi[era]/1000),float(xsec[nickName]))
+        if ScaleToLumi : print "Events scaled to {0:.1f}/pb for xsec = {1:.3f} pb".format(float(lumi[era]),float(xsec[nickName]))
 
 
         arr = [[0 for i in range(cols)] for j in range(rows)] 
@@ -131,7 +160,6 @@ for group in groups :
         product=1.
         if ScaleToLumi : product = float(sampleWeight[nickName])
 			
-	    #print 'The weight will be', product, xsec, lumi, hW.GetSumOfWeights()
 
         if 'all' not in channel :
 	    hist="hCutFlow_"+cat
@@ -154,7 +182,7 @@ for group in groups :
 	        count+=1
        
 
-        #### this part write a csv - commented for the moment
+        #### this part write a csv - commented out for the moment
         '''
         np.vstack([arr,cats])
         t_matrix = zip(*arr) 
@@ -197,7 +225,7 @@ for group in groups :
 
     ### this is to create a .txt per group
 
-    with open('All_'+group+'_'+args.selection+'_'+era+'_yields.txt', 'w') as f:
+    with open('txt/All_'+group+'_'+args.selection+'_'+era+'_yields.txt', 'w') as f:
         '''
 	print >> f,'\\documentclass[10pt]{report}'
 	print >> f,'\\usepackage{adjustbox}'
@@ -239,24 +267,24 @@ data=[]
 cutlist=[]
 allbkg=[]
   
-cutlist.append( np.genfromtxt('All_Signal_{0:s}_{1:s}_yields.txt'.format(args.selection, args.year), dtype=str,usecols=(0)))
+cutlist.append( np.genfromtxt('txt/All_Signal_{0:s}_{1:s}_yields.txt'.format(args.selection, args.year), dtype=str,usecols=(0)))
 
 
 for counter in range( len(cats[1:])) :
 #for counter in range(1,len(cats)) :
     #print counter, cats[counter]
-    zz4l.append( np.genfromtxt('All_ZZ4L_{0:s}_{1:s}_yields.txt'.format(args.selection, args.year), dtype=None,usecols=(counter+1)))
-    reducible.append( np.genfromtxt('All_Reducible_{0:s}_{1:s}_yields.txt'.format(args.selection, args.year), dtype=None,usecols=(counter+1)))
-    rare.append( np.genfromtxt('All_Rare_{0:s}_{1:s}_yields.txt'.format(args.selection, args.year), dtype=None,usecols=(counter+1)))
-    data.append( np.genfromtxt('All_data_{0:s}_{1:s}_yields.txt'.format(args.selection, args.year), dtype=None,usecols=(counter+1)))
-    signal.append( np.genfromtxt('All_Signal_{0:s}_{1:s}_yields.txt'.format(args.selection, args.year), dtype=None,usecols=(counter+1)))
+    zz4l.append( np.genfromtxt('txt/All_ZZ4L_{0:s}_{1:s}_yields.txt'.format(args.selection, args.year), dtype=None,usecols=(counter+1)))
+    reducible.append( np.genfromtxt('txt/All_Reducible_{0:s}_{1:s}_yields.txt'.format(args.selection, args.year), dtype=None,usecols=(counter+1)))
+    rare.append( np.genfromtxt('txt/All_Rare_{0:s}_{1:s}_yields.txt'.format(args.selection, args.year), dtype=None,usecols=(counter+1)))
+    data.append( np.genfromtxt('txt/All_data_{0:s}_{1:s}_yields.txt'.format(args.selection, args.year), dtype=None,usecols=(counter+1)))
+    signal.append( np.genfromtxt('txt/All_Signal_{0:s}_{1:s}_yields.txt'.format(args.selection, args.year), dtype=None,usecols=(counter+1)))
     allbkg.append(zz4l[counter] + reducible[counter] + rare[counter])
     #cutlist.append( np.genfromtxt('All_ZZ4L_{0:s}_yields.txt'.format(args.year), dtype=str,usecols=(0)))
     #allbkg = np.sum([counter-1] + zz4l[counter-1] + rare[counter-1] + reducible[counter-1], axis)
     #counter+=1
 
 
-data = {'names': cutlist, 'values': zz4l}
+#data = {'names': cutlist, 'values': zz4l}
 
 dfzz4l = pn.DataFrame(data=zz4l)
 df2zz4l_t = dfzz4l.T
@@ -280,23 +308,20 @@ df2allbkg_t.index=[i for i in cutlist]
 df2allbkg_t.columns=[i for i in cats[1:]]
 #df2allbkg_t.head()
 
-dfdata = pn.DataFrame(data=rare)
+dfdata = pn.DataFrame(data=data)
 df2data_t = dfdata.T
 df2data_t.index=[i for i in cutlist]
 df2data_t.columns=[i for i in cats[1:]]
 #df2data_t.head()
 
+dfsignal = pn.DataFrame(data=signal)
+df2signal_t = dfsignal.T
+df2signal_t.index=[i for i in cutlist]
+df2signal_t.columns=[i for i in cats[1:]]
 
 df2zz4l_t.index=[i for i in cutlist]
 df2zz4l_t.columns=[i for i in cats[1:]]
 #df2zz4l_t.head()
-
-
-print df2zz4l_t
-
-
-print df2rare_t
-
 
 
 
@@ -315,7 +340,9 @@ for cat in cats[1:] :
     cc.columns=[i for i in groups[1:]]
     cc.index=[i for i in cutlist]
 
-    with open('All_'+cat+'_'+args.selection+'_'+era+'yields.txt', 'w') as f:
+    fIn = 'txt/All_'+cat+'_'+args.selection+'_'+era+'yields.txt'
+
+    with open(fIn, 'w') as f:
 	print >> f,'\\documentclass[10pt]{report}'
 	print >> f,'\\usepackage{adjustbox}'
 	print >> f,'\\begin{document}'
@@ -344,13 +371,23 @@ for cat in cats[1:] :
 	print >> f,'\\end{tabular}'
 	print >> f,'\\end{adjustbox}'
         '''
-        
-    s = open('All_'+cat+'_'+args.selection+'_'+era+'yields.txt').read()
+
+
+    s = open(fIn).read()
     s = s.replace('\\bottomrule','')
     s = s.replace('\\midrule','')
     s = s.replace('\\toprule','')
     s = s.replace('\\\\','\\\\ \\hline')
-    f = open('All_'+cat+'_'+args.selection+'_'+era+'yields.txt','w')
+    f = open(fIn,'w')
     f.write(s)
     f.close()
- 
+
+WriteLatexGroup('txt/All_ZZ4L_'+args.selection+'_'+era+'_yields.txt',df2zz4l_t)
+WriteLatexGroup('txt/All_Reducible_'+args.selection+'_'+era+'_yields.txt',df2rare_t)
+WriteLatexGroup('txt/All_Rare_'+args.selection+'_'+era+'_yields.txt',df2reducible_t)
+WriteLatexGroup('txt/All_data_'+args.selection+'_'+era+'_yields.txt',df2data_t)
+WriteLatexGroup('txt/All_Allbkg_'+args.selection+'_'+era+'_yields.txt',df2allbkg_t)
+WriteLatexGroup('txt/All_Signal_'+args.selection+'_'+era+'_yields.txt',df2signal_t)
+
+
+print 'All txt files can be found in the ./txt dir....exiting'
