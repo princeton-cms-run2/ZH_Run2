@@ -1,0 +1,23 @@
+\documentclass[10pt]{report}
+\usepackage{adjustbox}
+\begin{document}
+\begin{table}[htp]
+\caption{ZH 2016}
+\begin{center}
+\begin{tabular}{l | r | r | r | r | r | r | r | r}
+
+               &      eeet &      eemt &      eett &      eeem &      mmet &      mmmt &      mmtt &      mmem \\ \hline
+
+All & 500000.00 & 500000.00 & 500000.00 & 500000.00 & 500000.00 & 500000.00 & 500000.00 & 500000 \\ \hline
+LeptonCount &   5646.00 &   3472.00 &   4640.00 &   3306.00 &   9490.00 &   5390.00 &   6903.00 & 376400 \\ \hline
+Trigger &   5646.00 &   3472.00 &   4640.00 &   3011.00 &   9490.00 &   5390.00 &   6903.00 & 188031.00 \\ \hline
+LeptonPair &      0.00 &      0.00 &      0.00 &   3347.00 &      0.00 &      0.00 &      0.00 & 188031.00 \\ \hline
+FoundZ &      0.00 &      0.00 &      0.00 &    724.00 &      0.00 &      0.00 &      0.00 & 157509.00 \\ \hline
+GoodTauPair &      0.00 &      0.00 &      0.00 &    724.00 &      0.00 &      0.00 &      0.00 &   4335.00 \\ \hline
+VVtightTauPair &      0.00 &      0.00 &      0.00 &    385.00 &      0.00 &      0.00 &      0.00 &   4335.00 \\ \hline
+
+\end{tabular}
+\end{center}
+\end{table}
+\end{document}
+txt/All_Signal_ZH_2016_yields.txt

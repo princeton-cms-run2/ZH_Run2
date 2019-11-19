@@ -1,0 +1,22 @@
+\documentclass[10pt]{report}
+\usepackage{adjustbox}
+\begin{document}
+\begin{table}[htp]
+\caption{mmem ZH 2016}
+\begin{center}
+\begin{tabular}{l | r | r | r | r | r}
+
+               &       ZZ4L &    Reducible &        Rare &      All bkg &          data \\ \hline
+
+All & 1988098.00 & 490992981.68 & 32723197.70 & 525704277.38 & 1765777515.00 \\ \hline
+LeptonCount &  305390.00 & 123864449.37 & 13019028.28 & 137188867.65 &  280255440 \\ \hline
+Trigger &  120736.00 &  25918992.63 &   954780.11 &  26994508.74 &   49282927.00 \\ \hline
+LeptonPair &  120736.00 &  25918992.63 &   954780.11 &  26994508.74 &   49282927.00 \\ \hline
+FoundZ &  110578.00 &  22666189.50 &   441128.64 &  23217896.14 &   44486892.00 \\ \hline
+GoodTauPair &     284.00 &     20318.00 &     7633.00 &     28235.00 &       7645.00 \\ \hline
+VVtightTauPair &     284.00 &     20318.00 &     7633.00 &     28235.00 &       7500 \\ \hline
+
+\end{tabular}
+\end{center}
+\end{table}
+\end{document}

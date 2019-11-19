@@ -1,0 +1,23 @@
+\documentclass[10pt]{report}
+\usepackage{adjustbox}
+\begin{document}
+\begin{table}[htp]
+\caption{ZH 2016}
+\begin{center}
+\begin{tabular}{l | r | r | r | r | r | r | r | r}
+
+               &         eeet &         eemt &         eett &         eeem &         mmet &         mmmt &         mmtt &         mmem \\ \hline
+
+All & 525704277.38 & 525704277.38 & 525704277.38 & 525704277.38 & 525704277.38 & 525704277.38 & 525704277.38 & 525704277.38 \\ \hline
+LeptonCount &     11108.99 &      4732.29 &      6202.85 &     96030.06 &     19205.72 &      6541.54 &      9010.54 & 137188867.65 \\ \hline
+Trigger &     11108.99 &      4732.29 &      6202.85 &     21357.80 &     19205.72 &      6541.54 &      9010.54 &  26994508.74 \\ \hline
+LeptonPair &         0.00 &         0.00 &         0.00 &     32079.97 &         0.00 &         0.00 &         0.00 &  26994508.74 \\ \hline
+FoundZ &         0.00 &         0.00 &         0.00 &      1206.01 &         0.00 &         0.00 &         0.00 &  23217896.14 \\ \hline
+GoodTauPair &         0.00 &         0.00 &         0.00 &       623.01 &         0.00 &         0.00 &         0.00 &     28235.00 \\ \hline
+VVtightTauPair &         0.00 &         0.00 &         0.00 &       488.04 &         0.00 &         0.00 &         0.00 &     28235.00 \\ \hline
+
+\end{tabular}
+\end{center}
+\end{table}
+\end{document}
+txt/All_Allbkg_ZH_2016_yields.txt

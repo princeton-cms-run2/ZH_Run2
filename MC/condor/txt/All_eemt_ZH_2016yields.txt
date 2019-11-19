@@ -1,0 +1,22 @@
+\documentclass[10pt]{report}
+\usepackage{adjustbox}
+\begin{document}
+\begin{table}[htp]
+\caption{eemt ZH 2016}
+\begin{center}
+\begin{tabular}{l | r | r | r | r | r}
+
+               &       ZZ4L &    Reducible &        Rare &      All bkg &          data \\ \hline
+
+All & 1988098.00 & 490992981.68 & 32723197.70 & 525704277.38 & 1765777515.00 \\ \hline
+LeptonCount &     125.00 &      2966.00 &     1641.29 &      4732.29 &       1611.00 \\ \hline
+Trigger &     125.00 &      2966.00 &     1641.29 &      4732.29 &       1592.00 \\ \hline
+LeptonPair &       0.00 &         0.00 &        0.00 &         0.00 &          0 \\ \hline
+FoundZ &       0.00 &         0.00 &        0.00 &         0.00 &          0 \\ \hline
+GoodTauPair &       0.00 &         0.00 &        0.00 &         0.00 &          0 \\ \hline
+VVtightTauPair &       0.00 &         0.00 &        0.00 &         0.00 &          0 \\ \hline
+
+\end{tabular}
+\end{center}
+\end{table}
+\end{document}

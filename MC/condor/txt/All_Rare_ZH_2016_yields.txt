@@ -1,0 +1,23 @@
+\documentclass[10pt]{report}
+\usepackage{adjustbox}
+\begin{document}
+\begin{table}[htp]
+\caption{ZH 2016}
+\begin{center}
+\begin{tabular}{l | r | r | r | r | r | r | r | r}
+
+               &        eeet &        eemt &        eett &        eeem &        mmet &        mmmt &        mmtt &        mmem \\ \hline
+
+All & 32723197.70 & 32723197.70 & 32723197.70 & 32723197.70 & 32723197.70 & 32723197.70 & 32723197.70 & 32723197.70 \\ \hline
+LeptonCount &     2483.99 &     1641.29 &     1274.85 &    12368.92 &     4156.72 &     2026.54 &     1777.54 & 13019028.28 \\ \hline
+Trigger &     2483.99 &     1641.29 &     1274.85 &     6086.80 &     4156.72 &     2026.54 &     1777.54 &   954780.11 \\ \hline
+LeptonPair &        0.00 &        0.00 &        0.00 &     8460.97 &        0.00 &        0.00 &        0.00 &   954780.11 \\ \hline
+FoundZ &        0.00 &        0.00 &        0.00 &      272.01 &        0.00 &        0.00 &        0.00 &   441128.64 \\ \hline
+GoodTauPair &        0.00 &        0.00 &        0.00 &      335.01 &        0.00 &        0.00 &        0.00 &     7633.00 \\ \hline
+VVtightTauPair &        0.00 &        0.00 &        0.00 &      207.04 &        0.00 &        0.00 &        0.00 &     7633.00 \\ \hline
+
+\end{tabular}
+\end{center}
+\end{table}
+\end{document}
+txt/All_Rare_ZH_2016_yields.txt

@@ -1,0 +1,23 @@
+\documentclass[10pt]{report}
+\usepackage{adjustbox}
+\begin{document}
+\begin{table}[htp]
+\caption{ZH 2016}
+\begin{center}
+\begin{tabular}{l | r | r | r | r | r | r | r | r}
+
+               &         eeet &         eemt &         eett &         eeem &         mmet &         mmmt &         mmtt &         mmem \\ \hline
+
+All & 490992981.68 & 490992981.68 & 490992981.68 & 490992981.68 & 490992981.68 & 490992981.68 & 490992981.68 & 490992981.68 \\ \hline
+LeptonCount &      8311.00 &      2966.00 &      4684.00 &     81686.14 &     14407.00 &      4344.00 &      6868.00 & 123864449.37 \\ \hline
+Trigger &      8311.00 &      2966.00 &      4684.00 &     14338.00 &     14407.00 &      4344.00 &      6868.00 &  25918992.63 \\ \hline
+LeptonPair &         0.00 &         0.00 &         0.00 &     22631.00 &         0.00 &         0.00 &         0.00 &  25918992.63 \\ \hline
+FoundZ &         0.00 &         0.00 &         0.00 &         9.00 &         0.00 &         0.00 &         0.00 &  22666189.50 \\ \hline
+GoodTauPair &         0.00 &         0.00 &         0.00 &         9.00 &         0.00 &         0.00 &         0.00 &     20318.00 \\ \hline
+VVtightTauPair &         0.00 &         0.00 &         0.00 &         4.00 &         0.00 &         0.00 &         0.00 &     20318.00 \\ \hline
+
+\end{tabular}
+\end{center}
+\end{table}
+\end{document}
+txt/All_Reducible_ZH_2016_yields.txt
