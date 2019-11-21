@@ -6,15 +6,15 @@
 \begin{center}
 \begin{tabular}{l | r | r | r | r | r}
 
-               &       ZZ4L &    Reducible &        Rare &      All bkg &          data \\ \hline
+               &      ZZ4L &     Reducible &       Rare &       All bkg &          data \\ \hline
 
-All & 1988098.00 & 490992981.68 & 32723197.70 & 525704277.38 & 1765777515.00 \\ \hline
-LeptonCount &     244.00 &      4684.00 &     1274.85 &      6202.85 &       5800 \\ \hline
-Trigger &     244.00 &      4684.00 &     1274.85 &      6202.85 &       5697.00 \\ \hline
-LeptonPair &       0.00 &         0.00 &        0.00 &         0.00 &          0 \\ \hline
-FoundZ &       0.00 &         0.00 &        0.00 &         0.00 &          0 \\ \hline
-GoodTauPair &       0.00 &         0.00 &        0.00 &         0.00 &          0 \\ \hline
-VVtightTauPair &       0.00 &         0.00 &        0.00 &         0.00 &          0 \\ \hline
+All & 872138.04 & 5335439860.73 & 5589965.26 & 5341901964.03 & 1765977515.00 \\ \hline
+LeptonCount & 121857.90 &  246764538.83 &  721473.87 &  247607870.60 &  219402744.00 \\ \hline
+Trigger &  21516.19 &   20363455.12 &   32225.41 &   20417196.72 &   17423293.00 \\ \hline
+LeptonPair &  21516.19 &   20363455.12 &   32225.41 &   20417196.72 &   17423293.00 \\ \hline
+FoundZ &  19899.27 &   18892700.35 &   19221.07 &   18931820.69 &   16218920 \\ \hline
+GoodTauPair &    106.98 &       4368.93 &      40.87 &       4516.78 &       5801.00 \\ \hline
+VVtightTauPair &    106.98 &       4368.93 &      40.87 &       4516.78 &       5698.00 \\ \hline
 
 \end{tabular}
 \end{center}
