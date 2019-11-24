@@ -122,7 +122,7 @@ for file in scriptList :
     outLines.append('Error = {0:s}.err\n'.format(base))
     outLines.append('Log = {0:s}.log\n'.format(base))
     print("dir={0:s}".format(dir))
-    outLines.append('transfer_input_files = {0:s}ZH.py, {0:s}MC_{1:s}.root, {0:s}data_pileup_{1:s}.root, {0:s}MCsamples_{1:s}.csv, {0:s}ScaleFactor.py, {0:s}SFs.tar.gz, '.format(dir,args.year))
+    outLines.append('transfer_input_files = {0:s}ZH.py, {0:s}MC_{1:s}.root, {0:s}data_pileup_{1:s}.root, {0:s}MCsamples_{1:s}.csv, {0:s}ScaleFactor.py, {0:s}SFs.tar.gz, {0:s}cuts.yaml, '.format(dir,args.year))
     #outLines.append('{0:s}*txt, '.format(dirData))
     outLines.append('{0:s}tauFun.py, {0:s}generalFunctions.py, {0:s}outTuple.py,'.format(funcsDir))
     outLines.append('{0:s}FastMTT.h, {0:s}MeasuredTauLepton.h, {0:s}svFitAuxFunctions.h,'.format(SVFitDir)) 

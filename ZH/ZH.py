@@ -174,8 +174,10 @@ for count, e in enumerate(inTree) :
 	        if  MC :   cutCounterGenWeight[cat].countGenWeight('LeptonCount', e.genWeight)
 
 
-        goodElectronList = tauFun.makeGoodElectronList(e, isAZH)
-        goodMuonList = tauFun.makeGoodMuonList(e, isAZH)
+        #goodElectronList = tauFun.makeGoodElectronList(e, isAZH)
+        #goodMuonList = tauFun.makeGoodMuonList(e, isAZH)
+        goodElectronList = tauFun.makeGoodElectronList(e)
+        goodMuonList = tauFun.makeGoodMuonList(e)
         if not isAZH : goodElectronList, goodMuonList = tauFun.eliminateCloseLeptons(e, goodElectronList, goodMuonList)
 
 	lepList=[]
