@@ -8,15 +8,29 @@ from ROOT import gSystem, gStyle, gROOT, kTRUE
 gROOT.SetBatch(True) # don't pop up any plots
 gStyle.SetOptStat(0) # don't show any stats
 from math import sqrt
+
+
+
+def catToNumber(cat) :
+    number = { 'eeet':1, 'eemt':2, 'eett':3, 'eeem':4, 'mmet':5, 'mmmt':6, 'mmtt':7, 'mmem':8, 'et':9, 'mt':10, 'tt':11 }
+    return number[cat]
+
+def numberToCat(number) :
+    cat = { 1:'eeet', 2:'eemt', 3:'eett', 4:'eeem', 5:'mmet', 6:'mmmt', 7:'mmtt', 8:'mmem', 9:'et', 10:'mt', 11:'tt' }
+    return cat[number]
+
+
+
 def getArgs() :
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("-v","--verbose",default=0,type=int,help="Print level.")
-    parser.add_argument("-f","--inFileName",default='./VBF_sync_input.root',help="File to be analyzed.")
+    parser.add_argument("-f","--inFileName",default='./MCsamples_2016.csv',help="File to be analyzed.")
     parser.add_argument("-o","--outFileName",default='',help="File to be used for output.")
     parser.add_argument("-y","--year",default=2016,type=int,help="Year for data.")
     parser.add_argument("-l","--LTcut",default=0.,type=float,help="H_LTcut")
     parser.add_argument("-s","--sign",default='OS',help="Opposite or same sign (OS or SS).")
+    parser.add_argument("-a","--analysis",default='ZH',help="Select ZH or AZH")
     parser.add_argument("--MConly",action='store_true',help="MC only") 
     parser.add_argument("--looseCuts",action='store_true',help="Loose cuts")
     parser.add_argument("--unBlind",action='store_true',help="Unblind signal region for OS")
@@ -28,17 +42,22 @@ class dupeDetector() :
     def __init__(self):
         self.nCalls = 0 
         self.runEventList = []
+        self.DuplicatedEvents = []
 
     def checkEvent(self,entry) :
         self.nCalls += 1 
-        runEvent = "{0:d}:{1:d}".format(entry.run,entry.evt)
+        runEvent = "{0:d}:{1:d}:{2:d}".format(entry.lumi,entry.run,entry.evt)
         if runEvent in self.runEventList :
             #print("Event in list: runEventList={0:s}".format(str(self.runEventList)))
+            self.DuplicatedEvents.append(runEvent)
+	    #print 'duplicated event', entry.lumi,entry.run,entry.evt
             return True
         else :
             self.runEventList.append(runEvent)
             #print("New event: runEventList={0:s}".format(str(self.runEventList)))
             return False
+
+        print 'print report', self.DuplicatedEvents
 
     def printSummary(self) :
         print("Duplicate Event Summary: Calls={0:d} Unique Events={1:d}".format(self.nCalls,len(self.runEventList)))
@@ -141,10 +160,18 @@ def trigweight(e,cat) :
 
 args = getArgs()
 era=str(args.year)
+#cats = { 1:'eeet', 2:'eemt', 3:'eett', 4:'mmet', 5:'mmmt', 6:'mmtt', 7:'et', 8:'mt', 9:'tt' }
+cats = { 1:'eeet', 2:'eemt', 3:'eett', 4:'eeem', 5:'mmet', 6:'mmmt', 7:'mmtt', 8:'mmem', 9:'et', 10:'mt', 11:'tt' }
+tightCuts = not args.looseCuts 
+dataDriven = not args.MConly
 
-groups = ['Signal','Reducible','Rare','ZZ','data']
+
+#groups = ['Signal','Reducible','Rare','ZZ4L','data']
+groups = ['Signal','ZZ4L','Reducible','Rare','data']
+
 lumi = 1000.
 tauID_w = 1.
+
 
 weights= {''}
 weights_muTotauFR={''}
@@ -184,12 +211,6 @@ if era == '2018' :
 '''
 
 
-#cats = { 1:'eeet', 2:'eemt', 3:'eett', 4:'mmet', 5:'mmmt', 6:'mmtt', 7:'et', 8:'mt', 9:'tt' }
-cats = { 1:'eeet', 2:'eemt', 3:'eett', 4:'eeem', 5:'mmet', 6:'mmmt', 7:'mmtt', 8:'mmem', 9:'et', 10:'mt', 11:'tt' }
-groups = ['Signal','Reducible','Rare','ZZ','data']
-tightCuts = not args.looseCuts 
-dataDriven = not args.MConly
-
 # use this utility class to screen out duplicate events
 DD = {}
 for cat in cats.values() :
@@ -197,6 +218,8 @@ for cat in cats.values() :
 
 # dictionary where the group is the key
 hMC = {}
+hCutFlow = {}
+WCounter = {}
 
 
 # dictionary where the nickName is the key
@@ -205,24 +228,25 @@ nickNames, xsec, totalWeight, sampleWeight = {}, {}, {}, {}
 for group in groups :
     nickNames[group] = []
 
-#       0                 1       2        3        4        5            6
-# GluGluHToTauTau       Signal  48.58   9259000 198813970.4             /GluGluHToTauTau_...
 
 # make a first pass to get the weights
-#for line in open('./MC/MCsamples_small_'+era+'.csv','r').readlines() :
-for line in open('./MC/MCplots_'+era+'.csv','r').readlines() :
+
+
+#for line in open('../MC/condor/MCsamples_'+era+'_one.csv','r').readlines() :
+print ' Will use the ' ,args.inFileName
+for line in open(args.inFileName,'r').readlines() :
     vals = line.split(',')
     nickName = vals[0]
     group = vals[1]
     nickNames[group].append(nickName)
     xsec[nickName] = float(vals[2])
     totalWeight[nickName] = float(vals[4])
-    sampleWeight[nickName]= lumi*xsec[nickName]/totalWeight[nickName]
+    sampleWeight[nickName]= lumi*weights['lumi']*xsec[nickName]/totalWeight[nickName]
     print("group={0:10s} nickName={1:20s} xSec={2:10.3f} totalWeight={3:11.1f} sampleWeight={4:10.6f}".format(
         group,nickName,xsec[nickName],totalWeight[nickName],sampleWeight[nickName]))
 
 # Stitch the DYJets and WJets samples
-
+'''
 for i in range(1,5) :
     nn = 'DY{0:d}JetsToLL'.format(i)
     if 'DYJetsToLL' in totalWeight : sampleWeight[nn] = lumi/(totalWeight['DYJetsToLL']/xsec['DYJetsToLL'] + totalWeight[nn]/xsec[nn])
@@ -230,14 +254,17 @@ for i in range(1,5) :
 for i in range(1,4) :
     nn = 'W{0:d}JetsToLNu'.format(i)
     if 'WJetsToLNu' in totalWeight : sampleWeight[nn] = lumi/(totalWeight['WJetsToLNu']/xsec['WJetsToLNu'] + totalWeight[nn]/xsec[nn])
+'''
+
 
 # now add the data
 #for eras in ['2017B','2017C','2017D','2017E','2017F'] :
 for eras in ['2016'] :
     #for dataset in ['SingleElectron','SingleMuon','DoubleEG','DoubleMuon'] :
-    #for dataset in ['SingleElectron','SingleMuon','DoubleEG','DoubleMuon'] :
-    for dataset in ['SingleMuon'] :
-        nickName = '{0:s}_Run{1:s}'.format(dataset,eras)
+    #for dataset in ['SingleMuon'] :
+    for dataset in ['data'] :
+        #nickName = '{0:s}_Run{1:s}'.format(dataset,eras)
+        nickName = '{0:s}_{1:s}'.format(dataset,eras)
         totalWeight[nickName] = 1.
         sampleWeight[nickName] = 1.
         nickNames['data'].append(nickName)
@@ -311,7 +338,7 @@ plotSettings = { # [nBins,xMin,xMax,units]
         "puppimet":[100,0,500,"[GeV]","#it{p}_{T}^{miss}"], 
         #"mt_tot":[100,0,1000,"[GeV]"], # sqrt(mt1^2 + mt2^2)
         #"mt_sum":[100,0,1000,"[GeV]"], # mt1 + mt2
-        "ll_lmass":[100,0,500,"[GeV]","l^{+} mass"],
+
         "mll":[100,0,500,"[Gev]","m(l^{+}l^{-})"],
         "ll_pt_p":[100,0,500,"[GeV]","P_{T}l^{-}"],
         "ll_phi_p":[100,-4,4,"","#phi(l_^{-})"],
@@ -319,8 +346,10 @@ plotSettings = { # [nBins,xMin,xMax,units]
         "ll_pt_m":[100,0,500,"[GeV]","P_{T}l^{-}"],
         "ll_phi_m":[100,-4,4,"","#phi(l_^{-})"],
         "ll_eta_m":[100,-4,4,"","#eta(l_^{-})"],
+        "ll_iso_1":[20,0,1,"","relIso(l_{1})"],
+        "ll_iso_2":[20,0,1,"","relIso(l_{2})"],
 
-        "m_sv":[100,0,500,"[Gev]","m(#ttau#tau)"],
+        "m_sv":[100,0,500,"[Gev]","m(#tau#tau)"],
         "mt_sv":[100,0,500,"[Gev]","m_{T}(#tau#tau)"],
         "pt_tt":[100,0,500,"[GeV]","P_{T}(#tau#tau)"],
         "mt_tot":[100,0,500,"[GeV]","m_{T}tot(#tau#tau)"],
@@ -337,7 +366,15 @@ plotSettings = { # [nBins,xMin,xMax,units]
 canvasDict = {}
 legendDict = {}
 hBkgdStacksDict = {} # maps plotVar to the stack of background
-for cat in cats.values()[0:8] :
+cuts = 15
+cols = len(cats.items()[0:8])
+icut=7 ########last filled bin from first round of ntuples
+hLabels=[]
+if tightCuts : hLabels.append("isTight")
+else : hLabels.append("isLoose")
+hLabels.append(args.sign)
+
+for icat,cat in cats.items()[0:8] :
     for plotVar in plotSettings: # add an entry to the plotVar:hist dictionary
         canvasDict.update({plotVar:TCanvas("c_"+plotVar+"_"+cat,"c_"+plotVar+"_"+cat,10,20,1000,700)})
         legendDict.update({plotVar:TLegend(.45,.75,.90,.90)})
@@ -345,12 +382,16 @@ for cat in cats.values()[0:8] :
         hBkgdStacksDict.update({plotVar:THStack(plotVar+"_bkgdStack", title)})
         title = "cutflow ("+cat+")"
         #hBkgdCutflowStack = THStack("cutflow_bkgdStack", title)
+        WCounter[icat] = {}
+        WCounter = [[0 for i in range(cols)] for j in range(cuts)] #first is row second is column
 
 for group in groups :
     fOut.cd()
     hMC[group] = {}
-    for cat in cats.values()[0:8] :
+    for icat, cat in cats.items()[0:8] :
         hMC[group][cat] = {}
+        hCutFlow[cat] = {}
+
         for plotVar in plotSettings:
             hMC[group][cat][plotVar] = {}
             nBins = plotSettings[plotVar][0]
@@ -363,7 +404,7 @@ for group in groups :
             binwidth = (xMax - xMin)/nBins
             hMC[group][cat][plotVar] = TH1D(hName,hName,nBins,xMin,xMax)
             hMC[group][cat][plotVar].SetDefaultSumw2()
-            hMC[group][cat][plotVar].GetXaxis().SetTitle(lTitle)
+            hMC[group][cat][plotVar].GetXaxis().SetTitle(lTitle + ' ' + units)
             if 'GeV' in units : hMC[group][cat][plotVar].GetYaxis().SetTitle("Events / "+str(binwidth)+" {0:s}".format(units))
             if 'GeV' not in units : hMC[group][cat][plotVar].GetYaxis().SetTitle("Events / "+str(binwidth))
 
@@ -371,12 +412,17 @@ for group in groups :
 
     print("\nInstantiating TH1D {0:s}".format(hName))
     print("      Nickname                 Entries    Wt/Evt  Ngood   Tot Wt")
+
+
     for nickName in nickNames[group] :
+
+
+        hCutFlow[cat][nickName] = {}
         isData = False 
-        inFileName = '../MC/condor/{0:s}_{1:s}/{0:s}_{1:s}.root'.format(nickName,era)
+        inFileName = '../MC/condor/{0:s}/{1:s}_{2:s}/{1:s}_{2:s}.root'.format(args.analysis,nickName,era)
         if group == 'data' :
             isData = True
-            inFileName = './data/{0:s}/{0:s}.root'.format(nickName)
+            inFileName = './data/{0:s}/{1:s}/{1:s}.root'.format(args.analysis,nickName)
         try :
             inFile = TFile.Open(inFileName)
             inFile.cd()
@@ -386,6 +432,20 @@ for group in groups :
             print("  Failure on file {0:s}".format(inFileName))
             exit()
 
+        for icat, cat in cats.items()[0:8] :
+	    if group != 'data' : hCutFlow[cat][nickName] = inFile.Get("hCutFlowWeighted_{0:s}".format(cat))
+	    else : hCutFlow[cat][nickName] = inFile.Get("hCutFlow_{0:s}".format(cat))  #temp
+
+	    #print 'for ========================',hCutFlow[cat][nickName].GetSumOfWeights(), group, cat
+	
+            for i in range(1,hCutFlow[cat][nickName].GetNbinsX()+1) : 
+	        #print i, hCutFlow[cat][nickName].GetBinContent(i), hCutFlow[cat][nickName].GetXaxis().GetBinLabel(i), cat
+	        WCounter[i-1][icat-1] = float(hCutFlow[cat][nickName].GetBinContent(i))
+
+        
+        #print WCounter 
+        #########------- last bin is bin 9 - to be controlled from within 
+
         # resume here
         nEvents, trigw, totalWeight = 0, 1., 0.
         sWeight = sampleWeight[nickName]
@@ -393,17 +453,25 @@ for group in groups :
         WJets  = (nickName == 'WJetsToLNu')
 
         for i, e in enumerate(inTree) :
+            iCut=icut
             hGroup = group
             #if e.nbtag > 0 : continue
             sw = sWeight
-            if e.LHE_Njets > 0 :
-                if DYJets : sw = sampleWeight['DY{0:d}JetsToLL'.format(e.LHE_Njets)]
-                if WJets  : sw = sampleWeight['W{0:d}JetsToLNu'.format(e.LHE_Njets)] 
+            #if e.LHE_Njets > 0 :
+                #if DYJets : sw = sampleWeight['DY{0:d}JetsToLL'.format(e.LHE_Njets)]
+                #if WJets  : sw = sampleWeight['W{0:d}JetsToLNu'.format(e.LHE_Njets)] 
 
-            weight = e.weight * sw
+            # the pu weight is the e.weight in the ntuples
+            weight = e.weight * e.Generator_weight* sw
 
-            ww = weight
+
+            ww = weight * sampleWeight[nickName]
+	    if group == 'data' : ww = 1.
+
+	  
             #s = sf.checkFile()
+
+            icat = catToNumber(cat)
 
             cat = cats[e.cat]
             #apply tau-ID
@@ -489,6 +557,7 @@ for group in groups :
 
                  #weights_elTotauFR = {'lelFR_lt1p46' : 1., 'lelFR_gt1p559' : 1., 'telFR_lt1p46' : 1., 'telFR_gt1p559' : 1.}
                 '''    
+	    '''	
             if tightCuts :
                 if cat[2:] == 'et' : tight1 = e.iso_1 > 0.5 
                 if cat[2:] == 'mt' : tight1 = e.iso_1 < 0.25 and e.iso_1_ID > 0.5
@@ -528,7 +597,11 @@ for group in groups :
                                         
                 #elif group == 'Rare' or group == 'ZZ4L' or group == 'Signal' :
                 #    if not (tight1 and tight2) : continue         
-                                        
+            ''' 
+            #print iCut, icat, cat, icat-1
+            iCut +=1
+            WCounter[iCut-1][icat-1] += weight  
+
             if args.sign == 'SS':
                 if e.q_1*e.q_2 < 0. : continue
             else :
@@ -538,10 +611,13 @@ for group in groups :
             if H_LT < args.LTcut : continue
             if group == 'data' :
                 if DD[cat].checkEvent(e) : continue 
-            if cat == 'mmtt' :
-                totalWeight += ww
-                nEvents += 1
+            #if cat == 'mmtt' :
+            #    totalWeight += ww
+            #    nEvents += 1
 
+            
+            iCut +=1
+            WCounter[iCut-1][icat-1] += weight  
 
             trigw_ = 1.#trigweight(e,cat)
 
@@ -551,16 +627,43 @@ for group in groups :
                     #print plotVar
                     val = getattr(e, plotVar, None)
 		    if val is not None: 
-                        hMC[hGroup][cat][plotVar].Fill(val,ww*trigw_)
+                        hMC[hGroup][cat][plotVar].Fill(val,weight*trigw_)
                         #print hGroup, cat, plotVar, val
                         #if val < hGroup][cat][plotVar].GetNbinsX() * hGroup][cat][plotVar].GetBinWidth(1) : hMC[hGroup][cat][plotVar].Fill(val,ww*trigw_)
                         #else : hMC[hGroup][cat][plotVar].Fill(val,ww*trigw_)
                     
 
+	    nEvents += 1
+
+	print("{0:30s} {1:7d} {2:10.6f} {3:5d} {4:8.3f}".format(nickName,nentries,sampleWeight[nickName],nEvents,totalWeight))
+        
+         
+
+        for icat, cat in cats.items()[0:8] : 
+            hCutFlow[cat][nickName].SetName( 'hCutFlow_'+cat+'_'+nickName)
+            #print icat, cat, hCutFlow[cat][nickName].GetName()
 
 
-        print("{0:30s} {1:7d} {2:10.6f} {3:5d} {4:8.3f}".format(nickName,nentries,sampleWeight[nickName],nEvents,totalWeight))
+
+        
+            #for i in range(icut, iCut+1) : 
+            #    hCutFlow[cat][nickName].SetBinContent(i, WCounter[i][icat-1])
+            for i in range(len(hLabels)) : 
+                hCutFlow[cat][nickName].GetXaxis().SetBinLabel(i+1+icut, hLabels[i])
+		#print hCutFlow[cat][nickName].GetXaxis().GetBinLabel(i+icut)
+
+            #for i in range(1,  hCutFlow[cat][nickName].GetNbinsX()) : 
+            for i in range(1,  hCutFlow[cat][nickName].GetNbinsX()) : 
+                hCutFlow[cat][nickName].SetBinContent(i, WCounter[i-1][icat-1])
+	        #print 'will fill now the',  hCutFlow[cat][nickName].GetName(), 'bin', i, 'with ', WCounter[i-1][icat-1], hCutFlow[cat][nickName].GetBinContent(i), hCutFlow[cat][nickName].GetXaxis().GetBinLabel(i), nickName
+
+            fOut.cd()
+
+            hCutFlow[cat][nickName].Write()
+        
         inFile.Close()
+
+
     fOut.cd()
     for cat in cats.values()[0:8] : 
         for plotVar in plotSettings:
@@ -568,7 +671,7 @@ for group in groups :
             hMC[group][cat][plotVar].Write()
 
 for cat in cats.values():
-    print("Duplicate summar for {0:s}".format(cat))
+    print("Duplicate summary for {0:s}".format(cat))
     DD[cat].printSummary()
     
 
