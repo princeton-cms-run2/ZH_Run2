@@ -33,7 +33,7 @@ def getArgs() :
     parser.add_argument("-a","--analysis",default='ZH',help="Select ZH or AZH")
     parser.add_argument("--MConly",action='store_true',help="MC only") 
     parser.add_argument("--looseCuts",action='store_true',help="Loose cuts")
-    parser.add_argument("--unBlind",action='store_true',help="Unblind signal region for OS")
+    parser.add_argument("-b", "--unBlind",default='no',help="Unblind signal region for OS")
     
     return parser.parse_args()
 
@@ -161,10 +161,12 @@ def trigweight(e,cat) :
 args = getArgs()
 era=str(args.year)
 #cats = { 1:'eeet', 2:'eemt', 3:'eett', 4:'mmet', 5:'mmmt', 6:'mmtt', 7:'et', 8:'mt', 9:'tt' }
-cats = { 1:'eeet', 2:'eemt', 3:'eett', 4:'eeem', 5:'mmet', 6:'mmmt', 7:'mmtt', 8:'mmem', 9:'et', 10:'mt', 11:'tt' }
+cats = { 1:'eeet', 2:'eemt', 3:'eett', 4:'eeem', 5:'mmet', 6:'mmmt', 7:'mmtt', 8:'mmem'}
 tightCuts = not args.looseCuts 
 dataDriven = not args.MConly
 
+unblind=False
+if args.unBlind.lower() == 'true' or args.unBlind.lower == 'yes' : unblind = True
 
 #groups = ['Signal','Reducible','Rare','ZZ4L','data']
 groups = ['Signal','ZZ4L','Reducible','Rare','data']
@@ -352,7 +354,9 @@ plotSettings = { # [nBins,xMin,xMax,units]
         "m_sv":[100,0,500,"[Gev]","m(#tau#tau)"],
         "mt_sv":[100,0,500,"[Gev]","m_{T}(#tau#tau)"],
         "pt_tt":[100,0,500,"[GeV]","P_{T}(#tau#tau)"],
-        "mt_tot":[100,0,500,"[GeV]","m_{T}tot(#tau#tau)"],
+        "mt_tot":[100,0,500,"[GeV]","m_{T}tot(#tau#tau)"]
+        #"CutFlowWeighted":[15,0.5,15.5,"","cutflow"],
+        #"CutFlow":[15,0.5,15.5,"","cutflow"]
 
 
 
@@ -462,13 +466,13 @@ for group in groups :
                 #if WJets  : sw = sampleWeight['W{0:d}JetsToLNu'.format(e.LHE_Njets)] 
 
             # the pu weight is the e.weight in the ntuples
-            weight = e.weight * e.Generator_weight* sw
+            weight = e.weight * e.Generator_weight *sw
 
+	    ww = 1.
+            ##requirement on the Z-boson
+	    if cat[:2] == 'mm' and  (e.ll_iso_1 > 0.25 or e.ll_iso_2 > 0.25) : continue
 
-            ww = weight * sampleWeight[nickName]
-	    if group == 'data' : ww = 1.
-
-	  
+	    if e.nbtag > 0 : continue
             #s = sf.checkFile()
 
             icat = catToNumber(cat)
@@ -557,15 +561,16 @@ for group in groups :
 
                  #weights_elTotauFR = {'lelFR_lt1p46' : 1., 'lelFR_gt1p559' : 1., 'telFR_lt1p46' : 1., 'telFR_gt1p559' : 1.}
                 '''    
-	    '''	
             if tightCuts :
-                if cat[2:] == 'et' : tight1 = e.iso_1 > 0.5 
-                if cat[2:] == 'mt' : tight1 = e.iso_1 < 0.25 and e.iso_1_ID > 0.5
-                if cat[2:] == 'tt' : tight1 = e.iso_1_ID > 15
+                if cat[2:] == 'mt' : tight1 = e.iso_1 < 0.15 and e.againstMuonTight3_2 > 0.5
+
+
+                if cat[2:] == 'et' : tight1 = e.iso_1 < 0.15 and e.againstElectronTightMVA6_2 > 0.5
+                if cat[2:] == 'tt' : tight1 = e.iso_1_ID > 0.5
                 tight2 = e.iso_2_ID > 15
                 if cat[2:] == 'em' :
-                    tight1 = e.iso_1 > 0.5
-                    tight2 = e.iso_2 < 0.25 and e.iso_2_ID > 0.5
+                    tight1 = e.iso_1 < 0.15
+                    tight2 = e.iso_2 < 0.15 and e.iso_2_ID > 0.5
                     
                 if group == 'data' :
                     if dataDriven :
@@ -597,8 +602,11 @@ for group in groups :
                                         
                 #elif group == 'Rare' or group == 'ZZ4L' or group == 'Signal' :
                 #    if not (tight1 and tight2) : continue         
-            ''' 
+            
             #print iCut, icat, cat, icat-1
+
+
+
             iCut +=1
             WCounter[iCut-1][icat-1] += weight  
 
@@ -606,7 +614,7 @@ for group in groups :
                 if e.q_1*e.q_2 < 0. : continue
             else :
                 if e.q_1*e.q_2 > 0. : continue
-                if hGroup == 'data' and not args.unBlind and e.m_sv > 80. and e.m_sv < 140. : continue                 
+                if hGroup == 'data' and not unblind and e.m_sv > 80. and e.m_sv < 140. : continue                 
             H_LT = e.pt_1 + e.pt_2
             if H_LT < args.LTcut : continue
             if group == 'data' :
@@ -640,7 +648,9 @@ for group in groups :
          
 
         for icat, cat in cats.items()[0:8] : 
-            hCutFlow[cat][nickName].SetName( 'hCutFlow_'+cat+'_'+nickName)
+	    nn = nickName
+	    if 'data' in nickName : nn = 'data'
+            hCutFlow[cat][nickName].SetName( 'hCutFlow_'+cat+'_'+nn)
             #print icat, cat, hCutFlow[cat][nickName].GetName()
 
 
@@ -658,7 +668,6 @@ for group in groups :
 	        #print 'will fill now the',  hCutFlow[cat][nickName].GetName(), 'bin', i, 'with ', WCounter[i-1][icat-1], hCutFlow[cat][nickName].GetBinContent(i), hCutFlow[cat][nickName].GetXaxis().GetBinLabel(i), nickName
 
             fOut.cd()
-
             hCutFlow[cat][nickName].Write()
         
         inFile.Close()
