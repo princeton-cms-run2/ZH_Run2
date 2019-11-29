@@ -126,6 +126,19 @@ era=str(args.year)
 
 outFileName = GF.getOutFileName(args).replace(".root",".ntup")
 
+if MC : 
+    if "WJetsToLNu" in outFileName:
+	hWxGenweightsArr = []
+	for i in range(5):
+	    hWxGenweightsArr.append(TH1D("W"+str(i)+"genWeights",\
+		    "W"+str(i)+"genWeights",1,-0.5,0.5))
+    elif "DYJetsToLL" in outFileName:
+	hDYxGenweightsArr = []
+	for i in range(5):
+	    hDYxGenweightsArr.append(TH1D("DY"+str(i)+"genWeights",\
+		    "DY"+str(i)+"genWeights",1,-0.5,0.5))
+
+
 if args.weights > 0 :
     hWeight = TH1D("hWeights","hWeights",1,-0.5,0.5)
     hWeight.Sumw2()
@@ -133,10 +146,25 @@ if args.weights > 0 :
     for count, e in enumerate(inTree) :
         hWeight.Fill(0, e.genWeight)
     
+
+        npartons = ord(e.LHE_Njets)
+        if "WJetsToLNu" in outFileName and npartons <= 4:
+	    hWxGenweightsArr[npartons].Fill(0, e.genWeight)
+        if "DYJetsToLL" in outFileName and npartons <= 4:
+	    hDYxGenweightsArr[npartons].Fill(0, e.genWeight)
+
     fName = GF.getOutFileName(args).replace(".root",".weights")
     fW = TFile( fName, 'recreate' )
     print 'Will be saving the Weights in', fName
     fW.cd()
+
+    if "WJetsToLNu" in outFileName :
+        for i in range(len(hWxGenweightsArr)):
+            hWxGenweightsArr[i].Write()
+    elif "DYJetsToLL" in outFileName:
+        for i in range(len(hDYxGenweightsArr)):
+            hDYxGenweightsArr[i].Write()
+
     hWeight.Write()
 
 #############end weights
@@ -174,11 +202,9 @@ for count, e in enumerate(inTree) :
 	        if  MC :   cutCounterGenWeight[cat].countGenWeight('LeptonCount', e.genWeight)
 
 
-        #goodElectronList = tauFun.makeGoodElectronList(e, isAZH)
-        #goodMuonList = tauFun.makeGoodMuonList(e, isAZH)
-        goodElectronList = tauFun.makeGoodElectronList(e)
-        goodMuonList = tauFun.makeGoodMuonList(e)
-        if not isAZH : goodElectronList, goodMuonList = tauFun.eliminateCloseLeptons(e, goodElectronList, goodMuonList)
+        goodElectronList = tauFun.makeGoodElectronList(e, isAZH)
+        goodMuonList = tauFun.makeGoodMuonList(e, isAZH)
+        goodElectronList, goodMuonList = tauFun.eliminateCloseLeptons(e, goodElectronList, goodMuonList)
 
 	lepList=[]
 
@@ -275,7 +301,7 @@ for count, e in enumerate(inTree) :
             cutCounter[cat].count("GoodTauPair")
 	    if  MC :   cutCounterGenWeight[cat].countGenWeight('GoodTauPair', e.genWeight)
 
-            if tauMode == 'tt' and args.testMode.lower() == "vvtight" :
+            if tauMode == 'tt' and args.testMode.lower() == "vvtight" and not isAZH:
                 j1, j2 = bestTauPair[0], bestTauPair[1]
                 if ord(e.Tau_idMVAnewDM2017v2[j1]) < 64 : continue
                 if ord(e.Tau_idMVAnewDM2017v2[j2]) < 64 : continue
@@ -294,7 +320,7 @@ for count, e in enumerate(inTree) :
                 if not isInJSON :
                     print("Event not in JSON: Run:{0:d} LS:{1:d}".format(e.run,e.luminosityBlock))
                     continue
-                if not MC and isInJSON : outTuple.setWeight(1.) ## we store the GenWeight * PUweight ?
+                if not MC and isInJSON : outTuple.setWeight(1.) ## we store weight = 1 for data
                 #cutCounter[cat].count("InJSON")
 
             cutCounter[cat].count("VVtightTauPair")
@@ -328,8 +354,6 @@ for cat in cats :
     cutCounter[cat].printSummary()
     hName="hCutFlow_"+str(cat)
     hNameW="hCutFlowWeighted_"+str(cat)
-    #print '======================', hName
-    #count
     hCutFlow.append( TH1D(hName,hName,15,0.5,15.5))
     if MC  : hCutFlowW.append( TH1D(hNameW,hNameW,15,0.5,15.5))
     lcount=len(cutCounter[cat].getYield())

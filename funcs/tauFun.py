@@ -12,7 +12,7 @@ __author__ = "Dan Marlow, Alexis Kalogeropoulos, Gage DeZoort"
 __date__   = "Monday, Oct. 28th, 2019"
 
 # get selections from configZH.yaml:
-with io.open('cuts.yaml', 'r') as stream:
+with io.open('./cuts.yaml', 'r') as stream:
     selections = yaml.load(stream)
 print "Using selections:\n", selections
 
@@ -39,6 +39,44 @@ def getTauList(channel, entry, pairList=[]) :
         if ord(entry.Tau_idAntiEle[j]) <= tt['tau_antiEle']: continue
         if not entry.Tau_idDecayMode[j]: continue
         if abs(entry.Tau_dz[j]) > tt['tau_dz']: continue
+        if not 0.5 < abs(entry.Tau_charge[j]) < 1.5: continue
+        eta, phi = entry.Tau_eta[j], entry.Tau_phi[j]
+        DR0, DR1 =  lTauDR(eta,phi, pairList[0]), lTauDR(eta,phi,pairList[1]) 
+        if DR0 < tt['lt_DR'] or DR1 < tt['lt_DR']: continue
+        tauList.append(j)
+    
+    return tauList
+
+def getTauListAZH(channel, entry, pairList=[]) :
+    """ tauFun.getTauList(): return a list of taus that 
+                             pass the basic selection cuts               
+    """
+
+    if not channel in ['mmtt','eett'] :
+        print("Warning: invalid channel={0:s} in tauFun.getTauList()".format(channel))
+        exit()
+
+    if entry.nTau == 0: return []
+
+    tauList = []
+    tt = selections['tt'] # selections for H->tau(h)+tau(h)
+    for j in range(entry.nTau):    
+        b_vsjet = False
+        b_vsmu = False
+        b_vse = False
+        # apply tau(h) selections 
+        if entry.Tau_pt[j] < tt['tau_pt']: continue
+        if abs(entry.Tau_eta[j]) > tt['tau_eta']: continue
+        if abs(entry.Tau_dz[j]) > tt['tau_dz']: continue
+        if not entry.Tau_idDecayModeNewDMs[j]: continue
+	if  entry.Tau_decayMode[j] == 5 or entry.Tau_decayMode[j] == 6 : continue
+        #if ord(entry.Tau_idDeepTau2017v2p1VSjet[j]) & 16 > 0 : b_vsjet  = True  #no needed for AZH sync
+        if ord(entry.Tau_idDeepTau2017v2p1VSmu[j]) & 2 > 0 : b_vsmu  = True 
+        if ord(entry.Tau_idDeepTau2017v2p1VSe[j]) & 4 > 0 : b_vse  = True 
+	
+        #if not b_vsjet or not b_vsmu or not b_vse : continue
+        if not b_vsmu or not b_vse : continue
+
         if not 0.5 < abs(entry.Tau_charge[j]) < 1.5: continue
         eta, phi = entry.Tau_eta[j], entry.Tau_phi[j]
         DR0, DR1 =  lTauDR(eta,phi, pairList[0]), lTauDR(eta,phi,pairList[1]) 
@@ -384,7 +422,7 @@ def getBestETauPair(entry,cat,pairList=[],printOn=False) :
 
 
 # select a muon for the Z candidate
-def goodMuon(entry, j):
+def goodMuon(entry, j, AZH):
     """ tauFun.goodMuon(): select good muons
                            for Z -> mu + mu
     """
@@ -394,20 +432,22 @@ def goodMuon(entry, j):
     if abs(entry.Muon_eta[j]) > mm['mu_eta']: return False
     if mm['mu_ID']:
         if not (entry.Muon_mediumId[j] or entry.Muon_tightId[j]): return False
-    if entry.Muon_pfRelIso04_all[j] > mm['mu_iso']: return False
+    #if entry.Muon_pfRelIso04_all[j] > mm['mu_iso']: return False #not needed for sync
     if abs(entry.Muon_dxy[j]) > mm['mu_dxy']: return False 
     if abs(entry.Muon_dz[j]) > mm['mu_dz']: return False
+    if AZH :
+       if not entry.Muon_isGlobal[j] and not entry.Muon_isTracker[j] : return False
     return True 
 
-def makeGoodMuonList(entry) :
+def makeGoodMuonList(entry, AZH) :
     goodMuonList = []
     for i in range(entry.nMuon) :
-        if goodMuon(entry, i) : goodMuonList.append(i)
+        if goodMuon(entry, i, AZH) : goodMuonList.append(i)
     #print("In tauFun.makeGoodMuonList = {0:s}".format(str(goodMuonList)))
     return goodMuonList
 
 # select an electron for the Z candidate
-def goodElectron(entry, j) :
+def goodElectron(entry, j, AZH) :
     """ tauFun.goodElectron(): select good electrons 
                                for Z -> ele + ele
     """
@@ -419,15 +459,17 @@ def goodElectron(entry, j) :
     if ord(entry.Electron_lostHits[j]) > ee['ele_lostHits']: return False
     if ee['ele_convVeto']:
         if not entry.Electron_convVeto[j]: return False
-    #if not entry.Electron_mvaFall17Iso_WP90[j] : return False
     if ee['ele_ID']:
         if not entry.Electron_mvaFall17V2noIso_WP90[j] : return False
+
+    if AZH and not entry.Electron_convVeto[j]: return False
+    if AZH and not entry.Electron_mvaFall17V2noIso_WP90[j] : return False
     return True 
 
-def makeGoodElectronList(entry) :
+def makeGoodElectronList(entry, AZH) :
     goodElectronList = []
     for i in range(entry.nElectron) :
-        if goodElectron(entry, i) : goodElectronList.append(i)
+        if goodElectron(entry, i, AZH) : goodElectronList.append(i)
     return goodElectronList
 
 def eliminateCloseLeptons(entry, goodElectronList, goodMuonList) :

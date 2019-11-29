@@ -73,6 +73,7 @@ for nFile in range(0, len(dataset),mjobs) :
 
     outLines.append("tar -zxvf SFs.tar.gz\n")
     outLines.append("cp MCsamples_*csv MCsamples.csv\n")
+    outLines.append("cp cuts_{0:s}.yaml cuts.yaml\n".format(args.selection))
 
     fileName = getFileName(file)
     maxx = mjobs
@@ -122,7 +123,7 @@ for file in scriptList :
     outLines.append('Error = {0:s}.err\n'.format(base))
     outLines.append('Log = {0:s}.log\n'.format(base))
     print("dir={0:s}".format(dir))
-    outLines.append('transfer_input_files = {0:s}ZH.py, {0:s}MC_{1:s}.root, {0:s}data_pileup_{1:s}.root, {0:s}MCsamples_{1:s}.csv, {0:s}ScaleFactor.py, {0:s}SFs.tar.gz, {0:s}cuts.yaml, '.format(dir,args.year))
+    outLines.append('transfer_input_files = {0:s}ZH.py, {0:s}MC_{1:s}.root, {0:s}data_pileup_{1:s}.root, {0:s}MCsamples_{1:s}.csv, {0:s}ScaleFactor.py, {0:s}SFs.tar.gz, {0:s}cuts_{2:s}.yaml, '.format(dir,args.year, args.selection))
     #outLines.append('{0:s}*txt, '.format(dirData))
     outLines.append('{0:s}tauFun.py, {0:s}generalFunctions.py, {0:s}outTuple.py,'.format(funcsDir))
     outLines.append('{0:s}FastMTT.h, {0:s}MeasuredTauLepton.h, {0:s}svFitAuxFunctions.h,'.format(SVFitDir)) 

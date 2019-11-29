@@ -10,7 +10,7 @@ def getArgs() :
     parser.add_argument("--nickName",default='MCpileup',help="Data set nick name.") 
     parser.add_argument("-m","--mode",default='anaXRD',help="Mode (script to run).")
     parser.add_argument("-y","--year",default=2017,type=str,help="Data taking period, 2016, 2017 or 2018")
-    parser.add_argument("-c","--concatenate",default=20,type=int,help="On how many files to run on each job")
+    parser.add_argument("-c","--concatenate",default=30,type=int,help="On how many files to run on each job")
     parser.add_argument("-s","--selection",default='ZH',type=str,help="Select ZH or AZH")
     return parser.parse_args()
 
@@ -73,6 +73,7 @@ for nFile in range(0, len(dataset),mjobs) :
 
     outLines.append("tar -zxvf SFs.tar.gz\n")
     outLines.append("cp MCsamples_*csv MCsamples.csv\n")
+    outLines.append("cp cuts_{0:s}.yaml cuts.yaml\n".format(args.selection))
 
     fileName = getFileName(file)
     maxx = mjobs
@@ -128,7 +129,7 @@ for file in scriptList :
     outLines.append('Error = {0:s}.err\n'.format(base))
     outLines.append('Log = {0:s}.log\n'.format(base))
     #print("dir={0:s}".format(dir))
-    outLines.append('transfer_input_files = {0:s}ZH.py, {0:s}MC_{1:s}.root, {0:s}data_pileup_{1:s}.root,  {0:s}MCsamples_{1:s}.csv, {0:s}ScaleFactor.py, {0:s}SFs.tar.gz, '.format(dir,args.year))
+    outLines.append('transfer_input_files = {0:s}ZH.py, {0:s}MC_{1:s}.root, {0:s}data_pileup_{1:s}.root,  {0:s}MCsamples_{1:s}.csv, {0:s}ScaleFactor.py, {0:s}SFs.tar.gz, {0:s}cuts_{2:s}.yaml,'.format(dir,args.year, args.selection))
     #outLines.append('transfer_input_files = {0:s}ZH.py, {0:s}ScaleFactor.py, {0:s}SFs.tar.gz, '.format(dir))
     #outLines.append('{0:s}*txt, '.format(dirData))
     outLines.append('{0:s}tauFun.py, {0:s}generalFunctions.py, {0:s}outTuple.py,'.format(funcsDir))
