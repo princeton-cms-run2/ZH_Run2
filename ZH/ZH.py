@@ -37,43 +37,6 @@ def getArgs() :
     
     return parser.parse_args()
 
-def ZHDR(entry,Lep,jt) :
-    phi1, eta1 = Lep.Phi(), Lep.Eta()
-    try :
-        phi2, eta2 = entry.Tau_phi[jt], entry.Tau_eta[jt]
-    except IndexError :
-        print("In ZHDR: IndexError:  jt={0:d} nTau={1:d} event={2:d}".format(jt,entry.nTau,entry.event))
-        return 0.
-    
-    dPhi = min(abs(phi2-phi1),2.*pi-abs(phi2-phi1))
-    return sqrt(dPhi**2 + (eta2-eta1)**2)
-
-def getEventDictionary(fileName) :
-    eventDict = {}
-    for line in open(fileName,'r').readlines() :
-        vals = line.split() 
-        eventDict[int(vals[0])] = [float(vals[1]),float(vals[2]),float(vals[3]),float(vals[4]),float(vals[5]),float(vals[6])]
-    return eventDict
-
-def tausInList(entry,event) :
-    nMatch = 0
-    for i in range(2) :
-        eta1, phi1 = event[1+2*i], event[2+2*i]
-        for j in range(entry.nTau) :
-            phi2, eta2 = entry.Tau_phi[j], entry.Tau_eta[j]
-            dPhi = min(abs(phi2-phi1),2.*pi-abs(phi2-phi1))
-            DR = sqrt(dPhi**2 + (eta2-eta1)**2)
-            if DR < 0.1 :
-                nMatch += 1
-                if nMatch > 1 : return True
-                continue
-    return False
-
-def goodTyler(entry, tylerListAll, tylerListnanoAOD) :
-    if not entry.event in tylerListAll.keys() : return False
-    if entry.event in tylerListnanoAOD.keys() : return True
-    return tausInList(entry,tylerListAll[entry.event]) 
-    
 args = getArgs()
 print("args={0:s}".format(str(args)))
 maxPrint = args.maxPrint 
