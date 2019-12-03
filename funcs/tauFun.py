@@ -437,7 +437,7 @@ def goodMuon(entry, j, AZH):
     if abs(entry.Muon_dz[j]) > mm['mu_dz']: return False
     if AZH :
        if not entry.Muon_isGlobal[j] and not entry.Muon_isTracker[j] : return False
-       if not entry.Muon_isLoose[j] : return False
+       if not entry.Muon_looseId[j] : return False
     return True 
 
 def makeGoodMuonList(entry, AZH) :
