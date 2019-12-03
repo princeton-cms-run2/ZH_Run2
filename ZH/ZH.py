@@ -45,10 +45,11 @@ cutCounter = {}
 cutCounterGenWeight = {}
 
 
-if args.category != 'none' :
-    cats = [args.category]
-else :
-    cats = ['eeet','eemt','eett','eeem','mmet','mmmt','mmtt','mmem']
+#if args.category != 'none' :
+#    cats = [args.category]
+#else :
+#    cats = ['eeet','eemt','eett','eeem','mmet','mmmt','mmtt','mmem']
+cats = ['eeet','eemt','eett','eeem','mmet','mmmt','mmtt','mmem']
 
 for cat in cats : 
     cutCounter[cat] = GF.cutCounter()
@@ -150,6 +151,7 @@ for count, e in enumerate(inTree) :
     if count == nMax : break
 
     for lepMode in ['ee','mm'] :
+        if args.category != 'none' and not lepMode in args.category : continue
 
         #if e.nTau < 1 : continue why this is there ? 
 
@@ -225,6 +227,7 @@ for count, e in enumerate(inTree) :
 	        if  MC :   cutCounterGenWeight[cat].countGenWeight('FoundZ', e.genWeight)
         
         for tauMode in ['et','mt','tt','em'] :
+            if args.category != 'none' and tauMode != args.category[2:] : continue
             cat = lepMode + tauMode
             if isAZH :
                 if cat =='eeet' and (len(goodMuonList) > 0 or len(goodElectronList) > 3) : continue 
