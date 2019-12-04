@@ -52,16 +52,18 @@ def printEvent(entry) :
                 j,entry.Photon_pt[j],entry.Photon_eta[j],entry.Photon_phi[j]))
 
     if True and entry.nTau > 0:
-        print("Taus                                    |-------Iso------|")
-        print(" #    Pt   Eta   Phi   Mode ID   DMID    Raw   Chg   Neu  jetIdx antiEl antiMu  dxy     dz  idMVA   rawIso  MC")
+        print("Taus                                    |-Deep Tau-||-------Iso------|")
+        print(" #    Pt   Eta   Phi   Mode ID   DMID    vJ  vM  vE  Raw   Chg   Neu  jetIdx antiEl antiMu  dxy     dz  idMVA   rawIso  MC")
         for j in range(entry.nTau) :
-            print("{0:2d} {1:5.1f}{2:6.2f}{3:6.2f}{4:5d}  {5:5s} {6:5s} {7:6.2f}{8:6.2f}{9:6.2f}{10:6d}{11:6d}{12:6d}  {13:7.3f}{14:7.3f} {15:5d} {16:8.4f} {17:6s}".format(
+            print("{0:2d} {1:5.1f}{2:6.2f}{3:6.2f}{4:5d}  {5:5s} {6:5s}{18:4d}{19:4d}{20:4d} {7:6.2f}{8:6.2f}{9:6.2f}{10:6d}{11:6d}{12:6d}  {13:7.3f}{14:7.3f} {15:5d} {16:8.4f} {17:6s}".format(
                 j,entry.Tau_pt[j],entry.Tau_eta[j],entry.Tau_phi[j],entry.Tau_decayMode[j],
                 str(entry.Tau_idDecayMode[j]),str(entry.Tau_idDecayModeNewDMs[j]),
                 entry.Tau_rawIso[j],entry.Tau_chargedIso[j],entry.Tau_neutralIso[j],
                 entry.Tau_jetIdx[j],ord(entry.Tau_idAntiEle[j]),ord(entry.Tau_idAntiMu[j]),
                 entry.Tau_dxy[j],entry.Tau_dz[j],ord(entry.Tau_idMVAoldDM2017v2[j]),entry.Tau_rawMVAoldDM2017v2[j],
-                getMCmatchString(entry.Tau_eta[j],entry.Tau_phi[j],entry)[0:6]))
+                getMCmatchString(entry.Tau_eta[j],entry.Tau_phi[j],entry)[0:6],
+                ord(entry.Tau_idDeepTau2017v2p1VSjet[j]),ord(entry.Tau_idDeepTau2017v2p1VSmu[j]),ord(entry.Tau_idDeepTau2017v2p1VSe[j])))
+
     if True and entry.nTrigObj > 0 :
         trigID = { 11:"Electr", 22:"Photon", 13:"  Muon",15:"   Tau", 1:"   Jet", 6:"FatJet", 2:"   MET", 3:"    HT" , 4:"   MHT" }
         print("Trigger Objects        Trig  Filt")

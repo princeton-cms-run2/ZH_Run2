@@ -23,7 +23,6 @@ def getArgs() :
     parser = argparse.ArgumentParser()
     parser.add_argument("-v","--verbose",default=0,type=int,help="Print level.")
     parser.add_argument("-f","--inFileName",default='ZHtoTauTau_test.root',help="File to be analyzed.")
-    #parser.add_argument("-f","--inFileName",default='DY1JetsToLL_test.root',help="File to be analyzed.")
     parser.add_argument("-c","--category",default='none',help="Event category to analyze.")
     parser.add_argument("--nickName",default='',help="MC sample nickname") 
     parser.add_argument("-d","--dataType",default='MC',help="Data or MC") 
@@ -33,6 +32,7 @@ def getArgs() :
     parser.add_argument("-t","--testMode",default='',help="tau MVA selection")
     parser.add_argument("-y","--year",default=2017,type=int,help="Data taking period, 2016, 2017 or 2018")
     parser.add_argument("-s","--selection",default='ZH',help="is this for the ZH or the AZH analysis?")
+    parser.add_argument("-u","--unique",default='none',help="CSV file containing list of unique events for sync studies.") 
     parser.add_argument("-w","--weights",default=False,type=int,help="to re-estimate Sum of Weights")
     
     return parser.parse_args()
@@ -44,11 +44,6 @@ maxPrint = args.maxPrint
 cutCounter = {}
 cutCounterGenWeight = {}
 
-
-#if args.category != 'none' :
-#    cats = [args.category]
-#else :
-#    cats = ['eeet','eemt','eett','eeem','mmet','mmmt','mmtt','mmem']
 cats = ['eeet','eemt','eett','eeem','mmet','mmmt','mmtt','mmem']
 
 for cat in cats : 
@@ -133,6 +128,14 @@ if args.weights > 0 :
 
 #############end weights
 
+# read a CSV file containing a list of unique events to be studied 
+unique = False 
+if args.unique != 'none' :
+    unique = True
+    uniqueEvents = set()
+    for line in open(args.unique,'r').readlines() : uniqueEvents.add(int(line.strip()))
+    print("******* Analyzing only {0:d} events from {1:s} ******.".format(len(uniqueEvents),args.unique))
+    
 print("Opening {0:s} as output.".format(outFileName))
 outTuple = outTuple.outTuple(outFileName, era)
 
@@ -150,6 +153,12 @@ for count, e in enumerate(inTree) :
         if count >= 10000 : countMod = 10000
     if count == nMax : break
 
+    if unique :
+        if e.event in uniqueEvents :
+            for cat in cats: cutCounter[cat].count('Unique') 
+        else :
+            continue
+        
     for lepMode in ['ee','mm'] :
         if args.category != 'none' and not lepMode in args.category : continue
 
@@ -176,17 +185,32 @@ for count, e in enumerate(inTree) :
         
         if lepMode == 'ee' :
             if  args.year == 2016 and not e.HLT_Ele27_eta2p1_WPTight_Gsf and not e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ : continue
-            if (args.year == 2017 or args.year == 2018) and not e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ and not e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL and not e.HLT_Ele35_WPTight_Gsf and not e.HLT_Ele32_WPTight_Gsf: continue
+            if (args.year == 2017 or args.year == 2018) and not e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ and not e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL and not e.HLT_Ele35_WPTight_Gsf and not e.HLT_Ele32_WPTight_Gsf:
+                if unique :
+                    print("Trigger Fail: Event ID={0:d} cat={1:s}".format(e.event,cat))
+                    GF.printEvent(e)
+                    if MC : GF.printMC(e)
+                continue
 
             for cat in cats[:4]: 
 	        cutCounter[cat].count('Trigger')
 	        if  MC :   cutCounterGenWeight[cat].countGenWeight('Trigger', e.genWeight)
                 
-            if len(goodElectronList) < 2 :  continue
+            if len(goodElectronList) < 2 :
+                if unique :
+                    print("GoodLeptons Fail: : Event ID={0:d} cat={1:s}".format(e.event,cat))
+                    GF.printEvent(e)
+                    if MC : GF.printMC(e)
+                continue
             cutCounter[cat].count('GoodLeptons')
 
             pairList, lepList = tauFun.findZ(goodElectronList,[], e)
-            if len(lepList) != 2 : continue
+            if len(lepList) != 2 :
+                if unique :
+                    print("LepList Fail: : Event ID={0:d} cat={1:s}".format(e.event,cat))
+                    GF.printEvent(e)
+                    if MC : GF.printMC(e)
+                continue
             
         
         if lepMode == 'mm' :
@@ -215,7 +239,12 @@ for count, e in enumerate(inTree) :
                 
         LepP, LepM = pairList[0], pairList[1]
         M = (LepM + LepP).M()
-        if M < 60. or M > 120. : continue ##cut valid for both AZH and ZHa
+        if M < 60. or M > 120. :
+            if unique :
+                print("Zmass Fail: : Event ID={0:d} cat={1:s} M={2:.2f}".format(e.event,cat,M))
+                GF.printEvent(e)
+                if MC : GF.printMC(e)
+            continue ##cut valid for both AZH and ZHa
 
         if lepMode == 'ee' :
             for cat in cats[:4]: 
@@ -230,16 +259,24 @@ for count, e in enumerate(inTree) :
             if args.category != 'none' and tauMode != args.category[2:] : continue
             cat = lepMode + tauMode
             if isAZH :
-                if cat =='eeet' and (len(goodMuonList) > 0 or len(goodElectronList) > 3) : continue 
-                if cat =='eemt' and (len(goodMuonList) > 1 or len(goodElectronList) > 2) : continue 
-                if cat =='eeet' and (len(goodMuonList) > 0 or len(goodElectronList) > 3) : continue 
-                if cat =='eett' and (len(goodMuonList) > 0 or len(goodElectronList) > 2) : continue 
+                passCut = True 
+                if cat =='eeet' and (len(goodMuonList) > 0 or len(goodElectronList) > 3) : passCut = False 
+                if cat =='eemt' and (len(goodMuonList) > 1 or len(goodElectronList) > 2) : passCut = False 
+                if cat =='eeet' and (len(goodMuonList) > 0 or len(goodElectronList) > 3) : passCut = False 
+                if cat =='eett' and (len(goodMuonList) > 0 or len(goodElectronList) > 2) : passCut = False 
 
-                if cat =='mmet' and (len(goodMuonList) > 2 or len(goodElectronList) > 1) : continue 
-                if cat =='mmmt' and (len(goodMuonList) > 3 or len(goodElectronList) > 0) : continue 
-                if cat =='mmem' and (len(goodMuonList) > 3 or len(goodElectronList) > 1) : continue 
-                if cat =='mmmt' and (len(goodMuonList) > 3 or len(goodElectronList) > 0) : continue 
+                if cat =='mmet' and (len(goodMuonList) > 2 or len(goodElectronList) > 1) : passCut = False 
+                if cat =='mmmt' and (len(goodMuonList) > 3 or len(goodElectronList) > 0) : passCut = False 
+                if cat =='mmem' and (len(goodMuonList) > 3 or len(goodElectronList) > 1) : passCut = False 
+                if cat =='mmmt' and (len(goodMuonList) > 3 or len(goodElectronList) > 0) : passCut = False 
 
+                if not passCut :
+                    if unique :
+                        print("isAZH Fail: : Event ID={0:d} cat={1:s}".format(e.event,cat))
+                        GF.printEvent(e)
+                        if MC : GF.printMC(e)
+                    continue 
+                
             if tauMode == 'tt' :
                 if isAZH : tauList = tauFun.getTauListAZH(cat, e, pairList=pairList)
                 else : tauList = tauFun.getTauList(cat, e, pairList=pairList)
@@ -253,10 +290,15 @@ for count, e in enumerate(inTree) :
                 bestTauPair = tauFun.getBestEMuTauPair(e,cat=cat,pairList=pairList)
 		
             if len(bestTauPair) < 1 :
+                if unique :
+                    print("Tau Pair Fail: : Event ID={0:d} cat={1:s}".format(e.event,cat))
+                    GF.printEvent(e)
+                    if MC : GF.printMC(e)
+                
                 if False and maxPrint > 0 and (tauMode == GF.eventID(e)[2:4]) :
                     maxPrint -= 1
                     print("Failed tau-pair cut")
-                    print("Event ID={0:s} cat={1:s}".format(GF.eventID(e),cat))
+                    print("Event={0:d} cat={1:s}".format(e.event,cat))
                     print("goodMuonList={0:s} goodElectronList={1:s} Mll={3:.1f} bestTauPair={4:s}".format(
                         str(goodMuonList),str(goodElectronList),str(pairList),M,str(bestTauPair)))
                     print("Lep1.pt() = {0:.1f} Lep2.pt={1:.1f}".format(pairList[0].Pt(),pairList[1].Pt()))

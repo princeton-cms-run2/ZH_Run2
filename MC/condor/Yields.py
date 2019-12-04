@@ -69,15 +69,14 @@ else:
         hist="hCutFlow_"+cat
        
         htest = inFile.Get(hist)
-        for i in range(1,htest.GetNbinsX()) : 
-            arr[count][i-1] = '{0:.2f}'.format(htest.GetBinContent(i)*product)
-            if cat == 'mmmt' : cuts.append(htest.GetXaxis().GetBinLabel(i))
+        for i in range(1,htest.GetNbinsX()) :
+            try :
+                arr[count][i-1] = '{0:.2f}'.format(htest.GetBinContent(i)*product)
+                if cat == 'mmmt' : cuts.append(htest.GetXaxis().GetBinLabel(i))
+            except IndexError :
+                print("Index error in histogram loop:  i={0:d}".format(i))
         count+=1
 
-
-cats.insert(0,'Cuts')
-
-np.vstack([arr,cats])
 
 with open(header+'_yields.txt', 'w') as f:
 
@@ -88,27 +87,29 @@ with open(header+'_yields.txt', 'w') as f:
 	print >> f,'\\caption{' + '{0:s}'.format(hh) + '}'  
 	print >> f,'\\begin{center}'
 	print >> f,'\\begin{tabular}{l r r r r r r r r }  \hline'
-        line = cats[0]
-	for i in cats[1:] : line += ' & {}'.format(i) 
-	line += '\\'
-        line += '\\ \hline' 
-        print >> f,line
-        lines = []
-        for x in arr :
-            line = []
-            for i in range(len(x)) :
-                v = float(x[i])
-                if v > 99. :
-                    line.append("{0:.0f} ".format(v))
+        
+        arrDict = {}
+        topLine = 'Cut'
+        for i,cat in enumerate(cats) :
+            print("**cat={0:s}".format(cat))
+            topLine += '& {0:s}'.format(cat)
+            row = arr[i]
+            print("cat={0:s} row={1:s}".format(cat,str(row)))
+            for j,cut in enumerate(cuts) :
+                arrDict[cut+cat] = row[j]
+                
+        print >> f, topLine + '\\\\ \\hline'
+        for cut in cuts :
+            line = '{0:s}'.format(cut)
+            
+            for cat in cats :
+                val = float(arrDict[cut+cat])
+                if val > 100. :
+                    line += " & {0:9.0f}".format(val)
                 else :
-                    line.append("{0:.2f} ".format(v)) 
-            lines.append(line)
-
-        for i in range(len(cuts)):
-            if len(cuts[i]) < 1 : continue 
-            line = cuts[i]
-            for j in range(8) : line += " & {0:s}".format(lines[i][j])
-            line += '\\\\ \\hline'
+                    line += " & {0:9.2f}".format(val)
+                    
+            line += '\\\\ \\hline '
 	    print >> f,line
 
 	print >> f,'\\end{tabular}'
