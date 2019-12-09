@@ -51,8 +51,12 @@ class outTuple() :
 
         
         self.pt_1 = array('f',[0])
+        self.pt_1_tr = array('f',[0])
         self.phi_1 = array('f',[0])
+        self.phi_1_tr = array('f',[0])
         self.eta_1 = array('f',[0])
+        self.eta_1_tr = array('f',[0])
+        self.motherPDG_1 = array('f',[0])
         self.m_1 = array('f',[0])
         self.q_1 = array('f',[0])
         self.d0_1 = array('f',[0])
@@ -76,8 +80,11 @@ class outTuple() :
         self.decayMode_1 = array('l',[0])
 
         self.pt_2 = array('f',[0])
+        self.pt_2_tr = array('f',[0])
         self.phi_2 = array('f',[0])
+        self.phi_2_tr = array('f',[0])
         self.eta_2 = array('f',[0])
+        self.eta_2_tr = array('f',[0])
         self.m_2 = array('f',[0])
         self.q_2 = array('f',[0])
         self.d0_2 = array('f',[0])
@@ -109,14 +116,20 @@ class outTuple() :
 
         # di-lepton variables.   _p and _m refer to plus and minus charge
         # ll_lmass is mass of decay lepton 
-        self.ll_lmass = array('f',[0])     
-        self.mll       = array('f',[0])
-        self.ll_pt_p   = array('f',[0])
-        self.ll_phi_p  = array('f',[0])
-        self.ll_eta_p  = array('f',[0])
-        self.ll_pt_m   = array('f',[0])
-        self.ll_phi_m  = array('f',[0])
-        self.ll_eta_m  = array('f',[0])
+        self.ll_lmass    = array('f',[0])     
+        self.mll         = array('f',[0])
+        self.ll_pt_p     = array('f',[0])
+        self.ll_pt_p_tr  = array('f',[0])
+        self.ll_phi_p    = array('f',[0])
+        self.ll_phi_p_tr = array('f',[0])
+        self.ll_eta_p    = array('f',[0])
+        self.ll_eta_p_tr = array('f',[0])
+        self.ll_pt_m     = array('f',[0])
+        self.ll_pt_m_tr  = array('f',[0])
+        self.ll_phi_m    = array('f',[0])
+        self.ll_phi_m_tr = array('f',[0])
+        self.ll_eta_m    = array('f',[0])
+        self.ll_eta_m_tr = array('f',[0])
         
         # MET variables
         self.met = array('f',[0])
@@ -129,7 +142,6 @@ class outTuple() :
         self.metcov11 = array('f',[0])
 
         # trigger sf
-
         self.trig_Lm_MC  = array('f',[0])
         self.trig_Lm_Data  = array('f',[0])
         self.trig_Lp_MC  = array('f',[0])
@@ -177,8 +189,12 @@ class outTuple() :
         self.t.Branch('Generator_weight',  self.Generator_weight,  'Generator_weight/F' )
 
         self.t.Branch('pt_1', self.pt_1, 'pt_1/F')
+        self.t.Branch('pt_1_tr', self.pt_1_tr, 'pt_1_tr/F')
         self.t.Branch('phi_1', self.phi_1, 'phi_1/F')
+        self.t.Branch('phi_1_tr', self.phi_1_tr, 'phi_1_tr/F')
         self.t.Branch('eta_1', self.eta_1, 'eta_1/F')
+        self.t.Branch('eta_1_tr', self.eta_1_tr, 'eta_1_tr/F')
+        self.t.Branch('motherPDG_1', self.motherPDG_1, 'motherPDG_1/I')
         self.t.Branch('m_1', self.m_1, 'm_1/F')
         self.t.Branch('q_1', self.q_1, 'q_1/F')
         self.t.Branch('d0_1', self.d0_1, 'd0_1/F')
@@ -202,8 +218,11 @@ class outTuple() :
         self.t.Branch('decayMode_1', self.decayMode_1, 'decayMode_1/I')
 
         self.t.Branch('pt_2', self.pt_2, 'pt_2/F')
+        self.t.Branch('pt_2_tr', self.pt_2, 'pt_2_tr/F')
         self.t.Branch('phi_2', self.phi_2, 'phi_2/F')
+        self.t.Branch('phi_2_tr', self.phi_2_tr, 'phi_2_tr/F')
         self.t.Branch('eta_2', self.eta_2, 'eta_2/F')
+        self.t.Branch('eta_2_tr', self.eta_2_tr, 'eta_2_tr/F')
         self.t.Branch('m_2', self.m_2, 'm_2/F')
         self.t.Branch('q_2', self.q_2, 'q_2/F')
         self.t.Branch('d0_2', self.d0_2, 'd0_2/F')
@@ -234,14 +253,20 @@ class outTuple() :
         self.t.Branch('mt_sv', self.mt_sv, 'mt_sv/F') 
 
         # di-lepton variables. 
-        self.t.Branch('ll_lmass',  self.ll_lmass,  'll_lmass/F')
-        self.t.Branch('mll',       self.mll,       'mll/F')   
-        self.t.Branch('ll_pt_p',   self.ll_pt_p,   'll_pt_p/F')   
-        self.t.Branch('ll_phi_p',  self.ll_phi_p,  'll_phi_p/F')  
-        self.t.Branch('ll_eta_p',  self.ll_eta_p,  'll_eta_p/F')    
-        self.t.Branch('ll_pt_m',   self.ll_pt_m,   'll_pt_m/F')      
-        self.t.Branch('ll_phi_m',  self.ll_phi_m,  'll_phi_m/F')    
-        self.t.Branch('ll_eta_m',  self.ll_eta_m,  'll_eta_m/F')      
+        self.t.Branch('ll_lmass',    self.ll_lmass,    'll_lmass/F')
+        self.t.Branch('mll',         self.mll,         'mll/F')   
+        self.t.Branch('ll_pt_p',     self.ll_pt_p,     'll_pt_p/F')
+        self.t.Branch('ll_pt_p_tr',  self.ll_pt_p_tr,  'll_pt_p_tr/F')
+        self.t.Branch('ll_phi_p',    self.ll_phi_p,    'll_phi_p/F')  
+        self.t.Branch('ll_phi_p_tr', self.ll_phi_p_tr, 'll_phi_p_tr/F')
+        self.t.Branch('ll_eta_p',    self.ll_eta_p,    'll_eta_p/F')    
+        self.t.Branch('ll_eta_p_tr', self.ll_eta_p_tr, 'll_eta_p_tr/F')
+        self.t.Branch('ll_pt_m',     self.ll_pt_m,     'll_pt_m/F')      
+        self.t.Branch('ll_pt_m_tr',  self.ll_pt_m_tr,  'll_pt_m_tr/F')
+        self.t.Branch('ll_phi_m',    self.ll_phi_m,    'll_phi_m/F')    
+        self.t.Branch('ll_phi_m_tr', self.ll_phi_m_tr, 'll_phi_m_tr/F')
+        self.t.Branch('ll_eta_m',    self.ll_eta_m,    'll_eta_m/F')      
+        self.t.Branch('ll_eta_m_tr', self.ll_eta_m_tr, 'll_eta_m_tr/F')
         
         # MET variables
         self.t.Branch('met', self.met, 'met/F')
@@ -610,6 +635,22 @@ class outTuple() :
             except AttributeError : self.gen_match_1[0] = -1
             tau1.SetPtEtaPhiM(entry.Muon_pt[jt1],entry.Muon_eta[jt1], entry.Muon_phi[jt1], tauMass)
             tau2.SetPtEtaPhiM(entry.Tau_pt[jt2],entry.Tau_eta[jt2],entry.Tau_phi[jt2],tauMass) 
+            
+            # fill genMatch for tau(mu)
+            if isMC:
+                idx_genMu           = entry.Muon_genPartIdx[jt1]
+                
+                # if idx_genMu = -1, no match was found
+                if idx_genMu >= 0:
+                    idx_genMu_mom       = entry.GenPart_genPartIdxMother[idx_genMu]
+                    self.pt_1_tr[0]     = entry.GenPart_pt[idx_genMu]
+                    self.phi_1_tr[0]    = entry.GenPart_phi[idx_genMu]
+                    self.eta_1_tr[0]    = entry.GenPart_eta[idx_genMu]
+                    
+                    # if idx_genMu_mom = -1, no mother was found
+                    if idx_genMu_mom >= 0:
+                        self.motherPDG_1[0] = entry.GenPart_pdgId[idx_genMu_mom]
+            
 
 	    '''tauListMu=[]
 	    tauListMu=[jt1]
@@ -686,6 +727,7 @@ class outTuple() :
             self.againstMuonTight3_2[0] = self.getAntiMu(entry,jt2,2)
 
             self.byIsolationMVA3oldDMwLTraw_2[0] = float(ord(entry.Tau_idMVAoldDMdR032017v2[jt2]))  # check this
+
 	    try : self.gen_match_2[0] = ord(entry.Tau_genPartFlav[jt2])
 	    except AttributeError :self.gen_match_2[0] = -1
 
@@ -708,7 +750,6 @@ class outTuple() :
         self.mt_sv[0] = fastMTTtransverseMass  
 
         # di-lepton variables.   _p and _m refer to plus and minus charge
-
         self.ll_lmass[0]  = LepP.M() 
         self.mll[0]       = (LepP + LepM).M() 
         self.ll_pt_p[0]   = LepP.Pt()
@@ -717,7 +758,7 @@ class outTuple() :
         self.ll_pt_m[0]   = LepM.Pt()
         self.ll_phi_m[0]  = LepM.Phi()
         self.ll_eta_m[0]  = LepM.Eta()
-        
+
         # MET variables
         self.met[0] = entry.MET_pt    
         self.metphi[0] = entry.MET_phi
