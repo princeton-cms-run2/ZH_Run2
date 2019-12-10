@@ -520,11 +520,12 @@ for group in groups :
             #sampleWeight = lumi/(WIncl_totgenwt/WIncl_xsec + WxGenweightsArr[i]/(WNJetsXsecs[i]*WJets_kfactor))
             
             sWeight = sampleWeight[nickName]
-            if WJets and WIncl_only: 
+
+            if WJets and not WIncl_only: 
                 if e.LHE_Njets > 0 : sWeight = sampleWeight['W{0:d}JetsToLNu'.format(e.LHE_Njets)]
                 else : sWeight = sampleWeight['WJetsToLNu']
                 print 'will now be using ',sWeight, e.LHE_Njets, nickName
-            if DYJets and DYIncl_only: 
+            if DYJets and not DYIncl_only: 
                 if e.LHE_Njets > 0 : sWeight = sampleWeight['DY{0:d}JetsToLL'.format(e.LHE_Njets)]
                 else  : sWeight = sampleWeight['DYJetsToLL']
                 print 'will now be using ',sWeight, e.LHE_Njets, nickName
