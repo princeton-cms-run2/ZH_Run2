@@ -702,7 +702,7 @@ class outTuple() :
 
         self.trigweight_1[0] =  -999.   
         self.idisoweight_1[0] = -999.   
-	if channel != 'em' :
+	if channel != 'em':
 	    self.pt_2[0] = entry.Tau_pt[jt2]
             self.phi_2[0] = entry.Tau_phi[jt2]
             self.eta_2[0] = entry.Tau_eta[jt2]
@@ -727,6 +727,17 @@ class outTuple() :
             self.againstMuonTight3_2[0] = self.getAntiMu(entry,jt2,2)
 
             self.byIsolationMVA3oldDMwLTraw_2[0] = float(ord(entry.Tau_idMVAoldDMdR032017v2[jt2]))  # check this
+
+            # genMatch the hadronic tau candidate
+            idx_t2_gen = GF.genMatchTau(entry, jt2, 'had')
+            if idx_t2_gen >= 0:
+                self.pt_2_tr[0]  = entry.GenVisTau_pt[idx_t2_gen]
+                self.phi_2_tr[0] = entry.GenVisTau_phi[idx_t2_gen]
+                self.eta_2_tr[0] = entry.GenVisTau_eta[idx_t2_gen]
+            else:
+                self.pt_2_tr[0]  = 1.2*entry.Tau_pt[jt2]
+                self.phi_2_tr[0] = 1.2*entry.Tau_phi[jt2]
+                self.eta_2_tr[0] = 1.2*entry.Tau_eta[jt2]
 
 	    try : self.gen_match_2[0] = ord(entry.Tau_genPartFlav[jt2])
 	    except AttributeError :self.gen_match_2[0] = -1
@@ -758,6 +769,24 @@ class outTuple() :
         self.ll_pt_m[0]   = LepM.Pt()
         self.ll_phi_m[0]  = LepM.Phi()
         self.ll_eta_m[0]  = LepM.Eta()
+        
+        # genMatch the di-lepton variables
+        idx_LepP = -1
+        idx_LepM = -1
+        if (channel[0] == 'm'): 
+            idx_LepP = GF.getLepIdxFrom4Vec(entry, LepP, 'm')
+            idx_LepM = GF.getLepIdxFrom4Vec(entry, LepM, 'm')
+        if (channel[0] == 'e'):
+            idx_LepP = GF.getLepIdxFrom4Vec(entry, LepP, 'e')
+            idx_LepM = GF.getLepIdxFrom4Vec(entry, LepM, 'e')
+        idx_LepP_tr = entry.Muon_genPartIdx[idx_LepP]
+        idx_LepM_tr = entry.Muon_genPartIdx[idx_LepM]
+        self.ll_pt_p_tr[0]  = entry.GenPart_pt[idx_LepP_tr]
+        self.ll_pt_m_tr[0]  = entry.GenPart_pt[idx_LepM_tr]
+        self.ll_eta_p_tr[0] = entry.GenPart_eta[idx_LepP_tr]
+        self.ll_eta_m_tr[0] = entry.GenPart_eta[idx_LepM_tr]
+        self.ll_phi_p_tr[0] = entry.GenPart_phi[idx_LepP_tr]
+        self.ll_phi_m_tr[0] = entry.GenPart_phi[idx_LepM_tr]
 
         # MET variables
         self.met[0] = entry.MET_pt    
