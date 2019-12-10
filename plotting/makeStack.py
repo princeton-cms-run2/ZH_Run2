@@ -4,7 +4,7 @@ from ROOT import gSystem, gStyle, gROOT, kTRUE
 from ROOT import TCanvas, TH1D, TH1F, THStack, TFile, TPad, TLegend, TLatex, TLine, TAttMarker, TMarker
 from ROOT import kBlack, kBlue, kMagenta, kOrange, kAzure, kRed
 import array
-import plotting as plt
+import plotting
 
 
 # cat = 'eeet', 'eemt', 'eett', 'mmet', 'mmmt', or 'mmtt'
@@ -25,9 +25,11 @@ def getArgs() :
     parser.add_argument("-c","--cat",default='all',help="Category")
     parser.add_argument("-w","--wait",default='wait',help="Wait for enter")
     parser.add_argument("-L","--setlog",default='yes',help="Set log scale")
-    parser.add_argument("-b","--blind",default='no',help="Unblind data")
+    parser.add_argument("-u","--unBlind",default='yes',help="Unblind data")
     
     return parser.parse_args()
+
+
 
 def applyStyle( h, fill, line, fillStyle) :
     h.SetFillColor(fill)
@@ -92,11 +94,11 @@ plotSettings = { # [nBins,xMin,xMax,units]
         "bpt_1":[100,0,500,"[GeV]","BJet^{1} P_{T}"], 
         "bpt_2":[100,0,500,"[GeV]","BJet^{2} P_{T}"], 
 
-        "nbtag":[5,-0.5,4.5,"","nBTag"],
+        #nbtag":[5,-0.5,4.5,"","nBTag"],
         #"nbtagLoose":[10,0,10,"","nBTag Loose"],
         #"nbtagTight":[5,0,5,"","nBTag Tight"],
-        "beta_1":[64,-3.2,3.2,"","BJet^{1} #eta"],
-        "beta_2":[64,-3.2,3.2,"","BJet^{2} #eta"],
+        #"beta_1":[64,-3.2,3.2,"","BJet^{1} #eta"],
+        #"beta_2":[64,-3.2,3.2,"","BJet^{2} #eta"],
 
         "met":[100,0,500,"[GeV]","#it{p}_{T}^{miss}"], 
         "met_phi":[100,-4,4,"","#it{p}_{T}^{miss} #phi"], 
@@ -105,17 +107,36 @@ plotSettings = { # [nBins,xMin,xMax,units]
         #"mt_tot":[100,0,1000,"[GeV]"], # sqrt(mt1^2 + mt2^2)
         #"mt_sum":[100,0,1000,"[GeV]"], # mt1 + mt2
 
-        "mll":[100,0,500,"[Gev]","m(l^{+}l^{-})"],
+        "m_vis":[40,50,130,"[Gev]","m(l^{+}l^{-})"],
         "ll_pt_p":[100,0,500,"[GeV]","P_{T}l^{-}"],
         "ll_phi_p":[100,-4,4,"","#phi(l_^{-})"],
         "ll_eta_p":[100,-4,4,"","#eta(l_^{-})"],
         "ll_pt_m":[100,0,500,"[GeV]","P_{T}l^{-}"],
         "ll_phi_m":[100,-4,4,"","#phi(l_^{-})"],
+        "ll_eta_m":[100,-4,4,"","#eta(l_^{-})"],
+        "ll_iso_1":[20,0,1,"","relIso(l_{1})"],
+        "ll_iso_2":[20,0,1,"","relIso(l_{2})"],
+
+        "H_vis":[100,0,500,"[Gev]","m(#tau#tau)"],
+        "H_Pt":[100,0,500,"[GeV]","P_{T}(#tau#tau)"],
+        "H_DR":[70,0,7,"","#Delta R(#tau#tau)"],
+        "H_tot":[100,0,500,"[GeV]","m_{T}tot(#tau#tau)"],
+
+        "TMass":[100,0,500,"[Gev]","m_{T}(#tau#tau)"],
+        "Mass":[100,0,500,"[Gev]","m(#tau#tau)(SV)"],
+        "AMass":[100,0,500,"[Gev]","m_{Z+H}(SV)"],
+        #"CutFlowWeighted":[15,0.5,15.5,"","cutflow"],
+        #"CutFlow":[15,0.5,15.5,"","cutflow"]
+
+        "Z_Pt":[100,0,500,"[Gev]","P_T(l_{1}l_{2})"],
+        "Z_DR":[100,0,500,"[Gev]","#Delta R(l_{1}l_{2})"]
+
+
 }
 
 def makeDiTauStack(outDir,inFile,rootDi,dndm = False, doRatio = False, year=2017, sign='OS', LTcut=0., cat='mmtt') :
     
-    if args.blind.lower() == 'false' or args.blind.lower() == 'no' : doRatio = True
+    if args.unBlind.lower() == 'true' or args.unBlind.lower() == 'yes' : doRatio = True
 
     tdrstyle.setTDRStyle()
 
@@ -123,7 +144,7 @@ def makeDiTauStack(outDir,inFile,rootDi,dndm = False, doRatio = False, year=2017
     extraText  = "Preliminary"  # default extra text is "Preliminary"
     lumi_sqrtS = "13 TeV"
     lumi_13TeV = cat+"   41.8 fb^{-1}, 2017"
-    iPeriod = 4    # 1=7TeV, 2=8TeV, 3=7+8TeV, 7=7+8+13TeV 
+    iPeriod = 5    # 1=7TeV, 2=8TeV, 3=7+8TeV, 7=7+8+13TeV 
 
     xR=0.65   #legend parameters
     xR=0.2    #legend parameters
@@ -171,7 +192,7 @@ def makeDiTauStack(outDir,inFile,rootDi,dndm = False, doRatio = False, year=2017
 	plotPad.SetTopMargin(T/H)
 	plotPad.SetBottomMargin(B_ratio/H) 
 	plotPad.SetFillColor(0)
-	plotPad.SetBottomMargin(0)
+	plotPad.SetBottomMargin(0.05)
 
 	ratioPad.SetLeftMargin  (L/W)
 	ratioPad.SetRightMargin (R/W)
@@ -207,34 +228,45 @@ def makeDiTauStack(outDir,inFile,rootDi,dndm = False, doRatio = False, year=2017
         for group in groups :
             units = plotSettings[plotVar][3]
             labelX = plotSettings[plotVar][4]
-
             histo[plotVar][group] ={}
+	    h_ = "h{0:s}_{1:s}_{2:s}".format(group,cat,plotVar)
             #print 'will try ', "h{0:s}_{1:s}_{2:s}".format(group,cat,plotVar)
+            if 'CutFlow' in plotVar : 
+	        if 'data' in group : h_ = "hCutFlow_{0:s}_data".format(cat)
+	        else : h_ = "hCutFlow_{0:s}_{1:s}".format(cat,group)
 
-            try : histo[plotVar][group] = f.Get("h{0:s}_{1:s}_{2:s}".format(group,cat,plotVar))
+            try : histo[plotVar][group] = f.Get(h_)
             except KeyError : continue
             #print histo[plotVar][group].GetName(), histo[plotVar][group].GetNbinsX()
             
             if dndm : convertToDNDM(histo[plotVar][group])
             if group == 'data' :
-                applyDATAStyle(histo[plotVar][group])
+                try : applyDATAStyle(histo[plotVar][group])
+                except KeyError : pass
             if group == 'Signal' :
                 applySignalStyle(histo[plotVar][group])
             if group != 'data' and group != 'Signal' :
                 applyStyle(histo[plotVar][group],colors[group],1,1001)
         
             if group != 'data' and group != 'Signal' : hs.Add(histo[plotVar][group]) 
+            #if '_met' in plotVar : print '============', group, histo[plotVar][group].GetSumOfWeights()
 
-
-        hMax = 10e+04*hs.GetMaximum()
-        if setLog : hs.SetMinimum(0.015)
-        else :     hs.SetMinimum(0.)
+        hMax = 10e+03+hs.GetMaximum()
+	if not setLog : hMax = 300+hs.GetMaximum()
+	hs.SetMinimum(0.)
+        #if setLog : 
+	#    hs.SetMaximum(10e+05*hs.GetMaximum())
+        #else :     hs.SetMinimum(0.)
         hsum=hs.GetStack().Last()
+	hsum.SetMinimum(0.)
+	if setLog : hsum.SetMinimum(0.015)
         hsum.SetMaximum(hMax)
-
+        if cat[:2] == 'ee': labelX = labelX.replace('l','e')
+        if cat[:2] == 'mm' : labelX = labelX.replace('l','#mu')
         hsum.GetXaxis().SetTitleSize(0.045)
 	if doRatio :
 	    hsum.GetXaxis().SetLabelSize(0)
+	    hsum.GetXaxis().SetTitle('')
 	else :
 	    if units!="" :
 		hsum.GetXaxis().SetTitle(labelX+" "+units)
@@ -309,23 +341,33 @@ def makeDiTauStack(outDir,inFile,rootDi,dndm = False, doRatio = False, year=2017
 	lg.SetFillStyle (0)
 	lg.SetTextSize(0.04)
 	lg.Draw("same")
-	plotPad.cd()
-	#plt.FixBoxPadding(plotPad,lg, 0.05);
-	#plt.FixOverlay();
-	
+        '''
+	y_min, y_max = (plotting.GetPadYMin(plotPad), plotting.GetPadYMax(plotPad))
+	if y_max == 0 : y_max = 100
+	try :
+	    plotting.FixBothRanges(plotPad, y_min if setLog else 0, 0.05 if setLog else 0, y_max, 0.25)
+	    #plotting.FixTopRange(plotPad,plotting.GetPadYMax(plotPad), 0.15);
+	    plotting.FixOverlay();
+	except KeyError : pass
+	'''
+
 	lTex1 = TLatex(120.,0.97*hMax,'Preliminary {0:d}'.format(year))
 	lTex1.SetTextSize(0.04) 
 	#lTex1.Draw("same")
 	signText = 'Same Sign'
 	if sign == 'OS' : signText = 'Opposite Sign'
         
-	lTex2 = TLatex(20.,2*hMax,'{0:s}'.format(signText))
-	#if setLog : lTex2 = TLatex(120.,0.80*hMax,'{0:s}'.format(signText))
+	lTex2 = TLatex(150., plotting.GetPadYMax(plotPad)+100,'{0:s}'.format(signText))
+	#lTex2 = TLatex(150.,0.8*hMax,'{0:s}'.format(signText))
+	#if setLog : lTex2 = TLatex(150.,hMax-10e+03,'{0:s}'.format(signText))
 	lTex2.SetTextSize(0.04) 
-	lTex2.Draw("same")
+	lTex2.Draw()
         CMS_lumi.CMS_lumi(c, iPeriod, 11)
+
+	#plotting.FixBoxPadding(plotPad,plotPad, 0.01);
+
+
         plotPad.cd()
-	#hsum.SetMaximum(10000000000)
         plotPad.Update()
         plotPad.RedrawAxis()
         #frame = c.GetFrame()
@@ -350,8 +392,9 @@ if __name__ == '__main__':
 
 #   see comments on cat argument at top of file
     cats = { 1:'eeet', 2:'eemt', 3:'eett', 4:'eeem', 5:'mmet', 6:'mmmt', 7:'mmtt', 8:'mmem'}
-    cats = { 1:'eeet', 2:'eemt'}
-    cats = { 1:'eeet'}
+    #cats = { 1:'eeet', 2:'mmmt'}
+    #cats = { 1:'eeet'}
+    #cats = { 1:'mmem'}
 
     if args.cat.lower() == 'all' :
         for cat in cats.values() :
