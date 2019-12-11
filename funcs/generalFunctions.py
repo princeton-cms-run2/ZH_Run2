@@ -6,6 +6,60 @@ from math import sqrt, sin, cos, pi
 import numpy as np
 import json
 
+
+def getLepIdxFrom4Vec(entry, lep_4vec, lep_type):
+    """ Classification: genMatching
+           - this function returns the index of a 4-vector (lep_4vec) belonging to
+             the muon (lep_type = 'm') or electron (lep_type = 'e') collection
+    """
+    
+    idx_lep = -1
+    if lep_type == 'm':
+        for i in range(entry.nMuon):
+            if abs((lep_4vec.Pt() - entry.Muon_pt[i])/lep_4vec.Pt()) < 0.08:
+                if abs((lep_4vec.Eta() - entry.Muon_eta[i])/lep_4vec.Eta()) < 0.08:
+                    if abs((lep_4vec.Phi() - entry.Muon_phi[i])/lep_4vec.Phi()) < 0.08:
+                        idx_lep = i
+
+    if lep_type == 'e':
+        for j in range(entry.nElectron):
+            if abs((lep_4vec.Pt() - entry.Electron_pt[j])/lep_4vec.Pt()) < 0.08:
+                    if abs((lep_4vec.Eta() - entry.Electron_eta[j])/lep_4vec.Eta()) < 0.08:
+                        if abs((lep_4vec.Phi() - entry.Electron_phi[j])/lep_4vec.Phi()) < 0.08:
+                            idx_lep = j
+
+    return idx_lep
+
+def genMatchTau(entry, jt, decayMode=''):
+    """ Classification: genMatching
+           - this function matches a hadronically-decaying tau (decayMode = 'had') to 
+             a GenVisPart with  minimum dR(tau,GenVisPart[i])
+           - it matches a leptonically-decaying tau (decayMode = 'lep') to a GenPart with
+             abs(PDGID) = 15 with the smallest dR(tau,GenPart[i])
+    """
+    
+    idx_match, dR_min = -99, 99
+    if decayMode == 'had':
+        for i in range(entry.nGenVisTau):
+            dPhi = min(abs(entry.GenVisTau_phi[i] - entry.Tau_phi[jt]),
+                       2.0*pi-abs(entry.GenVisTau_phi[i] - entry.Tau_phi[jt]))
+            dEta = abs(entry.GenVisTau_eta[i] - entry.Tau_eta[jt])
+            dR = sqrt(dPhi**2 + dEta**2)
+            if dR < dR_min:
+                idx_match, dR_min = i, dR
+    
+    if decayMode == 'lep':
+        for i in range(entry.nGenPart):
+            if abs(entry.GenPart_pdgId[i]) != 15: continue
+            dPhi = min(abs(entry.GenPart_phi[i] - entry.Tau_phi[jt]),
+                       2.0*pi-abs(entry.GenPart_phi[i] - entry.Tau_phi[jt]))
+            dEta = abs(entry.GenPart_eta[i] - entry.Tau_eta[jt])
+            dR = sqrt(dPhi**2 + dEta**2)
+            if dR < dR_min:
+                idx_match, dR_min = i, dR
+
+    return idx_match
+
 def printEvent(entry) :
     print("** Run={0:d} LS={1:d} Event={2:d} MET={3:.1f}".format(entry.run,entry.luminosityBlock,entry.event,entry.MET_pt))
     if entry.nMuon > 0 :
