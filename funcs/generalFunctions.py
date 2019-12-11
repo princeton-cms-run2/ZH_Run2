@@ -16,16 +16,17 @@ def getLepIdxFrom4Vec(entry, lep_4vec, lep_type):
     idx_lep = -1
     if lep_type == 'm':
         for i in range(entry.nMuon):
-            if abs((lep_4vec.Pt() - entry.Muon_pt[i])/lep_4vec.Pt()) < 0.05:
-                if abs((lep_4vec.Eta() - entry.Muon_eta[i])/lep_4vec.Eta()) < 0.05:
-                    if abs((lep_4vec.Phi() - entry.Muon_phi[i])/lep_4vec.Phi()) < 0.05:
+            if abs((lep_4vec.Pt() - entry.Muon_pt[i])/lep_4vec.Pt()) < 0.08:
+                if abs((lep_4vec.Eta() - entry.Muon_eta[i])/lep_4vec.Eta()) < 0.08:
+                    if abs((lep_4vec.Phi() - entry.Muon_phi[i])/lep_4vec.Phi()) < 0.08:
                         idx_lep = i
+
     if lep_type == 'e':
-        for i in range(entry.nElectron):
-                if abs((lep_4vec.Pt() - entry.Electron_pt[i])/lep_4vec.Pt()) < 0.05:
-                    if abs((lep_4vec.Eta() - entry.Electron_eta[i])/lep_4vec.Eta()) < 0.05:
-                        if abs((lep_4vec.Phi() - entry.Electron_phi[i])/lep_4vec.Phi()) < 0.05:
-                            idx_lep = i
+        for j in range(entry.nElectron):
+            if abs((lep_4vec.Pt() - entry.Electron_pt[j])/lep_4vec.Pt()) < 0.08:
+                    if abs((lep_4vec.Eta() - entry.Electron_eta[j])/lep_4vec.Eta()) < 0.08:
+                        if abs((lep_4vec.Phi() - entry.Electron_phi[j])/lep_4vec.Phi()) < 0.08:
+                            idx_lep = j
 
     return idx_lep
 

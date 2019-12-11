@@ -56,7 +56,6 @@ class outTuple() :
         self.phi_1_tr = array('f',[0])
         self.eta_1 = array('f',[0])
         self.eta_1_tr = array('f',[0])
-        self.motherPDG_1 = array('f',[0])
         self.m_1 = array('f',[0])
         self.q_1 = array('f',[0])
         self.d0_1 = array('f',[0])
@@ -157,23 +156,35 @@ class outTuple() :
         self.njets = array('f',[0])
         self.nbtag = array('f',[0])
 
-        self.jpt_1  = array('f',[0])
-        self.jeta_1  = array('f',[0])
-        self.jphi_1  = array('f',[0])
-        self.jcsv_1 = array('f',[0])
-        self.jpt_2  = array('f',[0])
-        self.jeta_2  = array('f',[0])
-        self.jphi_2  = array('f',[0])
-        self.jcsv_2 = array('f',[0])
+        self.jpt_1     = array('f',[0])
+        self.jpt_1_tr  = array('f',[0])
+        self.jeta_1    = array('f',[0])
+        self.jeta_1_tr = array('f',[0])
+        self.jphi_1    = array('f',[0])
+        self.jphi_1_tr = array('f',[0])
+        self.jcsv_1    = array('f',[0])
+        self.jpt_2     = array('f',[0])
+        self.jpt_2_tr  = array('f',[0])
+        self.jeta_2    = array('f',[0])
+        self.jeta_2_tr = array('f',[0])
+        self.jphi_2    = array('f',[0])
+        self.jphi_2_tr = array('f',[0])
+        self.jcsv_2    = array('f',[0])
 
-        self.bpt_1  = array('f',[0])
-        self.beta_1  = array('f',[0])
-        self.bphi_1  = array('f',[0])
-        self.bcsv_1 = array('f',[0])
-        self.bpt_2  = array('f',[0])
-        self.beta_2  = array('f',[0])
-        self.bphi_2  = array('f',[0])
-        self.bcsv_2 = array('f',[0])
+        self.bpt_1     = array('f',[0])
+        self.bpt_1_tr  = array('f',[0])
+        self.beta_1    = array('f',[0])
+        self.beta_1_tr = array('f',[0])
+        self.bphi_1    = array('f',[0])
+        self.bphi_1_tr = array('f',[0])
+        self.bcsv_1    = array('f',[0])
+        self.bpt_2     = array('f',[0])
+        self.bpt_2_tr  = array('f',[0])
+        self.beta_2    = array('f',[0])
+        self.beta_2_tr = array('f',[0])
+        self.bphi_2    = array('f',[0])
+        self.bphi_2_tr = array('f',[0])
+        self.bcsv_2    = array('f',[0])
       
         self.t.Branch('run',  self.run,    'run/l' )
         self.t.Branch('lumi', self.lumi,   'lumi/I' )
@@ -194,7 +205,6 @@ class outTuple() :
         self.t.Branch('phi_1_tr', self.phi_1_tr, 'phi_1_tr/F')
         self.t.Branch('eta_1', self.eta_1, 'eta_1/F')
         self.t.Branch('eta_1_tr', self.eta_1_tr, 'eta_1_tr/F')
-        self.t.Branch('motherPDG_1', self.motherPDG_1, 'motherPDG_1/I')
         self.t.Branch('m_1', self.m_1, 'm_1/F')
         self.t.Branch('q_1', self.q_1, 'q_1/F')
         self.t.Branch('d0_1', self.d0_1, 'd0_1/F')
@@ -294,23 +304,35 @@ class outTuple() :
         self.t.Branch('njets', self.njets, 'njets/F')
         self.t.Branch('nbtag', self.nbtag, 'nbtag/F')
 
-        self.t.Branch('jpt_1',  self.jpt_1, 'jpt_1/F' )
-        self.t.Branch('jeta_1', self.jeta_1, 'jeta_1/F' ) 
-        self.t.Branch('jphi_1', self.jphi_1, 'jphi_1/F' )
-        self.t.Branch('jcsv_1', self.jcsv_1, 'jcsv_1/F' )
-        self.t.Branch('jpt_2',  self.jpt_2, 'jpt_2/F' )
-        self.t.Branch('jeta_2', self.jeta_2, 'jeta_2/F' ) 
-        self.t.Branch('jphi_2', self.jphi_2, 'jphi_2/F' )
-        self.t.Branch('jcsv_2', self.jcsv_2, 'jcsv_2/F' )
+        self.t.Branch('jpt_1',     self.jpt_1,     'jpt_1/F' )
+        self.t.Branch('jpt_1_tr',  self.jpt_1_tr,  'jpt_1_tr/F' )
+        self.t.Branch('jeta_1',    self.jeta_1,    'jeta_1/F' ) 
+        self.t.Branch('jeta_1_tr', self.jeta_1_tr, 'jeta_1_tr/F' )
+        self.t.Branch('jphi_1',    self.jphi_1,    'jphi_1/F' )
+        self.t.Branch('jphi_1_tr', self.jphi_1_tr, 'jphi_1_tr/F' )
+        self.t.Branch('jcsv_1',    self.jcsv_1,    'jcsv_1/F' )
+        self.t.Branch('jpt_2',     self.jpt_2,     'jpt_2/F' )
+        self.t.Branch('jpt_2_tr',  self.jpt_2_tr,  'jpt_2_tr/F' )
+        self.t.Branch('jeta_2',    self.jeta_2,    'jeta_2/F' ) 
+        self.t.Branch('jeta_2_tr', self.jeta_2_tr, 'jeta_2_tr/F' )
+        self.t.Branch('jphi_2',    self.jphi_2,    'jphi_2/F' )
+        self.t.Branch('jphi_2_tr', self.jphi_2_tr, 'jphi_2_tr/F' )
+        self.t.Branch('jcsv_2',    self.jcsv_2,    'jcsv_2/F' )
 
-        self.t.Branch('bpt_1',  self.bpt_1, 'bpt_1/F' )
-        self.t.Branch('beta_1', self.beta_1, 'beta_1/F' ) 
-        self.t.Branch('bphi_1', self.bphi_1, 'bphi_1/F' )
-        self.t.Branch('bcsv_1', self.bcsv_1, 'bcsv_1/F' )
-        self.t.Branch('bpt_2',  self.bpt_2, 'bpt_2/F' )
-        self.t.Branch('beta_2', self.beta_2, 'beta_2/F' ) 
-        self.t.Branch('bphi_2', self.bphi_2, 'bphi_2/F' )
-        self.t.Branch('bcsv_2', self.bcsv_2, 'bcsv_2/F' )
+        self.t.Branch('bpt_1',     self.bpt_1,     'bpt_1/F' )
+        self.t.Branch('bpt_1_tr',  self.bpt_1_tr,  'bpt_1_tr/F' )
+        self.t.Branch('beta_1',    self.beta_1,    'beta_1/F' ) 
+        self.t.Branch('beta_1_tr', self.beta_1_tr, 'beta_1_tr/F' )
+        self.t.Branch('bphi_1',    self.bphi_1,    'bphi_1/F' )
+        self.t.Branch('bphi_1_tr', self.bphi_1_tr, 'bphi_1_tr/F' )
+        self.t.Branch('bcsv_1',    self.bcsv_1,    'bcsv_1/F' )
+        self.t.Branch('bpt_2',     self.bpt_2,     'bpt_2/F' )
+        self.t.Branch('bpt_2_tr',  self.bpt_2_tr,  'bpt_2_tr/F' )
+        self.t.Branch('beta_2',    self.beta_2,    'beta_2/F' )
+        self.t.Branch('beta_2_tr', self.beta_2_tr, 'beta_2_tr/F' )
+        self.t.Branch('bphi_2',    self.bphi_2,    'bphi_2/F' )
+        self.t.Branch('bphi_2_tr', self.bphi_2_tr, 'bphi_2_tr/F' )
+        self.t.Branch('bcsv_2',    self.bcsv_2,    'bcsv_2/F' )
 
     def getAntiEle(self,entry,j,bitPos) :
         if ord(entry.Tau_idAntiEle[j]) & bitPos > 0 : return 1.
@@ -555,6 +577,18 @@ class outTuple() :
             #self.iso_1[0] = 0.
             self.iso_1[0] = 0. 
             if entry.Electron_mvaFall17V2noIso_WP90[jt1] : self.iso_1[0] = 1.
+            
+            # fill genMatch variables for tau(ele)
+            if isMC:
+                idx_genEle = entry.Electron_genPartIdx[jt1]
+
+                # if idx_genMu = -1, no match was found
+                if idx_genEle >= 0:
+                    idx_genEle_mom      = entry.GenPart_genPartIdxMother[idx_genEle]
+                    self.pt_1_tr[0]     = entry.GenPart_pt[idx_genEle]
+                    self.phi_1_tr[0]    = entry.GenPart_phi[idx_genEle]
+                    self.eta_1_tr[0]    = entry.GenPart_eta[idx_genEle]
+
             try: self.gen_match_1[0] = ord(entry.Electron_genPartFlav[jt1])
             except AttributeError: self.gen_match_1[0] = -1
             tau1.SetPtEtaPhiM(entry.Electron_pt[jt1],entry.Electron_eta[jt1], entry.Electron_phi[jt1], tauMass)
@@ -589,6 +623,17 @@ class outTuple() :
             except AttributeError : self.gen_match_1[0] = -1
             tau1.SetPtEtaPhiM(entry.Electron_pt[jt1],entry.Electron_eta[jt1], entry.Electron_phi[jt1], tauMass)
 
+             # fill genMatch for tau(ele)
+            if isMC:
+                idx_genEle = entry.Electron_genPartIdx[jt1]
+
+                # if idx_genEle = -1, no match was found
+                if idx_genEle >= 0:
+                    idx_genEle_mom      = entry.GenPart_genPartIdxMother[idx_genEle]
+                    self.pt_1_tr[0]     = entry.GenPart_pt[idx_genEle]
+                    self.phi_1_tr[0]    = entry.GenPart_phi[idx_genEle]
+                    self.eta_1_tr[0]    = entry.GenPart_eta[idx_genEle]
+
             self.pt_2[0] = entry.Muon_pt[jt2]
             self.phi_2[0] = entry.Muon_phi[jt2]
             self.eta_2[0] = entry.Muon_eta[jt2]
@@ -602,6 +647,18 @@ class outTuple() :
             try : self.gen_match_2[0] = ord(entry.Muon_genPartFlav[jt2]) 
             except AttributeError : self.gen_match_2[0] = -1
             tau2.SetPtEtaPhiM(entry.Muon_pt[jt2],entry.Muon_eta[jt2], entry.Muon_phi[jt2], tauMass) ######### should this be tauMass ???
+
+            # fill genMatch for tau(mu)
+            if isMC:
+                idx_genMu = entry.Muon_genPartIdx[jt2]
+                
+                # if idx_genMu = -1, no match was found
+                if idx_genMu >= 0:
+                    idx_genMu_mom       = entry.GenPart_genPartIdxMother[idx_genMu]
+                    self.pt_2_tr[0]     = entry.GenPart_pt[idx_genMu]
+                    self.phi_2_tr[0]    = entry.GenPart_phi[idx_genMu]
+                    self.eta_2_tr[0]    = entry.GenPart_eta[idx_genMu]
+
 	    '''tauListMu=[]
 	    tauListE=[jt1]
 	    tauListMu=[jt2]
@@ -638,7 +695,7 @@ class outTuple() :
             
             # fill genMatch for tau(mu)
             if isMC:
-                idx_genMu           = entry.Muon_genPartIdx[jt1]
+                idx_genMu = entry.Muon_genPartIdx[jt1]
                 
                 # if idx_genMu = -1, no match was found
                 if idx_genMu >= 0:
@@ -647,12 +704,7 @@ class outTuple() :
                     self.phi_1_tr[0]    = entry.GenPart_phi[idx_genMu]
                     self.eta_1_tr[0]    = entry.GenPart_eta[idx_genMu]
                     
-                    # if idx_genMu_mom = -1, no mother was found
-                    if idx_genMu_mom >= 0:
-                        self.motherPDG_1[0] = entry.GenPart_pdgId[idx_genMu_mom]
-            
-
-	    '''tauListMu=[]
+ 	    '''tauListMu=[]
 	    tauListMu=[jt1]
 	    TrigListMuTau=[]
 	    TrigListMuTau = GF.findETrigger(tauListMu, entry, era)
@@ -683,6 +735,18 @@ class outTuple() :
             self.againstMuonLoose3_1[0] = self.getAntiMu(entry,jt1,1)
             self.againstMuonTight3_1[0] = self.getAntiMu(entry,jt1,2)                            
             self.byIsolationMVA3oldDMwLTraw_1[0] = 0.    # does not seem to exist in nanoAOD
+    
+            # genMatch the hadronic tau candidate
+            idx_t1_gen = GF.genMatchTau(entry, jt1, 'had')
+            if idx_t1_gen >= 0:
+                self.pt_1_tr[0]  = entry.GenVisTau_pt[idx_t1_gen]
+                self.phi_1_tr[0] = entry.GenVisTau_phi[idx_t1_gen]
+                self.eta_1_tr[0] = entry.GenVisTau_eta[idx_t1_gen]
+            else:
+                self.pt_1_tr[0]  = 1.2*entry.Tau_pt[jt1]
+                self.phi_1_tr[0] = 1.2*entry.Tau_phi[jt1]
+                self.eta_1_tr[0] = 1.2*entry.Tau_eta[jt1]
+
             try : self.gen_match_1[0] = ord(entry.Tau_genPartFlav[jt1])
             except AttributeError : self.gen_match_1[0] = -1
 
@@ -771,23 +835,27 @@ class outTuple() :
         self.ll_eta_m[0]  = LepM.Eta()
         
         # genMatch the di-lepton variables
-        idx_LepP = -1
-        idx_LepM = -1
-        if (channel[0] == 'm'): 
+        idx_LepP, idx_LepM = -1, -1
+        idx_LepP_tr, idx_LepM_tr = -1, -1
+        if (LepP.M() > 0.05 and LepM.M() > 0.05): # muon mass 
             idx_LepP = GF.getLepIdxFrom4Vec(entry, LepP, 'm')
             idx_LepM = GF.getLepIdxFrom4Vec(entry, LepM, 'm')
-        if (channel[0] == 'e'):
+            idx_LepP_tr = entry.Muon_genPartIdx[idx_LepP]
+            idx_LepM_tr = entry.Muon_genPartIdx[idx_LepM]
+        elif (LepP.M() < 0.05 and LepM.M() < 0.05): # electron mass
             idx_LepP = GF.getLepIdxFrom4Vec(entry, LepP, 'e')
             idx_LepM = GF.getLepIdxFrom4Vec(entry, LepM, 'e')
-        idx_LepP_tr = entry.Muon_genPartIdx[idx_LepP]
-        idx_LepM_tr = entry.Muon_genPartIdx[idx_LepM]
-        self.ll_pt_p_tr[0]  = entry.GenPart_pt[idx_LepP_tr]
-        self.ll_pt_m_tr[0]  = entry.GenPart_pt[idx_LepM_tr]
-        self.ll_eta_p_tr[0] = entry.GenPart_eta[idx_LepP_tr]
-        self.ll_eta_m_tr[0] = entry.GenPart_eta[idx_LepM_tr]
-        self.ll_phi_p_tr[0] = entry.GenPart_phi[idx_LepP_tr]
-        self.ll_phi_m_tr[0] = entry.GenPart_phi[idx_LepM_tr]
-
+            idx_LepP_tr = entry.Electron_genPartIdx[idx_LepP]
+            idx_LepM_tr = entry.Electron_genPartIdx[idx_LepM]
+            
+        if idx_LepP_tr >= 0 and idx_LepM_tr >= 0:
+            self.ll_pt_p_tr[0]  = entry.GenPart_pt[idx_LepP_tr]
+            self.ll_pt_m_tr[0]  = entry.GenPart_pt[idx_LepM_tr]
+            self.ll_eta_p_tr[0] = entry.GenPart_eta[idx_LepP_tr]
+            self.ll_eta_m_tr[0] = entry.GenPart_eta[idx_LepM_tr]
+            self.ll_phi_p_tr[0] = entry.GenPart_phi[idx_LepP_tr]
+            self.ll_phi_m_tr[0] = entry.GenPart_phi[idx_LepM_tr]
+        
         # MET variables
         self.met[0] = entry.MET_pt    
         self.metphi[0] = entry.MET_phi
@@ -828,18 +896,32 @@ class outTuple() :
         self.jpt_1[0], self.jeta_1[0], self.jphi_1[0], self.jcsv_1[0] = -9.99, -9.99, -9.99, -9.99 
         if len(jetList) > 0 :
             jj1 = jetList[0]
-            self.jpt_1[0] = entry.Jet_pt[jj1]
+            self.jpt_1[0]  = entry.Jet_pt[jj1]
             self.jeta_1[0] = entry.Jet_eta[jj1]
             self.jphi_1[0] = entry.Jet_phi[jj1]
             self.jcsv_1[0] = entry.Jet_btagDeepB[jj1]
 
+            # genMatch jet1
+            idx_genJet = entry.Jet_genJetIdx[jj1]
+            if idx_genJet >= 0:
+                self.jpt_1_tr[0]  = entry.GenJet_pt[idx_genJet]
+                self.jeta_1_tr[0] = entry.GenJet_eta[idx_genJet]
+                self.jphi_1_tr[0] = entry.GenJet_phi[idx_genJet]
+
         self.jpt_2[0], self.jeta_2[0], self.jphi_2[0], self.jcsv_2[0] = -9.99, -9.99, -9.99, -9.99 
         if len(jetList) > 1 :
             jj2 = jetList[1] 
-            self.jpt_2[0] = entry.Jet_pt[jj2]
+            self.jpt_2[0]  = entry.Jet_pt[jj2]
             self.jeta_2[0] = entry.Jet_eta[jj2]
             self.jphi_2[0] = entry.Jet_phi[jj2]
             self.jcsv_2[0] = entry.Jet_btagDeepB[jj2]
+            
+            # genMatch jet2
+            idx_genJet = entry.Jet_genJetIdx[jj2]
+            if idx_genJet >= 0:
+                self.jpt_2_tr[0]  = entry.GenJet_pt[idx_genJet]
+                self.jeta_2_tr[0] = entry.GenJet_eta[idx_genJet]
+                self.jphi_2_tr[0] = entry.GenJet_phi[idx_genJet]
 
         self.bpt_1[0], self.beta_1[0], self.bphi_1[0], self.bcsv_1[0] = -9.99, -9.99, -9.99, -9.99
         if len(bJetList) > 0 :
@@ -848,6 +930,13 @@ class outTuple() :
             self.beta_1[0] = entry.Jet_eta[jbj1]
             self.bphi_1[0] = entry.Jet_phi[jbj1]
             self.bcsv_1[0] = entry.Jet_btagDeepB[jbj1] 
+            
+            # genMatch bjet1
+            idx_genJet = entry.Jet_genJetIdx[jbj1]
+            if idx_genJet >= 0:
+                self.bpt_1_tr[0] = entry.GenJet_pt[idx_genJet]
+                self.beta_1_tr[0] =entry.GenJet_eta[idx_genJet]
+                self.bphi_1_tr[0] =entry.GenJet_phi[idx_genJet]
 
         self.bpt_2[0], self.beta_2[0], self.bphi_2[0], self.bcsv_2[0] = -9.99, -9.99, -9.99, -9.99
         if len(bJetList) > 1 :
@@ -856,6 +945,13 @@ class outTuple() :
             self.beta_2[0] = entry.Jet_eta[jbj2]
             self.bphi_2[0] = entry.Jet_phi[jbj2]
             self.bcsv_2[0] = entry.Jet_btagDeepB[jbj2]
+
+            # genMatch bjet1
+            idx_genJet = entry.Jet_genJetIdx[jbj2]
+            if idx_genJet >= 0:
+                self.bpt_2_tr[0]  = entry.GenJet_pt[idx_genJet]
+                self.beta_2_tr[0] = entry.GenJet_eta[idx_genJet]
+                self.bphi_2_tr[0] = entry.GenJet_phi[idx_genJet]
 
         self.t.Fill()
         #self.weight[0] = 1.
