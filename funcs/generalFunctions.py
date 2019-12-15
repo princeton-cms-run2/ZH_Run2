@@ -60,6 +60,29 @@ def genMatchTau(entry, jt, decayMode=''):
 
     return idx_match
 
+def checkMETFlags(entry, year) :
+    METfilter = False
+    '''
+    if entry.Flag_BadChargedCandidateFilter or entry.Flag_BadChargedCandidateSummer16Filter or entry.Flag_BadPFMuonFilter
+    or entry.Flag_BadPFMuonSummer16Filter or  entry.Flag_CSCTightHalo2015Filter or entry.Flag_CSCTightHaloFilter
+    or entry.Flag_CSCTightHaloTrkMuUnvetoFilter or entry.Flag_EcalDeadCellBoundaryEnergyFilter	
+    or entry.Flag_EcalDeadCellTriggerPrimitiveFilter or entry.Flag_HBHENoiseFilter or entry.Flag_HBHENoiseIsoFilter
+    or entry.Flag_HcalStripHaloFilter	or entry.Flag_METFilters or entry.Flag_chargedHadronTrackResolutionFilter
+    or entry.Flag_ecalBadCalibFilter	or entry.Flag_ecalBadCalibFilterV2 Flag_ecalLaserCorrFilter or entry.Flag_eeBadScFilter	
+    or entry.Flag_globalSuperTightHalo2016Filter or entry.Flag_globalTightHalo2016Filter or entry.Flag_goodVertices 
+    or entry.Flag_hcalLaserEventFilter	or entry.Flag_muonBadTrackFilter or entry.Flag_trkPOGFilters
+    or entry.Flag_trkPOG_logErrorTooManyClusters or entry.Flag_trkPOG_manystripclus53X	or entry.Flag_trkPOG_toomanystripclus53X : 
+    '''
+    if year== 2016 and entry.Flag_goodVertices  == False or entry.Flag_globalSuperTightHalo2016Filter  == False or entry.Flag_HBHENoiseFilter == False or entry.Flag_HBHENoiseIsoFilter  == False or entry.Flag_EcalDeadCellTriggerPrimitiveFilter  == False or  entry.Flag_BadPFMuonFilter  == False or entry.Flag_eeBadScFilter  == False: METfilter = True
+
+    if year== 2017 and entry.Flag_goodVertices  == False or entry.Flag_globalSuperTightHalo2016Filter  == False or entry.Flag_HBHENoiseFilter  == False or entry.Flag_HBHENoiseIsoFilter  == False or entry.Flag_EcalDeadCellTriggerPrimitiveFilter  == False or  entry.Flag_BadPFMuonFilter   == False or entry.Flag_eeBadScFilter  == False or entry.Flag_BadChargedCandidateFilter == False : METfilter = True
+
+    if year== 2018 and entry.Flag_goodVertices  == False or entry.Flag_globalSuperTightHalo2016Filter  == False or entry.Flag_HBHENoiseFilter  == False or entry.Flag_HBHENoiseIsoFilter  == False or entry.Flag_EcalDeadCellTriggerPrimitiveFilter  == False or  entry.Flag_BadPFMuonFilter == False  or entry.Flag_eeBadScFilter == False or entry.Flag_BadChargedCandidateFilter  == False: METfilter = True
+
+
+    return METfilter
+
+
 def printEvent(entry) :
     print("** Run={0:d} LS={1:d} Event={2:d} MET={3:.1f}".format(entry.run,entry.luminosityBlock,entry.event,entry.MET_pt))
     if entry.nMuon > 0 :
@@ -738,3 +761,4 @@ class checkJSON() :
 
     
     
+
