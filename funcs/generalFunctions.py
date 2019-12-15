@@ -60,7 +60,6 @@ def genMatchTau(entry, jt, decayMode=''):
 
     return idx_match
 
-<<<<<<< HEAD
 def checkMETFlags(entry, year) :
     METfilter = False
     '''
@@ -84,8 +83,6 @@ def checkMETFlags(entry, year) :
     return METfilter
 
 
-=======
->>>>>>> a98176a4f075761e31b9bf00573868e75412c63a
 def printEvent(entry) :
     print("** Run={0:d} LS={1:d} Event={2:d} MET={3:.1f}".format(entry.run,entry.luminosityBlock,entry.event,entry.MET_pt))
     if entry.nMuon > 0 :
