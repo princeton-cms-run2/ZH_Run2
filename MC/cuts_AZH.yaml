@@ -11,6 +11,8 @@ mt:
   mu_ID: false
   mu_pt: 10.
   mu_eta: 2.4  
+  mu_iso_f : true
+  mu_iso: 0.25
   mu_dxy: 0.045
   mu_dz: 0.2
   mt_DR: 0.5
@@ -29,6 +31,7 @@ em:
   mu_dz: 0.2
   mu_pt: 10.
   mu_eta: 2.4
+  mu_iso_f : true
   mu_iso: 0.25
   em_DR: 0.3
   lt_DR: 0.5
@@ -63,6 +66,7 @@ mm:
   mu_pt: 10.
   mu_eta: 2.4
   mu_ID: false
+  mu_iso_f : true
   mu_iso: 0.25
   mu_dxy: 0.045
   mu_dz: 0.2

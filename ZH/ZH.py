@@ -106,11 +106,13 @@ if args.weights > 0 :
         hWeight.Fill(0, e.genWeight)
     
 
-        npartons = ord(e.LHE_Njets)
-        if "WJetsToLNu" in outFileName and npartons <= 4:
-	    hWxGenweightsArr[npartons].Fill(0, e.genWeight)
-        if "DYJetsToLL" in outFileName and npartons <= 4:
-	    hDYxGenweightsArr[npartons].Fill(0, e.genWeight)
+        if "WJetsToLNu" in outFileName :
+
+            npartons = ord(e.LHE_Njets)
+	    if  npartons <= 4: 	hWxGenweightsArr[npartons].Fill(0, e.genWeight)
+        if "DYJetsToLL" in outFileName :
+            npartons = ord(e.LHE_Njets)
+	    if  npartons <= 4 : hDYxGenweightsArr[npartons].Fill(0, e.genWeight)
 
     fName = GF.getOutFileName(args).replace(".root",".weights")
     fW = TFile( fName, 'recreate' )
@@ -144,6 +146,15 @@ tStart = time.time()
 countMod = 1000
 isMC = True
 for count, e in enumerate(inTree) :
+    isInJSON = False
+    if not MC : isInJSON = CJ.checkJSON(e.luminosityBlock,e.run)
+    if not isInJSON and not MC :
+        #print("Event not in JSON: Run:{0:d} LS:{1:d}".format(e.run,e.luminosityBlock))
+        continue
+
+    MetFilter = GF.checkMETFlags(e,args.year)
+    if MetFilter : continue
+
     for cat in cats : 
         cutCounter[cat].count('All')
 	if  MC :   cutCounterGenWeight[cat].countGenWeight('All', e.genWeight)
@@ -279,7 +290,7 @@ for count, e in enumerate(inTree) :
                 
             if tauMode == 'tt' :
                 if isAZH : tauList = tauFun.getTauListAZH(cat, e, pairList=pairList)
-                else : tauList = tauFun.getTauList(cat, e, pairList=pairList)
+                else : tauList = tauFun.getTauListv3(cat, e, pairList=pairList)
                 bestTauPair = tauFun.getBestTauPair(cat, e, tauList )
                                     
             elif tauMode == 'et' :
@@ -320,16 +331,10 @@ for count, e in enumerate(inTree) :
                 continue
 
             if MC :
-                outTuple.setWeight(PU.getWeight(e.Pileup_nPU)) ## we store the GenWeight * PUweight ?
-	    else :
-                isInJSON = CJ.checkJSON(e.luminosityBlock,e.run)
-                if not isInJSON :
-                    print("Event not in JSON: Run:{0:d} LS:{1:d}".format(e.run,e.luminosityBlock))
-                    continue
-                if not MC:
-                    if isInJSON :
-                        outTuple.setWeight(1.) ## we store weight = 1 for data
-                        cutCounter[cat].count("InJSON")
+                outTuple.setWeight(PU.getWeight(e.Pileup_nPU)) ## we store the GenWeight * PUweight ?   
+	    else : 
+                outTuple.setWeight(1.) ## we store weight = 1 for data
+
 
             cutCounter[cat].count("VVtightTauPair")
 	    if  MC :   cutCounterGenWeight[cat].countGenWeight('VVtightTauPair', e.genWeight)

@@ -29,14 +29,22 @@ def search(values, searchFor):
     return False
 
 
+def LeptonID(cat, year):
+
+
+    El_IDFiles = {'2016:2016LegacyReReco_ElectronMVA90noiso_Fall17V2.root', '2017:2017_ElectronMVA90noiso.root', '2018:2018_ElectronMVA90noiso.root'}
+    #MuonID_Files
+
+
+
 
 def getArgs() :
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("-v","--verbose",default=0,type=int,help="Print level.")
-    parser.add_argument("-f","--inFileName",default='./MCsamples_2016.csv',help="File to be analyzed.")
+    parser.add_argument("-f","--inFileName",default='./MCsamples_2017_small.csv',help="File to be analyzed.")
     parser.add_argument("-o","--outFileName",default='',help="File to be used for output.")
-    parser.add_argument("-y","--year",default=2016,type=int,help="Year for data.")
+    parser.add_argument("-y","--year",default=2017,type=int,help="Year for data.")
     parser.add_argument("-l","--LTcut",default=0.,type=float,help="H_LTcut")
     parser.add_argument("-s","--sign",default='OS',help="Opposite or same sign (OS or SS).")
     parser.add_argument("-a","--analysis",default='ZH',help="Select ZH or AZH")
@@ -178,7 +186,7 @@ unblind=False
 if args.unBlind.lower() == 'true' or args.unBlind.lower == 'yes' : unblind = True
 
 #groups = ['Signal','Reducible','Rare','ZZ4L','data']
-groups = ['Signal','ZZ4L','Reducible','Rare','data']
+groups = ['Signal','ZZ4L','Reducible','Rare','Top','data']
 
 Pblumi = 1000.
 tauID_w = 1.
@@ -207,19 +215,6 @@ if era == '2018' :
     weights_elTotauFR = {'lelFR_lt1p46' : 1., 'lelFR_gt1p559' : 1., 'telFR_lt1p46' : 1., 'telFR_gt1p559' : 1.}
 
 
-'''
-if era == '2016' : 
-    lumi *= 35.92
-    tauID_w = 0.87
-
-if era == '2017' : 
-    lumi *= 41.53
-    tauID_w = 0.89
-
-if era == '2018' : 
-    lumi *= 59.74
-    tauID_w = 0.90
-'''
 
 
 # use this utility class to screen out duplicate events
@@ -230,6 +225,7 @@ for cat in cats.values() :
 # dictionary where the group is the key
 hMC = {}
 hCutFlow = {}
+hCutFlowPerGroup = {}
 WCounter = {}
 
 
@@ -258,9 +254,7 @@ DYxGenweightsArr = []
 print ' Will use the ' ,args.inFileName
 for line in open(args.inFileName,'r').readlines() :
     vals = line.split(',')
-    if vals[0] == "#": continue
-    nickName = vals[0]
-    group = vals[1]
+    if '#' in vals[0] : continue
     if vals[0][0] == "W" and  "JetsToLNu" in vals[0][2:] :
         WNJetsXsecs.append(float(vals[2]))
         filein = '../MC/condor/{0:s}/{1:s}_{2:s}/{1:s}_{2:s}.root'.format(args.analysis,vals[0],era)
@@ -281,17 +275,23 @@ DYIncl_only = False
 
 for line in open(args.inFileName,'r').readlines() :
     vals = line.split(',')
-    if vals[0] == "#": continue
+    if '#' in vals[0] : continue
     nickName = vals[0]
     group = vals[1]
     nickNames[group].append(nickName)
     xsec[nickName] = float(vals[2])
-    totalWeight[nickName] = float(vals[4])
+    #totalWeight[nickName] = float(vals[4])
+    filein = '../MC/condor/{0:s}/{1:s}_{2:s}/{1:s}_{2:s}.root'.format(args.analysis,vals[0],era)
+    fIn = TFile.Open(filein,"READ")
+    totalWeight[nickName] = float(fIn.Get("hWeights").GetSumOfWeights())
     sampleWeight[nickName]= Pblumi*weights['lumi']*xsec[nickName]/totalWeight[nickName]
 
-    print("group={0:10s} nickName={1:20s} xSec={2:10.3f} totalWeight={3:11.1f} sampleWeight={4:10.6f}".format(
-        group,nickName,xsec[nickName],totalWeight[nickName],sampleWeight[nickName]))
+    #print("group={0:10s} nickName={1:20s} xSec={2:10.3f} totalWeight={3:11.1f} sampleWeight={4:10.6f}".format(
+    #    group,nickName,xsec[nickName],totalWeight[nickName],sampleWeight[nickName]))
 
+    print("{0:100s}  & {1:10.3f} & {2:11.1f} & {3:10.6f}\\\\\\hline".format(
+         str(vals[6]),xsec[nickName],totalWeight[nickName],sampleWeight[nickName]))
+   
 if not search(nickNames, 'W1') and not search(nickNames, 'W2') and not search(nickNames, 'W3') and not search(nickNames, 'W4') : WIncl_only = True
 if not search(nickNames, 'DY1') and not search(nickNames, 'DY2') and not search(nickNames, 'DY3') and not search(nickNames, 'DY4') : DYIncl_only = True
 
@@ -310,7 +310,7 @@ for i in range(1,4) :
 
 # now add the data
 #for eras in ['2017B','2017C','2017D','2017E','2017F'] :
-for eras in ['2016'] :
+for eras in [era] :
     #for dataset in ['SingleElectron','SingleMuon','DoubleEG','DoubleMuon'] :
     #for dataset in ['SingleMuon'] :
     for dataset in ['data'] :
@@ -347,73 +347,73 @@ global getsf,sf
 
 
 plotSettings = { # [nBins,xMin,xMax,units]
-        "pt_1":[100,0,500,"[Gev]","P_{T}(#tau_{1})"],
-        "eta_1":[100,-4,4,"","#eta(l_{1})"],
-        "phi_1":[100,-4,4,"","#phi(l_{1})"],
+
+        "pt_1":[40,0,200,"[Gev]","P_{T}(#tau_{1})"],
+        "eta_1":[60,-3,3,"","#eta(l_{1})"],
+        "phi_1":[60,-3,3,"","#phi(l_{1})"],
         "iso_1":[20,0,1,"","relIso(l_{1})"],
         "dz_1":[10,0,0.2,"[cm]","d_{z}(l_{1})"],
         "d0_1":[10,0,0.2,"[cm]","d_{xy}(l_{1})"],
         "q_1":[10,-5,5,"","charge(l_{1})"],
 
-        "pt_2":[100,0,500,"[Gev]","P_{T}(l_{2})"],
-        "eta_2":[100,-4,4,"","#eta(l_{2})"],
-        "phi_2":[100,-4,4,"","#phi(l_{2})"],
+        "pt_2":[40,0,200,"[Gev]","P_{T}(l_{2})"],
+        "eta_2":[60,-3,3,"","#eta(l_{2})"],
+        "phi_2":[60,-3,3,"","#phi(l_{2})"],
         "iso_2":[20,0,1,"","relIso(l_{2})"],
         "dz_2":[10,0,0.2,"[cm]","d_{z}(l_{2})"],
         "d0_2":[10,0,0.2,"[cm]","d_{xy}(l_{2})"],
         "q_2":[10,-5,5,"","charge(l_{2})"],
 
-        "njets":[10,-0.5,9.5,"","nJet"],
+        "njets":[10,-0.5,9.5,"","nJets"],
         #"Jet_pt":[100,0,500,"[GeV]","Jet P_{T}"], 
-        #"Jet_eta":[64,-3.2,3.2,"","Jet #eta"],
-        #"Jet_phi":[100,-4,4,"","Jet #phi"],
+        #"Jet_eta":[60,-3,3,"","Jet #eta"],
+        #"Jet_phi":[60,-3,3,"","Jet #phi"],
         #"Jet_ht":[100,0,800,"[GeV]","H_{T}"],
 
-        "jpt_1":[100,0,500,"[GeV]","Jet^{1} P_{T}"], 
-        "jeta_1":[64,-3.2,3.2,"","Jet^{1} #eta"],
-        "jpt_2":[100,0,500,"[GeV]","Jet^{2} P_{T}"], 
-        "jeta_2":[64,-3.2,3.2,"","Jet^{2} #eta"],
+        "jpt_1":[60,0,300,"[GeV]","Jet^{1} P_{T}"], 
+        "jeta_1":[60,-3,3,"","Jet^{1} #eta"],
+        "jpt_2":[60,0,300,"[GeV]","Jet^{2} P_{T}"], 
+        "jeta_2":[6,-3,3,"","Jet^{2} #eta"],
 
-        "bpt_1":[100,0,500,"[GeV]","BJet^{1} P_{T}"], 
-        "bpt_2":[100,0,500,"[GeV]","BJet^{2} P_{T}"], 
+        "bpt_1":[40,0,200,"[GeV]","BJet^{1} P_{T}"], 
+        "bpt_2":[40,0,200,"[GeV]","BJet^{2} P_{T}"], 
 
         "nbtag":[5,-0.5,4.5,"","nBTag"],
         #"nbtagLoose":[10,0,10,"","nBTag Loose"],
         #"nbtagTight":[5,0,5,"","nBTag Tight"],
-        "beta_1":[64,-3.2,3.2,"","BJet^{1} #eta"],
-        "beta_2":[64,-3.2,3.2,"","BJet^{2} #eta"],
+        "beta_1":[60,-3,3,"","BJet^{1} #eta"],
+        "beta_2":[60,-3,3,"","BJet^{2} #eta"],
 
-        "met":[100,0,500,"[GeV]","#it{p}_{T}^{miss}"], 
-        "met_phi":[100,-4,4,"","#it{p}_{T}^{miss} #phi"], 
-        "puppi_phi":[100,-4,4,"","PUPPI#it{p}_{T}^{miss} #phi"], 
-        "puppimet":[100,0,500,"[GeV]","#it{p}_{T}^{miss}"], 
+        "met":[20,0,200,"[GeV]","#it{p}_{T}^{miss}"], 
+        "met_phi":[60,-3,3,"","#it{p}_{T}^{miss} #phi"], 
+        "puppi_phi":[60,-3,3,"","PUPPI#it{p}_{T}^{miss} #phi"], 
+        "puppimet":[20,0,200,"[GeV]","#it{p}_{T}^{miss}"], 
         #"mt_tot":[100,0,1000,"[GeV]"], # sqrt(mt1^2 + mt2^2)
         #"mt_sum":[100,0,1000,"[GeV]"], # mt1 + mt2
 
         "m_vis":[40,50,130,"[Gev]","m(l^{+}l^{-})"],
-        "ll_pt_p":[100,0,500,"[GeV]","P_{T}l^{-}"],
-        "ll_phi_p":[100,-4,4,"","#phi(l_^{-})"],
-        "ll_eta_p":[100,-4,4,"","#eta(l_^{-})"],
-        "ll_pt_m":[100,0,500,"[GeV]","P_{T}l^{-}"],
-        "ll_phi_m":[100,-4,4,"","#phi(l_^{-})"],
-        "ll_eta_m":[100,-4,4,"","#eta(l_^{-})"],
+        "ll_pt_p":[30,0,300,"[GeV]","P_{T}l^{-}"],
+        "ll_phi_p":[30,-3,3,"","#phi(l_^{-})"],
+        "ll_eta_p":[30,-3,3,"","#eta(l_^{-})"],
+        "ll_pt_m":[30,0,300,"[GeV]","P_{T}l^{-}"],
+        "ll_phi_m":[30,-3,3,"","#phi(l_^{-})"],
+        "ll_eta_m":[30,-3,3,"","#eta(l_^{-})"],
         "ll_iso_1":[20,0,1,"","relIso(l_{1})"],
         "ll_iso_2":[20,0,1,"","relIso(l_{2})"],
 
-        "H_vis":[100,0,500,"[Gev]","m(#tau#tau)"],
-        "H_Pt":[100,0,500,"[GeV]","P_{T}(#tau#tau)"],
-        "H_DR":[70,0,7,"","#Delta R(#tau#tau)"],
-        "H_tot":[100,0,500,"[GeV]","m_{T}tot(#tau#tau)"],
+        "H_vis":[30,50,200,"[Gev]","m(#tau#tau)"],
+        "H_Pt":[40,0,200,"[GeV]","P_{T}(#tau#tau)"],
+        "H_DR":[60,0,6,"","#Delta R(#tau#tau)"],
+        "H_tot":[30,0,200,"[GeV]","m_{T}tot(#tau#tau)"],
 
-        "TMass":[100,0,500,"[Gev]","m_{T}(#tau#tau)"],
-        "Mass":[100,0,500,"[Gev]","m(#tau#tau)(SV)"],
-        "AMass":[100,0,500,"[Gev]","m_{Z+H}(SV)"],
+        "TMass":[60,0,300,"[Gev]","m_{T}(#tau#tau)"],
+        "Mass":[60,0,300,"[Gev]","m(#tau#tau)(SV)"],
+        "AMass":[100,50,550,"[Gev]","m_{Z+H}(SV)"],
         #"CutFlowWeighted":[15,0.5,15.5,"","cutflow"],
         #"CutFlow":[15,0.5,15.5,"","cutflow"]
 
-        "Z_Pt":[100,0,500,"[Gev]","P_T(l_{1}l_{2})"],
-        "Z_DR":[100,0,500,"[Gev]","#Delta R(l_{1}l_{2})"],
-
+        "Z_Pt":[60,0,300,"[Gev]","P_T(l_{1}l_{2})"],
+        "Z_DR":[60,0,6,"[Gev]","#Delta R(l_{1}l_{2})"],
         }
 
 
@@ -431,6 +431,35 @@ if tightCuts : hLabels.append("isTight")
 else : hLabels.append("isLoose")
 hLabels.append(args.sign)
 
+'''
+for group in groups :
+    hCutFlowPerGroup[group] = {}
+    for icat, cat in cats.items()[0:8] :
+        hCutFlowPerGroup[group][cat] = {}
+        isData = False 
+        inFileName = '../MC/condor/{0:s}/{1:s}_{2:s}/{1:s}_{2:s}.root'.format(args.analysis,nickName,era)
+	#cf = os.path.isfile('{0:s}'.format(inFileName))
+	#if not cf : continue
+        if group == 'data' :
+            isData = True
+            inFileName = './data/{0:s}/{1:s}/{1:s}.root'.format(args.analysis,nickName)
+	    print 'for data will use ',inFileName
+        try :
+
+            inFile = TFile.Open(inFileName)
+            inFile.cd()
+	    histo='hCutFlowWeighted'
+	    if isData : histo='hCutFlow'
+	    inFile.Get('{0:s}_{1:}'.format(histo,cat))
+
+            for i in range(len(hLabels)) : 
+                hCutFlowPerGroup[group][cat].GetXaxis().SetBinLabel(i+1, hLabels[i])
+
+            for i in range(1,  10) : 
+                hCutFlowPerGroup[group][cat].SetBinContent(i, WCounter[i-1][icat-1])
+'''
+
+
 for icat,cat in cats.items()[0:8] :
     for plotVar in plotSettings: # add an entry to the plotVar:hist dictionary
         canvasDict.update({plotVar:TCanvas("c_"+plotVar+"_"+cat,"c_"+plotVar+"_"+cat,10,20,1000,700)})
@@ -444,9 +473,11 @@ for icat,cat in cats.items()[0:8] :
 for group in groups :
     fOut.cd()
     hMC[group] = {}
+    #hCutFlowPerGroup[group] = {}
     for icat, cat in cats.items()[0:8] :
         hMC[group][cat] = {}
         hCutFlow[cat] = {}
+        #hCutFlowPerGroup[group][cat] = {}
 
         for plotVar in plotSettings:
             hMC[group][cat][plotVar] = {}
@@ -515,7 +546,6 @@ for group in groups :
         for i, e in enumerate(inTree) :
             iCut=icut
             hGroup = group
-            #if e.nbtag > 0 : continue
 
             #sampleWeight = lumi/(WIncl_totgenwt/WIncl_xsec + WxGenweightsArr[i]/(WNJetsXsecs[i]*WJets_kfactor))
             
@@ -523,23 +553,29 @@ for group in groups :
 
             if WJets and not WIncl_only: 
                 if e.LHE_Njets > 0 : sWeight = sampleWeight['W{0:d}JetsToLNu'.format(e.LHE_Njets)]
-                else : sWeight = sampleWeight['WJetsToLNu']
-                print 'will now be using ',sWeight, e.LHE_Njets, nickName
+                elif e.LHE_Njets == 0 : sWeight = sampleWeight['WJetsToLNu']
+                #print 'will now be using ',sWeight, e.LHE_Njets, nickName
             if DYJets and not DYIncl_only: 
                 if e.LHE_Njets > 0 : sWeight = sampleWeight['DY{0:d}JetsToLL'.format(e.LHE_Njets)]
-                else  : sWeight = sampleWeight['DYJetsToLL']
-                print 'will now be using ',sWeight, e.LHE_Njets, nickName
+                elif e.LHE_Njets  : sWeight = sampleWeight['DYJetsToLL']
+                #print 'will now be using ',sWeight, e.LHE_Njets, nickName
 
 
-            sw = sWeight
             # the pu weight is the e.weight in the ntuples
-            weight = e.weight * e.Generator_weight *sw
+            weight = e.weight * e.Generator_weight *sWeight
 
 	    ww = 1.
             ##requirement on the Z-boson
 	    if cat[:2] == 'mm' and  (e.ll_iso_1 > 0.25 or e.ll_iso_2 > 0.25) : continue
+	    '''
+	    if cat[:2] == 'ee' and  (e.ll_iso_1 > 0.15 or e.ll_iso_2 > 0.15) : continue
+
+	    if cat[2:] == 'em' and  (e.iso_1 > 0.3 or e.iso_2 > 0.4) : continue
+	    if cat[2:] == 'mt' and  (e.iso_1 > 0.3) : continue
+	    if cat[2:] == 'et' and  (e.iso_1 > 0.2) : continue
 
 	    if e.nbtag > 0 : continue
+            '''
             #s = sf.checkFile()
 
             icat = catToNumber(cat)
@@ -627,7 +663,9 @@ for group in groups :
                  #weights_muTotauFR = {'lmuFR_lt0p4' : 1.22, 'lmuFR_0p4to0p8' : 1.12, 'lmuFR_0p8to1p2' : 1.26, 'lmuFR_1p2to1p7' : 1.22, 'lmuFR_1p7to2p3' : 2.39 , 'tmuFR_lt0p4' : 1.47, 'tmuFR_0p4to0p8' : 1.55, 'tmuFR_0p8to1p2' : 1.33, 'tmuFR_1p2to1p7' : 1.72, 'tmuFR_1p7to2p3' : 2.50 }
 
                  #weights_elTotauFR = {'lelFR_lt1p46' : 1., 'lelFR_gt1p559' : 1., 'telFR_lt1p46' : 1., 'telFR_gt1p559' : 1.}
-                '''    
+                   
+            '''
+
             if tightCuts :
                 if cat[2:] == 'mt' : tight1 = e.iso_1 < 0.15 and e.againstMuonTight3_2 > 0.5
 
@@ -681,7 +719,8 @@ for group in groups :
                 if e.q_1*e.q_2 < 0. : continue
             else :
                 if e.q_1*e.q_2 > 0. : continue
-                #if hGroup == 'data' and not unblind and e.m_sv > 80. and e.m_sv < 140. : continue                 
+                if hGroup == 'data' and not unblind and e.H_vis > 80. and e.H_vis < 140. : continue                 
+                if hGroup == 'data' and not unblind and e.Mass > 80. and e.Mass < 140. : continue                 
             H_LT = e.pt_1 + e.pt_2
             if H_LT < args.LTcut : continue
             if group == 'data' :
@@ -695,6 +734,9 @@ for group in groups :
             WCounter[iCut-1][icat-1] += weight  
 
             trigw_ = 1.#trigweight(e,cat)
+            lepton_sf = 1.
+
+
 
             #if e.is_trig == 1 :  
             if 1 == 1 : 
@@ -718,11 +760,10 @@ for group in groups :
 	    nn = nickName
 	    if 'data' in nickName : nn = 'data'
             hCutFlow[cat][nickName].SetName( 'hCutFlow_'+cat+'_'+nn)
-            #print icat, cat, nickName, hCutFlow[cat][nickName].GetName()
+            print icat, cat, nickName, hCutFlow[cat][nickName].GetName(), group
 
 
-
-        
+       
             #for i in range(icut, iCut+1) : 
             #    hCutFlow[cat][nickName].SetBinContent(i, WCounter[i][icat-1])
             for i in range(len(hLabels)) : 
@@ -736,6 +777,8 @@ for group in groups :
 
             fOut.cd()
             hCutFlow[cat][nickName].Write()
+        
+
         
         inFile.Close()
 

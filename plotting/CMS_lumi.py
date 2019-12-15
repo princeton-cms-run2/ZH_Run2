@@ -11,6 +11,8 @@ cmsTextFont   = 61
 
 writeExtraText = True
 extraText   = "Preliminary"
+extraText2   = "     Opposite Sign"
+extraText2=""
 extraTextFont = 52 
 
 lumiTextSize     = 0.6
@@ -26,6 +28,7 @@ relExtraDY = 1.2
 extraOverCmsTextSize  = 0.76
 
 lumi_13TeV = "137 fb^{-1}"
+lumi_13TeV_2016_2017 = "2016 + 2017 - 77.4 fb^{-1}"
 lumi_13TeV_2016 = "35.9 fb^{-1}"
 lumi_13TeV_2017 = "41.53 fb^{-1}"
 lumi_13TeV_2018 = "59.74 fb^{-1}"
@@ -63,12 +66,13 @@ def CMS_lumi(pad,  iPeriod,  iPosX ):
         lumiText += lumi_7TeV
         lumiText += " (7 TeV)"
     elif ( iPeriod==2 ):
-        lumiText += lumi_8TeV
-        lumiText += " (8 TeV)"
+        lumiText += lumi_13TeV_2016_2017
+        lumiText += " (13 TeV)"
 
     elif( iPeriod==3 ):      
         lumiText = lumi_13TeV 
         lumiText += " (13 TeV)"
+
     elif ( iPeriod==4 ):
         lumiText += lumi_13TeV_2016
         lumiText += " (13 TeV)"
@@ -94,7 +98,6 @@ def CMS_lumi(pad,  iPeriod,  iPosX ):
     elif ( iPeriod==0 ):
         lumiText += lumi_sqrtS
             
-    print lumiText
 
     latex = rt.TLatex()
     latex.SetNDC()
@@ -160,6 +163,6 @@ def CMS_lumi(pad,  iPeriod,  iPosX ):
         latex.SetTextFont(extraTextFont)
         latex.SetTextSize(extraTextSize*t)
         latex.SetTextAlign(align_)
-        latex.DrawLatex(posX_, posY_, extraText)      
+        latex.DrawLatex(posX_, posY_, extraText + extraText2)      
 
     pad.Update()
