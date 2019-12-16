@@ -929,14 +929,19 @@ class outTuple() :
         if (Lep1.M() > 0.05 and Lep2.M() > 0.05): # muon mass 
             idx_Lep1 = GF.getLepIdxFrom4Vec(entry, Lep1, 'm')
             idx_Lep2 = GF.getLepIdxFrom4Vec(entry, Lep2, 'm')
-            idx_Lep1_tr = entry.Muon_genPartIdx[idx_Lep1]
-            idx_Lep2_tr = entry.Muon_genPartIdx[idx_Lep2]
+            try :
+                idx_Lep1_tr = entry.Muon_genPartIdx[idx_Lep1]
+                idx_Lep2_tr = entry.Muon_genPartIdx[idx_Lep2]
+            except IndexError : pass 
+                
         elif (Lep1.M() < 0.05 and Lep2.M() < 0.05): # electron mass
             idx_Lep1 = GF.getLepIdxFrom4Vec(entry, Lep1, 'e')
             idx_Lep2 = GF.getLepIdxFrom4Vec(entry, Lep2, 'e')
-            idx_Lep1_tr = entry.Electron_genPartIdx[idx_Lep1]
-            idx_Lep2_tr = entry.Electron_genPartIdx[idx_Lep2]
-            
+            try :
+                idx_Lep1_tr = entry.Electron_genPartIdx[idx_Lep1]
+                idx_Lep2_tr = entry.Electron_genPartIdx[idx_Lep2]
+            except IndexError : pass 
+                
         if idx_Lep1_tr >= 0 and idx_Lep2_tr >= 0:
             self.pt_1_tr[0]  = entry.GenPart_pt[idx_Lep1_tr]
             self.pt_2_tr[0]  = entry.GenPart_pt[idx_Lep2_tr]
@@ -989,10 +994,12 @@ class outTuple() :
             # genMatch jet1
             idx_genJet = entry.Jet_genJetIdx[jj1]
             if idx_genJet >= 0:
-                self.jpt_1_tr[0]  = entry.GenJet_pt[idx_genJet]
-                self.jeta_1_tr[0] = entry.GenJet_eta[idx_genJet]
-                self.jphi_1_tr[0] = entry.GenJet_phi[idx_genJet]
-            
+                try :
+                    self.jpt_1_tr[0]  = entry.GenJet_pt[idx_genJet]
+                    self.jeta_1_tr[0] = entry.GenJet_eta[idx_genJet]
+                    self.jphi_1_tr[0] = entry.GenJet_phi[idx_genJet]
+                except IndexError : pass
+                
         self.jpt_2[0], self.jeta_2[0], self.jphi_2[0], self.jcsv_2[0],self.jcsvfv_2[0] = -9.99, -9.99, -9.99, -9.99, -9.99
         if len(jetList) > 1 :
             jj2 = jetList[1] 
@@ -1009,7 +1016,7 @@ class outTuple() :
                    self.jpt_2_tr[0]  = entry.GenJet_pt[idx_genJet]
                    self.jeta_2_tr[0] = entry.GenJet_eta[idx_genJet]
                    self.jphi_2_tr[0] = entry.GenJet_phi[idx_genJet]
-                except IndexError :    print("In outTuple.py bjet2 IndexError idx_genJet={0:d} nGenJet={1:}".format(idx_genJet,entry.nGenJet))
+                except IndexError : pass 
 
         self.bpt_1[0], self.beta_1[0], self.bphi_1[0], self.bcsv_1[0], self.bcsvfv_1[0] = -9.99, -9.99, -9.99, -9.99, -9.99
         if len(bJetList) > 0 :
