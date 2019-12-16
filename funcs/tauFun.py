@@ -440,7 +440,7 @@ def getETauPairs(entry,cat='et',pairList=[],printOn=False) :
         if ord(entry.Electron_lostHits[i]) > et['ele_lostHits']: continue 
         if et['ele_convVeto']:
             if not entry.Electron_convVeto[i]: continue
-        if entry.Electron_pfRelIso03_all[i] > et['ele_iso']: continue
+        if et['ele_iso_f'] and entry.Electron_pfRelIso03_all[i] > et['ele_iso']: continue
 
         ele_eta, ele_phi = entry.Electron_eta[i], entry.Electron_phi[i]
         if entry.Electron_pt[i] < et['ele_pt']: continue
