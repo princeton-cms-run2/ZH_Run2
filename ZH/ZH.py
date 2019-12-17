@@ -146,23 +146,27 @@ tStart = time.time()
 countMod = 1000
 isMC = True
 for count, e in enumerate(inTree) :
+    if count % countMod == 0 :
+        print("Count={0:d}".format(count))
+        if count >= 10000 : countMod = 10000
+    if count == nMax : break    
+    
+    for cat in cats : 
+        cutCounter[cat].count('All')
+	if  MC :   cutCounterGenWeight[cat].countGenWeight('All', e.genWeight)
+
     isInJSON = False
     if not MC : isInJSON = CJ.checkJSON(e.luminosityBlock,e.run)
     if not isInJSON and not MC :
         #print("Event not in JSON: Run:{0:d} LS:{1:d}".format(e.run,e.luminosityBlock))
         continue
 
+    for cat in cats: cutCounter[cat].count('InJSON')
+    
     MetFilter = GF.checkMETFlags(e,args.year)
     if MetFilter : continue
-
-    for cat in cats : 
-        cutCounter[cat].count('All')
-	if  MC :   cutCounterGenWeight[cat].countGenWeight('All', e.genWeight)
-        
-    if count % countMod == 0 :
-        print("Count={0:d}".format(count))
-        if count >= 10000 : countMod = 10000
-    if count == nMax : break
+    
+    for cat in cats: cutCounter[cat].count('METfilter') 
 
     if unique :
         if e.event in uniqueEvents :
@@ -250,11 +254,11 @@ for count, e in enumerate(inTree) :
                 
         LepP, LepM = pairList[0], pairList[1]
         M = (LepM + LepP).M()
-        if M < 60. or M > 120. :
+        if False and (M < 60. or M > 120.) :
             if unique :
                 print("Zmass Fail: : Event ID={0:d} cat={1:s} M={2:.2f}".format(e.event,cat,M))
-                GF.printEvent(e)
-                if MC : GF.printMC(e)
+                #GF.printEvent(e)
+                #if MC : GF.printMC(e)
             continue ##cut valid for both AZH and ZHa
 
         if lepMode == 'ee' :
@@ -285,7 +289,6 @@ for count, e in enumerate(inTree) :
                     if unique :
                         print("isAZH Fail: : Event ID={0:d} cat={1:s}".format(e.event,cat))
                         GF.printEvent(e)
-                        if MC : GF.printMC(e)
                     continue 
                 
             if tauMode == 'tt' :
@@ -302,10 +305,10 @@ for count, e in enumerate(inTree) :
 		
             if len(bestTauPair) < 1 :
                 if unique :
-                    print("Tau Pair Fail: : Event ID={0:d} cat={1:s}".format(e.event,cat))
+                    print("Tau Pair Fail: Event ID={0:d} cat={1:s}".format(e.event,cat))
+                    bestTauPair = tauFun.getBestMuTauPair(e,cat=cat,pairList=pairList,printOn=True) 
                     GF.printEvent(e)
-                    if MC : GF.printMC(e)
-                
+                                    
                 if False and maxPrint > 0 and (tauMode == GF.eventID(e)[2:4]) :
                     maxPrint -= 1
                     print("Failed tau-pair cut")

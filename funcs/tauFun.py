@@ -260,35 +260,64 @@ def getMuTauPairs(entry,cat='mt',pairList=[],printOn=False) :
                                  of muons and taus 
     """
 
-    if entry.nMuon < 1 or entry.nTau < 1: return []
+    if entry.nMuon < 1 or entry.nTau < 1:
+        if printOn : print("Entering getMuTauPairs failing nMuon={0:d} nTau={1:d}".format(entry.nMuon,entry.nTau))
+        return []
     if cat == 'mmmt' and entry.nMuon < 3: return []
 
     muTauPairs = []
     mt = selections['mt'] # H->tau(mu)+tau(h) selections
+    if printOn : print("Entering tauFun.getMuTauPairs() nMuon={0:d} nTau={1:d}".format(entry.nMuon,entry.nTau))
     for i in range(entry.nMuon):
         
         # apply tau(mu) selections
         if mt['mu_ID']:
-            if not entry.Muon_mediumId[i]: continue
-        if abs(entry.Muon_dxy[i]) > mt['mu_dxy']: continue
-        if abs(entry.Muon_dz[i]) > mt['mu_dz']: continue
+            if not entry.Muon_mediumId[i]:
+                if printOn : print("    fail mu_ID mediumId={0}".format(entry.Muon_mediumId[i]))
+                continue
+        if abs(entry.Muon_dxy[i]) > mt['mu_dxy']:
+            if printOn : print("    fail mu_dxy={0:f}".format(entry.Muon_dxy[i]))
+            continue
+        if abs(entry.Muon_dz[i]) > mt['mu_dz']:
+            if printOn : print("    fail mu_dz={0:f}".format(entry.Muon_dz[i]))
+            continue
         mu_eta, mu_phi = entry.Muon_eta[i], entry.Muon_phi[i] 
-        if entry.Muon_pt[i] < mt['mu_pt']: continue
-        if abs(mu_eta) > mt['mu_eta']: continue 
-        if entry.Muon_pfRelIso04_all[i] > mt['mu_iso']: continue
+        if entry.Muon_pt[i] < mt['mu_pt']:
+            if printOn : print("    fail mu_pt={0:f}".format(entry.Muon_pt[i]))
+            continue
+        if abs(mu_eta) > mt['mu_eta']:
+            if printOn : print("    fail mu_eta={0:f}".format(entry.Muon_eta[i]))
+            continue 
+        if entry.Muon_pfRelIso04_all[i] > mt['mu_iso']:
+            if printOn : print("    fail mu_iso={0:f}".format(entry.Muon_pfRelIso04_all[i]))
+            continue
         DR0 = lTauDR(mu_eta,mu_phi,pairList[0]) # l1 vs. tau(mu)
         DR1 = lTauDR(mu_eta,mu_phi,pairList[1]) # l2 vs. tau(mu)
-        if DR0 < mt['lt_DR'] or DR1 < mt['lt_DR']: continue
+        if DR0 < mt['lt_DR'] or DR1 < mt['lt_DR']:
+            if printOn : print("    fail muon DR  DR0={0:f} DR1={1:f}".format(DR0,DR1))
+            continue
+        if printOn : print("    Good muon i={0:d}".format(i))
                         
         for j in range(entry.nTau):
 
-            # apply tau(h) selections 
-            if abs(entry.Tau_eta[j]) > mt['tau_eta']: continue
-            if entry.Tau_pt[j] < mt['tau_pt']: continue
-            if abs(entry.Tau_dz[j]) > mt['tau_dz']: continue
+            # apply tau(h) selections
+            if printOn : print("        tau j={0:d}".format(j))
+            if abs(entry.Tau_eta[j]) > mt['tau_eta']:
+                if printOn : print("        fail tau eta={0:f}".format(entry.Tau_eta[j]))
+                continue
+            if entry.Tau_pt[j] < mt['tau_pt']:
+                if printOn : print("        fail tau  pt={0:f}".format(entry.Tau_pt[j]))
+                continue
+            if abs(entry.Tau_dz[j]) > mt['tau_dz']:
+                if printOn : print("        fail tau  dz={0:f}".format(entry.Tau_dz[j]))
+                continue
             if mt['tau_decayMode']:
-                if not entry.Tau_idDecayModeNewDMs[j]: continue
-	    if  entry.Tau_decayMode[j] == 5 or entry.Tau_decayMode[j] == 6 : continue
+                if not entry.Tau_idDecayModeNewDMs[j]:
+                    if printOn : print("        fail tau idDecayModeNewDMs={0}".format(entry.Tau_idDecayModeNewDMs[j]))
+                    continue
+	    if  entry.Tau_decayMode[j] == 5 or entry.Tau_decayMode[j] == 6 :
+                if printOn : print("        fail tau decayMode={0:d}".format(entry.Tau_decayMode[j]))
+                continue
             '''
 	    if ord(entry.Tau_idAntiMu[j]) <= mt['tau_antiMu']: continue
             if ord(entry.Tau_idAntiEle[j]) <= mt['tau_antiEle']: continue
@@ -296,17 +325,28 @@ def getMuTauPairs(entry,cat='mt',pairList=[],printOn=False) :
                 if ord(entry.Tau_idAntiMu[j]) < mt['tau_eemt_antiMu']: continue
 	    '''
 
-	    if not ord(entry.Tau_idDeepTau2017v2p1VSjet[j]) & 16 > 0 : continue
-	    if not ord(entry.Tau_idDeepTau2017v2p1VSe[j]) & 1 > 0 : continue
-            if not ord(entry.Tau_idDeepTau2017v2p1VSmu[j]) & 8 > 0 : continue
-
+	    if False and not ord(entry.Tau_idDeepTau2017v2p1VSjet[j]) & 16 > 0 :
+                if printOn : print("        fail DeepTau vs. Jet={0:d}".format(ord(entry.Tau_idDeepTau2017v2p1VSjet[j])))
+                continue
+	    if not ord(entry.Tau_idDeepTau2017v2p1VSe[j]) & 1 > 0 :
+                if printOn : print("        fail DeepTau vs. ele={0:d}".format(ord(entry.Tau_idDeepTau2017v2p1VSe[j])))
+                continue
+            if not ord(entry.Tau_idDeepTau2017v2p1VSmu[j]) & 8 > 0 :
+                if printOn : print("        fail DeepTau vs.  mu={0:d}".format(ord(entry.Tau_idDeepTau2017v2p1VSmu[j])))
+                continue
+            
             tau_eta, tau_phi = entry.Tau_eta[j], entry.Tau_phi[j]
             dPhi = min(abs(tau_phi-mu_phi),2.*pi-abs(tau_phi-mu_phi))
             DR = sqrt(dPhi**2 + (tau_eta-mu_eta)**2) # tau(mu) vs. tau(h)
-            if DR < mt['mt_DR']: continue
+            if DR < mt['mt_DR']:
+                if printOn : print("        fail mtDR DR={0:f}".format(DR))
+                continue
             DR0 = lTauDR(tau_eta, tau_phi, pairList[0]) #l1 vs. tau(h)
             DR1 = lTauDR(tau_eta, tau_phi, pairList[1]) #l2 vs. tau(h)
-            if DR0 < mt['lt_DR'] or DR1 < mt['lt_DR']: continue
+            if DR0 < mt['lt_DR'] or DR1 < mt['lt_DR']:
+                if printOn : print("        fail DR  DR0={0:f} DR1={1:f}".format(DR0,DR1))
+                continue
+            if printOn: print("        Tau j={0:d} passes all cuts.".format(j))
             muTauPairs.append([i,j])
 
     return muTauPairs
@@ -326,6 +366,7 @@ def compareMuTauPair(entry,pair1,pair2) :
 def getBestMuTauPair(entry,cat='mt',pairList=[],printOn=False) :
 
     # form all possible pairs that satisfy DR requirement
+    if printOn : print("Entering getBestMuTauPair()") 
     tauPairList = getMuTauPairs(entry,cat=cat,pairList=pairList,printOn=printOn) 
 
     # Sort the pair list using a bubble sort
