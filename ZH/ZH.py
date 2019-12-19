@@ -254,7 +254,7 @@ for count, e in enumerate(inTree) :
                 
         LepP, LepM = pairList[0], pairList[1]
         M = (LepM + LepP).M()
-        if False and (M < 60. or M > 120.) :
+        if not tauFun.mllCut(M) :
             if unique :
                 print("Zmass Fail: : Event ID={0:d} cat={1:s} M={2:.2f}".format(e.event,cat,M))
                 #GF.printEvent(e)

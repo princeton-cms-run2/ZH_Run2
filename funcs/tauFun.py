@@ -176,6 +176,10 @@ def DRobj(eta1,phi1,eta2,phi2) :
     dPhi = min(abs(phi2-phi1),2.*pi-abs(phi2-phi1))
     return sqrt(dPhi**2 + (eta2-eta1)**2)
 
+def mllCut(mll) :
+    mllcuts = selections['mll']
+    if mll < mllcuts['mll_low'] or mll > mllcuts['mll_high'] : return False
+    return True
 
 def getTauPointer(entry, eta1, phi1) :
     # find the j value that most closely matches the specified eta or phi value
@@ -343,7 +347,7 @@ def getMuTauPairs(entry,cat='mt',pairList=[],printOn=False) :
                 continue
             DR0 = lTauDR(tau_eta, tau_phi, pairList[0]) #l1 vs. tau(h)
             DR1 = lTauDR(tau_eta, tau_phi, pairList[1]) #l2 vs. tau(h)
-            if DR0 < mt['lt_DR'] or DR1 < mt['lt_DR']:
+            if DR0 < mt['mt_DR'] or DR1 < mt['mt_DR']:
                 if printOn : print("        fail DR  DR0={0:f} DR1={1:f}".format(DR0,DR1))
                 continue
             if printOn: print("        Tau j={0:d} passes all cuts.".format(j))
