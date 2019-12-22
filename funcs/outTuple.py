@@ -436,7 +436,7 @@ class outTuple() :
 	    if True  and abs(entry.Jet_eta[j]) < 2.5 and entry.Jet_btagDeepFlavB[j] > bjet_discrFlav : bJetListFlav.append(j)
             #if True and abs(entry.Jet_eta[j]) < 2.4 and entry.Jet_btagCSVV2[j] > 0.800 and entry.Jet_pt[j] > 30. : bJetList.append(j)
 	    jj = entry.Jet_jetId[j] & 2 ==0
-	    print '==================',entry.Jet_jetId[j], entry.Jet_pt[j], jj, entry.Jet_puId[j] 
+	    #print '==================',entry.Jet_jetId[j], entry.Jet_pt[j], jj, entry.Jet_puId[j] 
             if entry.Jet_jetId[j]  <2  : continue
             if entry.Jet_pt[j] < 30. : continue
             nJet30 += 1
@@ -1046,9 +1046,11 @@ class outTuple() :
             # genMatch bjet1
             idx_genJet = entry.Jet_genJetIdx[jbj2]
             if idx_genJet >= 0:
-                self.bpt_2_tr[0]  = entry.GenJet_pt[idx_genJet]
-                self.beta_2_tr[0] = entry.GenJet_eta[idx_genJet]
-                self.bphi_2_tr[0] = entry.GenJet_phi[idx_genJet]
+                try :
+                    self.bpt_2_tr[0]  = entry.GenJet_pt[idx_genJet]
+                    self.beta_2_tr[0] = entry.GenJet_eta[idx_genJet]
+                    self.bphi_2_tr[0] = entry.GenJet_phi[idx_genJet]
+                except IndexError : pass
 
         self.t.Fill()
         #self.weight[0] = 1.

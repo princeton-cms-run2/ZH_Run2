@@ -28,6 +28,9 @@ mt:
   tau_ID: 0
   tau_dz: 0.2
   lt_DR: 0.3
+  tau_vJet: -1
+  tau_vMu: 8
+  tau_vEle: 4
 em: 
   mu_ID: false
   mu_dxy: 0.045
