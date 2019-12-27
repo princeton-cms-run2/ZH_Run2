@@ -59,6 +59,7 @@ et:
   ele_pt: 10
   ele_eta: 2.5
   ele_iso_f: false
+  ele_iso: 0.3
   lt_DR: 0.3
   tau_eta: 2.3
   tau_pt: 20
