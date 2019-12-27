@@ -1,0 +1,132 @@
+   
+import ROOT as root
+import sys,math
+   
+
+def ScaleFactor(inputRootFile="Muon_IsoMu27.root") :
+    global etaBinsH
+    global get_EfficiencyData
+    global get_EfficiencyMC
+    global eff_dataH
+    global eff_mcH   
+    eff_dataH = root.std.map("string", root.TGraphAsymmErrors)()   
+    eff_mcH = root.std.map("string", root.TGraphAsymmErrors)()   
+    #std::map<std::string, root.TGraphAsymmErrors *> eff_data
+    #std::map<std::string, root.TGraphAsymmErrors *> eff_mc
+    EtaBins=["Lt0p9", "0p9to1p2","1p2to2p1","Gt2p1"]
+    
+    print inputRootFile
+    fileIn = root.TFile(inputRootFile,"read")  
+    fileIn.ls()  
+    HistoBaseName = "ZMassEta"
+    etaBinsH = fileIn.Get("etaBinsH")
+    #etaLabel, GraphName
+    nEtaBins = int(etaBinsH.GetNbinsX())
+    eff_data= []
+    eff_mc= []
+    #eff_mcH =root.TGraphAsymmErrors()
+    print "EtaBins...........",nEtaBins, len(EtaBins)
+    for iBin in range (0, nEtaBins) : 
+        etaLabel = EtaBins[iBin]
+        GraphName = HistoBaseName+etaLabel+"_Data"
+   	print GraphName,etaLabel
+   
+   	eff_data.append(fileIn.Get(str(GraphName)))
+   	eff_dataH[etaLabel]=fileIn.Get(str(GraphName))
+   	 
+   	GraphName = HistoBaseName+etaLabel+"_MC"
+   	eff_mc.append(fileIn.Get(str(GraphName)))
+   	eff_mcH[etaLabel]=fileIn.Get(str(GraphName))
+   	 
+        print eff_mcH[etaLabel].GetXaxis().GetNbins()
+        print eff_mcH[etaLabel].GetX()[5]
+    sff = get_ScaleFactor(46.8,2.0)
+    print "SFFFFFFFFFFFFFf",sff
+   
+def get_ScaleFactor(pt, eta) :
+	
+    efficiency_data = get_EfficiencyData(pt, eta)
+    efficiency_mc = get_EfficiencyMC(pt, eta)
+
+    if  efficiency_mc != 0. : 
+        SF = float(efficiency_data)/float(efficiency_mc)
+    else  : 	
+        SF=1.
+
+    print "ScaleFactor::get_ScaleFactor(double pt, double eta) Scale Factor set to",SF,efficiency_data,efficiency_mc
+    return SF	
+
+
+def get_EfficiencyMC(pt, eta) :
+
+    label = FindEtaLabel(eta,"mc")
+    #label= "Lt0p9"
+    binNumber = etaBinsH.GetXaxis().FindFixBin(eta)
+    label = etaBinsH.GetXaxis().GetBinLabel(binNumber)
+    ptbin = FindPtBin(eff_mcH, label, pt)
+    Eta = math.fabs(eta)
+    print "eff_mcH ==================",eff_mcH,binNumber,label,ptbin
+    #ptbin=10
+    if ptbin == -99 : eff =1
+    else  : eff= eff_mcH[label].GetY()[ptbin-1]
+
+    if eff > 1.  : eff = -1 #std::cout << "WARNING in ScaleFactor::get_EfficiencyMC(double pt, double eta) from LepEffInterface/src/ScaleFactor.cc : Efficiency in MC > 1. Set eff = 1." << std::endl eff =1
+    if eff < 0 : eff = 0. # {std::cout<<"WARNING in ScaleFactor::get_EfficiencyMC(double pt, double eta) from LepEffInterface/src/ScaleFactor.cc : Negative efficiency in MC. Set eff = 0." <<std::endl eff =0
+    print "inside eff_mc",eff
+    return eff
+
+def get_EfficiencyData(pt, eta) :
+
+    label = FindEtaLabel(eta,"data")
+    #label= "Lt0p9"
+    binNumber = etaBinsH.GetXaxis().FindFixBin(eta)
+    label = etaBinsH.GetXaxis().GetBinLabel(binNumber)
+    print eff_dataH
+    ptbin = FindPtBin(eff_dataH, label, pt)
+    Eta = math.fabs(eta)
+    fileOut=root.TFile("out.root","recreate")
+    fileOut.cd()
+    eff_dataH[label].Write(label)
+
+    #ptbin=10
+    if ptbin == -99 : eff =1
+    else  : eff= eff_dataH[label].GetY()[ptbin-1]
+    print "inside eff_data",eff
+
+    if eff > 1.  : eff = -1 #std::cout << "WARNING in ScaleFactor::get_EfficiencyMC(double pt, double eta) from LepEffInterface/src/ScaleFactor.cc : Efficiency in MC > 1. Set eff = 1." << std::endl eff =1
+    if eff < 0 : eff = 0. # {std::cout<<"WARNING in ScaleFactor::get_EfficiencyMC(double pt, double eta) from LepEffInterface/src/ScaleFactor.cc : Negative efficiency in MC. Set eff = 0." <<std::endl eff =0
+    print "inside eff_data",eff,pt,eta,label
+
+    return eff
+
+
+def FindPtBin( eff_map, EtaLabel, Pt) :
+
+    Npoints = eff_map[EtaLabel].GetN()
+    print Npoints, "for ===============>",eff_map[EtaLabel],eff_map[EtaLabel].GetN(),EtaLabel
+    ptMAX=100
+    ptMIN=90
+    #ptMAX = (eff_map[EtaLabel].GetX()[Npoints-1])+(eff_map[EtaLabel].GetErrorXhigh(Npoints-1))
+    #ptMIN = (eff_map[EtaLabel].GetX()[0])-(eff_map[EtaLabel].GetErrorXlow(0))
+    if Pt >= ptMAX : return Npoints
+    elif Pt < ptMIN :
+        return -99
+    else : return eff_map[EtaLabel].GetXaxis().FindFixBin(Pt)
+
+
+def FindEtaLabel(Eta, Which) : 
+
+    Eta = math.fabs(Eta)
+    binNumber = etaBinsH.GetXaxis().FindFixBin(Eta)
+    EtaLabel = etaBinsH.GetXaxis().GetBinLabel(binNumber)
+	
+    it=-1
+    if str(Which) == "data" :
+        it =  eff_dataH.find(EtaLabel)
+
+    if str(Which) == "mc" :
+        it = eff_mcH.find(EtaLabel)
+	
+    return EtaLabel
+
+sf  = ScaleFactor("Muon_IsoMu27.root")
