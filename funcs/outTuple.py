@@ -142,6 +142,8 @@ class outTuple() :
         self.phi_2_tr  = array('f',[0])
         self.eta_2     = array('f',[0])
         self.eta_2_tr  = array('f',[0])
+        self.iso_1       = array('f',[0])
+        self.q_1       = array('f',[0])
         
         # MET variables
         self.met         = array('f',[0])
@@ -179,6 +181,8 @@ class outTuple() :
         self.jphi_2_tr = array('f',[0])
         self.jcsv_2    = array('f',[0])
         self.jcsvfv_2    = array('f',[0])
+        self.iso_2       = array('f',[0])
+        self.q_2       = array('f',[0])
 
         self.bpt_1     = array('f',[0])
         self.bpt_1_tr  = array('f',[0])
@@ -306,6 +310,11 @@ class outTuple() :
         self.t.Branch('phi_2_tr',    self.phi_2_tr,    'phi_2_tr/F')
         self.t.Branch('eta_2',       self.eta_2,       'eta_2/F')      
         self.t.Branch('eta_2_tr',    self.eta_2_tr,    'eta_2_tr/F')
+        self.t.Branch('iso_1',       self.iso_1,       'iso_1/F')
+        self.t.Branch('iso_2',       self.iso_2,       'iso_2/F')
+        self.t.Branch('q_1',       self.q_1,       'q_1/F')
+        self.t.Branch('q_2',       self.q_2,       'q_2/F')
+        
         
         # MET variables
         self.t.Branch('met', self.met, 'met/F')
@@ -511,6 +520,11 @@ class outTuple() :
         self.lumi[0] = entry.luminosityBlock 
         self.evt[0]  = entry.event
         self.cat[0]  = tauFun.catToNumber(cat)
+        self.iso_1[0]  = -99
+        self.iso_2[0]  = -99
+        self.q_1[0]  = -99
+        self.q_2[0]  = -99
+
         
         try :
             self.weight[0]           = entry.genWeight
@@ -847,13 +861,38 @@ class outTuple() :
         self.AMass[0]       = (Lep1 + Lep2 + tau1 + tau2).M() 
         self.mll[0]       = (Lep1 + Lep2).M()
         self.Z_DR[0]       = self.getDR(entry,Lep1,Lep2)
-            
+           
         self.pt_1[0]   = Lep1.Pt()
         self.phi_1[0]  = Lep1.Phi()
         self.eta_1[0]  = Lep1.Eta()
         self.pt_2[0]   = Lep2.Pt()
         self.phi_2[0]  = Lep2.Phi()
         self.eta_2[0]  = Lep2.Eta()
+
+	#relIso 
+	if channel_ll == 'ee' : 
+	   if (LepP.Pt() > LepM.Pt()):
+                self.iso_1[0]  = entry.Electron_pfRelIso03_all[lepList[0]]
+                self.iso_2[0]  = entry.Electron_pfRelIso03_all[lepList[1]]
+                self.q_1[0]  = entry.Electron_charge[lepList[0]]
+                self.q_2[0]  = entry.Electron_charge[lepList[1]]
+	   else : 
+                self.iso_1[0]  = entry.Electron_pfRelIso03_all[lepList[1]]
+                self.iso_2[0]  = entry.Electron_pfRelIso03_all[lepList[0]]
+                self.q_1[0]  = entry.Electron_charge[lepList[1]]
+                self.q_2[0]  = entry.Electron_charge[lepList[0]]
+
+	if channel_ll == 'mm' : 
+	   if (LepP.Pt() > LepM.Pt()):
+                self.iso_1[0]  = entry.Muon_pfRelIso04_all[lepList[0]]
+                self.iso_2[0]  = entry.Muon_pfRelIso04_all[lepList[1]]
+                self.q_1[0]  = entry.Muon_charge[lepList[0]]
+                self.q_2[0]  = entry.Muon_charge[lepList[1]]
+	   else : 
+                self.iso_1[0]  = entry.Muon_pfRelIso04_all[lepList[1]]
+                self.iso_2[0]  = entry.Muon_pfRelIso04_all[lepList[0]]
+                self.q_1[0]  = entry.Muon_charge[lepList[1]]
+                self.q_2[0]  = entry.Muon_charge[lepList[0]]
         
         # genMatch the di-lepton variables
         idx_Lep1, idx_Lep2 = -1, -1
