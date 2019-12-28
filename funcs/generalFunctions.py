@@ -6,7 +6,6 @@ from math import sqrt, sin, cos, pi
 import numpy as np
 import json
 
-
 def getLepIdxFrom4Vec(entry, lep_4vec, lep_type):
     """ Classification: genMatching
            - this function returns the index of a 4-vector (lep_4vec) belonging to
