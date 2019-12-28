@@ -412,8 +412,8 @@ plotSettings = { # [nBins,xMin,xMax,units]
         "ll_pt_m":[30,0,300,"[GeV]","P_{T}l^{-}"],
         "ll_phi_m":[30,-3,3,"","#phi(l_^{-})"],
         "ll_eta_m":[30,-3,3,"","#eta(l_^{-})"],
-        "ll_iso_1":[20,0,1,"","relIso(l_{1})"],
-        "ll_iso_2":[20,0,1,"","relIso(l_{2})"],
+        "iso_1":[20,0,1,"","relIso(l_{1})"],
+        "iso_2":[20,0,1,"","relIso(l_{2})"],
 
         "m_vis":[30,50,200,"[Gev]","m(#tau#tau)"],
         "pt_tt":[40,0,200,"[GeV]","P_{T}(#tau#tau)"],
@@ -580,9 +580,9 @@ for group in groups :
 
 	    ww = 1.
             ##requirement on the Z-boson
-	    if cat[:2] == 'mm' and  (e.ll_iso_1 > 0.25 or e.ll_iso_2 > 0.25) : continue
+	    if cat[:2] == 'mm' and  (e.iso_1 > 0.25 or e.iso_2 > 0.25) : continue
 	    '''
-	    if cat[:2] == 'ee' and  (e.ll_iso_1 > 0.15 or e.ll_iso_2 > 0.15) : continue
+	    if cat[:2] == 'ee' and  (e.iso_1 > 0.15 or e.iso_2 > 0.15) : continue
 
 	    if cat[2:] == 'em' and  (e.iso_1 > 0.3 or e.iso_2 > 0.4) : continue
 	    if cat[2:] == 'mt' and  (e.iso_1 > 0.3) : continue
@@ -755,27 +755,27 @@ for group in groups :
 
 	        if e.isTrig_1 != 0 and e.isTrig_2 == 0: 
                     if cat[:2] == 'mm' :                 
-	                eff_d_1 =  self.sf_MuonTrig.get_EfficiencyData(e.pt_1,e.eta_1)
-	                eff_mc_1 =  self.sf_MuonTrig.get_EfficiencyMC(e.pt_1,e.eta_1)
+	                eff_d_1 =  sf_MuonTrig.get_EfficiencyData(e.pt_1,e.eta_1)
+	                eff_mc_1 =  sf_MuonTrig.get_EfficiencyMC(e.pt_1,e.eta_1)
 
                     if cat[:2] == 'ee' :                 
-	                eff_d_1 =  self.sf_EleTrig.get_EfficiencyData(e.pt_1,e.eta_1)
-	                eff_mc_1 =  self.sf_EleTrig.get_EfficiencyMC(e.pt_1,e.eta_1)
+	                eff_d_1 =  sf_EleTrig.get_EfficiencyData(e.pt_1,e.eta_1)
+	                eff_mc_1 =  sf_EleTrig.get_EfficiencyMC(e.pt_1,e.eta_1)
 
 
                 
 	        if e.isTrig_1 != 0 and  e.isTrig_2 != 0: 
                     if cat[:2] == 'mm' :                 
-	                eff_d_1 =  self.sf_MuonTrig.get_EfficiencyData(e.pt_1,e.eta_1)
-	                eff_mc_1 =  self.sf_MuonTrig.get_EfficiencyMC(e.pt_1,e.eta_1)
-	                eff_d_2 =  self.sf_MuonTrig.get_EfficiencyData(e.pt_2,e.eta_2)
-	                eff_mc_2 =  self.sf_MuonTrig.get_EfficiencyMC(e.pt_2,e.eta_2)
+	                eff_d_1 =  sf_MuonTrig.get_EfficiencyData(e.pt_1,e.eta_1)
+	                eff_mc_1 = sf_MuonTrig.get_EfficiencyMC(e.pt_1,e.eta_1)
+	                eff_d_2 =  sf_MuonTrig.get_EfficiencyData(e.pt_2,e.eta_2)
+	                eff_mc_2 = sf_MuonTrig.get_EfficiencyMC(e.pt_2,e.eta_2)
 
                     if cat[:2] == 'ee' :                 
-	                eff_d_1 =  self.sf_EleTrig.get_EfficiencyData(e.pt_1,e.eta_1)
-	                eff_mc_1 =  self.sf_EleTrig.get_EfficiencyMC(e.pt_1,e.eta_1)
-	                eff_d_2 =  self.sf_EleTrig.get_EfficiencyData(e.pt_2,e.eta_2)
-	                eff_mc_2 =  self.sf_EleTrig.get_EfficiencyMC(e.pt_2,e.eta_2)
+	                eff_d_1 =  sf_EleTrig.get_EfficiencyData(e.pt_1,e.eta_1)
+	                eff_mc_1 =  sf_EleTrig.get_EfficiencyMC(e.pt_1,e.eta_1)
+	                eff_d_2 =  sf_EleTrig.get_EfficiencyData(e.pt_2,e.eta_2)
+	                eff_mc_2 =  sf_EleTrig.get_EfficiencyMC(e.pt_2,e.eta_2)
 
 
                 if  e.isTrig_2 == 0 :

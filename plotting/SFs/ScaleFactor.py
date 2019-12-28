@@ -78,7 +78,7 @@ class SFs():
         ptbin = self.FindPtBin("mc", label, pt)
         Eta = math.fabs(eta)
         label=label.replace("Eta","")
-        print "inside eff_mc pt",pt,"eta",eta,"label",label,"N",self.eff_mcH[label].GetN(),"ptbin",ptbin
+        #print "inside eff_mc pt",pt,"eta",eta,"label",label,"N",self.eff_mcH[label].GetN(),"ptbin",ptbin
      
   
         if ptbin == -99 : eff =1
@@ -97,7 +97,7 @@ class SFs():
         ptbin = self.FindPtBin("data", label, pt)
         Eta = math.fabs(eta)
         label=label.replace("Eta","")
-        print "inside eff_data pt",pt,"eta",eta,"label",label,"N",self.eff_dataH[label].GetN(),"ptbin",ptbin
+        #print "inside eff_data pt",pt,"eta",eta,"label",label,"N",self.eff_dataH[label].GetN(),"ptbin",ptbin
     
         if ptbin == -99 : eff =1
         else  : eff= self.eff_dataH[label].GetY()[ptbin-1]
