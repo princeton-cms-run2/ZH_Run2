@@ -758,18 +758,19 @@ class outTuple() :
 
     
             # genMatch the hadronic tau candidate
-            idx_t1_gen = GF.genMatchTau(entry, jt1, 'had')
-            if idx_t1_gen >= 0:
-                self.pt_3_tr[0]  = entry.GenVisTau_pt[idx_t1_gen]
-                self.phi_3_tr[0] = entry.GenVisTau_phi[idx_t1_gen]
-                self.eta_3_tr[0] = entry.GenVisTau_eta[idx_t1_gen]
-            else:
-                self.pt_3_tr[0]  = 1.2*entry.Tau_pt[jt1]
-                self.phi_3_tr[0] = 1.2*entry.Tau_phi[jt1]
-                self.eta_3_tr[0] = 1.2*entry.Tau_eta[jt1]
+            if isMC:
+		idx_t1_gen = GF.genMatchTau(entry, jt1, 'had')
+		if idx_t1_gen >= 0:
+		    self.pt_3_tr[0]  = entry.GenVisTau_pt[idx_t1_gen]
+		    self.phi_3_tr[0] = entry.GenVisTau_phi[idx_t1_gen]
+		    self.eta_3_tr[0] = entry.GenVisTau_eta[idx_t1_gen]
+		else:
+		    self.pt_3_tr[0]  = 1.2*entry.Tau_pt[jt1]
+		    self.phi_3_tr[0] = 1.2*entry.Tau_phi[jt1]
+		    self.eta_3_tr[0] = 1.2*entry.Tau_eta[jt1]
 
-            try : self.gen_match_3[0] = ord(entry.Tau_genPartFlav[jt1])
-            except AttributeError : self.gen_match_3[0] = -1
+		try : self.gen_match_3[0] = ord(entry.Tau_genPartFlav[jt1])
+		except AttributeError : self.gen_match_3[0] = -1
 
             try : self.decayMode_3[0] = int(entry.Tau_decayMode[jt1])
             except AttributeError : self.decayMode_3[0] = -1
@@ -813,18 +814,19 @@ class outTuple() :
 
 
             # genMatch the hadronic tau candidate
-            idx_t2_gen = GF.genMatchTau(entry, jt2, 'had')
-            if idx_t2_gen >= 0:
-                self.pt_4_tr[0]  = entry.GenVisTau_pt[idx_t2_gen]
-                self.phi_4_tr[0] = entry.GenVisTau_phi[idx_t2_gen]
-                self.eta_4_tr[0] = entry.GenVisTau_eta[idx_t2_gen]
-            else:
-                self.pt_4_tr[0]  = 1.2*entry.Tau_pt[jt2]
-                self.phi_4_tr[0] = 1.2*entry.Tau_phi[jt2]
-                self.eta_4_tr[0] = 1.2*entry.Tau_eta[jt2]
+            if isMC:
+		idx_t2_gen = GF.genMatchTau(entry, jt2, 'had')
+		if idx_t2_gen >= 0:
+		    self.pt_4_tr[0]  = entry.GenVisTau_pt[idx_t2_gen]
+		    self.phi_4_tr[0] = entry.GenVisTau_phi[idx_t2_gen]
+		    self.eta_4_tr[0] = entry.GenVisTau_eta[idx_t2_gen]
+		else:
+		    self.pt_4_tr[0]  = 1.2*entry.Tau_pt[jt2]
+		    self.phi_4_tr[0] = 1.2*entry.Tau_phi[jt2]
+		    self.eta_4_tr[0] = 1.2*entry.Tau_eta[jt2]
 
-	    try : self.gen_match_4[0] = ord(entry.Tau_genPartFlav[jt2])
-	    except AttributeError: self.gen_match_4[0] = -1
+		try : self.gen_match_4[0] = ord(entry.Tau_genPartFlav[jt2])
+		except AttributeError: self.gen_match_4[0] = -1
 
             try : self.decayMode_4[0] = int(entry.Tau_decayMode[jt2])
             except AttributeError: self.decayMode_4[0] = -1
@@ -953,13 +955,14 @@ class outTuple() :
             self.jcsvfv_1[0] = entry.Jet_btagDeepFlavB[jj1]
             
             # genMatch jet1
-            idx_genJet = entry.Jet_genJetIdx[jj1]
-            if idx_genJet >= 0:
-                try :
-                    self.jpt_1_tr[0]  = entry.GenJet_pt[idx_genJet]
-                    self.jeta_1_tr[0] = entry.GenJet_eta[idx_genJet]
-                    self.jphi_1_tr[0] = entry.GenJet_phi[idx_genJet]
-                except IndexError : pass
+            if isMC:
+		idx_genJet = entry.Jet_genJetIdx[jj1]
+		if idx_genJet >= 0:
+		    try :
+			self.jpt_1_tr[0]  = entry.GenJet_pt[idx_genJet]
+			self.jeta_1_tr[0] = entry.GenJet_eta[idx_genJet]
+			self.jphi_1_tr[0] = entry.GenJet_phi[idx_genJet]
+		    except IndexError : pass
                 
         self.jpt_2[0], self.jeta_2[0], self.jphi_2[0], self.jcsv_2[0],self.jcsvfv_2[0] = -9.99, -9.99, -9.99, -9.99, -9.99
         if len(jetList) > 1 :
@@ -971,13 +974,14 @@ class outTuple() :
             self.jcsvfv_2[0] = entry.Jet_btagDeepFlavB[jj2]
             
             # genMatch jet2
-            idx_genJet = entry.Jet_genJetIdx[jj2]
-            if idx_genJet >= 0:
-	        try: 
-                   self.jpt_2_tr[0]  = entry.GenJet_pt[idx_genJet]
-                   self.jeta_2_tr[0] = entry.GenJet_eta[idx_genJet]
-                   self.jphi_2_tr[0] = entry.GenJet_phi[idx_genJet]
-                except IndexError : pass 
+            if isMC:
+		idx_genJet = entry.Jet_genJetIdx[jj2]
+		if idx_genJet >= 0:
+		    try: 
+		       self.jpt_2_tr[0]  = entry.GenJet_pt[idx_genJet]
+		       self.jeta_2_tr[0] = entry.GenJet_eta[idx_genJet]
+		       self.jphi_2_tr[0] = entry.GenJet_phi[idx_genJet]
+		    except IndexError : pass 
 
         self.bpt_1[0], self.beta_1[0], self.bphi_1[0], self.bcsv_1[0], self.bcsvfv_1[0] = -9.99, -9.99, -9.99, -9.99, -9.99
         if len(bJetList) > 0 :
@@ -1005,13 +1009,14 @@ class outTuple() :
             self.bcsvfv_2[0] = entry.Jet_btagDeepFlavB[jbj2]
 
             # genMatch bjet1
-            idx_genJet = entry.Jet_genJetIdx[jbj2]
-            if idx_genJet >= 0:
-                try :
-                    self.bpt_2_tr[0]  = entry.GenJet_pt[idx_genJet]
-                    self.beta_2_tr[0] = entry.GenJet_eta[idx_genJet]
-                    self.bphi_2_tr[0] = entry.GenJet_phi[idx_genJet]
-                except IndexError : pass
+            if isMC:
+		idx_genJet = entry.Jet_genJetIdx[jbj2]
+		if idx_genJet >= 0:
+		    try :
+			self.bpt_2_tr[0]  = entry.GenJet_pt[idx_genJet]
+			self.beta_2_tr[0] = entry.GenJet_eta[idx_genJet]
+			self.bphi_2_tr[0] = entry.GenJet_phi[idx_genJet]
+		    except IndexError : pass
         self.t.Fill()
         #self.weight[0] = 1.
         return
