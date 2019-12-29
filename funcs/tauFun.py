@@ -1,6 +1,5 @@
 # !/usr/bin/env python
 
-
 """ tauFun.py: apply selection sequence to four-lepton final state """
 
 import io
@@ -109,9 +108,15 @@ def getTauListv3(channel, entry, pairList=[]) :
 	if  entry.Tau_decayMode[j] == 5 or entry.Tau_decayMode[j] == 6 : continue
         if abs(entry.Tau_charge[j]) != 1: continue
 
-	if not ord(entry.Tau_idDeepTau2017v2p1VSjet[j]) & 16 > 0 : continue
-	if not ord(entry.Tau_idDeepTau2017v2p1VSe[j]) & 1 > 0 : continue
-	if not ord(entry.Tau_idDeepTau2017v2p1VSmu[j]) & 1 > 0 : continue
+        if tt['tau_vJet'] > 0  and not ord(entry.Tau_idDeepTau2017v2p1VSjet[j]) & tt['tau_vJet'] > 0 :
+            if printOn : print("        fail DeepTau vs. Jet={0:d}".format(ord(entry.Tau_idDeepTau2017v2p1VSjet[j])))
+            continue
+	if tt['tau_vEle'] > 0 and not ord(entry.Tau_idDeepTau2017v2p1VSe[j]) & tt['tau_vEle'] > 0 :
+            if printOn : print("        fail DeepTau vs. ele={0:d}".format(ord(entry.Tau_idDeepTau2017v2p1VSe[j])))
+            continue
+        if tt['tau_vMu'] > 0 and not ord(entry.Tau_idDeepTau2017v2p1VSmu[j]) & tt['tau_vMu'] > 0 :
+            if printOn : print("        fail DeepTau vs.  mu={0:d}".format(ord(entry.Tau_idDeepTau2017v2p1VSmu[j])))
+            continue
 
 
         eta, phi = entry.Tau_eta[j], entry.Tau_phi[j]
@@ -155,10 +160,6 @@ def getTauListAZH(channel, entry, pairList=[], printOn=False) :
 	if tt['tau_decayMode'] and (entry.Tau_decayMode[j] == 5 or entry.Tau_decayMode[j] == 6) :
             if printOn : print("    fail decayMode={0:d}".format(entry.Tau_decayMode[j]))
             continue
-        
-        #if ord(entry.Tau_idDeepTau2017v2p1VSjet[j]) & 16 > 0 : b_vsjet  = True  #no needed for AZH sync
-        #if ord(entry.Tau_idDeepTau2017v2p1VSmu[j]) & 2 > 0 : b_vsmu  = True 
-        #if ord(entry.Tau_idDeepTau2017v2p1VSe[j]) & 4 > 0 : b_vse  = True 
 
         if tt['tau_vJet'] > 0  and not ord(entry.Tau_idDeepTau2017v2p1VSjet[j]) & tt['tau_vJet'] > 0 :
             if printOn : print("        fail DeepTau vs. Jet={0:d}".format(ord(entry.Tau_idDeepTau2017v2p1VSjet[j])))
@@ -169,9 +170,6 @@ def getTauListAZH(channel, entry, pairList=[], printOn=False) :
         if tt['tau_vMu'] > 0 and not ord(entry.Tau_idDeepTau2017v2p1VSmu[j]) & tt['tau_vMu'] > 0 :
             if printOn : print("        fail DeepTau vs.  mu={0:d}".format(ord(entry.Tau_idDeepTau2017v2p1VSmu[j])))
             continue
-            
-        #if not b_vsjet or not b_vsmu or not b_vse : continue
-        #if not b_vsmu or not b_vse : continue
 
         if abs(entry.Tau_charge[j]) != 1 :
             if printOn : print("        fail charge={0:d}".format(entry.Tau_charge[j]))
@@ -318,7 +316,7 @@ def getMuTauPairs(entry,cat='mt',pairList=[],printOn=False) :
         if abs(mu_eta) > mt['mu_eta']:
             if printOn : print("    fail mu_eta={0:f}".format(entry.Muon_eta[i]))
             continue 
-        if entry.Muon_pfRelIso04_all[i] > mt['mu_iso']:
+        if mt['mu_iso_f'] and entry.Muon_pfRelIso04_all[i] > mt['mu_iso']:
             if printOn : print("    fail mu_iso={0:f}".format(entry.Muon_pfRelIso04_all[i]))
             continue
         DR0 = lTauDR(mu_eta,mu_phi,pairList[0]) # l1 vs. tau(mu)
@@ -442,8 +440,8 @@ def getEMuTauPairs(entry,cat='em',pairList=[],printOn=False) :
             continue
         if abs(mu_eta) > em['mu_eta']:
             if printOn : print("    failed eta={0:f}".format(entry.Muon_eta[i]))
-            continue   
-        if entry.Muon_pfRelIso04_all[i] > em['mu_iso']:
+            continue  
+        if em['mu_iso_f'] and entry.Muon_pfRelIso04_all[i] > em['mu_iso']:
             if printOn : print("    failed iso={0:f}".format(entry.Muon_pfRelIso04_all[i]))
             continue 
         
