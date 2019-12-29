@@ -8,6 +8,7 @@ import os
 import sys
 import generalFunctions as GF
 
+
 class outTuple() :
     
     def __init__(self,fileName, era):
@@ -595,8 +596,8 @@ class outTuple() :
                     self.phi_3_tr[0]    = entry.GenPart_phi[idx_genEle]
                     self.eta_3_tr[0]    = entry.GenPart_eta[idx_genEle]
 
-            try: self.gen_match_3[0] = ord(entry.Electron_genPartFlav[jt1])
-            except AttributeError: self.gen_match_3[0] = -1
+                try: self.gen_match_3[0] = ord(entry.Electron_genPartFlav[jt1])
+                except AttributeError: self.gen_match_3[0] = -1
             
             tau1.SetPtEtaPhiM(entry.Electron_pt[jt1],entry.Electron_eta[jt1], entry.Electron_phi[jt1], tauMass)
             tau2.SetPtEtaPhiM(entry.Tau_pt[jt2],entry.Tau_eta[jt2],entry.Tau_phi[jt2],tauMass)
@@ -624,8 +625,9 @@ class outTuple() :
             self.dZ_3[0]   = entry.Electron_dz[jt1]
             self.iso_3[0]  = entry.Electron_pfRelIso03_all[jt1]
             
-            try : self.gen_match_3[0] = ord(entry.Electron_genPartFlav[jt1])
-            except AttributeError : self.gen_match_3[0] = -1
+            if isMC:
+                try : self.gen_match_3[0] = ord(entry.Electron_genPartFlav[jt1])
+                except AttributeError : self.gen_match_3[0] = -1
             
             tau1.SetPtEtaPhiM(entry.Electron_pt[jt1], entry.Electron_eta[jt1], entry.Electron_phi[jt1], tauMass)
                                                                                                         #???
@@ -655,8 +657,9 @@ class outTuple() :
             self.isTracker_4[0]     = entry.Muon_isTracker[jt2]
             self.ip3d_4[0]       = entry.Muon_ip3d[jt2]
             self.inTimeMuon_4[0]    = entry.Muon_inTimeMuon[jt2]
-            try : self.gen_match_4[0] = ord(entry.Muon_genPartFlav[jt2]) 
-            except AttributeError : self.gen_match_4[0] = -1
+            if isMC:
+                try : self.gen_match_4[0] = ord(entry.Muon_genPartFlav[jt2]) 
+                except AttributeError : self.gen_match_4[0] = -1
             
             tau2.SetPtEtaPhiM(entry.Muon_pt[jt2], entry.Muon_eta[jt2], entry.Muon_phi[jt2], tauMass) 
 
@@ -707,8 +710,9 @@ class outTuple() :
             self.ip3d_3[0]       = entry.Muon_ip3d[jt1]
             self.inTimeMuon_3[0]    = entry.Muon_inTimeMuon[jt1]
             
-            try : self.gen_match_3[0] = ord(entry.Muon_genPartFlav[jt1])
-            except AttributeError : self.gen_match_1[0] = -1
+            if isMC:
+                try : self.gen_match_3[0] = ord(entry.Muon_genPartFlav[jt1])
+                except AttributeError : self.gen_match_1[0] = -1
             
             tau1.SetPtEtaPhiM(entry.Muon_pt[jt1], entry.Muon_eta[jt1], entry.Muon_phi[jt1], tauMass)
             tau2.SetPtEtaPhiM(entry.Tau_pt[jt2],  entry.Tau_eta[jt2],  entry.Tau_phi[jt2],  tauMass) 
@@ -897,31 +901,32 @@ class outTuple() :
                 self.q_2[0]  = entry.Muon_charge[lepList[0]]
         
         # genMatch the di-lepton variables
-        idx_Lep1, idx_Lep2 = -1, -1
-        idx_Lep1_tr, idx_Lep2_tr = -1, -1
-        if (Lep1.M() > 0.05 and Lep2.M() > 0.05): # muon mass 
-            idx_Lep1 = GF.getLepIdxFrom4Vec(entry, Lep1, 'm')
-            idx_Lep2 = GF.getLepIdxFrom4Vec(entry, Lep2, 'm')
-            try :
-                idx_Lep1_tr = entry.Muon_genPartIdx[idx_Lep1]
-                idx_Lep2_tr = entry.Muon_genPartIdx[idx_Lep2]
-            except IndexError : pass 
-                
-        elif (Lep1.M() < 0.05 and Lep2.M() < 0.05): # electron mass
-            idx_Lep1 = GF.getLepIdxFrom4Vec(entry, Lep1, 'e')
-            idx_Lep2 = GF.getLepIdxFrom4Vec(entry, Lep2, 'e')
-            try :
-                idx_Lep1_tr = entry.Electron_genPartIdx[idx_Lep1]
-                idx_Lep2_tr = entry.Electron_genPartIdx[idx_Lep2]
-            except IndexError : pass 
-                
-        if idx_Lep1_tr >= 0 and idx_Lep2_tr >= 0:
-            self.pt_1_tr[0]  = entry.GenPart_pt[idx_Lep1_tr]
-            self.pt_2_tr[0]  = entry.GenPart_pt[idx_Lep2_tr]
-            self.eta_1_tr[0] = entry.GenPart_eta[idx_Lep1_tr]
-            self.eta_2_tr[0] = entry.GenPart_eta[idx_Lep2_tr]
-            self.phi_1_tr[0] = entry.GenPart_phi[idx_Lep1_tr]
-            self.phi_2_tr[0] = entry.GenPart_phi[idx_Lep2_tr]
+	if isMC :
+	    idx_Lep1, idx_Lep2 = -1, -1
+	    idx_Lep1_tr, idx_Lep2_tr = -1, -1
+	    if (Lep1.M() > 0.05 and Lep2.M() > 0.05): # muon mass 
+		idx_Lep1 = GF.getLepIdxFrom4Vec(entry, Lep1, 'm')
+		idx_Lep2 = GF.getLepIdxFrom4Vec(entry, Lep2, 'm')
+		try :
+		    idx_Lep1_tr = entry.Muon_genPartIdx[idx_Lep1]
+		    idx_Lep2_tr = entry.Muon_genPartIdx[idx_Lep2]
+		except IndexError : pass 
+		    
+	    elif (Lep1.M() < 0.05 and Lep2.M() < 0.05): # electron mass
+		idx_Lep1 = GF.getLepIdxFrom4Vec(entry, Lep1, 'e')
+		idx_Lep2 = GF.getLepIdxFrom4Vec(entry, Lep2, 'e')
+		try :
+		    idx_Lep1_tr = entry.Electron_genPartIdx[idx_Lep1]
+		    idx_Lep2_tr = entry.Electron_genPartIdx[idx_Lep2]
+		except IndexError : pass 
+		    
+	    if idx_Lep1_tr >= 0 and idx_Lep2_tr >= 0:
+		self.pt_1_tr[0]  = entry.GenPart_pt[idx_Lep1_tr]
+		self.pt_2_tr[0]  = entry.GenPart_pt[idx_Lep2_tr]
+		self.eta_1_tr[0] = entry.GenPart_eta[idx_Lep1_tr]
+		self.eta_2_tr[0] = entry.GenPart_eta[idx_Lep2_tr]
+		self.phi_1_tr[0] = entry.GenPart_phi[idx_Lep1_tr]
+		self.phi_2_tr[0] = entry.GenPart_phi[idx_Lep2_tr]
         
         # MET variables
         self.met[0]         = entry.MET_pt    
