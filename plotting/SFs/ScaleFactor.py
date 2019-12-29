@@ -45,7 +45,6 @@ class SFs():
             #print "some checks.................",self.eff_mcH[etaLabel].GetXaxis().GetNbins(),self.eff_dataH[etaLabel].GetXaxis().GetNbins(),"etaLabel",etaLabel,self.eff_dataH[etaLabel].GetN(),"eff_mcH.GetN()",self.eff_mcH[etaLabel].GetN()
             #print "just get some value",self.eff_mcH[etaLabel].GetX()[5],"for etaLabel",etaLabel
 
-        #print sff
         
 
     def SetAxisBins(self,graph):
