@@ -199,8 +199,11 @@ for count, e in enumerate(inTree) :
 
         
         if lepMode == 'ee' :
-            if  args.year == 2016 and not e.HLT_Ele27_eta2p1_WPTight_Gsf and not e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ : continue
-            if (args.year == 2017 or args.year == 2018) and not e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ and not e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL and not e.HLT_Ele35_WPTight_Gsf and not e.HLT_Ele32_WPTight_Gsf:
+            #if  args.year == 2016 and not e.HLT_Ele27_eta2p1_WPTight_Gsf and not e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ and not e.HLT_Ele25_eta2p1_WPTight_Gsf: continue
+            #if (args.year == 2017 or args.year == 2018) and not e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ and not e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL and not e.HLT_Ele35_WPTight_Gsf and not e.HLT_Ele32_WPTight_Gsf:
+
+            if  args.year == 2016 and not e.HLT_Ele27_eta2p1_WPTight_Gsf and not e.HLT_Ele25_eta2p1_WPTight_Gsf: continue
+            if (args.year == 2017 or args.year == 2018) and not e.HLT_Ele35_WPTight_Gsf and not e.HLT_Ele32_WPTight_Gsf:
                 if unique :
                     print("Trigger Fail: Event ID={0:d} cat={1:s}".format(e.event,cat))
                     GF.printEvent(e)
@@ -229,8 +232,10 @@ for count, e in enumerate(inTree) :
             
         
         if lepMode == 'mm' :
-            if args.year == 2016 and not e.HLT_IsoMu24 and not e.HLT_IsoTkMu24 and not e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ and not e.HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ: continue
-            if (args.year == 2017 or args.year == 2018) and not e.HLT_IsoMu24  and not e.HLT_IsoMu27 and not e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass8 and not e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass3p8 : continue
+            #if args.year == 2016 and not e.HLT_IsoMu24 and not e.HLT_IsoTkMu24 and not e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ and not e.HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ and not e.HLT_IsoMu27 : continue
+            #if (args.year == 2017 or args.year == 2018) and not e.HLT_IsoMu24  and not e.HLT_IsoMu27 and not e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass8 and not e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass3p8 : continue
+
+            if not e.HLT_IsoMu24 and not  e.HLT_IsoMu27 : continue
             for cat in cats[4:]: 
 	        cutCounter[cat].count('Trigger')
 	        if  MC :   cutCounterGenWeight[cat].countGenWeight('Trigger', e.genWeight)

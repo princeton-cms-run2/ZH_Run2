@@ -2,7 +2,7 @@
 # read MC file root files and histogram by group 
 #
 
-from ROOT import TFile, TTree, TH1D, TCanvas, TLorentzVector, TLegend, TAxis, THStack
+from ROOT import TFile, TTree, TH1D, TCanvas, TLorentzVector, TLegend, TAxis, THStack, TGraphAsymmErrors
 import tdrstyle
 from ROOT import gSystem, gStyle, gROOT, kTRUE
 gROOT.SetBatch(True) # don't pop up any plots
@@ -10,6 +10,9 @@ gStyle.SetOptStat(0) # don't show any stats
 from math import sqrt
 import os
 import os.path
+import sys
+sys.path.append('SFs')
+import ScaleFactor as SF
 
 
 def catToNumber(cat) :
@@ -197,10 +200,14 @@ weights_muTotauFR={''}
 weights_elTotauFR={''}
 
 
+
+
+
 if era == '2016' : 
     weights = {'lumi':35.92, 'tauID_w' :0.87, 'tauES_DM0' : -0.6, 'tauES_DM1' : -0.5,'tauES_DM10' : 0.0, 'mutauES_DM0' : -0.2, 'mutauES_DM1' : 1.5, 'eltauES_DM0' : 0.0, 'eltauES_DM1' : 9.5}
     weights_muTotauFR = {'lmuFR_lt0p4' : 1.22, 'lmuFR_0p4to0p8' : 1.12, 'lmuFR_0p8to1p2' : 1.26, 'lmuFR_1p2to1p7' : 1.22, 'lmuFR_1p7to2p3' : 2.39 , 'tmuFR_lt0p4' : 1.47, 'tmuFR_0p4to0p8' : 1.55, 'tmuFR_0p8to1p2' : 1.33, 'tmuFR_1p2to1p7' : 1.72, 'tmuFR_1p7to2p3' : 2.50 }
     weights_elTotauFR = {'lelFR_lt1p46' : 1.21, 'lelFR_gt1p559' : 1.38, 'telFR_lt1p46' : 1.40, 'telFR_gt1p559' : 1.90}
+    TriggerSF={'dir' : 'SFs/TriggerEfficiencies/', 'fileMuon' : 'Muon_Run2016_IsoMu24orIsoMu27.root', 'fileElectron' : 'Electron_Run2016_Ele25orEle27.root'}
 
 
 
@@ -208,11 +215,18 @@ if era == '2017' :
     weights = {'lumi':41.53, 'tauID_w' :0.89, 'tauES_DM0' : 0.7, 'tauES_DM1' : -0.2,'tauES_DM10' : 0.1, 'mutauES_DM0' : 0.0, 'mutauES_DM1' : 0.0, 'eltauES_DM0' : 0.3, 'eltauES_DM1' : 3.6}
     weights_muTotauFR = { 'lmuFR_lt0p4' : 1.06, 'lmuFR_0p4to0p8' : 1.02, 'lmuFR_0p8to1p2' : 1.10, 'lmuFR_1p2to1p7' : 1.03, 'lmuFR_1p7to2p3' : 1.94 , 'tmuFR_lt0p4' : 1.17, 'tmuFR_0p4to0p8' : 1.29, 'tmuFR_0p8to1p2' : 1.14, 'tmuFR_1p2to1p7' : 0.94, 'tmuFR_1p7to2p3' : 1.61}
     weights_elTotauFR = {'lelFR_lt1p46' : 1.09, 'lelFR_gt1p559' : 1.19, 'telFR_lt1p46' : 1.80, 'telFR_gt1p559' : 1.53}
+    TriggerSF={'dir' : 'SFs/TriggerEfficiencies/', 'fileMuon' : 'Muon_Run2017_IsoMu24orIsoMu27.root', 'fileElectron' : 'Electron_Run2017_Ele32orEle35.root'}
 
 if era == '2018' : 
     weights = {'lumi':59.74, 'tauID_w' :0.90, 'tauES_DM0' : -1.3, 'tauES_DM1' : -0.5,'tauES_DM10' : -1.2, 'mutauES_DM0' : 0.0, 'mutauES_DM1' : 0.0, 'eltauES_DM0' : 0.0, 'eltauES_DM1' : 0.0}
     weights_muTotauFR = { 'lmuFR_lt0p4' : 1., 'lmuFR_0p4to0p8' : 1., 'lmuFR_0p8to1p2' : 1., 'lmuFR_1p2to1p7' : 1., 'lmuFR_1p7to2p3' : 1. , 'tmuFR_lt0p4' : 1., 'tmuFR_0p4to0p8' : 1., 'tmuFR_0p8to1p2' : 1., 'tmuFR_1p2to1p7' : 1., 'tmuFR_1p7to2p3' : 1.}
     weights_elTotauFR = {'lelFR_lt1p46' : 1., 'lelFR_gt1p559' : 1., 'telFR_lt1p46' : 1., 'telFR_gt1p559' : 1.}
+    TriggerSF={'dir' : 'SFs/TriggerEfficiencies/', 'fileMuon' : 'Muon_Run2018_IsoMu24orIsoMu27.root', 'fileElectron' : 'Electron_Run2018_Ele32orEle35.root'}
+
+sf_MuonTrig = SF.SFs()
+sf_MuonTrig.ScaleFactor("{0:s}{1:s}".format(TriggerSF['dir'],TriggerSF['fileMuon']))
+sf_EleTrig = SF.SFs()
+sf_EleTrig.ScaleFactor("{0:s}{1:s}".format(TriggerSF['dir'],TriggerSF['fileElectron']))
 
 
 
@@ -391,23 +405,23 @@ plotSettings = { # [nBins,xMin,xMax,units]
         #"mt_tot":[100,0,1000,"[GeV]"], # sqrt(mt1^2 + mt2^2)
         #"mt_sum":[100,0,1000,"[GeV]"], # mt1 + mt2
 
-        "m_vis":[40,50,130,"[Gev]","m(l^{+}l^{-})"],
+        "mll":[40,50,130,"[Gev]","m(l^{+}l^{-})"],
         "ll_pt_p":[30,0,300,"[GeV]","P_{T}l^{-}"],
         "ll_phi_p":[30,-3,3,"","#phi(l_^{-})"],
         "ll_eta_p":[30,-3,3,"","#eta(l_^{-})"],
         "ll_pt_m":[30,0,300,"[GeV]","P_{T}l^{-}"],
         "ll_phi_m":[30,-3,3,"","#phi(l_^{-})"],
         "ll_eta_m":[30,-3,3,"","#eta(l_^{-})"],
-        "ll_iso_1":[20,0,1,"","relIso(l_{1})"],
-        "ll_iso_2":[20,0,1,"","relIso(l_{2})"],
+        "iso_1":[20,0,1,"","relIso(l_{1})"],
+        "iso_2":[20,0,1,"","relIso(l_{2})"],
 
-        "H_vis":[30,50,200,"[Gev]","m(#tau#tau)"],
-        "H_Pt":[40,0,200,"[GeV]","P_{T}(#tau#tau)"],
+        "m_vis":[30,50,200,"[Gev]","m(#tau#tau)"],
+        "pt_tt":[40,0,200,"[GeV]","P_{T}(#tau#tau)"],
         "H_DR":[60,0,6,"","#Delta R(#tau#tau)"],
         "H_tot":[30,0,200,"[GeV]","m_{T}tot(#tau#tau)"],
 
-        "TMass":[60,0,300,"[Gev]","m_{T}(#tau#tau)"],
-        "Mass":[60,0,300,"[Gev]","m(#tau#tau)(SV)"],
+        "mt_sv":[60,0,300,"[Gev]","m_{T}(#tau#tau)"],
+        "m_sv":[60,0,300,"[Gev]","m(#tau#tau)(SV)"],
         "AMass":[100,50,550,"[Gev]","m_{Z+H}(SV)"],
         #"CutFlowWeighted":[15,0.5,15.5,"","cutflow"],
         #"CutFlow":[15,0.5,15.5,"","cutflow"]
@@ -566,9 +580,9 @@ for group in groups :
 
 	    ww = 1.
             ##requirement on the Z-boson
-	    if cat[:2] == 'mm' and  (e.ll_iso_1 > 0.25 or e.ll_iso_2 > 0.25) : continue
+	    if cat[:2] == 'mm' and  (e.iso_1 > 0.25 or e.iso_2 > 0.25) : continue
 	    '''
-	    if cat[:2] == 'ee' and  (e.ll_iso_1 > 0.15 or e.ll_iso_2 > 0.15) : continue
+	    if cat[:2] == 'ee' and  (e.iso_1 > 0.15 or e.iso_2 > 0.15) : continue
 
 	    if cat[2:] == 'em' and  (e.iso_1 > 0.3 or e.iso_2 > 0.4) : continue
 	    if cat[2:] == 'mt' and  (e.iso_1 > 0.3) : continue
@@ -719,8 +733,8 @@ for group in groups :
                 if e.q_1*e.q_2 < 0. : continue
             else :
                 if e.q_1*e.q_2 > 0. : continue
-                if hGroup == 'data' and not unblind and e.H_vis > 80. and e.H_vis < 140. : continue                 
-                if hGroup == 'data' and not unblind and e.Mass > 80. and e.Mass < 140. : continue                 
+                if hGroup == 'data' and not unblind and e.m_vis > 80. and e.m_vis < 140. : continue                 
+                if hGroup == 'data' and not unblind and e.m_sv > 80. and e.m_sv < 140. : continue                 
             H_LT = e.pt_1 + e.pt_2
             if H_LT < args.LTcut : continue
             if group == 'data' :
@@ -733,18 +747,57 @@ for group in groups :
             iCut +=1
             WCounter[iCut-1][icat-1] += weight  
 
-            trigw_ = 1.#trigweight(e,cat)
+            trigw = 0.
+
+            if group != 'data' :
+	        eff_d_1, eff_d_2 = 0., 0.
+	        eff_mc_1, eff_mc_2 = 0., 0.
+
+	        if e.isTrig_1 != 0 and e.isTrig_2 == 0: 
+                    if cat[:2] == 'mm' :                 
+	                eff_d_1 =  sf_MuonTrig.get_EfficiencyData(e.pt_1,e.eta_1)
+	                eff_mc_1 =  sf_MuonTrig.get_EfficiencyMC(e.pt_1,e.eta_1)
+
+                    if cat[:2] == 'ee' :                 
+	                eff_d_1 =  sf_EleTrig.get_EfficiencyData(e.pt_1,e.eta_1)
+	                eff_mc_1 =  sf_EleTrig.get_EfficiencyMC(e.pt_1,e.eta_1)
+
+
+                
+	        if e.isTrig_1 != 0 and  e.isTrig_2 != 0: 
+                    if cat[:2] == 'mm' :                 
+	                eff_d_1 =  sf_MuonTrig.get_EfficiencyData(e.pt_1,e.eta_1)
+	                eff_mc_1 = sf_MuonTrig.get_EfficiencyMC(e.pt_1,e.eta_1)
+	                eff_d_2 =  sf_MuonTrig.get_EfficiencyData(e.pt_2,e.eta_2)
+	                eff_mc_2 = sf_MuonTrig.get_EfficiencyMC(e.pt_2,e.eta_2)
+
+                    if cat[:2] == 'ee' :                 
+	                eff_d_1 =  sf_EleTrig.get_EfficiencyData(e.pt_1,e.eta_1)
+	                eff_mc_1 =  sf_EleTrig.get_EfficiencyMC(e.pt_1,e.eta_1)
+	                eff_d_2 =  sf_EleTrig.get_EfficiencyData(e.pt_2,e.eta_2)
+	                eff_mc_2 =  sf_EleTrig.get_EfficiencyMC(e.pt_2,e.eta_2)
+
+
+                if  e.isTrig_2 == 0 :
+		    if eff_d_1 > 0.0001 and eff_mc_1 > 0.0001 : 
+	                trigw = float(eff_d_1/eff_mc_1)
+
+		else : 
+		    if eff_d_1 > 0.0001 and eff_mc_1 > 0.0001 and eff_d_2 > 0.0001 and eff_mc_2 > 0.0001: 
+		  
+	                trigw = float(1- (1-eff_d_1/eff_mc_1) * (1-eff_d_2/eff_mc_2))
+
             lepton_sf = 1.
 
 
 
-            #if e.is_trig == 1 :  
-            if 1 == 1 : 
+            #if e.isTrig == 1 :  
+            if trigw > 0 : 
                 for plotVar in plotSettings:
                     #print plotVar
                     val = getattr(e, plotVar, None)
 		    if val is not None: 
-                        hMC[hGroup][cat][plotVar].Fill(val,weight*trigw_)
+                        hMC[hGroup][cat][plotVar].Fill(val,weight *trigw *lepton_sf)
                         #print hGroup, cat, plotVar, val
                         #if val < hGroup][cat][plotVar].GetNbinsX() * hGroup][cat][plotVar].GetBinWidth(1) : hMC[hGroup][cat][plotVar].Fill(val,ww*trigw_)
                         #else : hMC[hGroup][cat][plotVar].Fill(val,ww*trigw_)

@@ -6,8 +6,6 @@ import tauFun
 import ROOT
 import os
 import sys
-sys.path.append('SFs')
-import ScaleFactor as SF
 import generalFunctions as GF
 
 class outTuple() :
@@ -26,12 +24,6 @@ class outTuple() :
                 ROOT.gInterpreter.ProcessLine(".L {0:s}.cc++".format(baseName))   
                 # .L is not just for .so files, also .cc
         
-        self.sf_MuonTrigIso27 = SF.SFs()
-        self.sf_MuonTrigIso27.ScaleFactor("SFs/LeptonEfficiencies/Muon/Run2017/Muon_IsoMu27.root")
-        self.sf_EleTrig35 = SF.SFs()
-        self.sf_EleTrig35.ScaleFactor("SFs/LeptonEfficiencies/Electron/Run2017/Electron_Ele35.root")
-        #self.SF_muonIdIso = SF.SFs()
-        #self.sf_SF_muonIdIso.ScaleFactor("SFs/LeptonEfficiencies/Muon/Run2017/Muon_IsoMu27.root")
 
         self.f = TFile( fileName, 'recreate' )
         self.t = TTree( 'Events', 'Output tree' )
@@ -150,6 +142,8 @@ class outTuple() :
         self.phi_2_tr  = array('f',[0])
         self.eta_2     = array('f',[0])
         self.eta_2_tr  = array('f',[0])
+        self.iso_1       = array('f',[0])
+        self.q_1       = array('f',[0])
         
         # MET variables
         self.met         = array('f',[0])
@@ -161,15 +155,9 @@ class outTuple() :
         self.metcov10    = array('f',[0])
         self.metcov11    = array('f',[0])
 
-        # trigger sf
-        self.trig_Lm_MC   = array('f',[0])
-        self.trig_Lm_Data = array('f',[0])
-        self.trig_Lp_MC   = array('f',[0])
-        self.trig_Lp_Data = array('f',[0])
-        self.trig_T1_MC   = array('f',[0])
-        self.trig_T1_Data = array('f',[0])
-        self.trig_T2_MC   = array('f',[0])
-        self.trig_T2_Data = array('f',[0])
+        # trigger info
+        self.isTrig_2   = array('f',[0])
+        self.isTrig_1   = array('f',[0])
 
 
         # jet variables
@@ -193,6 +181,8 @@ class outTuple() :
         self.jphi_2_tr = array('f',[0])
         self.jcsv_2    = array('f',[0])
         self.jcsvfv_2    = array('f',[0])
+        self.iso_2       = array('f',[0])
+        self.q_2       = array('f',[0])
 
         self.bpt_1     = array('f',[0])
         self.bpt_1_tr  = array('f',[0])
@@ -320,6 +310,11 @@ class outTuple() :
         self.t.Branch('phi_2_tr',    self.phi_2_tr,    'phi_2_tr/F')
         self.t.Branch('eta_2',       self.eta_2,       'eta_2/F')      
         self.t.Branch('eta_2_tr',    self.eta_2_tr,    'eta_2_tr/F')
+        self.t.Branch('iso_1',       self.iso_1,       'iso_1/F')
+        self.t.Branch('iso_2',       self.iso_2,       'iso_2/F')
+        self.t.Branch('q_1',       self.q_1,       'q_1/F')
+        self.t.Branch('q_2',       self.q_2,       'q_2/F')
+        
         
         # MET variables
         self.t.Branch('met', self.met, 'met/F')
@@ -332,14 +327,8 @@ class outTuple() :
         self.t.Branch('metcov11', self.metcov11, 'metcov11/F')
 
         # trigger sf
-        self.t.Branch('trig_Lm_MC',  self.trig_Lm_MC, 'trig_Lm_MC/F' )
-        self.t.Branch('trig_Lm_Data',  self.trig_Lm_Data, 'trig_Lm_Data/F' )
-        self.t.Branch('trig_Lp_MC',  self.trig_Lp_MC, 'trig_Lp_MC/F' )
-        self.t.Branch('trig_Lp_Data',  self.trig_Lp_Data, 'trig_Lp_Data/F' )
-        self.t.Branch('trig_T1_MC',  self.trig_T1_MC, 'trig_T1_MC/F' )
-        self.t.Branch('trig_T1_Data',  self.trig_T1_Data, 'trig_T1_Data/F' )
-        self.t.Branch('trig_T2_MC',  self.trig_T2_MC, 'trig_T2_MC/F' )
-        self.t.Branch('trig_T2_Data',  self.trig_T2_Data, 'trig_T2_Data/F' )
+        self.t.Branch('isTrig_2',  self.isTrig_2, 'isTrig_2/F' )
+        self.t.Branch('isTrig_1',  self.isTrig_1, 'isTrig_1/F' )
 
 
         # jet variables
@@ -492,10 +481,7 @@ class outTuple() :
             - LepP and LepM are TLorentz vectors for the positive and negative members of the dilepton pair
         '''
 
-        sf_Lp_MC, sf_Lp_Data = 0., 0.
-        sf_Lm_MC, sf_Lm_Data = 0., 0.
-        sf_T1_MC, sf_T1_Data = 0., 0.
-        sf_T2_MC, sf_T2_Data = 0., 0.
+        is_trig_1, is_trig_2 = 0., 0.
         TrigListLep = []
         TrigListTau = []
         hltListLep  = []
@@ -503,73 +489,27 @@ class outTuple() :
         #channel_ll = 'mm' or 'ee'
         channel_ll = cat[:-2]
 
-	#if chanl == 'mm' : TrigListLep, hltListLep = GF.findMuTrigger(lepList, entry, era)
 	TrigListLep, hltListLep  = GF.findLeptTrigger(lepList, entry, channel_ll, era)
 
 	TrigListLep = list(dict.fromkeys(TrigListLep))
-        #print 'TrigerList ===========>', TrigListLep, hltListLep, channel_ll
+
+
+        if len(TrigListLep) == 1 :
+
+	    if lepList[0] == TrigListLep[0] :
+	        is_trig_1 = 1.
+	    if lepList[1] == TrigListLep[0] :
+	        is_trig_1 = -1.
+
+
+        if len(TrigListLep) == 2 :
+            if 'DoubleLept' in hltListLep :
+	        is_trig_1 = 1.
+	        is_trig_2 = 1.
+
+
+        #if len(TrigListLep) == 1 : print 'TrigerList ===========>', TrigListLep, lepList, hltListLep, channel_ll, is_trig_1, is_trig_2, LepP.Pt(), LepM.Pt()
         
-        leadLPt = 0.
-        subleadLPt = 0.
-        leadEta = -100.
-        subleadEta = -100.
-        isPLead = True
-
-	if LepP.Pt() > LepM.Pt() : 
-            leadLPt = LepP.Pt()
-            leadEta = LepP.Eta()
-            subleadLPt = LepM.Pt()
-            subleadEta = LepM.Eta()
-        else : 
-            leadLPt = LepM.Pt()
-            leadEta = LepM.Eta()
-            subleadLPt = LepP.Pt()
-            subleadEta = LepP.Eta()
-            isPLead = False
-        
-        '''
-        #we have to implement the different .root files depending on the different triggers
-        if isMC :
-
-		if len(TrigListLep) == 1 :
-
-		    if lepList[0] == TrigListLep[0] :
-			if channel_ll == 'ee' : 
-			    sf_Lp_MC = self.sf_EleTrig35.get_EfficiencyMC(LepP.Pt(),LepP.Eta())
-			    sf_Lp_Data = self.sf_EleTrig35.get_EfficiencyData(LepP.Pt(),LepP.Eta())
-			if channel_ll == 'mm' : 
-			    sf_Lp_MC = self.sf_MuonTrigIso27.get_EfficiencyMC(LepP.Pt(),LepP.Eta())
-			    sf_Lp_Data = self.sf_MuonTrigIso27.get_EfficiencyData(LepP.Pt(),LepP.Eta())
-
-		    if lepList[1] == TrigListLep[0] :
-			if channel_ll == 'ee' : 
-			    sf_Lm_MC = self.sf_EleTrig35.get_EfficiencyMC(LepM.Pt(),LepM.Eta())
-			    sf_Lm_Data = self.sf_EleTrig35.get_EfficiencyData(LepM.Pt(),LepM.Eta())
-			if channel_ll == 'mm' : 
-			    sf_Lm_MC = self.sf_MuonTrigIso27.get_EfficiencyMC(LepM.Pt(),LepM.Eta())
-			    sf_Lm_Data = self.sf_MuonTrigIso27.get_EfficiencyData(LepM.Pt(),LepM.Eta())
-
-
-		if len(TrigListLep) == 2 :
-
-                    
-		    if 'ee' in channel_ll : 
-                        if leadPt > 28. and subleadPt > 28. :
-                            if 'DoubleLep' in hltListLep :
-                                sf_Lp_MC = self.sf_EleTrig35.get_EfficiencyMC(LepP.Pt(),LepP.Eta())
-			        sf_Lp_Data = self.sf_EleTrig35.get_EfficiencyData(LepP.Pt(),LepP.Eta())
-			        sf_Lm_MC = self.sf_EleTrig35.get_EfficiencyMC(LepM.Pt(),LepM.Eta())
-			        sf_Lm_Data = self.sf_EleTrig35.get_EfficiencyData(LepM.Pt(),LepM.Eta())
-
-
-		    if 'mm' in channel_ll : 
-			sf_Lp_MC = self.sf_MuonTrigIso27.get_EfficiencyMC(LepP.Pt(),LepP.Eta())
-			sf_Lp_Data = self.sf_MuonTrigIso27.get_EfficiencyData(LepP.Pt(),LepP.Eta())
-			sf_Lm_MC = self.sf_MuonTrigIso27.get_EfficiencyMC(LepM.Pt(),LepM.Eta())
-			sf_Lm_Data = self.sf_MuonTrigIso27.get_EfficiencyData(LepM.Pt(),LepM.Eta())
-
-                        print '==========!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! TrigList',TrigListLep,'lepList',lepList,channel_ll,sf_Lp_MC, 'and Pt ?',LepP.Pt(), 'sf',sf_Lp_MC,'Pt m',LepM.Pt(),'sf',sf_Lm_MC
-         '''
 
         # channel = 'mt', 'et', 'tt', or 'em'
         channel = cat[-2:]
@@ -580,6 +520,11 @@ class outTuple() :
         self.lumi[0] = entry.luminosityBlock 
         self.evt[0]  = entry.event
         self.cat[0]  = tauFun.catToNumber(cat)
+        self.iso_1[0]  = -99
+        self.iso_2[0]  = -99
+        self.q_1[0]  = -99
+        self.q_2[0]  = -99
+
         
         try :
             self.weight[0]           = entry.genWeight
@@ -813,18 +758,19 @@ class outTuple() :
 
     
             # genMatch the hadronic tau candidate
-            idx_t1_gen = GF.genMatchTau(entry, jt1, 'had')
-            if idx_t1_gen >= 0:
-                self.pt_3_tr[0]  = entry.GenVisTau_pt[idx_t1_gen]
-                self.phi_3_tr[0] = entry.GenVisTau_phi[idx_t1_gen]
-                self.eta_3_tr[0] = entry.GenVisTau_eta[idx_t1_gen]
-            else:
-                self.pt_3_tr[0]  = 1.2*entry.Tau_pt[jt1]
-                self.phi_3_tr[0] = 1.2*entry.Tau_phi[jt1]
-                self.eta_3_tr[0] = 1.2*entry.Tau_eta[jt1]
+            if isMC:
+		idx_t1_gen = GF.genMatchTau(entry, jt1, 'had')
+		if idx_t1_gen >= 0:
+		    self.pt_3_tr[0]  = entry.GenVisTau_pt[idx_t1_gen]
+		    self.phi_3_tr[0] = entry.GenVisTau_phi[idx_t1_gen]
+		    self.eta_3_tr[0] = entry.GenVisTau_eta[idx_t1_gen]
+		else:
+		    self.pt_3_tr[0]  = 1.2*entry.Tau_pt[jt1]
+		    self.phi_3_tr[0] = 1.2*entry.Tau_phi[jt1]
+		    self.eta_3_tr[0] = 1.2*entry.Tau_eta[jt1]
 
-            try : self.gen_match_3[0] = ord(entry.Tau_genPartFlav[jt1])
-            except AttributeError : self.gen_match_3[0] = -1
+		try : self.gen_match_3[0] = ord(entry.Tau_genPartFlav[jt1])
+		except AttributeError : self.gen_match_3[0] = -1
 
             try : self.decayMode_3[0] = int(entry.Tau_decayMode[jt1])
             except AttributeError : self.decayMode_3[0] = -1
@@ -868,18 +814,19 @@ class outTuple() :
 
 
             # genMatch the hadronic tau candidate
-            idx_t2_gen = GF.genMatchTau(entry, jt2, 'had')
-            if idx_t2_gen >= 0:
-                self.pt_4_tr[0]  = entry.GenVisTau_pt[idx_t2_gen]
-                self.phi_4_tr[0] = entry.GenVisTau_phi[idx_t2_gen]
-                self.eta_4_tr[0] = entry.GenVisTau_eta[idx_t2_gen]
-            else:
-                self.pt_4_tr[0]  = 1.2*entry.Tau_pt[jt2]
-                self.phi_4_tr[0] = 1.2*entry.Tau_phi[jt2]
-                self.eta_4_tr[0] = 1.2*entry.Tau_eta[jt2]
+            if isMC:
+		idx_t2_gen = GF.genMatchTau(entry, jt2, 'had')
+		if idx_t2_gen >= 0:
+		    self.pt_4_tr[0]  = entry.GenVisTau_pt[idx_t2_gen]
+		    self.phi_4_tr[0] = entry.GenVisTau_phi[idx_t2_gen]
+		    self.eta_4_tr[0] = entry.GenVisTau_eta[idx_t2_gen]
+		else:
+		    self.pt_4_tr[0]  = 1.2*entry.Tau_pt[jt2]
+		    self.phi_4_tr[0] = 1.2*entry.Tau_phi[jt2]
+		    self.eta_4_tr[0] = 1.2*entry.Tau_eta[jt2]
 
-	    try : self.gen_match_4[0] = ord(entry.Tau_genPartFlav[jt2])
-	    except AttributeError: self.gen_match_4[0] = -1
+		try : self.gen_match_4[0] = ord(entry.Tau_genPartFlav[jt2])
+		except AttributeError: self.gen_match_4[0] = -1
 
             try : self.decayMode_4[0] = int(entry.Tau_decayMode[jt2])
             except AttributeError: self.decayMode_4[0] = -1
@@ -911,17 +858,43 @@ class outTuple() :
             Lep1 = LepM
             Lep2 = LepP
 
+
         # di-lepton variables.   _p and _m refer to plus and minus charge
         self.AMass[0]       = (Lep1 + Lep2 + tau1 + tau2).M() 
         self.mll[0]       = (Lep1 + Lep2).M()
         self.Z_DR[0]       = self.getDR(entry,Lep1,Lep2)
-            
+           
         self.pt_1[0]   = Lep1.Pt()
         self.phi_1[0]  = Lep1.Phi()
         self.eta_1[0]  = Lep1.Eta()
         self.pt_2[0]   = Lep2.Pt()
         self.phi_2[0]  = Lep2.Phi()
         self.eta_2[0]  = Lep2.Eta()
+
+	#relIso 
+	if channel_ll == 'ee' : 
+	   if (LepP.Pt() > LepM.Pt()):
+                self.iso_1[0]  = entry.Electron_pfRelIso03_all[lepList[0]]
+                self.iso_2[0]  = entry.Electron_pfRelIso03_all[lepList[1]]
+                self.q_1[0]  = entry.Electron_charge[lepList[0]]
+                self.q_2[0]  = entry.Electron_charge[lepList[1]]
+	   else : 
+                self.iso_1[0]  = entry.Electron_pfRelIso03_all[lepList[1]]
+                self.iso_2[0]  = entry.Electron_pfRelIso03_all[lepList[0]]
+                self.q_1[0]  = entry.Electron_charge[lepList[1]]
+                self.q_2[0]  = entry.Electron_charge[lepList[0]]
+
+	if channel_ll == 'mm' : 
+	   if (LepP.Pt() > LepM.Pt()):
+                self.iso_1[0]  = entry.Muon_pfRelIso04_all[lepList[0]]
+                self.iso_2[0]  = entry.Muon_pfRelIso04_all[lepList[1]]
+                self.q_1[0]  = entry.Muon_charge[lepList[0]]
+                self.q_2[0]  = entry.Muon_charge[lepList[1]]
+	   else : 
+                self.iso_1[0]  = entry.Muon_pfRelIso04_all[lepList[1]]
+                self.iso_2[0]  = entry.Muon_pfRelIso04_all[lepList[0]]
+                self.q_1[0]  = entry.Muon_charge[lepList[1]]
+                self.q_2[0]  = entry.Muon_charge[lepList[0]]
         
         # genMatch the di-lepton variables
         idx_Lep1, idx_Lep2 = -1, -1
@@ -961,20 +934,10 @@ class outTuple() :
         self.metcov10[0] = entry.MET_covXY	
         self.metcov11[0] = entry.MET_covYY
 
-        # trigger sf
-        self.trig_Lp_MC[0]   = sf_Lp_MC
-        self.trig_Lp_Data[0] = sf_Lp_Data
-        self.trig_Lm_MC[0]   = sf_Lm_MC
-        self.trig_Lm_Data[0] = sf_Lm_Data
-        self.trig_T1_MC[0]   = sf_T1_MC
-        self.trig_T1_Data[0] = sf_T1_Data
-        self.trig_T2_MC[0]   = sf_T2_MC
-        self.trig_T2_Data[0] = sf_T2_Data
 
-        if sf_Lp_MC != 0. or sf_Lm_MC != 0. or sf_T1_MC != 0. or sf_T2_MC != 0. :   self.is_trig[0] = 1 # either Z or H or both
-        if sf_Lp_MC == 0. and sf_Lm_MC == 0. and (sf_T1_MC != 0. or sf_T2_MC != 0.) :   self.is_trigH[0] = 1 # H fired the trigger
-        if (sf_Lp_MC != 0. or sf_Lm_MC != 0.) and (sf_T1_MC == 0. and sf_T2_MC == 0.) :   self.is_trigZ[0] = 1 # Z fired the trigger
-        if (sf_Lp_MC != 0. or sf_Lm_MC != 0.) and (sf_T1_MC != 0. or sf_T2_MC != 0.) :   self.is_trigZH[0] = 1 # either Z or H or both fired it
+        # trig
+	self.isTrig_1[0]   = is_trig_1
+        self.isTrig_2[0]   = is_trig_2
 
         # jet variables
         nJet30, jetList, bJetList, bJetListFlav = self.getJets(entry,tau1,tau2,era) 
@@ -992,13 +955,14 @@ class outTuple() :
             self.jcsvfv_1[0] = entry.Jet_btagDeepFlavB[jj1]
             
             # genMatch jet1
-            idx_genJet = entry.Jet_genJetIdx[jj1]
-            if idx_genJet >= 0:
-                try :
-                    self.jpt_1_tr[0]  = entry.GenJet_pt[idx_genJet]
-                    self.jeta_1_tr[0] = entry.GenJet_eta[idx_genJet]
-                    self.jphi_1_tr[0] = entry.GenJet_phi[idx_genJet]
-                except IndexError : pass
+            if isMC:
+		idx_genJet = entry.Jet_genJetIdx[jj1]
+		if idx_genJet >= 0:
+		    try :
+			self.jpt_1_tr[0]  = entry.GenJet_pt[idx_genJet]
+			self.jeta_1_tr[0] = entry.GenJet_eta[idx_genJet]
+			self.jphi_1_tr[0] = entry.GenJet_phi[idx_genJet]
+		    except IndexError : pass
                 
         self.jpt_2[0], self.jeta_2[0], self.jphi_2[0], self.jcsv_2[0],self.jcsvfv_2[0] = -9.99, -9.99, -9.99, -9.99, -9.99
         if len(jetList) > 1 :
@@ -1010,13 +974,14 @@ class outTuple() :
             self.jcsvfv_2[0] = entry.Jet_btagDeepFlavB[jj2]
             
             # genMatch jet2
-            idx_genJet = entry.Jet_genJetIdx[jj2]
-            if idx_genJet >= 0:
-	        try: 
-                   self.jpt_2_tr[0]  = entry.GenJet_pt[idx_genJet]
-                   self.jeta_2_tr[0] = entry.GenJet_eta[idx_genJet]
-                   self.jphi_2_tr[0] = entry.GenJet_phi[idx_genJet]
-                except IndexError : pass 
+            if isMC:
+		idx_genJet = entry.Jet_genJetIdx[jj2]
+		if idx_genJet >= 0:
+		    try: 
+		       self.jpt_2_tr[0]  = entry.GenJet_pt[idx_genJet]
+		       self.jeta_2_tr[0] = entry.GenJet_eta[idx_genJet]
+		       self.jphi_2_tr[0] = entry.GenJet_phi[idx_genJet]
+		    except IndexError : pass 
 
         self.bpt_1[0], self.beta_1[0], self.bphi_1[0], self.bcsv_1[0], self.bcsvfv_1[0] = -9.99, -9.99, -9.99, -9.99, -9.99
         if len(bJetList) > 0 :
@@ -1044,14 +1009,14 @@ class outTuple() :
             self.bcsvfv_2[0] = entry.Jet_btagDeepFlavB[jbj2]
 
             # genMatch bjet1
-            idx_genJet = entry.Jet_genJetIdx[jbj2]
-            if idx_genJet >= 0:
-                try :
-                    self.bpt_2_tr[0]  = entry.GenJet_pt[idx_genJet]
-                    self.beta_2_tr[0] = entry.GenJet_eta[idx_genJet]
-                    self.bphi_2_tr[0] = entry.GenJet_phi[idx_genJet]
-                except IndexError : pass
-
+            if isMC:
+		idx_genJet = entry.Jet_genJetIdx[jbj2]
+		if idx_genJet >= 0:
+		    try :
+			self.bpt_2_tr[0]  = entry.GenJet_pt[idx_genJet]
+			self.beta_2_tr[0] = entry.GenJet_eta[idx_genJet]
+			self.bphi_2_tr[0] = entry.GenJet_phi[idx_genJet]
+		    except IndexError : pass
         self.t.Fill()
         #self.weight[0] = 1.
         return
