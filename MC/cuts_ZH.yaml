@@ -94,3 +94,5 @@ ee:
   ele_lostHits: 1
   ele_convVeto: true
   ele_ID: true 
+  ele_iso_f : true
+  ele_iso : 0.2
