@@ -42,6 +42,11 @@ class outTuple() :
         self.LHEweight        = array('f',[0])
         self.Generator_weight = array('f',[0])
         self.LHE_Njets        = array('l',[0])
+
+        self.d0_1        = array('f',[0])
+        self.dZ_1        = array('f',[0])
+        self.d0_2        = array('f',[0])
+        self.dZ_2        = array('f',[0])
         
         self.pt_3        = array('f',[0])
         self.pt_3_tr     = array('f',[0])
@@ -65,6 +70,8 @@ class outTuple() :
         self.isTracker_3       = array('f',[0])
         self.ip3d_3       = array('f',[0])
         self.inTimeMuon_3       = array('f',[0])
+        self.indx_3       = array('l',[0])
+        self.indx_4       = array('l',[0])
 
         self.idDecayModeNewDMs_3 = array('f',[0])
         self.idDeepTau2017v2p1VSe_3 = array('f',[0])
@@ -237,6 +244,8 @@ class outTuple() :
         self.t.Branch('isTracker_3', self.isTracker_3, 'isTracker_3/F')
         self.t.Branch('ip3d_3', self.ip3d_3, 'ip3d_3/F')
         self.t.Branch('inTimeMuon_3', self.inTimeMuon_3, 'inTimeMuon_3/F')
+        self.t.Branch('indx_3', self.indx_3, 'indx_3/I')
+        self.t.Branch('indx_4', self.indx_4, 'indx_4/I')
 
 
         self.t.Branch('idDecayModeNewDMs_3', self.idDecayModeNewDMs_3, 'idDecayModeNewDMs_3/F')
@@ -315,6 +324,10 @@ class outTuple() :
         self.t.Branch('iso_2',       self.iso_2,       'iso_2/F')
         self.t.Branch('q_1',       self.q_1,       'q_1/F')
         self.t.Branch('q_2',       self.q_2,       'q_2/F')
+        self.t.Branch('d0_1',        self.d0_1,        'd0_1/F')
+        self.t.Branch('dZ_1',        self.dZ_1,        'dZ_1/F')
+        self.t.Branch('d0_2',        self.d0_2,        'd0_2/F')
+        self.t.Branch('dZ_2',        self.dZ_2,        'dZ_2/F')
         
         
         # MET variables
@@ -572,6 +585,9 @@ class outTuple() :
 
         tauMass = 1.7768 
         tau1, tau2 = TLorentzVector(), TLorentzVector()
+	indx_3[0] = jt1
+	indx_4[0] = jt2
+
 
         # Fill variables for Leg3, where 3->tau(ele) and 4->tau(had)
         if channel == 'et' :
@@ -882,11 +898,16 @@ class outTuple() :
                 self.iso_2[0]  = entry.Electron_pfRelIso03_all[lepList[1]]
                 self.q_1[0]  = entry.Electron_charge[lepList[0]]
                 self.q_2[0]  = entry.Electron_charge[lepList[1]]
+                self.d0_1[0]   = entry.Electron_dxy[lepList[0]]
+                self.dZ_2[0]   = entry.Electron_dz[lepList[1]]
+
 	   else : 
                 self.iso_1[0]  = entry.Electron_pfRelIso03_all[lepList[1]]
                 self.iso_2[0]  = entry.Electron_pfRelIso03_all[lepList[0]]
                 self.q_1[0]  = entry.Electron_charge[lepList[1]]
                 self.q_2[0]  = entry.Electron_charge[lepList[0]]
+                self.d0_1[0]   = entry.Electron_dxy[lepList[1]]
+                self.dZ_2[0]   = entry.Electron_dz[lepList[0]]
 
 	if channel_ll == 'mm' : 
 	   if (LepP.Pt() > LepM.Pt()):
@@ -894,11 +915,15 @@ class outTuple() :
                 self.iso_2[0]  = entry.Muon_pfRelIso04_all[lepList[1]]
                 self.q_1[0]  = entry.Muon_charge[lepList[0]]
                 self.q_2[0]  = entry.Muon_charge[lepList[1]]
+                self.d0_1[0]   = entry.Muon_dxy[lepList[0]]
+                self.dZ_2[0]   = entry.Muon_dz[lepList[1]]
 	   else : 
                 self.iso_1[0]  = entry.Muon_pfRelIso04_all[lepList[1]]
                 self.iso_2[0]  = entry.Muon_pfRelIso04_all[lepList[0]]
                 self.q_1[0]  = entry.Muon_charge[lepList[1]]
                 self.q_2[0]  = entry.Muon_charge[lepList[0]]
+                self.d0_1[0]   = entry.Muon_dxy[lepList[1]]
+                self.dZ_2[0]   = entry.Muon_dz[lepList[2]]
         
         # genMatch the di-lepton variables
 	if isMC :

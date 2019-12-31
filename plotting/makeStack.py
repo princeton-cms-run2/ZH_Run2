@@ -61,7 +61,7 @@ def convertToDNDM( histo) :
 
 
 
-groups = ['data','Rare','ZZ4L','Reducible','Top','Signal']
+groups = ['data','Rare','ZZ4L','Reducible','Top','DY','Signal']
 
 plotSettings = { # [nBins,xMin,xMax,units]
 
@@ -80,6 +80,21 @@ plotSettings = { # [nBins,xMin,xMax,units]
         "dz_2":[10,0,0.2,"[cm]","d_{z}(l_{2})"],
         "d0_2":[10,0,0.2,"[cm]","d_{xy}(l_{2})"],
         "q_2":[10,-5,5,"","charge(l_{2})"],
+
+	"iso_3":[20,0,1,"","relIso(l_{3})"],
+        "pt_3":[40,0,200,"[Gev]","P_{T}(l_{3})"],
+        "eta_3":[60,-3,3,"","#eta(l_{3})"],
+        "phi_3":[60,-3,3,"","#phi(l_{3})"],
+        "dz_3":[10,0,0.2,"[cm]","d_{z}(l_{3})"],
+        "d0_3":[10,0,0.2,"[cm]","d_{xy}(l_{3})"],
+
+        "iso_4":[20,0,1,"","relIso(l_{4})"],
+        "pt_4":[40,0,200,"[Gev]","P_{T}(l_{4})"],
+        "eta_4":[60,-3,3,"","#eta(l_{4})"],
+        "phi_4":[60,-3,3,"","#phi(l_{4})"],
+        "dz_4":[10,0,0.2,"[cm]","d_{z}(l_{4})"],
+        "d0_4":[10,0,0.2,"[cm]","d_{xy}(l_{4})"],
+
 
         "njets":[10,-0.5,9.5,"","nJets"],
         #"Jet_pt":[100,0,500,"[GeV]","Jet P_{T}"], 
@@ -108,21 +123,24 @@ plotSettings = { # [nBins,xMin,xMax,units]
         #"mt_tot":[100,0,1000,"[GeV]"], # sqrt(mt1^2 + mt2^2)
         #"mt_sum":[100,0,1000,"[GeV]"], # mt1 + mt2
 
-        "m_vis":[40,50,130,"[Gev]","m(l^{+}l^{-})"],
-        "ll_pt_p":[60,0,300,"[GeV]","P_{T}l^{-}"],
-        "ll_phi_p":[60,-3,3,"","#phi(l_^{-})"],
-        "ll_eta_p":[60,-3,3,"","#eta(l_^{-})"],
-        "ll_pt_m":[60,0,300,"[GeV]","P_{T}l^{-}"],
-        "ll_phi_m":[60,-3,3,"","#phi(l_^{-})"],
-        "ll_eta_m":[60,-3,3,"","#eta(l_^{-})"],
+        "mll":[40,50,130,"[Gev]","m(l^{+}l^{-})"],
+        "pt_1":[60,0,300,"[GeV]","P_{T}l^{-}"],
+        "phi_1":[60,-3,3,"","#phi(l_^{-})"],
+        "eta_1":[60,-3,3,"","#eta(l_^{-})"],
+        "pt_2":[60,0,300,"[GeV]","P_{T}l^{-}"],
+        "phi_2":[60,-3,3,"","#phi(l_^{-})"],
+        "eta_2":[60,-3,3,"","#eta(l_^{-})"],
 
-        "H_vis":[30,50,200,"[Gev]","m(#tau#tau)"],
-        "H_Pt":[40,0,200,"[GeV]","P_{T}(#tau#tau)"],
+        "m_vis":[30,50,200,"[Gev]","m(#tau#tau)"],
+        "pt_tt":[40,0,200,"[GeV]","P_{T}(#tau#tau)"],
         "H_DR":[60,0,6,"","#Delta R(#tau#tau)"],
         "H_tot":[30,0,200,"[GeV]","m_{T}tot(#tau#tau)"],
 
-        "TMass":[60,0,300,"[Gev]","m_{T}(#tau#tau)"],
-        "Mass":[60,0,300,"[Gev]","m(#tau#tau)(SV)"],
+        "mt_sv":[60,0,300,"[Gev]","m_{T}(#tau#tau)"],
+        "m_sv":[60,0,300,"[Gev]","m(#tau#tau)(SV)"],
+        "m_sv_new":[60,0,300,"[Gev]","m(#tau#tau)(newSV)"],
+        "mt_sv":[60,0,300,"[Gev]","m_{T}(#tau#tau)(SV)"],
+        #"mt_sv_new":[60,0,300,"[Gev]","m_{T}(#tau#tau)(newSV)"],
         "AMass":[100,50,550,"[Gev]","m_{Z+H}(SV)"],
         #"CutFlowWeighted":[15,0.5,15.5,"","cutflow"],
         #"CutFlow":[15,0.5,15.5,"","cutflow"]
@@ -135,7 +153,7 @@ plotSettings = { # [nBins,xMin,xMax,units]
 def makeDiTauStack(outDir,inFile,rootDi,dndm = False, doRatio = False, year=2020, sign='OS', LTcut=0., cat='mmtt') :
     
     if args.unBlind.lower() == 'true' or args.unBlind.lower() == 'yes' : doRatio = True
-    doRatio = False
+    #doRatio = False
 
     tdrstyle.setTDRStyle()
     writeExtraText = True       # if extra text
@@ -222,12 +240,16 @@ def makeDiTauStack(outDir,inFile,rootDi,dndm = False, doRatio = False, year=2020
 
 
     histo = {}
+    hsumall ={}
     kTop = TColor.GetColor("#ffcc66")
-    colors = {'data':0,'Reducible':kMagenta-10,'Rare':kBlue-8,'ZZ4L':kAzure-9,'Top':kTop,'Signal':kRed}
+    kDY = TColor.GetColor("#58d885")
+    colors = {'data':0,'Reducible':kMagenta-10,'Rare':kBlue-8,'ZZ4L':kAzure-9,'Top':kTop,'DY':kDY,'Signal':kRed}
     for plotVar in plotSettings :
         histo[plotVar] ={}
+        hsumall[plotVar] ={}
         hsum ={}
         hs = THStack("hs","")
+        hsall = THStack("hsall","")
         f.cd()
         for group in groups :
             units = plotSettings[plotVar][3]
@@ -254,7 +276,6 @@ def makeDiTauStack(outDir,inFile,rootDi,dndm = False, doRatio = False, year=2020
         
             if group != 'data' and group != 'Signal' : hs.Add(histo[plotVar][group]) 
             #if '_met' in plotVar : print '============', group, histo[plotVar][group].GetSumOfWeights()
-
         hMax = 75e+03+hs.GetMaximum()
 	if not setLog : hMax = 300+hs.GetMaximum()
 	hs.SetMinimum(0.)
@@ -292,8 +313,8 @@ def makeDiTauStack(outDir,inFile,rootDi,dndm = False, doRatio = False, year=2020
 
 	hsum.Draw("hist")
 	hs.Draw("hist same")
-	#if doRatio : 
-	histo[plotVar]['data'].Draw("same ep hist")
+	if doRatio : 
+	    histo[plotVar]['data'].Draw("same ep hist")
 	histo[plotVar]['Signal'].Draw("same e1 hist")
 
 	if doRatio :
@@ -301,6 +322,7 @@ def makeDiTauStack(outDir,inFile,rootDi,dndm = False, doRatio = False, year=2020
 	    mc = histo[plotVar]['Rare']
 	    mc.Add(histo[plotVar]['Reducible'])
 	    mc.Add(histo[plotVar]['Top'])
+	    mc.Add(histo[plotVar]['DY'])
 	    mc.Add(histo[plotVar]['ZZ4L'])
 	    xmin = mc.GetXaxis().GetXmin()
 	    xmax = mc.GetXaxis().GetXmax()
@@ -336,6 +358,8 @@ def makeDiTauStack(outDir,inFile,rootDi,dndm = False, doRatio = False, year=2020
 	lg.Clear()
 	for group in groups :
 	    try :
+		if group == 'data' : print group, histo[plotVar][group].GetSumOfWeights()
+
 		if group == 'data' : lg.AddEntry(histo[plotVar][group],group,"ple")
 		elif group == 'Signal' : lg.AddEntry(histo[plotVar][group],"ZH#rightarrow#tau#tau","pl")
 		else : lg.AddEntry(histo[plotVar][group],group,"f")

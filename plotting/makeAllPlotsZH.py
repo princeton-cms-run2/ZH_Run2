@@ -2,18 +2,21 @@
 # read MC file root files and histogram by group 
 #
 
-from ROOT import TFile, TTree, TH1D, TCanvas, TLorentzVector, TLegend, TAxis, THStack, TGraphAsymmErrors
 import tdrstyle
-from ROOT import gSystem, gStyle, gROOT, kTRUE
+import ROOT
+from ROOT import gSystem, gStyle, gROOT, kTRUE, TMatrixD
+from ROOT import TFile, TTree, TH1D, TCanvas, TLorentzVector, TLegend, TAxis, THStack, TGraphAsymmErrors, vector, gInterpreter
 gROOT.SetBatch(True) # don't pop up any plots
 gStyle.SetOptStat(0) # don't show any stats
-from math import sqrt
+from math import sqrt, sin, cos, pi
 import os
 import os.path
 import sys
 sys.path.append('SFs')
 import ScaleFactor as SF
-
+sys.path.append('../TauPOG')
+from TauPOG.TauIDSFs.TauIDSFTool import TauIDSFTool
+from TauPOG.TauIDSFs.TauIDSFTool import TauESTool
 
 def catToNumber(cat) :
     number = { 'eeet':1, 'eemt':2, 'eett':3, 'eeem':4, 'mmet':5, 'mmmt':6, 'mmtt':7, 'mmem':8, 'et':9, 'mt':10, 'tt':11 }
@@ -39,6 +42,47 @@ def LeptonID(cat, year):
     #MuonID_Files
 
 
+def runSVFit(entry, channel) :
+		  
+    measuredMETx = entry.met*cos(entry.metphi)
+    measuredMETy = entry.met*sin(entry.metphi)
+
+    #define MET covariance
+    covMET = TMatrixD(2,2)
+    covMET[0][0] = entry.metcov00
+    covMET[1][0] = entry.metcov10
+    covMET[0][1] = entry.metcov01
+    covMET[1][1] = entry.metcov11
+
+    #self.kUndefinedDecayType, self.kTauToHadDecay,  self.kTauToElecDecay, self.kTauToMuDecay = 0, 1, 2, 3
+
+    if channel == 'et' :
+	measTau1 = ROOT.MeasuredTauLepton(kTauToElecDecay, entry.pt_3, entry.eta_3, entry.phi_3, 0.000511) 
+    elif channel == 'mt' :
+	measTau1 = ROOT.MeasuredTauLepton(kTauToMuDecay, entry.pt_3, entry.eta_3, entry.phi_3, 0.106) 
+    elif channel == 'tt' :
+	measTau1 = ROOT.MeasuredTauLepton(kTauToHadDecay, entry.pt_3, entry.eta_3, entry.phi_3, entry.m_3)
+		    
+    if channel != 'em' :
+	measTau2 = ROOT.MeasuredTauLepton(kTauToHadDecay, entry.pt_4, entry.eta_4, entry.phi_4, entry.m_4)
+
+    if channel == 'em' :
+	measTau1 = ROOT.MeasuredTauLepton(kTauToElecDecay,  entry.pt_3, entry.eta_3, entry.phi_3, 0.000511)
+	measTau2 = ROOT.MeasuredTauLepton(kTauToMuDecay, entry.pt_4, entry.eta_4, entry.phi_4, 0.106)
+
+    VectorOfTaus = ROOT.std.vector('MeasuredTauLepton')
+    instance = VectorOfTaus()
+    instance.push_back(measTau1)
+    instance.push_back(measTau2)
+
+    FMTT = ROOT.FastMTT()
+    FMTT.run(instance, measuredMETx, measuredMETy, covMET)
+    ttP4 = FMTT.getBestP4()
+    return ttP4.M(), ttP4.Mt() 
+
+
+
+
 
 
 def getArgs() :
@@ -51,7 +95,7 @@ def getArgs() :
     parser.add_argument("-l","--LTcut",default=0.,type=float,help="H_LTcut")
     parser.add_argument("-s","--sign",default='OS',help="Opposite or same sign (OS or SS).")
     parser.add_argument("-a","--analysis",default='ZH',help="Select ZH or AZH")
-    parser.add_argument("--MConly",action='store_true',help="MC only") 
+    parser.add_argument("--MConly",action='store_true',help="no data driven bkg") 
     parser.add_argument("--looseCuts",action='store_true',help="Loose cuts")
     parser.add_argument("-u", "--unBlind",default='no',help="Unblind signal region for OS")
     
@@ -189,39 +233,84 @@ unblind=False
 if args.unBlind.lower() == 'true' or args.unBlind.lower == 'yes' : unblind = True
 
 #groups = ['Signal','Reducible','Rare','ZZ4L','data']
-groups = ['Signal','ZZ4L','Reducible','Rare','Top','data']
+groups = ['Signal','ZZ4L','Reducible','Rare','Top','DY','data']
 
 Pblumi = 1000.
 tauID_w = 1.
 
 
+# Tau Decay types
+kUndefinedDecayType, kTauToHadDecay,  kTauToElecDecay, kTauToMuDecay = 0, 1, 2, 3   
+
+gInterpreter.ProcessLine(".include .")
+for baseName in ['../SVFit/MeasuredTauLepton','../SVFit/svFitAuxFunctions','../SVFit/FastMTT'] : 
+    if os.path.isfile("{0:s}_cc.so".format(baseName)) :
+	gInterpreter.ProcessLine(".L {0:s}_cc.so".format(baseName))
+    else :
+	gInterpreter.ProcessLine(".L {0:s}.cc++".format(baseName))   
+	# .L is not just for .so files, also .cc
+
+
+print 'compiled it====================================================================='
+
 weights= {''}
-weights_muTotauFR={''}
-weights_elTotauFR={''}
+weights_muToTauFR={''}
+weights_elToTauFR={''}
+weights_mujToTauFR={''}
+weights_eljToTauFR={''}
+weights_muTotauES={''}
+weights_elTotauES={''}
 
 
+campaign = {2016:'2016Legacy', 2017:'2017ReReco', 2018:'2018ReReco'}
 
 
 
 if era == '2016' : 
     weights = {'lumi':35.92, 'tauID_w' :0.87, 'tauES_DM0' : -0.6, 'tauES_DM1' : -0.5,'tauES_DM10' : 0.0, 'mutauES_DM0' : -0.2, 'mutauES_DM1' : 1.5, 'eltauES_DM0' : 0.0, 'eltauES_DM1' : 9.5}
-    weights_muTotauFR = {'lmuFR_lt0p4' : 1.22, 'lmuFR_0p4to0p8' : 1.12, 'lmuFR_0p8to1p2' : 1.26, 'lmuFR_1p2to1p7' : 1.22, 'lmuFR_1p7to2p3' : 2.39 , 'tmuFR_lt0p4' : 1.47, 'tmuFR_0p4to0p8' : 1.55, 'tmuFR_0p8to1p2' : 1.33, 'tmuFR_1p2to1p7' : 1.72, 'tmuFR_1p7to2p3' : 2.50 }
-    weights_elTotauFR = {'lelFR_lt1p46' : 1.21, 'lelFR_gt1p559' : 1.38, 'telFR_lt1p46' : 1.40, 'telFR_gt1p559' : 1.90}
+
+    weights_mujToTauFR = {'DM1' : 0.85, 'lt0p4' : 1.21, '0p4to0p8' : 1.11, '0p8to1p2' : 1.20, '1p2to1p7' : 1.16, '1p7to2p3' : 2.25 }
+    weights_muToTauFR = {'DM1' : 1.38, 'lt0p4' : 0.80, '0p4to0p8' : 0.81, '0p8to1p2' : 0.79, '1p2to1p7' : 0.68, '1p7to2p3' : 1.34 }
+    weights_eljToTauFR = {'lt1p479_DM0' : 1.18, 'gt1p479_DM0' : 0.93, 'lt1p479_DM1' : 1.18, 'gt1p479_DM1' : 1.07 }
+    weights_elToTauFR = {'lt1p479_DM0' : 0.80, 'gt1p479_DM0' : 0.72, 'lt1p479_DM1' : 1.14, 'gt1p479_DM1' : 0.64 }
+
+    weights_muTotauES = {'DM0' : 0, 'DM1' : -0.5}
+    weights_elTotauES = {'DM0' :-0.5, 'DM1' : 6}
+
     TriggerSF={'dir' : 'SFs/TriggerEfficiencies/', 'fileMuon' : 'Muon_Run2016_IsoMu24orIsoMu27.root', 'fileElectron' : 'Electron_Run2016_Ele25orEle27.root'}
+    TESSF={'dir' : 'TauPOG/TauIDSFs/data/', 'fileTES' : 'TauES_dm_2016Legacy.root'}
 
 
 
 if era == '2017' : 
     weights = {'lumi':41.53, 'tauID_w' :0.89, 'tauES_DM0' : 0.7, 'tauES_DM1' : -0.2,'tauES_DM10' : 0.1, 'mutauES_DM0' : 0.0, 'mutauES_DM1' : 0.0, 'eltauES_DM0' : 0.3, 'eltauES_DM1' : 3.6}
-    weights_muTotauFR = { 'lmuFR_lt0p4' : 1.06, 'lmuFR_0p4to0p8' : 1.02, 'lmuFR_0p8to1p2' : 1.10, 'lmuFR_1p2to1p7' : 1.03, 'lmuFR_1p7to2p3' : 1.94 , 'tmuFR_lt0p4' : 1.17, 'tmuFR_0p4to0p8' : 1.29, 'tmuFR_0p8to1p2' : 1.14, 'tmuFR_1p2to1p7' : 0.94, 'tmuFR_1p7to2p3' : 1.61}
-    weights_elTotauFR = {'lelFR_lt1p46' : 1.09, 'lelFR_gt1p559' : 1.19, 'telFR_lt1p46' : 1.80, 'telFR_gt1p559' : 1.53}
+
+    weights_mujToTauFR = {'DM1' : 0.77, 'lt0p4' : 1.23, '0p4to0p8' : 1.07, '0p8to1p2' : 1.21, '1p2to1p7' : 1.21, '1p7to2p3' : 2.74 }
+    weights_muToTauFR = {'DM1' : 0.69, 'lt0p4' : 1.14, '0p4to0p8' : 1., '0p8to1p2' : 0.87, '1p2to1p7' : 0.52, '1p7to2p3' : 1.47 }
+    weights_eljToTauFR = {'lt1p479_DM0' : 1.09, 'gt1p479_DM0' : 0.86, 'lt1p479_DM1' : 1.10, 'gt1p479_DM1' : 1.03 }
+    weights_elToTauFR = {'lt1p479_DM0' : 0.98, 'gt1p479_DM0' : 0.80, 'lt1p479_DM1' : 1.07, 'gt1p479_DM1' : 0.64 }
+
+
+    weights_muTotauES = {'DM0' : -0.2, 'DM1' : -0.8}
+    weights_elTotauES = {'DM0' :-1.8, 'DM1' : 1.8}
+
     TriggerSF={'dir' : 'SFs/TriggerEfficiencies/', 'fileMuon' : 'Muon_Run2017_IsoMu24orIsoMu27.root', 'fileElectron' : 'Electron_Run2017_Ele32orEle35.root'}
+    TESSF={'dir' : 'TauPOG/TauIDSFs/data/', 'fileTES' : 'TauES_dm_2017ReReco.root'}
 
 if era == '2018' : 
     weights = {'lumi':59.74, 'tauID_w' :0.90, 'tauES_DM0' : -1.3, 'tauES_DM1' : -0.5,'tauES_DM10' : -1.2, 'mutauES_DM0' : 0.0, 'mutauES_DM1' : 0.0, 'eltauES_DM0' : 0.0, 'eltauES_DM1' : 0.0}
-    weights_muTotauFR = { 'lmuFR_lt0p4' : 1., 'lmuFR_0p4to0p8' : 1., 'lmuFR_0p8to1p2' : 1., 'lmuFR_1p2to1p7' : 1., 'lmuFR_1p7to2p3' : 1. , 'tmuFR_lt0p4' : 1., 'tmuFR_0p4to0p8' : 1., 'tmuFR_0p8to1p2' : 1., 'tmuFR_1p2to1p7' : 1., 'tmuFR_1p7to2p3' : 1.}
-    weights_elTotauFR = {'lelFR_lt1p46' : 1., 'lelFR_gt1p559' : 1., 'telFR_lt1p46' : 1., 'telFR_gt1p559' : 1.}
+    weights_mujToTauFR = {'DM1' : 0.79, 'lt0p4' : 1.11, '0p4to0p8' : 1.05, '0p8to1p2' : 1.18, '1p2to1p7' : 1.06, '1p7to2p3' : 1.79 }
+    weights_muToTauFR = {'DM1' : 0.55, 'lt0p4' : 1.08, '0p4to0p8' : 0.78, '0p8to1p2' : 0.77, '1p2to1p7' : 0.75, '1p7to2p3' : 2.02 }
+    weights_eljToTauFR = {'lt1p479_DM0' : 1.21, 'gt1p479_DM0' : 0.92, 'lt1p479_DM1' : 1.18, 'gt1p479_DM1' : 1.04 }
+    weights_elToTauFR = {'lt1p479_DM0' : 1.09, 'gt1p479_DM0' : 0.80, 'lt1p479_DM1' : 0.85, 'gt1p479_DM1' : 0.49 }
+
+
+    weights_muTotauES = {'DM0' : -0.2, 'DM1' : -1.}
+    weights_elTotauES = {'DM0' :-3.2, 'DM1' : 2.6}
+
     TriggerSF={'dir' : 'SFs/TriggerEfficiencies/', 'fileMuon' : 'Muon_Run2018_IsoMu24orIsoMu27.root', 'fileElectron' : 'Electron_Run2018_Ele32orEle35.root'}
+    TESSF={'dir' : 'TauPOG/TauIDSFs/data/', 'fileTES' : 'TauES_dm_2018ReReco.root'}
+
 
 sf_MuonTrig = SF.SFs()
 sf_MuonTrig.ScaleFactor("{0:s}{1:s}".format(TriggerSF['dir'],TriggerSF['fileMuon']))
@@ -229,6 +318,8 @@ sf_EleTrig = SF.SFs()
 sf_EleTrig.ScaleFactor("{0:s}{1:s}".format(TriggerSF['dir'],TriggerSF['fileElectron']))
 
 
+tauSFTool = TauIDSFTool(campaign[args.year],'DeepTau2017v2p1VSjet','Tight')
+testool = TauESTool(campaign[args.year])
 
 
 # use this utility class to screen out duplicate events
@@ -238,7 +329,10 @@ for cat in cats.values() :
 
 # dictionary where the group is the key
 hMC = {}
+hm_sv_new = {}
+hmt_sv_new = {}
 hCutFlow = {}
+hW = {}
 hCutFlowPerGroup = {}
 WCounter = {}
 
@@ -314,7 +408,7 @@ for i in range(1,5) :
     nn = 'DY{0:d}JetsToLL'.format(i)
     if search(nickNames, nn) :
         sampleWeight[nn] = Pblumi*weights['lumi']/(totalWeight['DYJetsToLL']/xsec['DYJetsToLL'] + DYxGenweightsArr[i-1]/(xsec[nn]*DY_kfactor))
-        print 'DY', totalWeight['DYJetsToLL']/xsec['DYJetsToLL'], DYxGenweightsArr[i-1], 'xsec', xsec[nn], 'weight ? ', sampleWeight[nn]
+        #print 'DY', totalWeight['DYJetsToLL']/xsec['DYJetsToLL'], DYxGenweightsArr[i-1], 'xsec', xsec[nn], 'weight ? ', sampleWeight[nn]
 
 for i in range(1,4) :
     nn = 'W{0:d}JetsToLNu'.format(i)
@@ -378,6 +472,20 @@ plotSettings = { # [nBins,xMin,xMax,units]
         "d0_2":[10,0,0.2,"[cm]","d_{xy}(l_{2})"],
         "q_2":[10,-5,5,"","charge(l_{2})"],
 
+	"iso_3":[20,0,1,"","relIso(l_{3})"],
+        "pt_3":[40,0,200,"[Gev]","P_{T}(l_{3})"],
+        "eta_3":[60,-3,3,"","#eta(l_{3})"],
+        "phi_3":[60,-3,3,"","#phi(l_{3})"],
+        "dz_3":[10,0,0.2,"[cm]","d_{z}(l_{3})"],
+        "d0_3":[10,0,0.2,"[cm]","d_{xy}(l_{3})"],
+
+        "iso_4":[20,0,1,"","relIso(l_{4})"],
+        "pt_4":[40,0,200,"[Gev]","P_{T}(l_{4})"],
+        "eta_4":[60,-3,3,"","#eta(l_{4})"],
+        "phi_4":[60,-3,3,"","#phi(l_{4})"],
+        "dz_4":[10,0,0.2,"[cm]","d_{z}(l_{4})"],
+        "d0_4":[10,0,0.2,"[cm]","d_{xy}(l_{4})"],
+
         "njets":[10,-0.5,9.5,"","nJets"],
         #"Jet_pt":[100,0,500,"[GeV]","Jet P_{T}"], 
         #"Jet_eta":[60,-3,3,"","Jet #eta"],
@@ -406,12 +514,12 @@ plotSettings = { # [nBins,xMin,xMax,units]
         #"mt_sum":[100,0,1000,"[GeV]"], # mt1 + mt2
 
         "mll":[40,50,130,"[Gev]","m(l^{+}l^{-})"],
-        "ll_pt_p":[30,0,300,"[GeV]","P_{T}l^{-}"],
-        "ll_phi_p":[30,-3,3,"","#phi(l_^{-})"],
-        "ll_eta_p":[30,-3,3,"","#eta(l_^{-})"],
-        "ll_pt_m":[30,0,300,"[GeV]","P_{T}l^{-}"],
-        "ll_phi_m":[30,-3,3,"","#phi(l_^{-})"],
-        "ll_eta_m":[30,-3,3,"","#eta(l_^{-})"],
+        "pt_1":[30,0,300,"[GeV]","P_{T}l^{-}"],
+        "phi_1":[30,-3,3,"","#phi(l_^{-})"],
+        "eta_1":[30,-3,3,"","#eta(l_^{-})"],
+        "pt_2":[30,0,300,"[GeV]","P_{T}l^{-}"],
+        "phi_2":[30,-3,3,"","#phi(l_^{-})"],
+        "eta_2":[30,-3,3,"","#eta(l_^{-})"],
         "iso_1":[20,0,1,"","relIso(l_{1})"],
         "iso_2":[20,0,1,"","relIso(l_{2})"],
 
@@ -484,13 +592,23 @@ for icat,cat in cats.items()[0:8] :
         WCounter[icat] = {}
         WCounter = [[0 for i in range(cols)] for j in range(cuts)] #first is row second is column
 
+
+
 for group in groups :
     fOut.cd()
     hMC[group] = {}
+    hm_sv_new[group] = {}
+    hmt_sv_new[group] = {}
     #hCutFlowPerGroup[group] = {}
     for icat, cat in cats.items()[0:8] :
         hMC[group][cat] = {}
+        hName = 'h{0:s}_{1:s}'.format(group,cat)
+        hm_sv_new[group][cat] = TH1D(hName+'_m_sv_new',hName+'_m_sv_new',60,0,300)
+        hm_sv_new[group][cat].SetDefaultSumw2()
+        hmt_sv_new[group][cat] = TH1D(hName+'_mt_sv_new',hName+'_mt_sv_new',60,0,300)
+        hmt_sv_new[group][cat].SetDefaultSumw2()
         hCutFlow[cat] = {}
+        hW[cat] = {}
         #hCutFlowPerGroup[group][cat] = {}
 
         for plotVar in plotSettings:
@@ -519,6 +637,9 @@ for group in groups :
 
 
         hCutFlow[cat][nickName] = {}
+        hW[cat][nickName] = {}
+	hW[cat][nickName] = TH1D("hW_"+nickName,"weights",3,-0.5,2.5)
+
         isData = False 
         inFileName = '../MC/condor/{0:s}/{1:s}_{2:s}/{1:s}_{2:s}.root'.format(args.analysis,nickName,era)
 	#cf = os.path.isfile('{0:s}'.format(inFileName))
@@ -542,7 +663,7 @@ for group in groups :
 	    if group != 'data' : hCutFlow[cat][nickName] = inFile.Get("hCutFlowWeighted_{0:s}".format(cat))
 	    else : hCutFlow[cat][nickName] = inFile.Get("hCutFlow_{0:s}".format(cat))  #temp
 
-	    #print 'for ========================',hCutFlow[cat][nickName].GetSumOfWeights(), group, cat
+	    #if group =='data'  : print 'for ========================',hCutFlow[cat][nickName].GetSumOfWeights(), group, cat
 	
             for i in range(1,hCutFlow[cat][nickName].GetNbinsX()+1) : 
 	        #print i, hCutFlow[cat][nickName].GetBinContent(i), hCutFlow[cat][nickName].GetXaxis().GetBinLabel(i), cat
@@ -557,9 +678,13 @@ for group in groups :
         DYJets = ('DYJetsToLL' in nickName and 'M10' not in nickName)
         WJets  = ('WJetsToLNu' in nickName)
 
+
+
         for i, e in enumerate(inTree) :
             iCut=icut
             hGroup = group
+
+	    #if group != 'data' and i > 1000 : continue
 
             #sampleWeight = lumi/(WIncl_totgenwt/WIncl_xsec + WxGenweightsArr[i]/(WNJetsXsecs[i]*WJets_kfactor))
             
@@ -593,92 +718,89 @@ for group in groups :
             #s = sf.checkFile()
 
             icat = catToNumber(cat)
+            if i > 1000 : continue
 
             cat = cats[e.cat]
             #apply tau-ID
             pfmet_tree = e.met
             puppimet_tree = e.puppimet
-            '''
-            if cat[2:] == 'et' or cat[2:]  == 'mt' or  cat[2:] == 'tt' :
             
+            if group != 'data' and (cat[2:] == 'et' or cat[2:]  == 'mt' or  cat[2:] == 'tt') :
+            
+                print weight, tauSFTool.getSFvsPT(e.pt_3,e.gen_match_3), 'pt', float(e.pt_3), float(e.pt_3_tr), i, 'g_match', e.gen_match_3, nickName
                 #tau energy scale
-                if  cat[2:] == 'tt' and  e.gen_match_1 == 5 : 
-                    weight *= weights['tauID_w'] # tauID SF
-                    if e.decayMode_1 == 0 : e.pt_1 *= (1+ weights['tauES_DM0'])  #tau ES
-                    if e.decayMode_1 == 1 : e.pt_1 *= (1+ weights['tauES_DM1'])  ##TODO CHANGE MASS of TAU TO PION
-                    if e.decayMode_1 == 10 : e.pt_1 *= (1+ weights['tauES_DM10'])
 
-                if e.gen_match_2 == 5 : 
-                    weight *= weights['tauID_w'] # tauID SF
+		if e.gen_match_4 == 2 or e.gen_match_4 == 4 :
+		    if e.decayMode_4 == 1 :  weight *= weights_muToTauFR['DM1']
+		    if e.decayMode_4 == 0 :  
+			if abs(e.eta_4) < 0.4                        : weight *= weights_muToTauFR['lt0p4']
+			if abs(e.eta_4) > 0.4 and abs(e.eta_4 < 0.8) : weight *= weights_muToTauFR['0p4to0p8']
+			if abs(e.eta_4) > 0.8 and abs(e.eta_4 < 1.2) : weight *= weights_muToTauFR['0p8to1p2']
+			if abs(e.eta_4) > 1.2 and abs(e.eta_4 < 1.7) : weight *= weights_muToTauFR['1p2to1p7']
+			if abs(e.eta_4) > 1.7 and abs(e.eta_4 < 2.3) : weight *= weights_muToTauFR['1p7to2p3']
+		'''if  cat[2:]  == 'mt' and e.gen_match_3 == 6  :
+		    if e.decayMode_4 == 1 :  weight *= weights_mujToTauFR['DM1']
+		    if e.decayMode_4 == 0 :  
+			if abs(e.eta_3) < 0.4                        : weight *= weights_mujToTauFR['lt0p4']
+			if abs(e.eta_3) > 0.4 and abs(e.eta_3 < 0.8) : weight *= weights_mujToTauFR['0p4to0p8']
+			if abs(e.eta_3) > 0.8 and abs(e.eta_3 < 1.2) : weight *= weights_mujToTauFR['0p8to1p2']
+			if abs(e.eta_3) > 1.2 and abs(e.eta_3 < 1.7) : weight *= weights_mujToTauFR['1p2to1p7']
+			if abs(e.eta_3) > 1.7 and abs(e.eta_3 < 2.3) : weight *= weights_mujToTauFR['1p7to2p3']
+                '''
+		if e.gen_match_4 == 1 or e.gen_match_4 == 3 :
+		    if e.decayMode_4 == 0 :  
+			if abs(e.eta_4) < 1.479                        : weight *= weights_elToTauFR['lt1p479_DM0']
+			if abs(e.eta_4) > 1.479 and abs(e.eta_4 < 0.8) : weight *= weights_elToTauFR['gt1p479_DM0']
+		    if e.decayMode_4 == 1 :  
+			if abs(e.eta_4) < 1.479                        : weight *= weights_elToTauFR['lt1p479_DM1']
+			if abs(e.eta_4) > 1.479 and abs(e.eta_4 < 0.8) : weight *= weights_elToTauFR['gt1p479_DM1']
 
-                    if e.decayMode_2 == 0 : e.pt_2 *= (1+ weights['tauES_DM0'])  #tau ES
-                    if e.decayMode_2 == 1 : e.pt_2 *= (1+ weights['tauES_DM1'])  ##TODO CHANGE MASS of TAU TO PION
-                    if e.decayMode_2 == 10 : e.pt_2 *= (1+ weights['tauES_DM10'])
 
-                #now shift the met as well - the problem is that we don't propagate that to m_tt
-                if e.gen_match_1 == 5 or e.gen_match_2 == 5 :
-                    if e.decayMode_1 == 0 or e.decayMode_2 == 0 : 
+		'''if e.gen_match_4 == 6  :
+		    if e.decayMode_4 == 1 :  weight *= weights_eljToTauFR['DM1']
+		    if e.decayMode_4 == 0 :  
+			if abs(e.eta_3) < 0.4                        : weight *= weights_eljToTauFR['lt0p4']
+			if abs(e.eta_3) > 0.4 and abs(e.eta_3 < 0.8) : weight *= weights_eljToTauFR['0p4to0p8']
+			if abs(e.eta_3) > 0.8 and abs(e.eta_3 < 1.2) : weight *= weights_eljToTauFR['0p8to1p2']
+			if abs(e.eta_3) > 1.2 and abs(e.eta_3 < 1.7) : weight *= weights_eljToTauFR['1p2to1p7']
+			if abs(e.eta_3) > 1.7 and abs(e.eta_3 < 2.3) : weight *= weights_eljToTauFR['1p7to2p3']
+		'''
+
+
+                if  cat[2:] == 'tt' :
+		    if e.gen_match_3 == 5 : 
+			weight *= tauSFTool.getSFvsPT(e.pt_3)
+			e.pt_3 *= testool.getTES(e.decayMode_3)
+			e.m_3 *= testool.getTES(e.decayMode_3)
+
+		    if e.gen_match_4 == 5 : 
+			#weight *= weights['tauID_w'] # tauID SF
+			weight *= tauSFTool.getSFvsPT(e.pt_4)
+			e.pt_4 *= testool.getTES(e.decayMode_4)
+			e.m_4 *= testool.getTES(e.decayMode_4)
+
+
+
+                '''
+		#now shift the met as well - the problem is that we don't propagate that to m_tt
+                if e.gen_match_3 == 5 or e.gen_match_4 == 5 :
+                    if e.decayMode_3 == 0 or e.decayMode_4 == 0 : 
                         pfmet_tree *= (1+ weights['tauES_DM0'])  #tau ES
                         puppimet_tree *= (1+ weights['tauES_DM0'])
-                    if e.decayMode_1 == 1 or e.decayMode_2 == 1 : 
+                    if e.decayMode_3 == 1 or e.decayMode_4 == 1 : 
                         pfmet_tree *= (1+ weights['tauES_DM1'])  #tau ES
                         puppimet_tree *= (1+ weights['tauES_DM1'])
-                    if e.decayMode_1 == 10 or e.decayMode_2 == 10 : 
+                    if e.decayMode_3 == 10 or e.decayMode_4 == 10 : 
                         pfmet_tree *= (1+ weights['tauES_DM10'])  #tau ES
                         puppimet_tree *= (1+ weights['tauES_DM10'])
-
-                #mu->tau FR
-                if e.gen_match_1 == 2 or e.gen_match_1 == 4  :
-                    if cat[2:] == 'et' or cat[2:] == 'tt' :
-                        if abs(e.eta_1) < 0.4 : weight *= weights_muTotauFR['lmuFR_lt0p4']
-                        if abs(e.eta_1) > 0.4 and abs(e.eta_1 < 0.8) : weight *= weights_muTotauFR['lmuFR_0p4to0p8']
-                        if abs(e.eta_1) > 0.8 and abs(e.eta_1 < 1.2) : weight *= weights_muTotauFR['lmuFR_0p8to1p2']
-                        if abs(e.eta_1) > 1.2 and abs(e.eta_1 < 1.7) : weight *= weights_muTotauFR['lmuFR_1p2to1p7']
-                        if abs(e.eta_1) > 1.7 and abs(e.eta_1 < 2.3) : weight *= weights_muTotauFR['lmuFR_1p7to2p3']
-                    if cat[2:] == 'mt' :
-                        if abs(e.eta_1) < 0.4 : weight *= weights_muTotauFR['tmuFR_lt0p4']
-                        if abs(e.eta_1) > 0.4 and abs(e.eta_1 < 0.8) : weight *= weights_muTotauFR['tmuFR_0p4to0p8']
-                        if abs(e.eta_1) > 0.8 and abs(e.eta_1 < 1.2) : weight *= weights_muTotauFR['tmuFR_0p8to1p2']
-                        if abs(e.eta_1) > 1.2 and abs(e.eta_1 < 1.7) : weight *= weights_muTotauFR['tmuFR_1p2to1p7']
-                        if abs(e.eta_1) > 1.7 and abs(e.eta_1 < 2.3) : weight *= weights_muTotauFR['tmuFR_1p7to2p3']
-                #e->tau FR
-                if e.gen_match_1 == 1 or e.gen_match_1 == 3  :
-                    if cat[2:] == 'et' or cat[2:] == 'tt' :
-                        if abs(e.eta_1) < 1.460 : weight *= weights_elTotauFR['lelFR_lt1p46']
-                        if abs(e.eta_1) >= 1.559 : weight *= weights_elTotauFR['lelFR_gt1p559']
-                    if cat[2:] == 'mt' :
-                        if abs(e.eta_1) < 1.460 : weight *= weights_elTotauFR['telFR_lt1p46']
-                        if abs(e.eta_1) >= 1.559 : weight *= weights_elTotauFR['telFR_gt1p559']
+		'''
 
 
-                if e.gen_match_2 == 2 or e.gen_match_2 == 4  :
-                    if cat[2:] == 'et' or cat[2:] == 'tt' :
-                        if abs(e.eta_2) < 0.4 : weight *= weights_muTotauFR['lmuFR_lt0p4']
-                        if abs(e.eta_2) > 0.4 and abs(e.eta_2 < 0.8) : weight *= weights_muTotauFR['lmuFR_0p4to0p8']
-                        if abs(e.eta_2) > 0.8 and abs(e.eta_2 < 1.2) : weight *= weights_muTotauFR['lmuFR_0p8to1p2']
-                        if abs(e.eta_2) > 1.2 and abs(e.eta_2 < 1.7) : weight *= weights_muTotauFR['lmuFR_1p2to1p7']
-                        if abs(e.eta_2) > 1.7 and abs(e.eta_2 < 2.3) : weight *= weights_muTotauFR['lmuFR_1p7to2p3']
-                    if cat[2:] == 'mt' :
-                        if abs(e.eta_2) < 0.4 : weight *= weights_muTotauFR['tmuFR_lt0p4']
-                        if abs(e.eta_2) > 0.4 and abs(e.eta_2 < 0.8) : weight *= weights_muTotauFR['tmuFR_0p4to0p8']
-                        if abs(e.eta_2) > 0.8 and abs(e.eta_2 < 1.2) : weight *= weights_muTotauFR['tmuFR_0p8to1p2']
-                        if abs(e.eta_2) > 1.2 and abs(e.eta_2 < 1.7) : weight *= weights_muTotauFR['tmuFR_1p2to1p7']
-                        if abs(e.eta_2) > 1.7 and abs(e.eta_2 < 2.3) : weight *= weights_muTotauFR['tmuFR_1p7to2p3']
+                 #weights_muToTauFR = {'lt0p4' : 1.22, '0p4to0p8' : 1.12, '0p8to1p2' : 1.26, '1p2to1p7' : 1.22, '1p7to2p3' : 2.39 , 'lt0p4' : 1.47, '0p4to0p8' : 1.55, '0p8to1p2' : 1.33, '1p2to1p7' : 1.72, '1p7to2p3' : 2.50 }
 
-                if e.gen_match_2 == 1 or e.gen_match_2 == 3  :
-                    if cat[2:] == 'et' or cat[2:] == 'tt' :
-                        if abs(e.eta_2) < 1.460 : weight *= weights_elTotauFR['lelFR_lt1p46']
-                        if abs(e.eta_2) >= 1.559 : weight *= weights_elTotauFR['lelFR_gt1p559']
-                    if cat[2:] == 'mt' :
-                        if abs(e.eta_2) < 1.460 : weight *= weights_elTotauFR['telFR_lt1p46']
-                        if abs(e.eta_2) >= 1.559 : weight *= weights_elTotauFR['telFR_gt1p559']
-                        
-
-                 #weights_muTotauFR = {'lmuFR_lt0p4' : 1.22, 'lmuFR_0p4to0p8' : 1.12, 'lmuFR_0p8to1p2' : 1.26, 'lmuFR_1p2to1p7' : 1.22, 'lmuFR_1p7to2p3' : 2.39 , 'tmuFR_lt0p4' : 1.47, 'tmuFR_0p4to0p8' : 1.55, 'tmuFR_0p8to1p2' : 1.33, 'tmuFR_1p2to1p7' : 1.72, 'tmuFR_1p7to2p3' : 2.50 }
-
-                 #weights_elTotauFR = {'lelFR_lt1p46' : 1., 'lelFR_gt1p559' : 1., 'telFR_lt1p46' : 1., 'telFR_gt1p559' : 1.}
+                 #weights_elToTauFR = {'lt1p46' : 1., 'gt1p559' : 1., 'telFR_lt1p46' : 1., 'telFR_gt1p559' : 1.}
                    
-            '''
+            
 
             if tightCuts :
                 if cat[2:] == 'mt' : tight1 = e.iso_1 < 0.15 and e.againstMuonTight3_2 > 0.5
@@ -707,17 +829,17 @@ for group in groups :
                         
                 else : 
                     if not (tight1 and tight2) : continue
-                    #print("Good MC event: group={0:s} nickName={1:s} cat={2:s} gen_match_1={3:d} gen_match_2={4:d}".format(
-                    #    group,nickName,cat,e.gen_match_1,e.gen_match_2))
+                    #print("Good MC event: group={0:s} nickName={1:s} cat={2:s} gen_match_1={3:d} gen_match_4={4:d}".format(
+                    #    group,nickName,cat,e.gen_match_1,e.gen_match_4))
                     if dataDriven :   # include only events with MC matching
                         if cat[2] == 'e' or cat[2] == 'm':
                             if not (e.gen_match_1 == 1 or e.gen_match_1 == 15) : continue
                         else :
                             if not e.gen_match_1 == 5 : continue
                         if cat[3] == 'e' or cat[3] == 'm' :
-                            if not (e.gen_match_2 == 1 or e.gen_match_2 == 15) : continue
+                            if not (e.gen_match_4 == 1 or e.gen_match_4 == 15) : continue
                         else : 
-                            if not e.gen_match_2 == 5 : continue
+                            if not e.gen_match_4 == 5 : continue
                                         
                 #elif group == 'Rare' or group == 'ZZ4L' or group == 'Signal' :
                 #    if not (tight1 and tight2) : continue         
@@ -733,8 +855,9 @@ for group in groups :
                 if e.q_1*e.q_2 < 0. : continue
             else :
                 if e.q_1*e.q_2 > 0. : continue
-                if hGroup == 'data' and not unblind and e.m_vis > 80. and e.m_vis < 140. : continue                 
-                if hGroup == 'data' and not unblind and e.m_sv > 80. and e.m_sv < 140. : continue                 
+                #if hGroup == 'data' and not unblind and e.m_vis > 80. and e.m_vis < 140. : continue                 
+                #if hGroup == 'data' and not unblind and e.m_sv > 80. and e.m_sv < 140. : continue                 
+
             H_LT = e.pt_1 + e.pt_2
             if H_LT < args.LTcut : continue
             if group == 'data' :
@@ -744,10 +867,13 @@ for group in groups :
             #    nEvents += 1
 
             
+
+	    #print fastMTTmass, e.m_sv, fastMTTtransverseMass, e.mt_sv, cat[2:]
+
             iCut +=1
             WCounter[iCut-1][icat-1] += weight  
 
-            trigw = 0.
+            trigw = 1.
 
             if group != 'data' :
 	        eff_d_1, eff_d_2 = 0., 0.
@@ -790,9 +916,9 @@ for group in groups :
             lepton_sf = 1.
 
 
-
-            #if e.isTrig == 1 :  
             if trigw > 0 : 
+                fastMTTmass, fastMTTtransverseMass = -1, -1
+                fastMTTmass, fastMTTtransverseMass = runSVFit(e, cat[2:]) 
                 for plotVar in plotSettings:
                     #print plotVar
                     val = getattr(e, plotVar, None)
@@ -801,6 +927,8 @@ for group in groups :
                         #print hGroup, cat, plotVar, val
                         #if val < hGroup][cat][plotVar].GetNbinsX() * hGroup][cat][plotVar].GetBinWidth(1) : hMC[hGroup][cat][plotVar].Fill(val,ww*trigw_)
                         #else : hMC[hGroup][cat][plotVar].Fill(val,ww*trigw_)
+                hm_sv_new[hGroup][cat].Fill(fastMTTmass,weight *trigw *lepton_sf)
+                hmt_sv_new[hGroup][cat].Fill(fastMTTtransverseMass,weight *trigw *lepton_sf)
                     
 
 	    nEvents += 1
@@ -827,9 +955,17 @@ for group in groups :
             for i in range(1,  hCutFlow[cat][nickName].GetNbinsX()) : 
                 hCutFlow[cat][nickName].SetBinContent(i, WCounter[i-1][icat-1])
 	        #print 'will fill now the',  hCutFlow[cat][nickName].GetName(), 'bin', i, 'with ', WCounter[i-1][icat-1], hCutFlow[cat][nickName].GetBinContent(i), hCutFlow[cat][nickName].GetXaxis().GetBinLabel(i), nickName
+            
+            #hW[cat][nickName].GetXaxis().SetBinLabel(1, "w")
+            #hW[cat][nickName].GetXaxis().SetBinLabel(2, "tr_w")
+            #hW[cat][nickName].GetXaxis().SetBinLabel(3, "l_sf")
+	    #hW[cat][nickName].SetBinContent(1, hW[cat][nickName].GetBinContent(1)*weight)
+	    #hW[cat][nickName].SetBinContent(2, hW[cat][nickName].GetBinContent(2)*trigw)
+	    #hW[cat][nickName].SetBinContent(3, hW[cat][nickName].GetBinContent(3)*lepton_sf)
 
             fOut.cd()
             hCutFlow[cat][nickName].Write()
+	    #hW[cat][nickName].Write()
         
 
         
@@ -838,6 +974,12 @@ for group in groups :
 
     fOut.cd()
     for cat in cats.values()[0:8] : 
+        OverFlow(hm_sv_new[group][cat])
+        OverFlow(hmt_sv_new[group][cat])
+        hm_sv_new[group][cat].GetXaxis().SetTitle('m_sv(new)  [GeV]')
+        hmt_sv_new[group][cat].GetXaxis().SetTitle('mt_sv(new)  [GeV]')
+        hm_sv_new[group][cat].Write()
+        hmt_sv_new[group][cat].Write()
         for plotVar in plotSettings:
             OverFlow(hMC[group][cat][plotVar])
             hMC[group][cat][plotVar].Write()
