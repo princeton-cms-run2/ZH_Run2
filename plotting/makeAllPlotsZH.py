@@ -54,8 +54,9 @@ def runSVFit(entry, channel) :
     covMET[0][1] = entry.metcov01
     covMET[1][1] = entry.metcov11
 
-    #self.kUndefinedDecayType, self.kTauToHadDecay,  self.kTauToElecDecay, self.kTauToMuDecay = 0, 1, 2, 3
 
+
+    #self.kUndefinedDecayType, self.kTauToHadDecay,  self.kTauToElecDecay, self.kTauToMuDecay = 0, 1, 2, 3
     if channel == 'et' :
 	measTau1 = ROOT.MeasuredTauLepton(kTauToElecDecay, entry.pt_3, entry.eta_3, entry.phi_3, 0.000511) 
     elif channel == 'mt' :
@@ -318,7 +319,7 @@ sf_EleTrig = SF.SFs()
 sf_EleTrig.ScaleFactor("{0:s}{1:s}".format(TriggerSF['dir'],TriggerSF['fileElectron']))
 
 
-tauSFTool = TauIDSFTool(campaign[args.year],'DeepTau2017v2p1VSjet','Tight')
+tauSFTool = TauIDSFTool(campaign[args.year],'DeepTau2017v2p1VSjet','Medium')
 testool = TauESTool(campaign[args.year])
 
 
@@ -718,7 +719,6 @@ for group in groups :
             #s = sf.checkFile()
 
             icat = catToNumber(cat)
-            if i > 1000 : continue
 
             cat = cats[e.cat]
             #apply tau-ID
@@ -727,59 +727,41 @@ for group in groups :
             
             if group != 'data' and (cat[2:] == 'et' or cat[2:]  == 'mt' or  cat[2:] == 'tt') :
             
-                print weight, tauSFTool.getSFvsPT(e.pt_3,e.gen_match_3), 'pt', float(e.pt_3), float(e.pt_3_tr), i, 'g_match', e.gen_match_3, nickName
+                #print weight, tauSFTool.getSFvsPT(e.pt_3,e.gen_match_3), 'pt', float(e.pt_3), float(e.pt_3_tr), i, 'g_match', e.gen_match_3, nickName
                 #tau energy scale
 
 		if e.gen_match_4 == 2 or e.gen_match_4 == 4 :
 		    if e.decayMode_4 == 1 :  weight *= weights_muToTauFR['DM1']
 		    if e.decayMode_4 == 0 :  
-			if abs(e.eta_4) < 0.4                        : weight *= weights_muToTauFR['lt0p4']
-			if abs(e.eta_4) > 0.4 and abs(e.eta_4 < 0.8) : weight *= weights_muToTauFR['0p4to0p8']
-			if abs(e.eta_4) > 0.8 and abs(e.eta_4 < 1.2) : weight *= weights_muToTauFR['0p8to1p2']
-			if abs(e.eta_4) > 1.2 and abs(e.eta_4 < 1.7) : weight *= weights_muToTauFR['1p2to1p7']
-			if abs(e.eta_4) > 1.7 and abs(e.eta_4 < 2.3) : weight *= weights_muToTauFR['1p7to2p3']
-		'''if  cat[2:]  == 'mt' and e.gen_match_3 == 6  :
-		    if e.decayMode_4 == 1 :  weight *= weights_mujToTauFR['DM1']
-		    if e.decayMode_4 == 0 :  
-			if abs(e.eta_3) < 0.4                        : weight *= weights_mujToTauFR['lt0p4']
-			if abs(e.eta_3) > 0.4 and abs(e.eta_3 < 0.8) : weight *= weights_mujToTauFR['0p4to0p8']
-			if abs(e.eta_3) > 0.8 and abs(e.eta_3 < 1.2) : weight *= weights_mujToTauFR['0p8to1p2']
-			if abs(e.eta_3) > 1.2 and abs(e.eta_3 < 1.7) : weight *= weights_mujToTauFR['1p2to1p7']
-			if abs(e.eta_3) > 1.7 and abs(e.eta_3 < 2.3) : weight *= weights_mujToTauFR['1p7to2p3']
-                '''
+			if abs(e.eta_4) < 0.4                        : weight *= weights_muToTauFR['lt0p4'] *  weights_mujToTauFR['lt0p4']
+			if abs(e.eta_4) > 0.4 and abs(e.eta_4 < 0.8) : weight *= weights_muToTauFR['0p4to0p8'] * weights_mujToTauFR['0p4to0p8']
+			if abs(e.eta_4) > 0.8 and abs(e.eta_4 < 1.2) : weight *= weights_muToTauFR['0p8to1p2'] * weights_mujToTauFR['0p8to1p2']
+			if abs(e.eta_4) > 1.2 and abs(e.eta_4 < 1.7) : weight *= weights_muToTauFR['1p2to1p7'] * weights_mujToTauFR['1p2to1p7']
+			if abs(e.eta_4) > 1.7 and abs(e.eta_4 < 2.3) : weight *= weights_muToTauFR['1p7to2p3'] * weights_mujToTauFR['1p7to2p3']
+
+
 		if e.gen_match_4 == 1 or e.gen_match_4 == 3 :
 		    if e.decayMode_4 == 0 :  
-			if abs(e.eta_4) < 1.479                        : weight *= weights_elToTauFR['lt1p479_DM0']
-			if abs(e.eta_4) > 1.479 and abs(e.eta_4 < 0.8) : weight *= weights_elToTauFR['gt1p479_DM0']
+			if abs(e.eta_4) < 1.479                        : weight *= weights_elToTauFR['lt1p479_DM0'] * weights_eljToTauFR['lt1p479_DM0']
+			if abs(e.eta_4) > 1.479 and abs(e.eta_4 < 0.8) : weight *= weights_elToTauFR['gt1p479_DM0'] * weights_eljToTauFR['gt1p479_DM0']
 		    if e.decayMode_4 == 1 :  
-			if abs(e.eta_4) < 1.479                        : weight *= weights_elToTauFR['lt1p479_DM1']
-			if abs(e.eta_4) > 1.479 and abs(e.eta_4 < 0.8) : weight *= weights_elToTauFR['gt1p479_DM1']
+			if abs(e.eta_4) < 1.479                        : weight *= weights_elToTauFR['lt1p479_DM1'] * weights_eljToTauFR['lt1p479_DM1']
+			if abs(e.eta_4) > 1.479 and abs(e.eta_4 < 0.8) : weight *= weights_elToTauFR['gt1p479_DM1'] * weights_eljToTauFR['gt1p479_DM1']
 
-
-		'''if e.gen_match_4 == 6  :
-		    if e.decayMode_4 == 1 :  weight *= weights_eljToTauFR['DM1']
-		    if e.decayMode_4 == 0 :  
-			if abs(e.eta_3) < 0.4                        : weight *= weights_eljToTauFR['lt0p4']
-			if abs(e.eta_3) > 0.4 and abs(e.eta_3 < 0.8) : weight *= weights_eljToTauFR['0p4to0p8']
-			if abs(e.eta_3) > 0.8 and abs(e.eta_3 < 1.2) : weight *= weights_eljToTauFR['0p8to1p2']
-			if abs(e.eta_3) > 1.2 and abs(e.eta_3 < 1.7) : weight *= weights_eljToTauFR['1p2to1p7']
-			if abs(e.eta_3) > 1.7 and abs(e.eta_3 < 2.3) : weight *= weights_eljToTauFR['1p7to2p3']
-		'''
-
-
+                #tau ES
+		
                 if  cat[2:] == 'tt' :
 		    if e.gen_match_3 == 5 : 
-			weight *= tauSFTool.getSFvsPT(e.pt_3)
+			weight *= tauSFTool.getSFvsPT(e.pt_3,e.gen_match_3)
 			e.pt_3 *= testool.getTES(e.decayMode_3)
 			e.m_3 *= testool.getTES(e.decayMode_3)
 
 		    if e.gen_match_4 == 5 : 
-			#weight *= weights['tauID_w'] # tauID SF
-			weight *= tauSFTool.getSFvsPT(e.pt_4)
+			weight *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4)
 			e.pt_4 *= testool.getTES(e.decayMode_4)
 			e.m_4 *= testool.getTES(e.decayMode_4)
 
-
+               
 
                 '''
 		#now shift the met as well - the problem is that we don't propagate that to m_tt
@@ -868,7 +850,6 @@ for group in groups :
 
             
 
-	    #print fastMTTmass, e.m_sv, fastMTTtransverseMass, e.mt_sv, cat[2:]
 
             iCut +=1
             WCounter[iCut-1][icat-1] += weight  
@@ -919,6 +900,7 @@ for group in groups :
             if trigw > 0 : 
                 fastMTTmass, fastMTTtransverseMass = -1, -1
                 fastMTTmass, fastMTTtransverseMass = runSVFit(e, cat[2:]) 
+	        #print 'new', fastMTTmass, 'old', e.m_sv, fastMTTtransverseMass, e.mt_sv, cat[2:]
                 for plotVar in plotSettings:
                     #print plotVar
                     val = getattr(e, plotVar, None)
