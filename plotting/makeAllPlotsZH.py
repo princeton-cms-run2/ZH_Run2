@@ -755,11 +755,16 @@ for group in groups :
 			weight *= tauSFTool.getSFvsPT(e.pt_3,e.gen_match_3)
 			e.pt_3 *= testool.getTES(e.decayMode_3)
 			e.m_3 *= testool.getTES(e.decayMode_3)
+			e.met *= testool.getTES(e.decayMode_3)
+			if e.decayMode_3 == 1 : m_3 =  0.1396  
 
 		    if e.gen_match_4 == 5 : 
 			weight *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4)
 			e.pt_4 *= testool.getTES(e.decayMode_4)
 			e.m_4 *= testool.getTES(e.decayMode_4)
+			e.met *= testool.getTES(e.decayMode_3)
+			if e.decayMode_4 == 1 : m_3 =  0.1396  
+
 
                
 
