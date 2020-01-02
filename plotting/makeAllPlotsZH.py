@@ -334,6 +334,8 @@ hm_sv_new = {}
 hmt_sv_new = {}
 hCutFlow = {}
 hW = {}
+hGenMatchTau_3 = {}
+hGenMatchTau_4 = {}
 hCutFlowPerGroup = {}
 WCounter = {}
 
@@ -461,31 +463,31 @@ plotSettings = { # [nBins,xMin,xMax,units]
         "eta_1":[60,-3,3,"","#eta(l_{1})"],
         "phi_1":[60,-3,3,"","#phi(l_{1})"],
         "iso_1":[20,0,1,"","relIso(l_{1})"],
-        "dz_1":[10,0,0.2,"[cm]","d_{z}(l_{1})"],
-        "d0_1":[10,0,0.2,"[cm]","d_{xy}(l_{1})"],
+        "dZ_1":[20,-0.2,0.2,"[cm]","d_{z}(l_{1})"],
+        "d0_1":[20,-0.2,0.2,"[cm]","d_{xy}(l_{1})"],
         "q_1":[10,-5,5,"","charge(l_{1})"],
 
         "pt_2":[40,0,200,"[Gev]","P_{T}(l_{2})"],
         "eta_2":[60,-3,3,"","#eta(l_{2})"],
         "phi_2":[60,-3,3,"","#phi(l_{2})"],
         "iso_2":[20,0,1,"","relIso(l_{2})"],
-        "dz_2":[10,0,0.2,"[cm]","d_{z}(l_{2})"],
-        "d0_2":[10,0,0.2,"[cm]","d_{xy}(l_{2})"],
+        "dZ_2":[20,-0.2,0.2,"[cm]","d_{z}(l_{2})"],
+        "d0_2":[20,-0.2,0.2,"[cm]","d_{xy}(l_{2})"],
         "q_2":[10,-5,5,"","charge(l_{2})"],
 
 	"iso_3":[20,0,1,"","relIso(l_{3})"],
         "pt_3":[40,0,200,"[Gev]","P_{T}(l_{3})"],
         "eta_3":[60,-3,3,"","#eta(l_{3})"],
         "phi_3":[60,-3,3,"","#phi(l_{3})"],
-        "dz_3":[10,0,0.2,"[cm]","d_{z}(l_{3})"],
-        "d0_3":[10,0,0.2,"[cm]","d_{xy}(l_{3})"],
+        "dZ_3":[20,-0.2,0.2,"[cm]","d_{z}(l_{3})"],
+        "d0_3":[20,-0.2,0.2,"[cm]","d_{xy}(l_{3})"],
 
         "iso_4":[20,0,1,"","relIso(l_{4})"],
         "pt_4":[40,0,200,"[Gev]","P_{T}(l_{4})"],
         "eta_4":[60,-3,3,"","#eta(l_{4})"],
         "phi_4":[60,-3,3,"","#phi(l_{4})"],
-        "dz_4":[10,0,0.2,"[cm]","d_{z}(l_{4})"],
-        "d0_4":[10,0,0.2,"[cm]","d_{xy}(l_{4})"],
+        "dZ_4":[20,-0.2,0.2,"[cm]","d_{z}(l_{4})"],
+        "d0_4":[20,-0.2,0.2,"[cm]","d_{xy}(l_{4})"],
 
         "njets":[10,-0.5,9.5,"","nJets"],
         #"Jet_pt":[100,0,500,"[GeV]","Jet P_{T}"], 
@@ -515,14 +517,6 @@ plotSettings = { # [nBins,xMin,xMax,units]
         #"mt_sum":[100,0,1000,"[GeV]"], # mt1 + mt2
 
         "mll":[40,50,130,"[Gev]","m(l^{+}l^{-})"],
-        "pt_1":[30,0,300,"[GeV]","P_{T}l^{-}"],
-        "phi_1":[30,-3,3,"","#phi(l_^{-})"],
-        "eta_1":[30,-3,3,"","#eta(l_^{-})"],
-        "pt_2":[30,0,300,"[GeV]","P_{T}l^{-}"],
-        "phi_2":[30,-3,3,"","#phi(l_^{-})"],
-        "eta_2":[30,-3,3,"","#eta(l_^{-})"],
-        "iso_1":[20,0,1,"","relIso(l_{1})"],
-        "iso_2":[20,0,1,"","relIso(l_{2})"],
 
         "m_vis":[30,50,200,"[Gev]","m(#tau#tau)"],
         "pt_tt":[40,0,200,"[GeV]","P_{T}(#tau#tau)"],
@@ -600,6 +594,8 @@ for group in groups :
     hMC[group] = {}
     hm_sv_new[group] = {}
     hmt_sv_new[group] = {}
+    hGenMatchTau_3[group] = {}
+    hGenMatchTau_4[group] = {}
     #hCutFlowPerGroup[group] = {}
     for icat, cat in cats.items()[0:8] :
         hMC[group][cat] = {}
@@ -608,6 +604,9 @@ for group in groups :
         hm_sv_new[group][cat].SetDefaultSumw2()
         hmt_sv_new[group][cat] = TH1D(hName+'_mt_sv_new',hName+'_mt_sv_new',60,0,300)
         hmt_sv_new[group][cat].SetDefaultSumw2()
+        hName = 'h{0:s}_{1:s}'.format(group,cat)
+        hGenMatchTau_3[group][cat] = TH1D(hName+'_GenMatchTau_3',hName+'_TauMatch',10,-0.5,9.5)
+        hGenMatchTau_4[group][cat] = TH1D(hName+'_GenMatchTau_4',hName+'_TauMatch',10,-0.5,9.5)
         hCutFlow[cat] = {}
         hW[cat] = {}
         #hCutFlowPerGroup[group][cat] = {}
@@ -739,18 +738,68 @@ for group in groups :
 			if abs(e.eta_4) > 1.2 and abs(e.eta_4 < 1.7) : weight *= weights_muToTauFR['1p2to1p7'] * weights_mujToTauFR['1p2to1p7']
 			if abs(e.eta_4) > 1.7 and abs(e.eta_4 < 2.3) : weight *= weights_muToTauFR['1p7to2p3'] * weights_mujToTauFR['1p7to2p3']
 
+			if e.decayMode_4 == 0 : 
+			    weight  *= (1 +  weights_muTotauES['DM0']*0.01)
+			    e.met *= (1 +  weights_muTotauES['DM0']*0.01)
+			if e.decayMode_4 == 1 : 
+			    weight  *= (1 +  weights_muTotauES['DM1']*0.01)
+			    e.met *= (1 +  weights_muTotauES['DM1']*0.01)
+
 
 		if e.gen_match_4 == 1 or e.gen_match_4 == 3 :
 		    if e.decayMode_4 == 0 :  
-			if abs(e.eta_4) < 1.479                        : weight *= weights_elToTauFR['lt1p479_DM0'] * weights_eljToTauFR['lt1p479_DM0']
-			if abs(e.eta_4) > 1.479 and abs(e.eta_4 < 0.8) : weight *= weights_elToTauFR['gt1p479_DM0'] * weights_eljToTauFR['gt1p479_DM0']
+			if abs(e.eta_4) < 1.479     : weight *= weights_elToTauFR['lt1p479_DM0'] * weights_eljToTauFR['lt1p479_DM0']
+			if abs(e.eta_4) > 1.479     : weight *= weights_elToTauFR['gt1p479_DM0'] * weights_eljToTauFR['gt1p479_DM0']
 		    if e.decayMode_4 == 1 :  
-			if abs(e.eta_4) < 1.479                        : weight *= weights_elToTauFR['lt1p479_DM1'] * weights_eljToTauFR['lt1p479_DM1']
-			if abs(e.eta_4) > 1.479 and abs(e.eta_4 < 0.8) : weight *= weights_elToTauFR['gt1p479_DM1'] * weights_eljToTauFR['gt1p479_DM1']
+			if abs(e.eta_4) < 1.479     : weight *= weights_elToTauFR['lt1p479_DM1'] * weights_eljToTauFR['lt1p479_DM1']
+			if abs(e.eta_4) > 1.479     : weight *= weights_elToTauFR['gt1p479_DM1'] * weights_eljToTauFR['gt1p479_DM1']
+
+			if e.decayMode_4 == 0 : 
+			    weight  *= (1 +  weights_elTotauES['DM0']*0.01)
+			    e.met *= (1 +  weights_elTotauES['DM0']*0.01)
+
+			if e.decayMode_4 == 1 : 
+			    weight  *= (1 +  weights_elTotauES['DM1']*0.01)
+			    e.met *= (1 +  weights_elTotauES['DM1']*0.01)
 
                 #tau ES
 		
                 if  cat[2:] == 'tt' :
+		    #muon faking _3 tau
+
+		    if e.gen_match_3 == 2 or e.gen_match_3 == 4 :
+			if e.decayMode_3 == 1 :  weight *= weights_muToTauFR['DM1']
+			if e.decayMode_3 == 0 :  
+			    if abs(e.eta_3) < 0.4                        : weight *= weights_muToTauFR['lt0p4'] *  weights_mujToTauFR['lt0p4']
+			    if abs(e.eta_3) > 0.4 and abs(e.eta_3 < 0.8) : weight *= weights_muToTauFR['0p4to0p8'] * weights_mujToTauFR['0p4to0p8']
+			    if abs(e.eta_3) > 0.8 and abs(e.eta_3 < 1.2) : weight *= weights_muToTauFR['0p8to1p2'] * weights_mujToTauFR['0p8to1p2']
+			    if abs(e.eta_3) > 1.2 and abs(e.eta_3 < 1.7) : weight *= weights_muToTauFR['1p2to1p7'] * weights_mujToTauFR['1p2to1p7']
+			    if abs(e.eta_3) > 1.7 and abs(e.eta_3 < 2.3) : weight *= weights_muToTauFR['1p7to2p3'] * weights_mujToTauFR['1p7to2p3']
+
+			    if e.decayMode_3 == 0 : 
+				weight  *= (1 +  weights_muTotauES['DM0']*0.01)
+				e.met *= (1 +  weights_muTotauES['DM0']*0.01)
+			    if e.decayMode_3 == 1 : 
+				weight  *= (1 +  weights_muTotauES['DM1']*0.01)
+				e.met *= (1 +  weights_muTotauES['DM1']*0.01)
+
+                    # electron faking _3 tau
+		    if e.gen_match_3 == 1 or e.gen_match_3 == 3 :
+			if e.decayMode_3 == 0 :  
+			    if abs(e.eta_3) < 1.479     : weight *= weights_elToTauFR['lt1p479_DM0'] * weights_eljToTauFR['lt1p479_DM0']
+			    if abs(e.eta_3) > 1.479     : weight *= weights_elToTauFR['gt1p479_DM0'] * weights_eljToTauFR['gt1p479_DM0']
+			if e.decayMode_3 == 1 :  
+			    if abs(e.eta_3) < 1.479     : weight *= weights_elToTauFR['lt1p479_DM1'] * weights_eljToTauFR['lt1p479_DM1']
+			    if abs(e.eta_3) > 1.479     : weight *= weights_elToTauFR['gt1p479_DM1'] * weights_eljToTauFR['gt1p479_DM1']
+
+			    if e.decayMode_3 == 0 : 
+				weight  *= (1 +  weights_elTotauES['DM0']*0.01)
+				e.met *= (1 +  weights_elTotauES['DM0']*0.01)
+
+			    if e.decayMode_3 == 1 : 
+				weight  *= (1 +  weights_elTotauES['DM1']*0.01)
+				e.met *= (1 +  weights_elTotauES['DM1']*0.01)
+
 		    if e.gen_match_3 == 5 : 
 			weight *= tauSFTool.getSFvsPT(e.pt_3,e.gen_match_3)
 			e.pt_3 *= testool.getTES(e.decayMode_3)
@@ -916,6 +965,8 @@ for group in groups :
                         #else : hMC[hGroup][cat][plotVar].Fill(val,ww*trigw_)
                 hm_sv_new[hGroup][cat].Fill(fastMTTmass,weight *trigw *lepton_sf)
                 hmt_sv_new[hGroup][cat].Fill(fastMTTtransverseMass,weight *trigw *lepton_sf)
+                hGenMatchTau_3[hGroup][cat].Fill(e.gen_match_3,weight *trigw *lepton_sf)
+                hGenMatchTau_4[hGroup][cat].Fill(e.gen_match_4,weight *trigw *lepton_sf)
                     
 
 	    nEvents += 1
@@ -967,6 +1018,8 @@ for group in groups :
         hmt_sv_new[group][cat].GetXaxis().SetTitle('mt_sv(new)  [GeV]')
         hm_sv_new[group][cat].Write()
         hmt_sv_new[group][cat].Write()
+        hGenMatchTau_3[group][cat].Write()
+        hGenMatchTau_4[group][cat].Write()
         for plotVar in plotSettings:
             OverFlow(hMC[group][cat][plotVar])
             hMC[group][cat][plotVar].Write()

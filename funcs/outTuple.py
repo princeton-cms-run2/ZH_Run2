@@ -70,8 +70,6 @@ class outTuple() :
         self.isTracker_3       = array('f',[0])
         self.ip3d_3       = array('f',[0])
         self.inTimeMuon_3       = array('f',[0])
-        self.indx_3       = array('l',[0])
-        self.indx_4       = array('l',[0])
 
         self.idDecayModeNewDMs_3 = array('f',[0])
         self.idDeepTau2017v2p1VSe_3 = array('f',[0])
@@ -244,8 +242,6 @@ class outTuple() :
         self.t.Branch('isTracker_3', self.isTracker_3, 'isTracker_3/F')
         self.t.Branch('ip3d_3', self.ip3d_3, 'ip3d_3/F')
         self.t.Branch('inTimeMuon_3', self.inTimeMuon_3, 'inTimeMuon_3/F')
-        self.t.Branch('indx_3', self.indx_3, 'indx_3/I')
-        self.t.Branch('indx_4', self.indx_4, 'indx_4/I')
 
 
         self.t.Branch('idDecayModeNewDMs_3', self.idDecayModeNewDMs_3, 'idDecayModeNewDMs_3/F')
@@ -585,8 +581,6 @@ class outTuple() :
 
         tauMass = 1.7768 
         tau1, tau2 = TLorentzVector(), TLorentzVector()
-	indx_3[0] = jt1
-	indx_4[0] = jt2
 
 
         # Fill variables for Leg3, where 3->tau(ele) and 4->tau(had)
