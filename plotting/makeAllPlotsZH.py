@@ -55,7 +55,6 @@ def runSVFit(entry, channel) :
     covMET[1][1] = entry.metcov11
 
 
-
     #self.kUndefinedDecayType, self.kTauToHadDecay,  self.kTauToElecDecay, self.kTauToMuDecay = 0, 1, 2, 3
     if channel == 'et' :
 	measTau1 = ROOT.MeasuredTauLepton(kTauToElecDecay, entry.pt_3, entry.eta_3, entry.phi_3, 0.000511) 
@@ -99,6 +98,7 @@ def getArgs() :
     parser.add_argument("--MConly",action='store_true',help="no data driven bkg") 
     parser.add_argument("--looseCuts",action='store_true',help="Loose cuts")
     parser.add_argument("-u", "--unBlind",default='no',help="Unblind signal region for OS")
+    parser.add_argument("-r", "--redoFit",default='no',help="redo FastMTT and adjust MET after to Tau ES corrections")
     
     return parser.parse_args()
 
@@ -244,7 +244,7 @@ tauID_w = 1.
 kUndefinedDecayType, kTauToHadDecay,  kTauToElecDecay, kTauToMuDecay = 0, 1, 2, 3   
 
 gInterpreter.ProcessLine(".include .")
-for baseName in ['../SVFit/MeasuredTauLepton','../SVFit/svFitAuxFunctions','../SVFit/FastMTT'] : 
+for baseName in ['../SVFit/MeasuredTauLepton','../SVFit/svFitAuxFunctions','../SVFit/FastMTT', '../HTT-utilities/RecoilCorrections/src/MEtSys', '../HTT-utilities/RecoilCorrections/src/RecoilCorrector'] : 
     if os.path.isfile("{0:s}_cc.so".format(baseName)) :
 	gInterpreter.ProcessLine(".L {0:s}_cc.so".format(baseName))
     else :
@@ -322,6 +322,9 @@ sf_EleTrig.ScaleFactor("{0:s}{1:s}".format(TriggerSF['dir'],TriggerSF['fileElect
 tauSFTool = TauIDSFTool(campaign[args.year],'DeepTau2017v2p1VSjet','Medium')
 testool = TauESTool(campaign[args.year])
 
+if era == '2016' : recoilCorrector  = ROOT.RecoilCorrector("HTT-utilities/RecoilCorrections/data/Type1_PFMET_Run2016BtoH.root");
+if era == '2017' : recoilCorrector  = ROOT.RecoilCorrector("HTT-utilities/RecoilCorrections/data/Type1_PFMET_2017.root");
+if era == '2018' : recoilCorrector  = ROOT.RecoilCorrector("HTT-utilities/RecoilCorrections/data/Type1_PFMET_2018.root");
 
 # use this utility class to screen out duplicate events
 DD = {}
@@ -339,7 +342,15 @@ hGenMatchTau_4 = {}
 hCutFlowPerGroup = {}
 WCounter = {}
 
-
+isW = False
+isDY = False
+muonMass = 0.106
+electronMass = 0.000511
+		
+L1 = TLorentzVector()
+L2 = TLorentzVector()
+L1.SetXYZM(0,0,0,0)
+L2.SetXYZM(0,0,0,0)
 # dictionary where the nickName is the key
 nickNames, xsec, totalWeight, sampleWeight = {}, {}, {}, {}
 
@@ -639,6 +650,8 @@ for group in groups :
         hCutFlow[cat][nickName] = {}
         hW[cat][nickName] = {}
 	hW[cat][nickName] = TH1D("hW_"+nickName,"weights",3,-0.5,2.5)
+        if 'DY' in nickName : isDY = True
+	if 'JetsToLNu' in nickName : isW = True
 
         isData = False 
         inFileName = '../MC/condor/{0:s}/{1:s}_{2:s}/{1:s}_{2:s}.root'.format(args.analysis,nickName,era)
@@ -724,113 +737,6 @@ for group in groups :
             pfmet_tree = e.met
             puppimet_tree = e.puppimet
             
-            if group != 'data' and (cat[2:] == 'et' or cat[2:]  == 'mt' or  cat[2:] == 'tt') :
-            
-                #print weight, tauSFTool.getSFvsPT(e.pt_3,e.gen_match_3), 'pt', float(e.pt_3), float(e.pt_3_tr), i, 'g_match', e.gen_match_3, nickName
-                #tau energy scale
-
-		if e.gen_match_4 == 2 or e.gen_match_4 == 4 :
-		    if e.decayMode_4 == 1 :  weight *= weights_muToTauFR['DM1']
-		    if e.decayMode_4 == 0 :  
-			if abs(e.eta_4) < 0.4                        : weight *= weights_muToTauFR['lt0p4'] *  weights_mujToTauFR['lt0p4']
-			if abs(e.eta_4) > 0.4 and abs(e.eta_4 < 0.8) : weight *= weights_muToTauFR['0p4to0p8'] * weights_mujToTauFR['0p4to0p8']
-			if abs(e.eta_4) > 0.8 and abs(e.eta_4 < 1.2) : weight *= weights_muToTauFR['0p8to1p2'] * weights_mujToTauFR['0p8to1p2']
-			if abs(e.eta_4) > 1.2 and abs(e.eta_4 < 1.7) : weight *= weights_muToTauFR['1p2to1p7'] * weights_mujToTauFR['1p2to1p7']
-			if abs(e.eta_4) > 1.7 and abs(e.eta_4 < 2.3) : weight *= weights_muToTauFR['1p7to2p3'] * weights_mujToTauFR['1p7to2p3']
-
-			if e.decayMode_4 == 0 : 
-			    weight  *= (1 +  weights_muTotauES['DM0']*0.01)
-			    e.met *= (1 +  weights_muTotauES['DM0']*0.01)
-			if e.decayMode_4 == 1 : 
-			    weight  *= (1 +  weights_muTotauES['DM1']*0.01)
-			    e.met *= (1 +  weights_muTotauES['DM1']*0.01)
-
-
-		if e.gen_match_4 == 1 or e.gen_match_4 == 3 :
-		    if e.decayMode_4 == 0 :  
-			if abs(e.eta_4) < 1.479     : weight *= weights_elToTauFR['lt1p479_DM0'] * weights_eljToTauFR['lt1p479_DM0']
-			if abs(e.eta_4) > 1.479     : weight *= weights_elToTauFR['gt1p479_DM0'] * weights_eljToTauFR['gt1p479_DM0']
-		    if e.decayMode_4 == 1 :  
-			if abs(e.eta_4) < 1.479     : weight *= weights_elToTauFR['lt1p479_DM1'] * weights_eljToTauFR['lt1p479_DM1']
-			if abs(e.eta_4) > 1.479     : weight *= weights_elToTauFR['gt1p479_DM1'] * weights_eljToTauFR['gt1p479_DM1']
-
-			if e.decayMode_4 == 0 : 
-			    weight  *= (1 +  weights_elTotauES['DM0']*0.01)
-			    e.met *= (1 +  weights_elTotauES['DM0']*0.01)
-
-			if e.decayMode_4 == 1 : 
-			    weight  *= (1 +  weights_elTotauES['DM1']*0.01)
-			    e.met *= (1 +  weights_elTotauES['DM1']*0.01)
-
-                #tau ES
-		
-                if  cat[2:] == 'tt' :
-		    #muon faking _3 tau
-
-		    if e.gen_match_3 == 2 or e.gen_match_3 == 4 :
-			if e.decayMode_3 == 1 :  weight *= weights_muToTauFR['DM1']
-			if e.decayMode_3 == 0 :  
-			    if abs(e.eta_3) < 0.4                        : weight *= weights_muToTauFR['lt0p4'] *  weights_mujToTauFR['lt0p4']
-			    if abs(e.eta_3) > 0.4 and abs(e.eta_3 < 0.8) : weight *= weights_muToTauFR['0p4to0p8'] * weights_mujToTauFR['0p4to0p8']
-			    if abs(e.eta_3) > 0.8 and abs(e.eta_3 < 1.2) : weight *= weights_muToTauFR['0p8to1p2'] * weights_mujToTauFR['0p8to1p2']
-			    if abs(e.eta_3) > 1.2 and abs(e.eta_3 < 1.7) : weight *= weights_muToTauFR['1p2to1p7'] * weights_mujToTauFR['1p2to1p7']
-			    if abs(e.eta_3) > 1.7 and abs(e.eta_3 < 2.3) : weight *= weights_muToTauFR['1p7to2p3'] * weights_mujToTauFR['1p7to2p3']
-
-			    if e.decayMode_3 == 0 : 
-				weight  *= (1 +  weights_muTotauES['DM0']*0.01)
-				e.met *= (1 +  weights_muTotauES['DM0']*0.01)
-			    if e.decayMode_3 == 1 : 
-				weight  *= (1 +  weights_muTotauES['DM1']*0.01)
-				e.met *= (1 +  weights_muTotauES['DM1']*0.01)
-
-                    # electron faking _3 tau
-		    if e.gen_match_3 == 1 or e.gen_match_3 == 3 :
-			if e.decayMode_3 == 0 :  
-			    if abs(e.eta_3) < 1.479     : weight *= weights_elToTauFR['lt1p479_DM0'] * weights_eljToTauFR['lt1p479_DM0']
-			    if abs(e.eta_3) > 1.479     : weight *= weights_elToTauFR['gt1p479_DM0'] * weights_eljToTauFR['gt1p479_DM0']
-			if e.decayMode_3 == 1 :  
-			    if abs(e.eta_3) < 1.479     : weight *= weights_elToTauFR['lt1p479_DM1'] * weights_eljToTauFR['lt1p479_DM1']
-			    if abs(e.eta_3) > 1.479     : weight *= weights_elToTauFR['gt1p479_DM1'] * weights_eljToTauFR['gt1p479_DM1']
-
-			    if e.decayMode_3 == 0 : 
-				weight  *= (1 +  weights_elTotauES['DM0']*0.01)
-				e.met *= (1 +  weights_elTotauES['DM0']*0.01)
-
-			    if e.decayMode_3 == 1 : 
-				weight  *= (1 +  weights_elTotauES['DM1']*0.01)
-				e.met *= (1 +  weights_elTotauES['DM1']*0.01)
-
-		    if e.gen_match_3 == 5 : 
-			weight *= tauSFTool.getSFvsPT(e.pt_3,e.gen_match_3)
-			e.pt_3 *= testool.getTES(e.decayMode_3)
-			e.m_3 *= testool.getTES(e.decayMode_3)
-			e.met *= testool.getTES(e.decayMode_3)
-			if e.decayMode_3 == 1 : m_3 =  0.1396  
-
-		    if e.gen_match_4 == 5 : 
-			weight *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4)
-			e.pt_4 *= testool.getTES(e.decayMode_4)
-			e.m_4 *= testool.getTES(e.decayMode_4)
-			e.met *= testool.getTES(e.decayMode_3)
-			if e.decayMode_4 == 1 : m_3 =  0.1396  
-
-
-               
-
-                '''
-		#now shift the met as well - the problem is that we don't propagate that to m_tt
-                if e.gen_match_3 == 5 or e.gen_match_4 == 5 :
-                    if e.decayMode_3 == 0 or e.decayMode_4 == 0 : 
-                        pfmet_tree *= (1+ weights['tauES_DM0'])  #tau ES
-                        puppimet_tree *= (1+ weights['tauES_DM0'])
-                    if e.decayMode_3 == 1 or e.decayMode_4 == 1 : 
-                        pfmet_tree *= (1+ weights['tauES_DM1'])  #tau ES
-                        puppimet_tree *= (1+ weights['tauES_DM1'])
-                    if e.decayMode_3 == 10 or e.decayMode_4 == 10 : 
-                        pfmet_tree *= (1+ weights['tauES_DM10'])  #tau ES
-                        puppimet_tree *= (1+ weights['tauES_DM10'])
-		'''
-
 
                  #weights_muToTauFR = {'lt0p4' : 1.22, '0p4to0p8' : 1.12, '0p8to1p2' : 1.26, '1p2to1p7' : 1.22, '1p7to2p3' : 2.39 , 'lt0p4' : 1.47, '0p4to0p8' : 1.55, '0p8to1p2' : 1.33, '1p2to1p7' : 1.72, '1p7to2p3' : 2.50 }
 
@@ -911,6 +817,139 @@ for group in groups :
             trigw = 1.
 
             if group != 'data' :
+
+
+	        # recoils
+		njetsforrecoil = e.njets
+		if (isW)  : njetsforrecoil = e.njets + 1
+                if isW or isDY :
+		    boson = TLorentzVector()
+		    if cat[:2] == 'mm' :  
+			L1.SetPtEtaPhiM(e.pt_1_tr, e.eta_1_tr,e.phi_1_tr,muonMass)
+			L2.SetPtEtaPhiM(e.pt_2_tr, e.eta_2_tr,e.phi_2_tr,muonMass)
+			boson += L1
+			boson += L2
+
+		    if cat[:2] == 'ee' :  
+			L1.SetPtEtaPhiM(e.pt_1_tr, e.eta_1_tr,e.phi_1_tr,electronMass)
+			L2.SetPtEtaPhiM(e.pt_2_tr, e.eta_2_tr,e.phi_2_tr,electronMass)
+			boson += L1
+			boson += L2
+		    #print 'before', e.met * cos(e.metphi)
+		    met_x = e.met * cos(e.metphi)
+		    met_y = e.met * sin(e.metphi)
+                    mett = recoilCorrector.CorrectByMeanResolution( met_x, met_y, boson.Px(), boson.Py(), boson.Px(), boson.Py(), int(njetsforrecoil))
+		    e.met = sqrt(mett[0]* mett[0] + mett[1]*mett[1])
+                    
+            if group != 'data' and (cat[2:] == 'et' or cat[2:]  == 'mt' or  cat[2:] == 'tt') :
+            
+                #print weight, tauSFTool.getSFvsPT(e.pt_3,e.gen_match_3), 'pt', float(e.pt_3), float(e.pt_3_tr), i, 'g_match', e.gen_match_3, nickName
+                #tau energy scale
+
+		if e.gen_match_4 == 2 or e.gen_match_4 == 4 :
+		    if e.decayMode_4 == 1 :  weight *= weights_muToTauFR['DM1']
+		    if e.decayMode_4 == 0 :  
+			if abs(e.eta_4) < 0.4                        : weight *= weights_muToTauFR['lt0p4'] *  weights_mujToTauFR['lt0p4']
+			if abs(e.eta_4) > 0.4 and abs(e.eta_4 < 0.8) : weight *= weights_muToTauFR['0p4to0p8'] * weights_mujToTauFR['0p4to0p8']
+			if abs(e.eta_4) > 0.8 and abs(e.eta_4 < 1.2) : weight *= weights_muToTauFR['0p8to1p2'] * weights_mujToTauFR['0p8to1p2']
+			if abs(e.eta_4) > 1.2 and abs(e.eta_4 < 1.7) : weight *= weights_muToTauFR['1p2to1p7'] * weights_mujToTauFR['1p2to1p7']
+			if abs(e.eta_4) > 1.7 and abs(e.eta_4 < 2.3) : weight *= weights_muToTauFR['1p7to2p3'] * weights_mujToTauFR['1p7to2p3']
+
+			if e.decayMode_4 == 0 : 
+			    weight  *= (1 +  weights_muTotauES['DM0']*0.01)
+			    if args.redoFit.lower() == 'yes' or args.redoFit.lower() == 'true' : e.met *= (1 +  weights_muTotauES['DM0']*0.01)
+			if e.decayMode_4 == 1 : 
+			    weight  *= (1 +  weights_muTotauES['DM1']*0.01)
+			    if args.redoFit.lower() == 'yes' or args.redoFit.lower() == 'true' : e.met *= (1 +  weights_muTotauES['DM1']*0.01)
+
+
+		if e.gen_match_4 == 1 or e.gen_match_4 == 3 :
+		    if e.decayMode_4 == 0 :  
+			if abs(e.eta_4) < 1.479     : weight *= weights_elToTauFR['lt1p479_DM0'] * weights_eljToTauFR['lt1p479_DM0']
+			if abs(e.eta_4) > 1.479     : weight *= weights_elToTauFR['gt1p479_DM0'] * weights_eljToTauFR['gt1p479_DM0']
+		    if e.decayMode_4 == 1 :  
+			if abs(e.eta_4) < 1.479     : weight *= weights_elToTauFR['lt1p479_DM1'] * weights_eljToTauFR['lt1p479_DM1']
+			if abs(e.eta_4) > 1.479     : weight *= weights_elToTauFR['gt1p479_DM1'] * weights_eljToTauFR['gt1p479_DM1']
+
+			if e.decayMode_4 == 0 : 
+			    weight  *= (1 +  weights_elTotauES['DM0']*0.01)
+			    if args.redoFit.lower() == 'yes' or args.redoFit.lower() == 'true' : e.met *= (1 +  weights_elTotauES['DM0']*0.01)
+
+			if e.decayMode_4 == 1 : 
+			    weight  *= (1 +  weights_elTotauES['DM1']*0.01)
+			    if args.redoFit.lower() == 'yes' or args.redoFit.lower() == 'true' : e.met *= (1 +  weights_elTotauES['DM1']*0.01)
+
+                #tau ES
+		
+                if  cat[2:] == 'tt' :
+		    #muon faking _3 tau
+
+		    if e.gen_match_3 == 2 or e.gen_match_3 == 4 :
+			if e.decayMode_3 == 1 :  weight *= weights_muToTauFR['DM1']
+			if e.decayMode_3 == 0 :  
+			    if abs(e.eta_3) < 0.4                        : weight *= weights_muToTauFR['lt0p4'] *  weights_mujToTauFR['lt0p4']
+			    if abs(e.eta_3) > 0.4 and abs(e.eta_3 < 0.8) : weight *= weights_muToTauFR['0p4to0p8'] * weights_mujToTauFR['0p4to0p8']
+			    if abs(e.eta_3) > 0.8 and abs(e.eta_3 < 1.2) : weight *= weights_muToTauFR['0p8to1p2'] * weights_mujToTauFR['0p8to1p2']
+			    if abs(e.eta_3) > 1.2 and abs(e.eta_3 < 1.7) : weight *= weights_muToTauFR['1p2to1p7'] * weights_mujToTauFR['1p2to1p7']
+			    if abs(e.eta_3) > 1.7 and abs(e.eta_3 < 2.3) : weight *= weights_muToTauFR['1p7to2p3'] * weights_mujToTauFR['1p7to2p3']
+
+			    if e.decayMode_3 == 0 : 
+				weight  *= (1 +  weights_muTotauES['DM0']*0.01)
+				if args.redoFit.lower() == 'yes' or args.redoFit.lower() == 'true' : e.met *= (1 +  weights_muTotauES['DM0']*0.01)
+			    if e.decayMode_3 == 1 : 
+				weight  *= (1 +  weights_muTotauES['DM1']*0.01)
+				if args.redoFit.lower() == 'yes' or args.redoFit.lower() == 'true' : e.met *= (1 +  weights_muTotauES['DM1']*0.01)
+
+                    # electron faking _3 tau
+		    if e.gen_match_3 == 1 or e.gen_match_3 == 3 :
+			if e.decayMode_3 == 0 :  
+			    if abs(e.eta_3) < 1.479     : weight *= weights_elToTauFR['lt1p479_DM0'] * weights_eljToTauFR['lt1p479_DM0']
+			    if abs(e.eta_3) > 1.479     : weight *= weights_elToTauFR['gt1p479_DM0'] * weights_eljToTauFR['gt1p479_DM0']
+			if e.decayMode_3 == 1 :  
+			    if abs(e.eta_3) < 1.479     : weight *= weights_elToTauFR['lt1p479_DM1'] * weights_eljToTauFR['lt1p479_DM1']
+			    if abs(e.eta_3) > 1.479     : weight *= weights_elToTauFR['gt1p479_DM1'] * weights_eljToTauFR['gt1p479_DM1']
+
+			    if e.decayMode_3 == 0 : 
+				weight  *= (1 +  weights_elTotauES['DM0']*0.01)
+				if args.redoFit.lower() == 'yes' or args.redoFit.lower() == 'true' : e.met *= (1 +  weights_elTotauES['DM0']*0.01)
+
+			    if e.decayMode_3 == 1 : 
+				weight  *= (1 +  weights_elTotauES['DM1']*0.01)
+				if args.redoFit.lower() == 'yes' or args.redoFit.lower() == 'true' : e.met *= (1 +  weights_elTotauES['DM1']*0.01)
+
+		    if e.gen_match_3 == 5 : 
+			weight *= tauSFTool.getSFvsPT(e.pt_3,e.gen_match_3)
+			e.pt_3 *= testool.getTES(e.decayMode_3)
+			e.m_3 *= testool.getTES(e.decayMode_3)
+			if args.redoFit.lower() == 'yes' or args.redoFit.lower() == 'true' : e.met *= testool.getTES(e.decayMode_3)
+			if e.decayMode_3 == 1 : m_3 =  0.1396  
+
+		    if e.gen_match_4 == 5 : 
+			weight *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4)
+			e.pt_4 *= testool.getTES(e.decayMode_4)
+			e.m_4 *= testool.getTES(e.decayMode_4)
+			if args.redoFit.lower() == 'yes' or args.redoFit.lower() == 'true' : e.met *= testool.getTES(e.decayMode_3)
+			if e.decayMode_4 == 1 : m_4 =  0.1396  
+
+
+               
+
+                '''
+		#now shift the met as well - the problem is that we don't propagate that to m_tt
+                if e.gen_match_3 == 5 or e.gen_match_4 == 5 :
+                    if e.decayMode_3 == 0 or e.decayMode_4 == 0 : 
+                        pfmet_tree *= (1+ weights['tauES_DM0'])  #tau ES
+                        puppimet_tree *= (1+ weights['tauES_DM0'])
+                    if e.decayMode_3 == 1 or e.decayMode_4 == 1 : 
+                        pfmet_tree *= (1+ weights['tauES_DM1'])  #tau ES
+                        puppimet_tree *= (1+ weights['tauES_DM1'])
+                    if e.decayMode_3 == 10 or e.decayMode_4 == 10 : 
+                        pfmet_tree *= (1+ weights['tauES_DM10'])  #tau ES
+                        puppimet_tree *= (1+ weights['tauES_DM10'])
+		'''
+
+
+
 	        eff_d_1, eff_d_2 = 0., 0.
 	        eff_mc_1, eff_mc_2 = 0., 0.
 
@@ -953,7 +992,7 @@ for group in groups :
 
             if trigw > 0 : 
                 fastMTTmass, fastMTTtransverseMass = -1, -1
-                fastMTTmass, fastMTTtransverseMass = runSVFit(e, cat[2:]) 
+                if args.redoFit.lower() == 'yes' or args.redoFit.lower() == 'true' : fastMTTmass, fastMTTtransverseMass = runSVFit(e, cat[2:]) 
 	        #print 'new', fastMTTmass, 'old', e.m_sv, fastMTTtransverseMass, e.mt_sv, cat[2:]
                 for plotVar in plotSettings:
                     #print plotVar
@@ -994,16 +1033,9 @@ for group in groups :
                 hCutFlow[cat][nickName].SetBinContent(i, WCounter[i-1][icat-1])
 	        #print 'will fill now the',  hCutFlow[cat][nickName].GetName(), 'bin', i, 'with ', WCounter[i-1][icat-1], hCutFlow[cat][nickName].GetBinContent(i), hCutFlow[cat][nickName].GetXaxis().GetBinLabel(i), nickName
             
-            #hW[cat][nickName].GetXaxis().SetBinLabel(1, "w")
-            #hW[cat][nickName].GetXaxis().SetBinLabel(2, "tr_w")
-            #hW[cat][nickName].GetXaxis().SetBinLabel(3, "l_sf")
-	    #hW[cat][nickName].SetBinContent(1, hW[cat][nickName].GetBinContent(1)*weight)
-	    #hW[cat][nickName].SetBinContent(2, hW[cat][nickName].GetBinContent(2)*trigw)
-	    #hW[cat][nickName].SetBinContent(3, hW[cat][nickName].GetBinContent(3)*lepton_sf)
 
             fOut.cd()
             hCutFlow[cat][nickName].Write()
-	    #hW[cat][nickName].Write()
         
 
         
