@@ -917,7 +917,7 @@ class outTuple() :
                 self.q_1[0]  = entry.Muon_charge[lepList[1]]
                 self.q_2[0]  = entry.Muon_charge[lepList[0]]
                 self.d0_1[0]   = entry.Muon_dxy[lepList[1]]
-                self.dZ_2[0]   = entry.Muon_dz[lepList[2]]
+                self.dZ_2[0]   = entry.Muon_dz[lepList[0]]
         
         # genMatch the di-lepton variables
 	if isMC :
