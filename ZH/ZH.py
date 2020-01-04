@@ -141,7 +141,6 @@ if args.unique != 'none' :
 print("Opening {0:s} as output.".format(outFileName))
 outTuple = outTuple.outTuple(outFileName, era)
 
-
 tStart = time.time()
 countMod = 1000
 isMC = True
@@ -157,9 +156,9 @@ for count, e in enumerate(inTree) :
 
     isInJSON = False
     if not MC : isInJSON = CJ.checkJSON(e.luminosityBlock,e.run)
-    if not isInJSON and not MC :
+    #if not isInJSON and not MC :
         #print("Event not in JSON: Run:{0:d} LS:{1:d}".format(e.run,e.luminosityBlock))
-        continue
+    #    continue
 
     for cat in cats: cutCounter[cat].count('InJSON')
     
@@ -282,13 +281,11 @@ for count, e in enumerate(inTree) :
                 passCut = True 
                 if cat =='eeet' and (len(goodMuonList) > 0 or len(goodElectronList) > 3) : passCut = False 
                 if cat =='eemt' and (len(goodMuonList) > 1 or len(goodElectronList) > 2) : passCut = False 
-                if cat =='eeet' and (len(goodMuonList) > 0 or len(goodElectronList) > 3) : passCut = False 
                 if cat =='eett' and (len(goodMuonList) > 0 or len(goodElectronList) > 2) : passCut = False 
 
                 if cat =='mmet' and (len(goodMuonList) > 2 or len(goodElectronList) > 1) : passCut = False 
                 if cat =='mmmt' and (len(goodMuonList) > 3 or len(goodElectronList) > 0) : passCut = False 
                 if cat =='mmem' and (len(goodMuonList) > 3 or len(goodElectronList) > 1) : passCut = False 
-                if cat =='mmmt' and (len(goodMuonList) > 3 or len(goodElectronList) > 0) : passCut = False 
 
                 if not passCut :
                     if unique :
