@@ -108,10 +108,19 @@ def getTauListv3(channel, entry, pairList=[]) :
 	if  entry.Tau_decayMode[j] == 5 or entry.Tau_decayMode[j] == 6 : continue
         if abs(entry.Tau_charge[j]) != 1: continue
 
-	if not ord(entry.Tau_idDeepTau2017v2p1VSjet[j]) & 16 > 0 : continue
-	if not ord(entry.Tau_idDeepTau2017v2p1VSe[j]) & 1 > 0 : continue
-	if not ord(entry.Tau_idDeepTau2017v2p1VSmu[j]) & 1 > 0 : continue
+	#if not ord(entry.Tau_idDeepTau2017v2p1VSjet[j]) & 16 > 0 : continue
+	#if not ord(entry.Tau_idDeepTau2017v2p1VSe[j]) & 1 > 0 : continue
+	#if not ord(entry.Tau_idDeepTau2017v2p1VSmu[j]) & 1 > 0 : continue
 
+        if tt['tau_vJet'] > 0  and not ord(entry.Tau_idDeepTau2017v2p1VSjet[j]) & tt['tau_vJet'] > 0 :
+            if printOn : print("        fail DeepTau vs. Jet={0:d}".format(ord(entry.Tau_idDeepTau2017v2p1VSjet[j])))
+            continue
+	if tt['tau_vEle'] > 0 and not ord(entry.Tau_idDeepTau2017v2p1VSe[j]) & tt['tau_vEle'] > 0 :
+            if printOn : print("        fail DeepTau vs. ele={0:d}".format(ord(entry.Tau_idDeepTau2017v2p1VSe[j])))
+            continue
+        if tt['tau_vMu'] > 0 and not ord(entry.Tau_idDeepTau2017v2p1VSmu[j]) & tt['tau_vMu'] > 0 :
+            if printOn : print("        fail DeepTau vs.  mu={0:d}".format(ord(entry.Tau_idDeepTau2017v2p1VSmu[j])))
+            continue
 
         eta, phi = entry.Tau_eta[j], entry.Tau_phi[j]
         DR0, DR1 =  lTauDR(eta,phi, pairList[0]), lTauDR(eta,phi,pairList[1]) 
