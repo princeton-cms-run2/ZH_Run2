@@ -202,8 +202,10 @@ for count, e in enumerate(inTree) :
             #if  args.year == 2016 and not e.HLT_Ele27_eta2p1_WPTight_Gsf and not e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ and not e.HLT_Ele25_eta2p1_WPTight_Gsf: continue
             #if (args.year == 2017 or args.year == 2018) and not e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ and not e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL and not e.HLT_Ele35_WPTight_Gsf and not e.HLT_Ele32_WPTight_Gsf:
 
-            if  args.year == 2016 and not e.HLT_Ele27_eta2p1_WPTight_Gsf and not e.HLT_Ele25_eta2p1_WPTight_Gsf: continue
-            if (args.year == 2017 or args.year == 2018) and not e.HLT_Ele35_WPTight_Gsf and not e.HLT_Ele32_WPTight_Gsf:
+            passCut = True 
+            if  args.year == 2016 and not e.HLT_Ele27_eta2p1_WPTight_Gsf and not e.HLT_Ele25_eta2p1_WPTight_Gsf: passCut = False 
+            if (args.year == 2017 or args.year == 2018) and not e.HLT_Ele35_WPTight_Gsf and not e.HLT_Ele32_WPTight_Gsf: passCut = False
+            if not passCut :
                 if unique :
                     print("Trigger Fail: Event ID={0:d} cat={1:s}".format(e.event,cat))
                     GF.printEvent(e)
@@ -235,7 +237,13 @@ for count, e in enumerate(inTree) :
             #if args.year == 2016 and not e.HLT_IsoMu24 and not e.HLT_IsoTkMu24 and not e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ and not e.HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ and not e.HLT_IsoMu27 : continue
             #if (args.year == 2017 or args.year == 2018) and not e.HLT_IsoMu24  and not e.HLT_IsoMu27 and not e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass8 and not e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass3p8 : continue
 
-            if not e.HLT_IsoMu24 and not  e.HLT_IsoMu27 : continue
+            if not e.HLT_IsoMu24 and not e.HLT_IsoMu27 :
+                if unique :
+                    print("Trigger Fail: Event ID={0:d} cat={1:s}".format(e.event,cat))
+                    GF.printEvent(e)
+                    if MC : GF.printMC(e)
+                continue
+            
             for cat in cats[4:]: 
 	        cutCounter[cat].count('Trigger')
 	        if  MC :   cutCounterGenWeight[cat].countGenWeight('Trigger', e.genWeight)
@@ -282,13 +290,13 @@ for count, e in enumerate(inTree) :
                 passCut = True 
                 if cat =='eeet' and (len(goodMuonList) > 0 or len(goodElectronList) > 3) : passCut = False 
                 if cat =='eemt' and (len(goodMuonList) > 1 or len(goodElectronList) > 2) : passCut = False 
-                if cat =='eeet' and (len(goodMuonList) > 0 or len(goodElectronList) > 3) : passCut = False 
+                if cat =='eeem' and (len(goodMuonList) > 1 or len(goodElectronList) > 3) : passCut = False 
                 if cat =='eett' and (len(goodMuonList) > 0 or len(goodElectronList) > 2) : passCut = False 
 
                 if cat =='mmet' and (len(goodMuonList) > 2 or len(goodElectronList) > 1) : passCut = False 
                 if cat =='mmmt' and (len(goodMuonList) > 3 or len(goodElectronList) > 0) : passCut = False 
                 if cat =='mmem' and (len(goodMuonList) > 3 or len(goodElectronList) > 1) : passCut = False 
-                if cat =='mmmt' and (len(goodMuonList) > 3 or len(goodElectronList) > 0) : passCut = False 
+                if cat =='mmtt' and (len(goodMuonList) > 2 or len(goodElectronList) > 0) : passCut = False 
 
                 if not passCut :
                     if unique :
@@ -311,7 +319,7 @@ for count, e in enumerate(inTree) :
             if len(bestTauPair) < 1 :
                 if unique :
                     print("Tau Pair Fail: Event ID={0:d} cat={1:s}".format(e.event,cat))
-                    bestTauPair = tauFun.getBestMuTauPair(e,cat=cat,pairList=pairList,printOn=True) 
+                    bestTauPair = tauFun.getBestEMuTauPair(e,cat=cat,pairList=pairList,printOn=True) 
                     GF.printEvent(e)
                                     
                 if False and maxPrint > 0 and (tauMode == GF.eventID(e)[2:4]) :

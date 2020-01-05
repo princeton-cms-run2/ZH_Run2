@@ -14,7 +14,7 @@ tt:
   tau_vMu: 2
   tau_vEle: 4
 mt:
-  mu_ID: false
+  mu_ID: true
   mu_pt: 10.
   mu_eta: 2.4  
   mu_iso_f : true
@@ -32,15 +32,15 @@ mt:
   tau_vMu: 2
   tau_vEle: 4
 em: 
-  mu_ID: false
+  mu_ID: true
   mu_dxy: 0.045
   mu_dz: 0.2
   mu_pt: 10.
   mu_eta: 2.4
-  mu_iso_f : true
+  mu_iso_f : false 
   mu_iso: 0.25
   em_DR: 0.3
-  lt_DR: 0.5
+  lt_DR: 0.3
   ele_pt: 10
   ele_eta: 2.5
   ele_dxy: 0.045
@@ -73,7 +73,7 @@ et:
 mm:
   mu_pt: 10.
   mu_eta: 2.4
-  mu_ID: false
+  mu_ID: true
   mu_iso_f : true
   mu_iso: 0.25
   mu_dxy: 0.045
