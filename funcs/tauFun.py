@@ -108,13 +108,19 @@ def getTauListv3(channel, entry, pairList=[]) :
 	if  entry.Tau_decayMode[j] == 5 or entry.Tau_decayMode[j] == 6 : continue
         if abs(entry.Tau_charge[j]) != 1: continue
 
+	#if not ord(entry.Tau_idDeepTau2017v2p1VSjet[j]) & 16 > 0 : continue
+	#if not ord(entry.Tau_idDeepTau2017v2p1VSe[j]) & 1 > 0 : continue
+	#if not ord(entry.Tau_idDeepTau2017v2p1VSmu[j]) & 1 > 0 : continue
+
         if tt['tau_vJet'] > 0  and not ord(entry.Tau_idDeepTau2017v2p1VSjet[j]) & tt['tau_vJet'] > 0 :
+            if printOn : print("        fail DeepTau vs. Jet={0:d}".format(ord(entry.Tau_idDeepTau2017v2p1VSjet[j])))
             continue
 	if tt['tau_vEle'] > 0 and not ord(entry.Tau_idDeepTau2017v2p1VSe[j]) & tt['tau_vEle'] > 0 :
+            if printOn : print("        fail DeepTau vs. ele={0:d}".format(ord(entry.Tau_idDeepTau2017v2p1VSe[j])))
             continue
         if tt['tau_vMu'] > 0 and not ord(entry.Tau_idDeepTau2017v2p1VSmu[j]) & tt['tau_vMu'] > 0 :
+            if printOn : print("        fail DeepTau vs.  mu={0:d}".format(ord(entry.Tau_idDeepTau2017v2p1VSmu[j])))
             continue
-
 
         eta, phi = entry.Tau_eta[j], entry.Tau_phi[j]
         DR0, DR1 =  lTauDR(eta,phi, pairList[0]), lTauDR(eta,phi,pairList[1]) 
@@ -151,12 +157,16 @@ def getTauListAZH(channel, entry, pairList=[], printOn=False) :
         if abs(entry.Tau_dz[j]) > tt['tau_dz']:
             if printOn : print("    fail dz={0:f}".format(entry.Tau_dz[j]))
             continue
-        if not entry.Tau_idDecayModeNewDMs[j]:
+        if tt['tau_ID'] and not entry.Tau_idDecayModeNewDMs[j]:
             if printOn : print("    fail idDecay={0}".format(entry.Tau_idDecayModeNewDMs[j]))
             continue
 	if tt['tau_decayMode'] and (entry.Tau_decayMode[j] == 5 or entry.Tau_decayMode[j] == 6) :
             if printOn : print("    fail decayMode={0:d}".format(entry.Tau_decayMode[j]))
             continue
+        
+        #if ord(entry.Tau_idDeepTau2017v2p1VSjet[j]) & 16 > 0 : b_vsjet  = True  #no needed for AZH sync
+        #if ord(entry.Tau_idDeepTau2017v2p1VSmu[j]) & 2 > 0 : b_vsmu  = True 
+        #if ord(entry.Tau_idDeepTau2017v2p1VSe[j]) & 4 > 0 : b_vse  = True 
 
         if tt['tau_vJet'] > 0  and not ord(entry.Tau_idDeepTau2017v2p1VSjet[j]) & tt['tau_vJet'] > 0 :
             if printOn : print("        fail DeepTau vs. Jet={0:d}".format(ord(entry.Tau_idDeepTau2017v2p1VSjet[j])))
@@ -167,6 +177,9 @@ def getTauListAZH(channel, entry, pairList=[], printOn=False) :
         if tt['tau_vMu'] > 0 and not ord(entry.Tau_idDeepTau2017v2p1VSmu[j]) & tt['tau_vMu'] > 0 :
             if printOn : print("        fail DeepTau vs.  mu={0:d}".format(ord(entry.Tau_idDeepTau2017v2p1VSmu[j])))
             continue
+            
+        #if not b_vsjet or not b_vsmu or not b_vse : continue
+        #if not b_vsmu or not b_vse : continue
 
         if abs(entry.Tau_charge[j]) != 1 :
             if printOn : print("        fail charge={0:d}".format(entry.Tau_charge[j]))
@@ -297,7 +310,7 @@ def getMuTauPairs(entry,cat='mt',pairList=[],printOn=False) :
         
         # apply tau(mu) selections
         if mt['mu_ID']:
-            if not entry.Muon_mediumId[i]:
+            if not (entry.Muon_mediumId[i] or entry.Muon_tightId[i]) :
                 if printOn : print("    fail mu_ID mediumId={0}".format(entry.Muon_mediumId[i]))
                 continue
         if abs(entry.Muon_dxy[i]) > mt['mu_dxy']:
@@ -313,7 +326,7 @@ def getMuTauPairs(entry,cat='mt',pairList=[],printOn=False) :
         if abs(mu_eta) > mt['mu_eta']:
             if printOn : print("    fail mu_eta={0:f}".format(entry.Muon_eta[i]))
             continue 
-        if mt['mu_iso_f'] and entry.Muon_pfRelIso04_all[i] > mt['mu_iso']:
+        if entry.Muon_pfRelIso04_all[i] > mt['mu_iso']:
             if printOn : print("    fail mu_iso={0:f}".format(entry.Muon_pfRelIso04_all[i]))
             continue
         DR0 = lTauDR(mu_eta,mu_phi,pairList[0]) # l1 vs. tau(mu)
@@ -336,7 +349,7 @@ def getMuTauPairs(entry,cat='mt',pairList=[],printOn=False) :
             if abs(entry.Tau_dz[j]) > mt['tau_dz']:
                 if printOn : print("        fail tau  dz={0:f}".format(entry.Tau_dz[j]))
                 continue
-            if False and mt['tau_ID']:
+            if mt['tau_ID']:
                 if not entry.Tau_idDecayModeNewDMs[j]:
                     if printOn : print("        fail tau idDecayModeNewDMs={0}".format(entry.Tau_idDecayModeNewDMs[j]))
                     continue
@@ -422,8 +435,8 @@ def getEMuTauPairs(entry,cat='em',pairList=[],printOn=False) :
         # selections for tau(mu)
         if printOn : print("Muon i={0:d}".format(i))
         if em['mu_ID']:
-            if not entry.Muon_mediumId[i]:
-                if printOn : print("    failed muID={0}".format(Muon_mediumId[i]))
+            if not (entry.Muon_mediumId[i] or entry.Muon_tightId[i]) :
+                if printOn : print("    failed muID={0}".format(entry.Muon_mediumId[i]))
                 continue
         if abs(entry.Muon_dxy[i]) > em['mu_dxy']:
             if printOn : print("    failed dxy={0:f}".format(entry.Muon_dxy[i]))
@@ -437,7 +450,7 @@ def getEMuTauPairs(entry,cat='em',pairList=[],printOn=False) :
             continue
         if abs(mu_eta) > em['mu_eta']:
             if printOn : print("    failed eta={0:f}".format(entry.Muon_eta[i]))
-            continue  
+            continue   
         if em['mu_iso_f'] and entry.Muon_pfRelIso04_all[i] > em['mu_iso']:
             if printOn : print("    failed iso={0:f}".format(entry.Muon_pfRelIso04_all[i]))
             continue 
@@ -632,7 +645,7 @@ def getETauPairs(entry,cat='et',pairList=[],printOn=False) :
                 continue # tau(ele) vs. tau(h)
             DR0 = lTauDR(tau_eta,tau_phi,pairList[0]) # l1 vs. tau(h)
             DR1 = lTauDR(tau_eta,tau_phi,pairList[1]) # l2 vs. tau(h)
-            if DR0 < et['lt_DR'] or DR1 < et['lt_DR']:
+            if DR0 < et['tt_DR'] or DR1 < et['tt_DR']:
                 if printOn : print("        failed ltDR DR0={0:f} DR1={1:f}".format(DR0,DR1))
                 continue
             eTauPairs.append([i,j])
@@ -709,8 +722,6 @@ def goodElectron(entry, j, AZH) :
         if not entry.Electron_convVeto[j]: return False
     if ee['ele_ID']:
         if not entry.Electron_mvaFall17V2noIso_WP90[j] : return False
-
-    if not AZH and ee['ele_iso_f'] and entry.Electron_pfRelIso03_all[j] > ee['ele_iso']: return False
 
     if AZH and not entry.Electron_convVeto[j]: return False
     if AZH and not entry.Electron_mvaFall17V2noIso_WP90[j] : return False
