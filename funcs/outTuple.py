@@ -137,12 +137,14 @@ class outTuple() :
         self.Z_DR       = array('f',[0])
         self.Z_SS       = array('f',[0])
         self.pt_1      = array('f',[0])
+        self.m_1_tr   = array('f',[0])
         self.pt_1_tr   = array('f',[0])
         self.phi_1     = array('f',[0])
         self.phi_1_tr  = array('f',[0])
         self.eta_1     = array('f',[0])
         self.eta_1_tr  = array('f',[0])
         self.pt_2      = array('f',[0])
+        self.m_2_tr   = array('f',[0])
         self.pt_2_tr   = array('f',[0])
         self.phi_2     = array('f',[0])
         self.phi_2_tr  = array('f',[0])
@@ -256,7 +258,7 @@ class outTuple() :
         self.t.Branch('decayMode_3',   self.decayMode_3,   'decayMode_3/I')
 
         self.t.Branch('pt_4',        self.pt_4,        'pt_4/F')
-        self.t.Branch('pt_4_tr',     self.pt_4,        'pt_4_tr/F')
+        self.t.Branch('pt_4_tr',     self.pt_4_tr,        'pt_4_tr/F')
         self.t.Branch('phi_4',       self.phi_4,       'phi_4/F')
         self.t.Branch('phi_4_tr',    self.phi_4_tr,    'phi_4_tr/F')
         self.t.Branch('eta_4',       self.eta_4,       'eta_4/F')
@@ -305,12 +307,14 @@ class outTuple() :
         self.t.Branch('Z_DR',       self.Z_DR,       'Z_DR/F')   
         self.t.Branch('Z_SS',       self.Z_SS,       'Z_SS/F')   
         self.t.Branch('pt_1',        self.pt_1,        'pt_1/F')
+        self.t.Branch('m_1_tr',     self.m_1_tr,     'm_1_tr/F')
         self.t.Branch('pt_1_tr',     self.pt_1_tr,     'pt_1_tr/F')
         self.t.Branch('phi_1',       self.phi_1,       'phi_1/F')  
         self.t.Branch('phi_1_tr',    self.phi_1_tr,    'phi_1_tr/F')
         self.t.Branch('eta_1',       self.eta_1,       'eta_1/F')    
         self.t.Branch('eta_1_tr',    self.eta_1_tr,    'eta_1_tr/F')
         self.t.Branch('pt_2',        self.pt_2,        'pt_2/F')      
+        self.t.Branch('m_2_tr',     self.m_2_tr,     'm_2_tr/F')
         self.t.Branch('pt_2_tr',     self.pt_2_tr,     'pt_2_tr/F')
         self.t.Branch('phi_2',       self.phi_2,       'phi_2/F')    
         self.t.Branch('phi_2_tr',    self.phi_2_tr,    'phi_2_tr/F')
@@ -940,7 +944,9 @@ class outTuple() :
 		except IndexError : pass 
 		    
 	    if idx_Lep1_tr >= 0 and idx_Lep2_tr >= 0:
+		self.m_1_tr[0]  = entry.GenPart_mass[idx_Lep1_tr]
 		self.pt_1_tr[0]  = entry.GenPart_pt[idx_Lep1_tr]
+		self.m_2_tr[0]  = entry.GenPart_mass[idx_Lep2_tr]
 		self.pt_2_tr[0]  = entry.GenPart_pt[idx_Lep2_tr]
 		self.eta_1_tr[0] = entry.GenPart_eta[idx_Lep1_tr]
 		self.eta_2_tr[0] = entry.GenPart_eta[idx_Lep2_tr]
