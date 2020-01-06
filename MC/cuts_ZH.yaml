@@ -3,7 +3,7 @@ mll:
   mll_low: 60.
   mll_high: 120. 
 tt:
-  tau_pt: 19
+  tau_pt: 20
   tau_eta: 2.3
   tau_antiMu: 0
   tau_antiEle: 0
@@ -14,7 +14,7 @@ tt:
   tau_vMu: 1
   tau_vEle: 1
 mt:
-  mu_ID: false
+  mu_ID: true
   mu_pt: 10.
   mu_eta: 2.4  
   mu_dxy: 0.045
@@ -35,7 +35,7 @@ mt:
   tau_vMu: 8
   tau_vEle: 1
 em: 
-  mu_ID: false
+  mu_ID: true
   mu_dxy: 0.045
   mu_dz: 0.2
   mu_pt: 10.
@@ -44,7 +44,7 @@ em:
   mu_iso: 0.4
   em_DR: 0.3
   lt_DR: 0.5
-  ele_pt: 9.5
+  ele_pt: 10
   ele_eta: 2.5
   ele_dxy: 0.045
   ele_dz: 0.2
@@ -59,7 +59,7 @@ et:
   ele_ID: true
   ele_lostHits: 1
   ele_convVeto: true
-  ele_pt: 9.5
+  ele_pt: 10
   ele_eta: 2.5
   ele_iso: 0.2
   lt_DR: 0.5
@@ -81,7 +81,7 @@ et:
 mm:
   mu_pt: 10
   mu_eta: 2.4
-  mu_ID: false
+  mu_ID: true
   mu_iso_f: true
   mu_iso: 0.25
   mu_dxy: 0.045
