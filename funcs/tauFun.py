@@ -86,7 +86,7 @@ def getTauListv2(channel, entry, pairList=[]) :
     return tauList
 
 
-def getTauListv3(channel, entry, pairList=[]) :
+def getTauListv3(channel, entry, pairList=[],printOn=False) :
     """ tauFun.getTauList(): return a list of taus that 
                              pass the basic selection cuts               
     """
