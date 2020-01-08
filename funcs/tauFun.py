@@ -17,76 +17,7 @@ with io.open('cuts.yaml', 'r') as stream:
 print "Using selections:\n", selections
 
 
-def getTauList(channel, entry, pairList=[]) :
-    """ tauFun.getTauList(): return a list of taus that 
-                             pass the basic selection cuts               
-    """
-
-    if not channel in ['mmtt','eett'] :
-        print("Warning: invalid channel={0:s} in tauFun.getTauList()".format(channel))
-        exit()
-
-    if entry.nTau == 0: return []
-
-    tauList = []
-    tt = selections['tt'] # selections for H->tau(h)+tau(h)
-    for j in range(entry.nTau):    
-
-        # apply tau(h) selections 
-        if entry.Tau_pt[j] < tt['tau_pt']: continue
-        if abs(entry.Tau_eta[j]) > tt['tau_eta']: continue
-        if ord(entry.Tau_idAntiMu[j]) <= tt['tau_antiMu']: continue
-        if ord(entry.Tau_idAntiEle[j]) <= tt['tau_antiEle']: continue
-        if not entry.Tau_idDecayMode[j]: continue
-        if abs(entry.Tau_dz[j]) > tt['tau_dz']: continue
-        if abs(entry.Tau_charge[j]) != 1. : continue
-        eta, phi = entry.Tau_eta[j], entry.Tau_phi[j]
-        DR0, DR1 =  lTauDR(eta,phi, pairList[0]), lTauDR(eta,phi,pairList[1]) 
-        if DR0 < tt['lt_DR'] or DR1 < tt['lt_DR']: continue
-        tauList.append(j)
-    
-    return tauList
-
-def getTauListv2(channel, entry, pairList=[]) :
-    """ tauFun.getTauList(): return a list of taus that 
-                             pass the basic selection cuts               
-    """
-
-    if not channel in ['mmtt','eett'] :
-        print("Warning: invalid channel={0:s} in tauFun.getTauList()".format(channel))
-        exit()
-
-    if entry.nTau == 0: return []
-
-    tauList = []
-    tt = selections['tt'] # selections for H->tau(h)+tau(h)
-    for j in range(entry.nTau):    
-        b_vsjet = False
-        b_vsmu = False
-        b_vse = False
-        # apply tau(h) selections 
-        if entry.Tau_pt[j] < tt['tau_pt']: continue
-        if abs(entry.Tau_eta[j]) > tt['tau_eta']: continue
-        if abs(entry.Tau_dz[j]) > tt['tau_dz']: continue
-        if not entry.Tau_idDecayModeNewDMs[j]: continue
-	if  entry.Tau_decayMode[j] == 5 or entry.Tau_decayMode[j] == 6 : continue
-        if ord(entry.Tau_idDeepTau2017v2p1VSjet[j]) & 16 > 0 : b_vsjet  = True  #no needed for AZH sync
-        if ord(entry.Tau_idDeepTau2017v2p1VSmu[j]) & 2 > 0 : b_vsmu  = True 
-        if ord(entry.Tau_idDeepTau2017v2p1VSe[j]) & 4 > 0 : b_vse  = True 
-	
-        #if not b_vsjet or not b_vsmu or not b_vse : continue
-        if not b_vsjet or not b_vsmu or not b_vse : continue
-
-        if abs(entry.Tau_charge[j]) != 1: continue
-        eta, phi = entry.Tau_eta[j], entry.Tau_phi[j]
-        DR0, DR1 =  lTauDR(eta,phi, pairList[0]), lTauDR(eta,phi,pairList[1]) 
-        if DR0 < tt['lt_DR'] or DR1 < tt['lt_DR']: continue
-        tauList.append(j)
-    
-    return tauList
-
-
-def getTauListv3(channel, entry, pairList=[],printOn=False) :
+def getTauList(channel, entry, pairList=[],printOn=False) :
     """ tauFun.getTauList(): return a list of taus that 
                              pass the basic selection cuts               
     """
@@ -107,10 +38,6 @@ def getTauListv3(channel, entry, pairList=[],printOn=False) :
         if not entry.Tau_idDecayModeNewDMs[j]: continue
 	if  entry.Tau_decayMode[j] == 5 or entry.Tau_decayMode[j] == 6 : continue
         if abs(entry.Tau_charge[j]) != 1: continue
-
-	#if not ord(entry.Tau_idDeepTau2017v2p1VSjet[j]) & 16 > 0 : continue
-	#if not ord(entry.Tau_idDeepTau2017v2p1VSe[j]) & 1 > 0 : continue
-	#if not ord(entry.Tau_idDeepTau2017v2p1VSmu[j]) & 1 > 0 : continue
 
         if tt['tau_vJet'] > 0  and not ord(entry.Tau_idDeepTau2017v2p1VSjet[j]) & tt['tau_vJet'] > 0 :
             if printOn : print("        fail DeepTau vs. Jet={0:d}".format(ord(entry.Tau_idDeepTau2017v2p1VSjet[j])))
@@ -164,10 +91,6 @@ def getTauListAZH(channel, entry, pairList=[], printOn=False) :
             if printOn : print("    fail decayMode={0:d}".format(entry.Tau_decayMode[j]))
             continue
         
-        #if ord(entry.Tau_idDeepTau2017v2p1VSjet[j]) & 16 > 0 : b_vsjet  = True  #no needed for AZH sync
-        #if ord(entry.Tau_idDeepTau2017v2p1VSmu[j]) & 2 > 0 : b_vsmu  = True 
-        #if ord(entry.Tau_idDeepTau2017v2p1VSe[j]) & 4 > 0 : b_vse  = True 
-
         if tt['tau_vJet'] > 0  and not ord(entry.Tau_idDeepTau2017v2p1VSjet[j]) & tt['tau_vJet'] > 0 :
             if printOn : print("        fail DeepTau vs. Jet={0:d}".format(ord(entry.Tau_idDeepTau2017v2p1VSjet[j])))
             continue
@@ -178,9 +101,6 @@ def getTauListAZH(channel, entry, pairList=[], printOn=False) :
             if printOn : print("        fail DeepTau vs.  mu={0:d}".format(ord(entry.Tau_idDeepTau2017v2p1VSmu[j])))
             continue
             
-        #if not b_vsjet or not b_vsmu or not b_vse : continue
-        #if not b_vsmu or not b_vse : continue
-
         if abs(entry.Tau_charge[j]) != 1 :
             if printOn : print("        fail charge={0:d}".format(entry.Tau_charge[j]))
             continue

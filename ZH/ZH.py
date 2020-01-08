@@ -306,7 +306,8 @@ for count, e in enumerate(inTree) :
                 
             if tauMode == 'tt' :
                 if isAZH : tauList = tauFun.getTauListAZH(cat, e, pairList=pairList)
-                else : tauList = tauFun.getTauListv3(cat, e, pairList=pairList)
+                #else : tauList = tauFun.getTauListv3(cat, e, pairList=pairList)
+                else : tauList = tauFun.getTauList(cat, e, pairList=pairList)
                 bestTauPair = tauFun.getBestTauPair(cat, e, tauList )
                                     
             elif tauMode == 'et' :
