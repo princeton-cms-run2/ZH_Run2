@@ -191,8 +191,8 @@ for count, e in enumerate(inTree) :
 	        if  MC :   cutCounterGenWeight[cat].countGenWeight('LeptonCount', e.genWeight)
 
 
-        goodElectronList = tauFun.makeGoodElectronList(e, isAZH)
-        goodMuonList = tauFun.makeGoodMuonList(e, isAZH)
+        goodElectronList = tauFun.makeGoodElectronList(e)
+        goodMuonList = tauFun.makeGoodMuonList(e)
         goodElectronList, goodMuonList = tauFun.eliminateCloseLeptons(e, goodElectronList, goodMuonList)
 
 	lepList=[]
@@ -286,6 +286,8 @@ for count, e in enumerate(inTree) :
         for tauMode in ['et','mt','tt','em'] :
             if args.category != 'none' and tauMode != args.category[2:] : continue
             cat = lepMode + tauMode
+
+            '''
             if isAZH :
                 passCut = True 
                 if cat =='eeet' and (len(goodMuonList) > 0 or len(goodElectronList) > 3) : passCut = False 
@@ -303,11 +305,14 @@ for count, e in enumerate(inTree) :
                         print("isAZH Fail: : Event ID={0:d} cat={1:s}".format(e.event,cat))
                         GF.printEvent(e)
                     continue 
-                
+            '''
+            
             if tauMode == 'tt' :
-                if isAZH : tauList = tauFun.getTauListAZH(cat, e, pairList=pairList)
+                #if isAZH : tauList = tauFun.getTauListAZH(cat, e, pairList=pairList)
                 #else : tauList = tauFun.getTauListv3(cat, e, pairList=pairList)
-                else : tauList = tauFun.getTauList(cat, e, pairList=pairList)
+                #if isAZH : tauList = tauFun.getTauList(cat, e, pairList=pairList)
+                #else :
+                tauList = tauFun.getTauList(cat, e, pairList=pairList)
                 bestTauPair = tauFun.getBestTauPair(cat, e, tauList )
                                     
             elif tauMode == 'et' :

@@ -43,6 +43,9 @@ class outTuple() :
         self.Generator_weight = array('f',[0])
         self.LHE_Njets        = array('l',[0])
 
+        self.nGoodElectron    = array('l',[0])
+        self.nGoodMuon        = array('l',[0])
+
         self.d0_1        = array('f',[0])
         self.dZ_1        = array('f',[0])
         self.d0_2        = array('f',[0])
@@ -222,6 +225,9 @@ class outTuple() :
         self.t.Branch('LHE_Njets',        self.LHE_Njets,         'LHE_Njets/I' )
         self.t.Branch('Generator_weight', self.Generator_weight,  'Generator_weight/F' )
 
+        self.t.Branch('nGoodElectron',    self.nGoodElectron,     'nGoodElectron/I' )
+        self.t.Branch('nGoodMuon',        self.nGoodMuon,         'nGoodMuon/I' )
+        
         self.t.Branch('pt_3',        self.pt_3,        'pt_3/F')
         self.t.Branch('pt_3_tr',     self.pt_3_tr,     'pt_3_tr/F')
         self.t.Branch('phi_3',       self.phi_3,       'phi_3/F')
@@ -539,6 +545,11 @@ class outTuple() :
         self.q_1[0]  = -99
         self.q_2[0]  = -99
 
+        goodElectronList = tauFun.makeGoodElectronList(entry)
+        goodMuonList = tauFun.makeGoodMuonList(entry)
+        
+        self.nGoodElectron[0] = len(goodElectronList)
+        self.nGoodMuon[0]     = len(goodMuonList)
         
         try :
             self.weight[0]           = entry.genWeight

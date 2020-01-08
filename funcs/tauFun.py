@@ -57,63 +57,6 @@ def getTauList(channel, entry, pairList=[],printOn=False) :
     return tauList
 
 
-def getTauListAZH(channel, entry, pairList=[], printOn=False) :
-    """ tauFun.getTauList(): return a list of taus that 
-                             pass the basic selection cuts               
-    """
-
-    if printOn : print("Entering getTauListAZH() nTau={0:d}".format(entry.nTau))
-    if not channel in ['mmtt','eett'] :
-        print("Warning: invalid channel={0:s} in tauFun.getTauList()".format(channel))
-        exit()
-
-    if entry.nTau == 0: return []
-
-    tauList = []
-    tt = selections['tt'] # selections for H->tau(h)+tau(h)
-    for j in range(entry.nTau):
-        if printOn : print("tau j={0:d}".format(j))
-
-        # apply tau(h) selections 
-        if entry.Tau_pt[j] < tt['tau_pt']:
-            if printOn : print("    fail pt={0:f}".format(entry.Tau_pt[j]))
-            continue
-        if abs(entry.Tau_eta[j]) > tt['tau_eta']:
-            if printOn : print("    fail eta={0:f}".format(entry.Tau_eta[j]))
-            continue
-        if abs(entry.Tau_dz[j]) > tt['tau_dz']:
-            if printOn : print("    fail dz={0:f}".format(entry.Tau_dz[j]))
-            continue
-        if tt['tau_ID'] and not entry.Tau_idDecayModeNewDMs[j]:
-            if printOn : print("    fail idDecay={0}".format(entry.Tau_idDecayModeNewDMs[j]))
-            continue
-	if tt['tau_decayMode'] and (entry.Tau_decayMode[j] == 5 or entry.Tau_decayMode[j] == 6) :
-            if printOn : print("    fail decayMode={0:d}".format(entry.Tau_decayMode[j]))
-            continue
-        
-        if tt['tau_vJet'] > 0  and not ord(entry.Tau_idDeepTau2017v2p1VSjet[j]) & tt['tau_vJet'] > 0 :
-            if printOn : print("        fail DeepTau vs. Jet={0:d}".format(ord(entry.Tau_idDeepTau2017v2p1VSjet[j])))
-            continue
-	if tt['tau_vEle'] > 0 and not ord(entry.Tau_idDeepTau2017v2p1VSe[j]) & tt['tau_vEle'] > 0 :
-            if printOn : print("        fail DeepTau vs. ele={0:d}".format(ord(entry.Tau_idDeepTau2017v2p1VSe[j])))
-            continue
-        if tt['tau_vMu'] > 0 and not ord(entry.Tau_idDeepTau2017v2p1VSmu[j]) & tt['tau_vMu'] > 0 :
-            if printOn : print("        fail DeepTau vs.  mu={0:d}".format(ord(entry.Tau_idDeepTau2017v2p1VSmu[j])))
-            continue
-            
-        if abs(entry.Tau_charge[j]) != 1 :
-            if printOn : print("        fail charge={0:d}".format(entry.Tau_charge[j]))
-            continue
-        eta, phi = entry.Tau_eta[j], entry.Tau_phi[j]
-        DR0, DR1 =  lTauDR(eta,phi, pairList[0]), lTauDR(eta,phi,pairList[1]) 
-        if DR0 < tt['lt_DR'] or DR1 < tt['lt_DR']:
-            if printOn : print("        fail ltDR DR0={0:f} DR1={1:f}".format(DR0,DR1))
-            continue
-        tauList.append(j)
-    
-    return tauList
-
-
 def tauDR(entry, j1,j2) :
     if j1 == j2 : return 0. 
     phi1, eta1, phi2, eta2 = entry.Tau_phi[j1], entry.Tau_eta[j1], entry.Tau_phi[j2], entry.Tau_eta[j2]
@@ -601,7 +544,7 @@ def getBestETauPair(entry,cat,pairList=[],printOn=False) :
 
 
 # select a muon for the Z candidate
-def goodMuon(entry, j, AZH):
+def goodMuon(entry, j, AZH=False ):
     """ tauFun.goodMuon(): select good muons
                            for Z -> mu + mu
     """
@@ -620,7 +563,7 @@ def goodMuon(entry, j, AZH):
        if not entry.Muon_looseId[j] : return False
     return True 
 
-def makeGoodMuonList(entry, AZH) :
+def makeGoodMuonList(entry, AZH=False) :
     goodMuonList = []
     for i in range(entry.nMuon) :
         if goodMuon(entry, i, AZH) : goodMuonList.append(i)
@@ -628,7 +571,7 @@ def makeGoodMuonList(entry, AZH) :
     return goodMuonList
 
 # select an electron for the Z candidate
-def goodElectron(entry, j, AZH) :
+def goodElectron(entry, j, AZH=False) :
     """ tauFun.goodElectron(): select good electrons 
                                for Z -> ele + ele
     """
@@ -647,10 +590,10 @@ def goodElectron(entry, j, AZH) :
     if AZH and not entry.Electron_mvaFall17V2noIso_WP90[j] : return False
     return True 
 
-def makeGoodElectronList(entry, AZH) :
+def makeGoodElectronList(entry, AZH=False) :
     goodElectronList = []
     for i in range(entry.nElectron) :
-        if goodElectron(entry, i, AZH) : goodElectronList.append(i)
+        if goodElectron(entry, i, AZH=AZH) : goodElectronList.append(i)
     return goodElectronList
 
 def eliminateCloseLeptons(entry, goodElectronList, goodMuonList) :
