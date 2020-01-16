@@ -16,7 +16,27 @@ with io.open('cuts.yaml', 'r') as stream:
     selections = yaml.load(stream)
 print "Using selections:\n", selections
 
+def goodTrigger(e, year):
+    trig = selections['trig']
+    if not (trig['singleLepton'] or trig['doubleLepton']) : return True
+    
+    if year == 2016 :
+        goodSingle = (e.HLT_Ele27_eta2p1_WPTight_Gsf or e.HLT_Ele25_eta2p1_WPTight_Gsf
+                      or e.HLT_IsoMu24 or e.HLT_IsoTkMu24 or e.HLT_IsoMu27) 
+        goodDouble = (e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ or e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ
+                      or e.HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ )
+    elif (year == 2017 or year == 2018) :
+        goodSingle = (e.HLT_Ele35_WPTight_Gsf or e.HLT_Ele32_WPTight_Gsf or e.HLT_IsoMu24 or e.HLT_IsoMu27)
 
+        goodDouble = (e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL or e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ
+                     or e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass8 or e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass3p8)
+    else :
+        print("Invalid year={0:d} in goodTrigger()".format(year))
+        return False
+    
+    return (trig['singleLepton'] and goodSingle) or (trig['doubleLepton'] and goodDouble)  
+
+    
 def getTauList(channel, entry, pairList=[],printOn=False) :
     """ tauFun.getTauList(): return a list of taus that 
                              pass the basic selection cuts               

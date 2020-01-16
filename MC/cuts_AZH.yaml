@@ -1,4 +1,7 @@
 ---
+trig:
+  singleLepton: false
+  doubleLepton: false 
 mll:
   mll_low: 60.
   mll_high: 120. 
