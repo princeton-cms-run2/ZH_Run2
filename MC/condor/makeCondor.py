@@ -90,7 +90,9 @@ for nFile in range(0, len(dataset),mjobs) :
         outLines.append("rm inFile.root\n")
 
 
+    outLines.append("hadd -f -k all_{0:s}_{1:03d}.root *ntup *weights\n".format(args.nickName,nFile+1))
     outLines.append("rm *.pyc\nrm *.so\nrm *.pcm\nrm *cc.d\n")
+    outLines.append("rm *.ntup *.weights *.so\nrm *.pcm\nrm *cc.d\n")
     print("Writing out file = {0:s}".format(scriptName))
     open(scriptName,'w').writelines(outLines)
     scriptList.append(scriptName)
@@ -124,7 +126,7 @@ for file in scriptList :
     outLines.append('Log = {0:s}.log\n'.format(base))
     print("dir={0:s}".format(dir))
     #outLines.append('transfer_input_files = {0:s}ZH.py, {0:s}MC_{1:s}.root, {0:s}data_pileup_{1:s}.root, {0:s}MCsamples_{1:s}.csv, {0:s}ScaleFactor.py, {0:s}SFs.tar.gz, {0:s}cuts_{2:s}.yaml, '.format(dir,args.year, args.selection))
-    outLines.append('transfer_input_files = {0:s}ZH.py, {0:s}MC_{1:s}.root, {0:s}data_pileup_{1:s}.root, {0:s}MCsamples_{1:s}.csv, {0:s}ScaleFactor.py, {0:s}cuts_{2:s}.yaml, '.format(dir,args.year, args.selection))
+    outLines.append('transfer_input_files = {0:s}ZH.py, {0:s}MC_{1:s}.root, {0:s}data_pileup_{1:s}.root, {0:s}MCsamples_{1:s}.csv, {0:s}cuts_{2:s}.yaml, '.format(dir,args.year, args.selection))
     #outLines.append('{0:s}*txt, '.format(dirData))
     outLines.append('{0:s}tauFun.py, {0:s}generalFunctions.py, {0:s}outTuple.py,'.format(funcsDir))
     outLines.append('{0:s}FastMTT.h, {0:s}MeasuredTauLepton.h, {0:s}svFitAuxFunctions.h,'.format(SVFitDir)) 
