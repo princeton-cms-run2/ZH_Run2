@@ -568,14 +568,15 @@ class outTuple() :
         # pack trigger bits into integer word
         year = int(era)
         e = entry
+	bits=[]
         if year == 2016 :
             bits = [e.HLT_Ele27_eta2p1_WPTight_Gsf, e.HLT_Ele25_eta2p1_WPTight_Gsf, e.HLT_IsoMu24, e.HLT_IsoTkMu24, e.HLT_IsoMu27,
                     e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ, e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ,
                     e.HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ]
-            if (year == 2017 or year == 2018) :
-                bits = [e.HLT_Ele35_WPTight_Gsf, e.HLT_Ele32_WPTight_Gsf, e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL,
-                        e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ, e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass8,
-                        e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass3p8 ]
+        if (year == 2017 or year == 2018) :
+            bits = [e.HLT_Ele35_WPTight_Gsf, e.HLT_Ele32_WPTight_Gsf, e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL,
+                    e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ, e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass8,
+                    e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass3p8 ]
 
         self.triggerWord[0] = 0
         for i, bit in enumerate(bits) :
