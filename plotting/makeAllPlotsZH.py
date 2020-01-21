@@ -334,6 +334,13 @@ hGenMatchTau_3 = {}
 hGenMatchTau_4 = {}
 hCutFlowPerGroup = {}
 WCounter = {}
+hidDeepTau2017v2p1VSjet_3 = {}
+hidDeepTau2017v2p1VSjet_4 = {}
+hidDeepTau2017v2p1VSmu_3 = {}
+hidDeepTau2017v2p1VSmu_4 = {}
+hidDeepTau2017v2p1VSe_3 = {}
+hidDeepTau2017v2p1VSe_4 = {}
+
 
 isW = False
 isDY = False
@@ -459,6 +466,8 @@ if tightCuts :
 else :
     outFileName = 'allGroups_{0:d}_{1:s}_LT{2:02d}_loose.root'.format(args.year,args.sign,int(args.LTcut))
     
+if args.redoFit.lower() == 'no' : outFileName = 'allGroups_{0:d}_{1:s}_LT{2:02d}_noSV.root'.format(args.year,args.sign,int(args.LTcut))
+
 print("Opening {0:s} as output.".format(outFileName))
 fOut = TFile( outFileName, 'recreate' )
 
@@ -626,6 +635,12 @@ for group in groups :
     hmt_sv_new[group] = {}
     hGenMatchTau_3[group] = {}
     hGenMatchTau_4[group] = {}
+    hidDeepTau2017v2p1VSjet_3[group] = {}
+    hidDeepTau2017v2p1VSjet_4[group] = {}
+    hidDeepTau2017v2p1VSmu_3[group] = {}
+    hidDeepTau2017v2p1VSmu_4[group] = {}
+    hidDeepTau2017v2p1VSe_3[group] = {}
+    hidDeepTau2017v2p1VSe_4[group] = {}
     #hCutFlowPerGroup[group] = {}
     for icat, cat in cats.items()[0:8] :
         hMC[group][cat] = {}
@@ -637,6 +652,13 @@ for group in groups :
         hName = 'h{0:s}_{1:s}'.format(group,cat)
         hGenMatchTau_3[group][cat] = TH1D(hName+'_GenMatchTau_3',hName+'_TauMatch',10,-0.5,9.5)
         hGenMatchTau_4[group][cat] = TH1D(hName+'_GenMatchTau_4',hName+'_TauMatch',10,-0.5,9.5)
+        hidDeepTau2017v2p1VSjet_3[group][cat] =  TH1D(hName+'_DeepTauiD_VSjet_3',hName+'_VSjet_3',256,-0.5,255.5)
+        hidDeepTau2017v2p1VSjet_4[group][cat] =  TH1D(hName+'_DeepTauiD_VSjet_4',hName+'_VSjet_4',256,-0.5,255.5)
+        hidDeepTau2017v2p1VSmu_3[group][cat] =  TH1D(hName+'_DeepTauiD_VSmu_3',hName+'_VSmu_3',256,-0.5,255.5)
+        hidDeepTau2017v2p1VSmu_4[group][cat] =  TH1D(hName+'_DeepTauiD_VSmu_4',hName+'_VSmu_4',256,-0.5,255.5)
+        hidDeepTau2017v2p1VSe_3[group][cat] =  TH1D(hName+'_DeepTauiD_VSe_3',hName+'_VSe_3',256,-0.5,255.5)
+        hidDeepTau2017v2p1VSe_4[group][cat] =  TH1D(hName+'_DeepTauiD_VSe_4',hName+'_VSe_4',256,-0.5,255.5)
+
         hCutFlow[cat] = {}
         hW[cat] = {}
         #hCutFlowPerGroup[group][cat] = {}
@@ -743,10 +765,33 @@ for group in groups :
 	    if cat[:2] == 'mm' and  (e.iso_1 > 0.2 or e.iso_2 > 0.2) : continue
 	    if cat[:2] == 'ee' and  (e.iso_1 > 0.15 or e.iso_2 > 0.15) : continue
 
-	    if cat[2:] == 'em' and  (e.iso_1 > 0.15 or e.iso_2 > 0.2) : continue
-	    if cat[2:] == 'mt' and  (e.iso_1 > 0.2) : continue
-	    if cat[2:] == 'et' and  (e.iso_1 > 0.15) : continue
-            
+	    if cat[2:] == 'em' and  (e.iso_3 > 0.15 or e.iso_4 > 0.2) : continue
+	    if cat[2:] == 'mt' and  (e.iso_3 > 0.2) : continue
+	    if cat[2:] == 'et' and  (e.iso_3 > 0.15) : continue
+
+	    if cat[2:] == 'mt' or cat[2:] == 'et' and  ( e.idDeepTau2017v2p1VSjet_4 < 15) : continue
+	    if cat[2:] == 'tt' and  (e.idDeepTau2017v2p1VSjet_3 < 15 or e.idDeepTau2017v2p1VSjet_4 < 15) : continue
+
+            if e.isTrig_1 == 0 and e.isTrig_2 == 0 : continue
+
+            #leading fired the trigger
+	    if e.isTrig_1 == 1 and e.isTrig_2 == 0: 
+		if cat[:2] == 'mm' and e.pt_1 < 29 : continue
+		if cat[:2] == 'ee' and era == '2016' and e.pt_1 < 29 : continue
+		if cat[:2] == 'ee' and era != '2016' and e.pt_1 < 37 : continue
+
+            #subleading fired the trigger
+	    if e.isTrig_1 == -1 and e.isTrig_2 == 0: 
+		if cat[:2] == 'mm' and e.pt_2 < 29 : continue
+		if cat[:2] == 'ee' and era == '2016' and e.pt_2 < 29 : continue
+		if cat[:2] == 'ee' and era != '2016' and e.pt_2 < 37 : continue
+
+            # both fired the trigger _isTrig_2 = 1
+	    if e.isTrig_2 == 1 : 
+		if cat[:2] == 'mm' and e.pt_1 < 29 and e.pt_2 < 29: continue
+		if cat[:2] == 'ee' and era == '2016' and e.pt_1 <  29 and  e.pt_2 < 29 : continue
+		if cat[:2] == 'ee' and era != '2016' and e.pt_1 < 37 and e.pt_2 < 37 : continue
+
 	    if e.nbtag > 0 : continue
 
             icat = catToNumber(cat)
@@ -973,9 +1018,11 @@ for group in groups :
 	    eff_id_d_1, eff_id_d_2, eff_id_d_3, eff_id_d_4 = 1.,1.,1.,1.
 	    eff_id_mc_1, eff_id_mc_2, eff_id_mc_3, eff_id_mc_4 = 1.,1.,1.,1.
 
-            if e.isTrig_1 == 0 and e.isTrig_2 == 0 : continue
+            #leading firing the trigger
 	    if e.isTrig_1 == 1 and e.isTrig_2 == 0: 
-		if cat[:2] == 'mm' :                 
+
+
+		if cat[:2] == 'mm' :                
 		    eff_trig_d_1 =  sf_MuonTrig.get_EfficiencyData(e.pt_1,e.eta_1)
 		    eff_trig_mc_1 =  sf_MuonTrig.get_EfficiencyMC(e.pt_1,e.eta_1)
 
@@ -985,7 +1032,8 @@ for group in groups :
                 if eff_trig_mc_1 !=0 :		trigw = float(eff_trig_d_1/eff_trig_mc_1)
                 else : continue
 
-	    if e.isTrig_1 == 0 and e.isTrig_2 == 1: 
+            #subleading firing the trigger
+	    if e.isTrig_1 == -1 and e.isTrig_2 == 0: 
 		if cat[:2] == 'mm' :                 
 		    eff_trig_d_2 =  sf_MuonTrig.get_EfficiencyData(e.pt_2,e.eta_2)
 		    eff_trig_mc_2 =  sf_MuonTrig.get_EfficiencyMC(e.pt_2,e.eta_2)
@@ -996,7 +1044,9 @@ for group in groups :
 
                 if eff_trig_mc_2 !=0 :		trigw = float(eff_trig_d_2/eff_trig_mc_2)
                 else : continue
-	    
+
+
+	    #both firing the trigger
 	    if e.isTrig_1 == 1 and e.isTrig_2 == 1 : 
 		if cat[:2] == 'mm' :                 
 		    eff_trig_d_1 =  sf_MuonTrig.get_EfficiencyData(e.pt_1,e.eta_1)
@@ -1048,7 +1098,7 @@ for group in groups :
 
 	    leptons_sf = float (eff_id_d_1/eff_id_mc_1 * eff_id_d_2/eff_id_mc_2 * eff_id_d_3/eff_id_mc_3 * eff_id_d_4/eff_id_mc_4)
 
-
+            #print 'made thus far', leptons_sf
 	    fastMTTmass, fastMTTtransverseMass = -1, -1
 	    if args.redoFit.lower() == 'yes' or args.redoFit.lower() == 'true' : fastMTTmass, fastMTTtransverseMass = runSVFit(e, cat[2:]) 
 	    #print 'new', fastMTTmass, 'old', e.m_sv, fastMTTtransverseMass, e.mt_sv, cat[2:]
@@ -1066,6 +1116,12 @@ for group in groups :
 	    hmt_sv_new[hGroup][cat].Fill(fastMTTtransverseMass,weight *trigw *lepton_sf)
 	    hGenMatchTau_3[hGroup][cat].Fill(e.gen_match_3,weight *trigw *lepton_sf)
 	    hGenMatchTau_4[hGroup][cat].Fill(e.gen_match_4,weight *trigw *lepton_sf)
+            hidDeepTau2017v2p1VSjet_3[hGroup][cat].Fill((e.idDeepTau2017v2p1VSjet_3), weight *trigw *lepton_sf)
+            hidDeepTau2017v2p1VSjet_4[hGroup][cat].Fill((e.idDeepTau2017v2p1VSjet_4), weight *trigw *lepton_sf)
+            hidDeepTau2017v2p1VSmu_3[hGroup][cat].Fill((e.idDeepTau2017v2p1VSmu_3), weight *trigw *lepton_sf)
+            hidDeepTau2017v2p1VSmu_4[hGroup][cat].Fill((e.idDeepTau2017v2p1VSmu_4), weight *trigw *lepton_sf)
+            hidDeepTau2017v2p1VSe_3[hGroup][cat].Fill((e.idDeepTau2017v2p1VSe_3), weight *trigw *lepton_sf)
+            hidDeepTau2017v2p1VSe_4[hGroup][cat].Fill((e.idDeepTau2017v2p1VSe_4), weight *trigw *lepton_sf)
                     
 
 	    nEvents += 1
@@ -1112,6 +1168,12 @@ for group in groups :
         hmt_sv_new[group][cat].Write()
         hGenMatchTau_3[group][cat].Write()
         hGenMatchTau_4[group][cat].Write()
+        hidDeepTau2017v2p1VSjet_3[group][cat].Write()
+        hidDeepTau2017v2p1VSjet_4[group][cat].Write()
+        hidDeepTau2017v2p1VSmu_3[group][cat].Write()
+        hidDeepTau2017v2p1VSmu_4[group][cat].Write()
+        hidDeepTau2017v2p1VSe_3[group][cat].Write()
+        hidDeepTau2017v2p1VSe_4[group][cat].Write()
         for plotVar in plotSettings:
             OverFlow(hMC[group][cat][plotVar])
             hMC[group][cat][plotVar].Write()

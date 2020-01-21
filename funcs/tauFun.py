@@ -118,9 +118,9 @@ def comparePair(entry, pair1, pair2) :
     """
     
     j1, j2 = pair1[0], pair2[0] # look at leading pt tau in each pair
-    if entry.Tau_rawMVAnewDM2017v2[j2] < entry.Tau_rawMVAnewDM2017v2[j1] :
+    if entry.Tau_rawDeepTau2017v2p1VSjet[j2] < entry.Tau_rawDeepTau2017v2p1VSjet[j1] :
         return True
-    elif  entry.Tau_rawMVAnewDM2017v2[j2] > entry.Tau_rawMVAnewDM2017v2[j1] :
+    elif  entry.Tau_rawDeepTau2017v2p1VSjet[j2] > entry.Tau_rawDeepTau2017v2p1VSjet[j1] :
         return False
     elif entry.Tau_pt[j2] > entry.Tau_pt[j1] :
         return True
@@ -128,9 +128,9 @@ def comparePair(entry, pair1, pair2) :
         return False
 
     j1, j2 = pair1[1], pair2[1] # look at trailing pt tau in each pair
-    if entry.Tau_rawMVAnewDM2017v2[j2] < entry.Tau_rawMVAnewDM2017v2[j1] :
+    if entry.Tau_rawDeepTau2017v2p1VSjet[j2] < entry.Tau_rawDeepTau2017v2p1VSjet[j1] :
         return True
-    elif  entry.Tau_rawMVAnewDM2017v2[j2] > entry.Tau_rawMVAnewDM2017v2[j1] :
+    elif  entry.Tau_rawDeepTau2017v2p1VSjet[j2] > entry.Tau_rawDeepTau2017v2p1VSjet[j1] :
         return False
     elif entry.Tau_pt[j2] > entry.Tau_pt[j1] :
         return True
@@ -281,7 +281,7 @@ def compareMuTauPair(entry,pair1,pair2) :
     if entry.Muon_pfRelIso04_all[i2] ==  entry.Muon_pfRelIso04_all[i1] :
         if entry.Muon_pt[i2] >  entry.Muon_pt[i1] : return True
         if entry.Muon_pt[i2] == entry.Muon_pt[i1] :
-            if entry.Tau_rawMVAnewDM2017v2[j2] < entry.Tau_rawMVAnewDM2017v2[j1] : return True   
+            if entry.Tau_rawDeepTau2017v2p1VSjet[j2] < entry.Tau_rawDeepTau2017v2p1VSjet[j1] : return True   
     return False
 
 
@@ -543,7 +543,7 @@ def compareETauPair(entry,pair1,pair2) :
     if entry.Electron_mvaFall17V2noIso_WP90[i1] == entry.Electron_mvaFall17V2noIso_WP90[i2] : 
         if entry.Electron_pt[i2]  > entry.Electron_pt[i1] : return True 
         if entry.Electron_pt[i2] == entry.Electron_pt[i1] : 
-            if entry.Tau_rawMVAnewDM2017v2[j2] < entry.Tau_rawMVAnewDM2017v2[j1] : return True   
+            if entry.Tau_rawDeepTau2017v2p1VSjet[j2] < entry.Tau_rawDeepTau2017v2p1VSjet[j1] : return True   
     return False 
 
 
