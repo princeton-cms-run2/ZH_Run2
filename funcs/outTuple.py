@@ -512,25 +512,25 @@ class outTuple() :
         channel_ll = cat[:-2]
 
 	TrigListLep, hltListLep  = GF.findLeptTrigger(lepList, entry, channel_ll, era)
+	#print TrigListLep
 
 	TrigListLep = list(dict.fromkeys(TrigListLep))
-
 
         if len(TrigListLep) == 1 :
 
 	    if lepList[0] == TrigListLep[0] :
 	        is_trig_1 = 1.
-	    if lepList[1] == TrigListLep[0] :
-	        is_trig_1 = -1.
+	    else:
+	        is_trig_1 = -1. #that means that the subleading fired the trigger
 
 
         if len(TrigListLep) == 2 :
-            if 'DoubleLept' in hltListLep :
+            if 'BothLept' in hltListLep :
 	        is_trig_1 = 1.
 	        is_trig_2 = 1.
 
 
-        #if len(TrigListLep) == 1 : print 'TrigerList ===========>', TrigListLep, lepList, hltListLep, channel_ll, is_trig_1, is_trig_2, LepP.Pt(), LepM.Pt()
+        #if len(TrigListLep) ==1 : print 'TrigerList ===========>', TrigListLep, lepList, hltListLep, channel_ll, 'istrig_1', is_trig_1, 'istrig_2', is_trig_2, 'lenTrigList', len(TrigListLep),  'lenLept', len(lepList), 'lepList_0', lepList[0], 'TrigList_0', TrigListLep[0], hltListLep
         
 
         # channel = 'mt', 'et', 'tt', or 'em'

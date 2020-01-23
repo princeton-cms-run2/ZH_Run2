@@ -279,26 +279,29 @@ def findLeptTrigger(goodLeptonList,entry,flavour,era):
     ## for 2016 in particular  "1 = TrkIsoVVL, 2 = Iso, 4 = OverlapFilter PFTau, 8 = IsoTkMu"
     dR=100.
     dRr=100.
-
     for iobj in range(0,entry.nTrigObj) :
+	isbit = False
         if 'ee' in flavour and abs(entry.TrigObj_id[iobj]) == 11 : 
+        #if 'ee' in flavour : 
 	    dR = DRobj(entry.Electron_eta[leadL],entry.Electron_phi[leadL], entry.TrigObj_eta[iobj], entry.TrigObj_phi[iobj])
 	    dRr = DRobj(entry.Electron_eta[subleadL],entry.Electron_phi[subleadL], entry.TrigObj_eta[iobj], entry.TrigObj_phi[iobj])
 	    #print dR, dRr
 
 	if 'mm' in flavour and abs(entry.TrigObj_id[iobj]) == 13 : 
+	#if 'mm' in flavour : 
 	    dR = DRobj(entry.Muon_eta[leadL],entry.Muon_phi[leadL], entry.TrigObj_eta[iobj], entry.TrigObj_phi[iobj])
 	    dRr = DRobj(entry.Muon_eta[subleadL],entry.Muon_phi[subleadL], entry.TrigObj_eta[iobj], entry.TrigObj_phi[iobj])
 
-		#print dR, dRr, era, flavour
 
 	if dR < 0.5 : 
 	    #if entry.TrigObj_filterBits[iobj] & 16 : 
 	    #    isLfired = True
+	    if entry.TrigObj_filterBits[iobj] &2 : isbit = True
+	    #print dR, dRr, era, flavour, entry.TrigObj_filterBits[iobj] &2, entry.TrigObj_filterBits[iobj] &2, isbit, iobj
             if entry.TrigObj_filterBits[iobj] & 2 :  
 		isLfired = True
-		if flavour == 'mm' : hltList.append("LIso")
-		if flavour == 'ee' : hltList.append("LTight")
+		if flavour == 'mm' : hltList.append("LeadIsoMu")
+		if flavour == 'ee' : hltList.append("LeadTightEle")
 			
 	    #if entry.TrigObj_filterBits[iobj] & 8 and flavour == 'mm':  
 	    #	isLfired = True
@@ -310,19 +313,20 @@ def findLeptTrigger(goodLeptonList,entry,flavour,era):
 
 	    if entry.TrigObj_filterBits[iobj] & 2 :  
 		issubLfired = True
-		if flavour == 'mm'  : hltList.append("subIso")
-		if flavour == 'ee'  : hltList.append("subTight")
+		if flavour == 'mm'  : hltList.append("subIsoMu")
+		if flavour == 'ee'  : hltList.append("subTightEle")
 			
 	    #if entry.TrigObj_filterBits[iobj] & 8 and flavour == 'mm':  
 	    #	issubLfired = True
             # 	hltList.append("subTrk")
 
+    #print isbit, hltList, flavour, isLfired
     if isLfired == True : LepttrigList.append(leadL)
     if issubLfired == True : LepttrigList.append(subleadL)
 
     if isLfired == True and issubLfired == True : 
         doubleLep = True 
-	hltList.append('DoubleLept')
+	hltList.append('BothLept')
 
     return LepttrigList, hltList
 
