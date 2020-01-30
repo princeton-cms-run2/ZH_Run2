@@ -66,6 +66,9 @@ class outTuple() :
         self.pfmt_3      = array('f',[0])
         self.puppimt_3   = array('f',[0])
         self.iso_3       = array('f',[0])
+        self.Electron_mvaFall17V2noIso_WP90_1 = array('f',[0])
+        self.Electron_mvaFall17V2noIso_WP90_2 = array('f',[0])
+        self.Electron_mvaFall17V2noIso_WP90_3 = array('f',[0])
         self.gen_match_3 = array('l',[0])
         self.mediumId_3       = array('f',[0])
         self.mediumPromptId_3       = array('f',[0])
@@ -156,6 +159,16 @@ class outTuple() :
         self.eta_2_tr  = array('f',[0])
         self.iso_1       = array('f',[0])
         self.q_1       = array('f',[0])
+        self.Muon_Id_1       = array('f',[0])
+        self.Muon_Id_2       = array('f',[0])
+        self.Muon_Id_3       = array('f',[0])
+        self.isGlobal_1       = array('f',[0])
+        self.isTracker_1       = array('f',[0])
+        self.isTracker_2       = array('f',[0])
+        self.isGlobal_2       = array('f',[0])
+        self.mediumId_1       = array('f',[0])
+        self.mediumPromptId_1       = array('f',[0])
+        self.looseId_1       = array('f',[0])
         
         # MET variables
         self.met         = array('f',[0])
@@ -170,6 +183,7 @@ class outTuple() :
         # trigger info
         self.isTrig_2   = array('f',[0])
         self.isTrig_1   = array('f',[0])
+        self.isDoubleTrig   = array('f',[0])
 
 
         # jet variables
@@ -195,6 +209,9 @@ class outTuple() :
         self.jcsvfv_2    = array('f',[0])
         self.iso_2       = array('f',[0])
         self.q_2       = array('f',[0])
+        self.mediumId_2       = array('f',[0])
+        self.mediumPromptId_2       = array('f',[0])
+        self.looseId_2       = array('f',[0])
 
         self.bpt_1     = array('f',[0])
         self.bpt_1_tr  = array('f',[0])
@@ -244,6 +261,9 @@ class outTuple() :
         self.t.Branch('pfmt_3',      self.pfmt_3,      'pfmt_3/F')
         self.t.Branch('puppimt_3',   self.puppimt_3,   'puppimt_3/F')
         self.t.Branch('iso_3',       self.iso_3,       'iso_3/F')
+        self.t.Branch('Electron_mvaFall17V2noIso_WP90_1', self.Electron_mvaFall17V2noIso_WP90_1, 'Electron_mvaFall17V2noIso_WP90_1/F')
+        self.t.Branch('Electron_mvaFall17V2noIso_WP90_2', self.Electron_mvaFall17V2noIso_WP90_2, 'Electron_mvaFall17V2noIso_WP90_2/F')
+        self.t.Branch('Electron_mvaFall17V2noIso_WP90_3', self.Electron_mvaFall17V2noIso_WP90_3, 'Electron_mvaFall17V2noIso_WP90_3/F')
         self.t.Branch('gen_match_3', self.gen_match_3, 'gen_match_3/l')
         self.t.Branch('mediumId_3', self.mediumId_3, 'mediumId_3/F')
         self.t.Branch('mediumPromptId_3', self.mediumPromptId_3, 'mediumPromptId_3/F')
@@ -336,6 +356,18 @@ class outTuple() :
         self.t.Branch('dZ_1',        self.dZ_1,        'dZ_1/F')
         self.t.Branch('d0_2',        self.d0_2,        'd0_2/F')
         self.t.Branch('dZ_2',        self.dZ_2,        'dZ_2/F')
+        self.t.Branch('Muon_Id_1',       self.Muon_Id_1,       'Muon_Id_1/F')
+        self.t.Branch('Muon_Id_2',       self.Muon_Id_2,       'Muon_Id_2/F')
+        self.t.Branch('isGlobal_1',       self.isGlobal_1,       'isGlobal_1/F')
+        self.t.Branch('isGlobal_2',       self.isGlobal_2,       'isGlobal_2/F')
+        self.t.Branch('isTracker_1',       self.isTracker_1,       'isTracker_1/F')
+        self.t.Branch('isTracker_2',       self.isTracker_2,       'isTracker_2/F')
+        self.t.Branch('mediumId_1', self.mediumId_1, 'mediumId_1/F')
+        self.t.Branch('mediumPromptId_1', self.mediumPromptId_1, 'mediumPromptId_1/F')
+        self.t.Branch('looseId_1', self.looseId_1, 'looseId_1/F')
+        self.t.Branch('mediumId_2', self.mediumId_2, 'mediumId_2/F')
+        self.t.Branch('mediumPromptId_2', self.mediumPromptId_2, 'mediumPromptId_2/F')
+        self.t.Branch('looseId_2', self.looseId_2, 'looseId_2/F')
         
         
         # MET variables
@@ -351,6 +383,7 @@ class outTuple() :
         # trigger sf
         self.t.Branch('isTrig_2',  self.isTrig_2, 'isTrig_2/F' )
         self.t.Branch('isTrig_1',  self.isTrig_1, 'isTrig_1/F' )
+        self.t.Branch('isDoubleTrig',  self.isDoubleTrig, 'isDoubleTrig/F' )
 
 
         # jet variables
@@ -446,11 +479,12 @@ class outTuple() :
             if True  and abs(entry.Jet_eta[j]) < 2.5 and entry.Jet_btagDeepB[j] > bjet_discr : bJetList.append(j)
 	    if True  and abs(entry.Jet_eta[j]) < 2.5 and entry.Jet_btagDeepFlavB[j] > bjet_discrFlav : bJetListFlav.append(j)
             #if True and abs(entry.Jet_eta[j]) < 2.4 and entry.Jet_btagCSVV2[j] > 0.800 and entry.Jet_pt[j] > 30. : bJetList.append(j)
-	    jj = entry.Jet_jetId[j] & 2 ==0
-	    #print '==================',entry.Jet_jetId[j], entry.Jet_pt[j], jj, entry.Jet_puId[j] 
-            if entry.Jet_jetId[j]  <2  : continue
-            if entry.Jet_pt[j] < 30. : continue
-            nJet30 += 1
+	    #isjj = entry.Jet_jetId[j] & 2 
+	    #print '==================',entry.Jet_jetId[j], entry.Jet_pt[j],  entry.Jet_puId[j], isjj, entry.Jet_jetId[j]
+            if entry.Jet_jetId[j]  < 2  : continue  #require tigh jets
+            if entry.Jet_puId[j]  < 4  : continue #loose jetPU_iD
+            if str(era) == 2017  and entry.Jet_pt[j] > 20 and entry.Jet_pt[j] < 50 and abs(entry.Jet_eta[j]) > 2.65 and abs(entry.Jet_eta[j]) < 3.139 : continue  #remove noisy jets
+            if entry.Jet_pt[j] > 30 : nJet30 += 1
             jetList.append(j) 
 
         return nJet30, jetList, bJetList,bJetListFlav
@@ -503,7 +537,7 @@ class outTuple() :
             - LepP and LepM are TLorentz vectors for the positive and negative members of the dilepton pair
         '''
 
-        is_trig_1, is_trig_2 = 0., 0.
+        is_trig_1, is_trig_2, is_Dtrig_1 = 0., 0., 0.
         TrigListLep = []
         TrigListTau = []
         hltListLep  = []
@@ -511,10 +545,21 @@ class outTuple() :
         #channel_ll = 'mm' or 'ee'
         channel_ll = cat[:-2]
 
-	TrigListLep, hltListLep  = GF.findLeptTrigger(lepList, entry, channel_ll, era)
-	#print TrigListLep
+	TrigListLep, hltListLep  = GF.findSingleLeptTrigger(lepList, entry, channel_ll, era)
 
 	TrigListLep = list(dict.fromkeys(TrigListLep))
+
+	TrigListLepD, hltListLepD  = GF.findDoubleLeptTrigger(lepList, entry, channel_ll, era)
+
+	TrigListLepD = list(dict.fromkeys(TrigListLepD))
+
+	#print TrigListLepD, hltListLepD, TrigListLep, hltListLep,
+	if len(TrigListLepD) == 2 : 
+	    if lepList[0] == TrigListLepD[0] :
+	        is_Dtrig_1 = 1
+	    else : 
+	        is_Dtrig_1 = -1
+
 
         if len(TrigListLep) == 1 :
 
@@ -546,6 +591,8 @@ class outTuple() :
         self.iso_2[0]  = -99
         self.q_1[0]  = -99
         self.q_2[0]  = -99
+        self.isGlobal_1[0]  = -99
+        self.isGlobal_2[0]  = -99
 
         goodElectronList = tauFun.makeGoodElectronList(entry)
         goodMuonList = tauFun.makeGoodMuonList(entry)
@@ -627,6 +674,7 @@ class outTuple() :
             self.d0_3[0]   = entry.Electron_dxy[jt1]
             self.dZ_3[0]   = entry.Electron_dz[jt1]
             self.iso_3[0]  = entry.Electron_pfRelIso03_all[jt1]
+            self.Electron_mvaFall17V2noIso_WP90_3[0]  = entry.Electron_mvaFall17V2noIso_WP90[jt1]
 
             
             # Fill genMatch variables for tau(ele)
@@ -668,6 +716,7 @@ class outTuple() :
             self.d0_3[0]   = entry.Electron_dxy[jt1]
             self.dZ_3[0]   = entry.Electron_dz[jt1]
             self.iso_3[0]  = entry.Electron_pfRelIso03_all[jt1]
+            self.Electron_mvaFall17V2noIso_WP90_3[0]  = entry.Electron_mvaFall17V2noIso_WP90[jt1]
             
             if isMC:
                 try : self.gen_match_3[0] = ord(entry.Electron_genPartFlav[jt1])
@@ -919,39 +968,43 @@ class outTuple() :
         self.phi_2[0]  = Lep2.Phi()
         self.eta_2[0]  = Lep2.Eta()
 
+	lep_index_1 = lepList[0]
+	lep_index_2 = lepList[1]
+
+	if (LepP.Pt() < LepM.Pt()):
+	    lep_index_1 = lepList[1]
+	    lep_index_2 = lepList[0]
 	#relIso 
 	if channel_ll == 'ee' : 
-	   if (LepP.Pt() > LepM.Pt()):
-                self.iso_1[0]  = entry.Electron_pfRelIso03_all[lepList[0]]
-                self.iso_2[0]  = entry.Electron_pfRelIso03_all[lepList[1]]
-                self.q_1[0]  = entry.Electron_charge[lepList[0]]
-                self.q_2[0]  = entry.Electron_charge[lepList[1]]
-                self.d0_1[0]   = entry.Electron_dxy[lepList[0]]
-                self.dZ_2[0]   = entry.Electron_dz[lepList[1]]
+      
+            self.iso_1[0]  = entry.Electron_pfRelIso03_all[lep_index_1]
+            self.iso_2[0]  = entry.Electron_pfRelIso03_all[lep_index_2]
+            self.q_1[0]  = entry.Electron_charge[lep_index_1]
+            self.q_2[0]  = entry.Electron_charge[lep_index_2]
+            self.d0_1[0]   = entry.Electron_dxy[lep_index_1]
+            self.dZ_2[0]   = entry.Electron_dz[lep_index_2]
+            self.Electron_mvaFall17V2noIso_WP90_1[0]  = entry.Electron_mvaFall17V2noIso_WP90[lep_index_1]
+            self.Electron_mvaFall17V2noIso_WP90_2[0]  = entry.Electron_mvaFall17V2noIso_WP90[lep_index_2]
 
-	   else : 
-                self.iso_1[0]  = entry.Electron_pfRelIso03_all[lepList[1]]
-                self.iso_2[0]  = entry.Electron_pfRelIso03_all[lepList[0]]
-                self.q_1[0]  = entry.Electron_charge[lepList[1]]
-                self.q_2[0]  = entry.Electron_charge[lepList[0]]
-                self.d0_1[0]   = entry.Electron_dxy[lepList[1]]
-                self.dZ_2[0]   = entry.Electron_dz[lepList[0]]
 
 	if channel_ll == 'mm' : 
-	   if (LepP.Pt() > LepM.Pt()):
-                self.iso_1[0]  = entry.Muon_pfRelIso04_all[lepList[0]]
-                self.iso_2[0]  = entry.Muon_pfRelIso04_all[lepList[1]]
-                self.q_1[0]  = entry.Muon_charge[lepList[0]]
-                self.q_2[0]  = entry.Muon_charge[lepList[1]]
-                self.d0_1[0]   = entry.Muon_dxy[lepList[0]]
-                self.dZ_2[0]   = entry.Muon_dz[lepList[1]]
-	   else : 
-                self.iso_1[0]  = entry.Muon_pfRelIso04_all[lepList[1]]
-                self.iso_2[0]  = entry.Muon_pfRelIso04_all[lepList[0]]
-                self.q_1[0]  = entry.Muon_charge[lepList[1]]
-                self.q_2[0]  = entry.Muon_charge[lepList[0]]
-                self.d0_1[0]   = entry.Muon_dxy[lepList[1]]
-                self.dZ_2[0]   = entry.Muon_dz[lepList[0]]
+            self.iso_1[0]  = entry.Muon_pfRelIso04_all[lep_index_1]
+	    self.iso_2[0]  = entry.Muon_pfRelIso04_all[lep_index_2]
+	    self.q_1[0]  = entry.Muon_charge[lep_index_1]
+	    self.q_2[0]  = entry.Muon_charge[lep_index_2]
+	    self.d0_1[0]   = entry.Muon_dxy[lep_index_1]
+	    self.dZ_2[0]   = entry.Muon_dz[lep_index_2]
+	    self.looseId_1[0]   = entry.Muon_looseId[lep_index_1] 
+	    self.looseId_2[0]   = entry.Muon_looseId[lep_index_2] 
+	    self.mediumId_1[0]   = entry.Muon_mediumId[lep_index_1] 
+	    self.mediumId_2[0]   = entry.Muon_mediumId[lep_index_2] 
+	    self.mediumPromptId_1[0]   = entry.Muon_mediumPromptId[lep_index_1] 
+	    self.mediumPromptId_2[0]   = entry.Muon_mediumPromptId[lep_index_2] 
+	    self.isGlobal_1[0]   = entry.Muon_isGlobal[lep_index_1] 
+	    self.isGlobal_2[0]   = entry.Muon_isGlobal[lep_index_2] 
+	    self.isTracker_1[0]   = entry.Muon_isTracker[lep_index_1] 
+	    self.isTracker_2[0]   = entry.Muon_isTracker[lep_index_2] 
+
         
         # genMatch the di-lepton variables
 	if isMC :
@@ -998,13 +1051,18 @@ class outTuple() :
         # trig
 	self.isTrig_1[0]   = is_trig_1
         self.isTrig_2[0]   = is_trig_2
+	self.isDoubleTrig[0]   = is_Dtrig_1
 
         # jet variables
         nJet30, jetList, bJetList, bJetListFlav = self.getJets(entry,tau1,tau2,era) 
         self.njetspt20[0] = len(jetList)
         self.njets[0] = nJet30
         self.nbtag[0] = len(bJetList)
-        
+        #print ''
+        #for ij in range(0, len(jetList)):
+            #self.jetId[0] = entry.Jet_jetId[ij]
+	    #print ij, len(jetList), entry.Jet_jetId[jetList[ij]], entry.Jet_puId[jetList[ij]]
+
         self.jpt_1[0], self.jeta_1[0], self.jphi_1[0], self.jcsv_1[0], self.jcsvfv_1[0]= -9.99, -9.99, -9.99, -9.99, -9.99 
         if len(jetList) > 0 :
             jj1 = jetList[0]

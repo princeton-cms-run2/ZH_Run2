@@ -118,24 +118,47 @@ def comparePair(entry, pair1, pair2) :
     """
     
     j1, j2 = pair1[0], pair2[0] # look at leading pt tau in each pair
+    j3, j4 = pair1[1], pair2[1] # look at leading pt tau in each pair
     if entry.Tau_rawDeepTau2017v2p1VSjet[j2] < entry.Tau_rawDeepTau2017v2p1VSjet[j1] :
         return True
-    elif  entry.Tau_rawDeepTau2017v2p1VSjet[j2] > entry.Tau_rawDeepTau2017v2p1VSjet[j1] :
+    if  entry.Tau_rawDeepTau2017v2p1VSjet[j2] > entry.Tau_rawDeepTau2017v2p1VSjet[j1] :
         return False
-    elif entry.Tau_pt[j2] > entry.Tau_pt[j1] :
-        return True
-    elif entry.Tau_pt[j2] < entry.Tau_pt[j1] :
-        return False
+    if  entry.Tau_rawDeepTau2017v2p1VSjet[j2] == entry.Tau_rawDeepTau2017v2p1VSjet[j1] :
+        if entry.Tau_pt[j2] > entry.Tau_pt[j1] :
+            return True
+        if entry.Tau_pt[j2] < entry.Tau_pt[j1] :
+            return False
+        if entry.Tau_pt[j2] == entry.Tau_pt[j1] :
+            if  entry.Tau_rawDeepTau2017v2p1VSjet[j4] > entry.Tau_rawDeepTau2017v2p1VSjet[j3] : 
+                return True
+            if  entry.Tau_rawDeepTau2017v2p1VSjet[j4] < entry.Tau_rawDeepTau2017v2p1VSjet[j3] : 
+                return False
+            if  entry.Tau_rawDeepTau2017v2p1VSjet[j4] == entry.Tau_rawDeepTau2017v2p1VSjet[j3] : 
+                if entry.Tau_pt[j4] > entry.Tau_pt[j3] : return True
+                if entry.Tau_pt[j4] < entry.Tau_pt[j3] : return False
+                if entry.Tau_pt[j4] == entry.Tau_pt[j3] : return False
 
-    j1, j2 = pair1[1], pair2[1] # look at trailing pt tau in each pair
+    # do it once more swapping the tau pairs
+    j1, j2 = pair1[1], pair2[1] # look at leading pt tau in each pair
+    j3, j4 = pair1[0], pair2[0] # look at leading pt tau in each pair
     if entry.Tau_rawDeepTau2017v2p1VSjet[j2] < entry.Tau_rawDeepTau2017v2p1VSjet[j1] :
         return True
-    elif  entry.Tau_rawDeepTau2017v2p1VSjet[j2] > entry.Tau_rawDeepTau2017v2p1VSjet[j1] :
+    if  entry.Tau_rawDeepTau2017v2p1VSjet[j2] > entry.Tau_rawDeepTau2017v2p1VSjet[j1] :
         return False
-    elif entry.Tau_pt[j2] > entry.Tau_pt[j1] :
-        return True
-    else : 
-        return False
+    if  entry.Tau_rawDeepTau2017v2p1VSjet[j2] == entry.Tau_rawDeepTau2017v2p1VSjet[j1] :
+        if entry.Tau_pt[j2] > entry.Tau_pt[j1] :
+            return True
+        if entry.Tau_pt[j2] < entry.Tau_pt[j1] :
+            return False
+        if entry.Tau_pt[j2] == entry.Tau_pt[j1] :
+            if  entry.Tau_rawDeepTau2017v2p1VSjet[j4] > entry.Tau_rawDeepTau2017v2p1VSjet[j3] : 
+                return True
+            if  entry.Tau_rawDeepTau2017v2p1VSjet[j4] < entry.Tau_rawDeepTau2017v2p1VSjet[j3] : 
+                return False
+            if  entry.Tau_rawDeepTau2017v2p1VSjet[j4] == entry.Tau_rawDeepTau2017v2p1VSjet[j3] : 
+                if entry.Tau_pt[j4] > entry.Tau_pt[j3] : return True
+                if entry.Tau_pt[j4] < entry.Tau_pt[j3] : return False
+                if entry.Tau_pt[j4] == entry.Tau_pt[j3] : return False
 
 
 def getBestTauPair(channel, entry, tauList) :
@@ -192,6 +215,10 @@ def getMuTauPairs(entry,cat='mt',pairList=[],printOn=False) :
     for i in range(entry.nMuon):
         
         # apply tau(mu) selections
+        if mt['mu_type']:
+            if not (entry.Muon_isGlobal[i] or entry.Muon_isTracker[i]) :
+                if printOn : print("    fail mu_type Global or Tracker={0}".format(entry.Muon_isGlobal[i]))
+                continue
         if mt['mu_ID']:
             if not (entry.Muon_mediumId[i] or entry.Muon_tightId[i]) :
                 if printOn : print("    fail mu_ID mediumId={0}".format(entry.Muon_mediumId[i]))
@@ -209,9 +236,10 @@ def getMuTauPairs(entry,cat='mt',pairList=[],printOn=False) :
         if abs(mu_eta) > mt['mu_eta']:
             if printOn : print("    fail mu_eta={0:f}".format(entry.Muon_eta[i]))
             continue 
-        if entry.Muon_pfRelIso04_all[i] > mt['mu_iso']:
+        if  mt['mu_iso_f'] and entry.Muon_pfRelIso04_all[i] > mt['mu_iso']:
             if printOn : print("    fail mu_iso={0:f}".format(entry.Muon_pfRelIso04_all[i]))
             continue
+
         DR0 = lTauDR(mu_eta,mu_phi,pairList[0]) # l1 vs. tau(mu)
         DR1 = lTauDR(mu_eta,mu_phi,pairList[1]) # l2 vs. tau(mu)
         if DR0 < mt['lt_DR'] or DR1 < mt['lt_DR']:
@@ -281,7 +309,10 @@ def compareMuTauPair(entry,pair1,pair2) :
     if entry.Muon_pfRelIso04_all[i2] ==  entry.Muon_pfRelIso04_all[i1] :
         if entry.Muon_pt[i2] >  entry.Muon_pt[i1] : return True
         if entry.Muon_pt[i2] == entry.Muon_pt[i1] :
-            if entry.Tau_rawDeepTau2017v2p1VSjet[j2] < entry.Tau_rawDeepTau2017v2p1VSjet[j1] : return True   
+            if entry.Tau_rawDeepTau2017v2p1VSjet[j2] > entry.Tau_rawDeepTau2017v2p1VSjet[j1] : return True   
+            if entry.Tau_rawDeepTau2017v2p1VSjet[j2] == entry.Tau_rawDeepTau2017v2p1VSjet[j1] :
+                if entry.Tau_pt[j2] > entry.Tau_pt[j1] : return True
+
     return False
 
 
@@ -320,6 +351,11 @@ def getEMuTauPairs(entry,cat='em',pairList=[],printOn=False) :
         if em['mu_ID']:
             if not (entry.Muon_mediumId[i] or entry.Muon_tightId[i]) :
                 if printOn : print("    failed muID={0}".format(entry.Muon_mediumId[i]))
+                continue
+
+        if em['mu_type']:
+            if not (entry.Muon_isGlobal[i] or entry.Muon_isTracker[i]) :
+                if printOn : print("    fail mu_type Global or Tracker={0}".format(entry.Muon_isGlobal[i]))
                 continue
         if abs(entry.Muon_dxy[i]) > em['mu_dxy']:
             if printOn : print("    failed dxy={0:f}".format(entry.Muon_dxy[i]))
@@ -390,19 +426,28 @@ def getEMuTauPairs(entry,cat='em',pairList=[],printOn=False) :
 
     return elmuTauPairs
 
-
+'''
 def compareEMuTauPair(entry,pair1,pair2) :
     # a return value of True means that pair2 is "better" than pair 1 
     i1, i2, j1, j2 = pair1[0], pair2[0], pair1[1], pair2[1]
     #if entry.Electron_mvaFall17Iso[i2]  < entry.Electron_mvaFall17Iso[i2] : return True
-    if entry.Electron_mvaFall17V2noIso_WP90[i2]  < entry.Electron_mvaFall17V2noIso_WP90[i1] : return True
+    if entry.Electron_pfRelIso03_all[i2]  < entry.Electron_pfRelIso03_all[i1] : return True
     #if entry.Electron_mvaFall17Iso[i2] == entry.Electron_mvaFall17Iso[i2] :
-    if entry.Electron_mvaFall17V2noIso_WP90[i1] == entry.Electron_mvaFall17V2noIso_WP90[i2] : 
+    if entry.Electron_pfRelIso03_all[i1] == entry.Electron_mvaFall17V2noIso_WP90[i2] : 
         if entry.Electron_pt[i2]  > entry.Electron_pt[i1] : return True 
         if entry.Electron_pt[i2] == entry.Electron_pt[i1] : 
             if entry.Muon_pt[j2] < entry.Muon_pt[j1] : return True   
     return False 
-
+'''
+def compareEMuTauPair(entry,pair1,pair2) :
+    # a return value of True means that pair2 is "better" than pair 1 
+    i1, i2, j1, j2 = pair1[0], pair2[0], pair1[1], pair2[1]
+    if entry.Muon_pfRelIso04_all[j2]  < entry.Muon_pfRelIso04_all[j1] : return True
+    if entry.Muon_pfRelIso04_all[j1] == entry.Muon_pfRelIso04_all[j2] : 
+        if entry.Muon_pt[j2]  > entry.Muon_pt[j1] : return True 
+        if entry.Muon_pt[j2] == entry.Muon_pt[j1] : 
+            if entry.Electron_pt[i2] < entry.Electron_pt[i1] : return True   
+    return False 
 
 def getBestEMuTauPair(entry,cat,pairList=[],printOn=False) :
 
@@ -538,13 +583,18 @@ def getETauPairs(entry,cat='et',pairList=[],printOn=False) :
 def compareETauPair(entry,pair1,pair2) :
     # a return value of True means that pair2 is "better" than pair 1 
     i1, i2, j1, j2 = pair1[0], pair2[0], pair1[1], pair2[1]
-    #if entry.Electron_mvaFall17Iso[i2]  < entry.Electron_mvaFall17Iso[i2] : return True
-    if entry.Electron_mvaFall17V2noIso_WP90[i2]  < entry.Electron_mvaFall17V2noIso_WP90[i1] : return True
-    if entry.Electron_mvaFall17V2noIso_WP90[i1] == entry.Electron_mvaFall17V2noIso_WP90[i2] : 
+    if entry.Electron_pfRelIso03_all[i2]  < entry.Electron_pfRelIso03_all[i1] : return True
+    if entry.Electron_pfRelIso03_all[i1] == entry.Electron_pfRelIso03_all[i2] : 
         if entry.Electron_pt[i2]  > entry.Electron_pt[i1] : return True 
         if entry.Electron_pt[i2] == entry.Electron_pt[i1] : 
-            if entry.Tau_rawDeepTau2017v2p1VSjet[j2] < entry.Tau_rawDeepTau2017v2p1VSjet[j1] : return True   
+            if entry.Tau_rawDeepTau2017v2p1VSjet[j2] > entry.Tau_rawDeepTau2017v2p1VSjet[j1] : return True   
+            if entry.Tau_rawDeepTau2017v2p1VSjet[j2] == entry.Tau_rawDeepTau2017v2p1VSjet[j1] :
+                if entry.Tau_pt[j2] > entry.Tau_pt[j1] : return True
     return False 
+
+
+
+
 
 
 def getBestETauPair(entry,cat,pairList=[],printOn=False) :
@@ -572,15 +622,15 @@ def goodMuon(entry, j, AZH=False ):
     mm = selections['mm'] # selections for Z->mumu
     if entry.Muon_pt[j] < mm['mu_pt']: return False
     if abs(entry.Muon_eta[j]) > mm['mu_eta']: return False
-    if entry.Muon_pfRelIso04_all[j] >  mm['mu_iso']: return False
-    if mm['mu_ID'] :
+    if mm['mu_iso_f'] and entry.Muon_pfRelIso04_all[j] >  mm['mu_iso']: return False
+    if mm['mu_ID'] and not AZH :
         if not (entry.Muon_mediumId[j] or entry.Muon_tightId[j]): return False
-    #if entry.Muon_pfRelIso04_all[j] > mm['mu_iso']: return False #not needed for sync
+    if mm['mu_ID'] and AZH and not entry.Muon_looseId[j] : return False
     if abs(entry.Muon_dxy[j]) > mm['mu_dxy']: return False 
     if abs(entry.Muon_dz[j]) > mm['mu_dz']: return False
-    if AZH :
-       if not entry.Muon_isGlobal[j] and not entry.Muon_isTracker[j] : return False
-       if not entry.Muon_looseId[j] : return False
+    if mm['mu_type'] :
+        if not (entry.Muon_isGlobal[j] or entry.Muon_isTracker[j]) : return False
+             
     return True 
 
 def makeGoodMuonList(entry, AZH=False) :
@@ -606,8 +656,6 @@ def goodElectron(entry, j, AZH=False) :
     if ee['ele_ID']:
         if not entry.Electron_mvaFall17V2noIso_WP90[j] : return False
 
-    if AZH and not entry.Electron_convVeto[j]: return False
-    if AZH and not entry.Electron_mvaFall17V2noIso_WP90[j] : return False
     return True 
 
 def makeGoodElectronList(entry, AZH=False) :

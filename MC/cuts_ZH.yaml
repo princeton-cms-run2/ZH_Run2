@@ -13,18 +13,19 @@ tt:
   tau_dz: 0.2
   lt_DR: 0.5
   tt_DR: 0.5
-  tau_vJet: 16
+  tau_vJet: 1
   tau_vMu: 1
   tau_vEle: 1
 mt:
-  mu_ID: true
+  mu_ID: false
   mu_pt: 10.
   mu_eta: 2.4  
   mu_dxy: 0.045
   mu_dz: 0.2
-  mu_iso_f: true
+  mu_iso_f: false
   mu_iso : 0.3
   mt_DR: 0.5
+  mu_type: false
   tau_pt: 20
   tau_eta: 2.3
   tau_antiMu: 0
@@ -34,17 +35,18 @@ mt:
   tau_ID: 0
   tau_dz: 0.2
   lt_DR: 0.5
-  tau_vJet: 16
+  tau_vJet: 1
   tau_vMu: 8
   tau_vEle: 1
 em: 
-  mu_ID: true
+  mu_ID: false
   mu_dxy: 0.045
   mu_dz: 0.2
   mu_pt: 10.
   mu_eta: 2.4
-  mu_iso_f: true
+  mu_iso_f: false
   mu_iso: 0.4
+  mu_type: false
   em_DR: 0.3
   lt_DR: 0.5
   ele_pt: 10
@@ -53,18 +55,17 @@ em:
   ele_dz: 0.2
   ele_lostHits: 1
   ele_convVeto: true
-  ele_ID: true
-  ele_iso_f: true
+  ele_ID: false
+  ele_iso_f: false
   ele_iso: 0.3
 et:
   ele_dxy: 0.045
   ele_dz: 0.2
-  ele_ID: true
+  ele_ID: false
   ele_lostHits: 1
   ele_convVeto: true
   ele_pt: 10
   ele_eta: 2.5
-  ele_iso: 0.2
   lt_DR: 0.5
   tau_eta: 2.3
   tau_pt: 20
@@ -76,9 +77,9 @@ et:
   tau_dz: 0.2
   tt_DR: 0.5
   lt_DR: 0.5
-  ele_iso_f: true
+  ele_iso_f: false
   ele_iso: 0.3
-  tau_vJet: 16
+  tau_vJet: 1
   tau_vMu: 1
   tau_vEle: 32
 mm:
@@ -89,6 +90,7 @@ mm:
   mu_iso: 0.25
   mu_dxy: 0.045
   mu_dz: 0.2
+  mu_type: true
 ee: 
   ele_pt: 10.
   ele_eta: 2.5
@@ -96,6 +98,6 @@ ee:
   ele_dz: 0.2
   ele_lostHits: 1
   ele_convVeto: true
-  ele_ID: true 
+  ele_ID: true
   ele_iso_f : true
   ele_iso : 0.2
