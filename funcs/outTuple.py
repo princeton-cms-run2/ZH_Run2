@@ -464,7 +464,10 @@ class outTuple() :
         phi2_1, eta2_1 = tau1.Phi(), tau1.Eta() 
         phi2_2, eta2_2 = tau2.Phi(), tau2.Eta() 
         for j in range(entry.nJet) :
-            if entry.Jet_pt[j] < 20. : break
+            if entry.Jet_jetId[j]  < 2  : continue  #require tigh jets
+            if entry.Jet_puId[j]  < 4  : continue #loose jetPU_iD
+            if str(era) == 2017  and entry.Jet_pt[j] > 20 and entry.Jet_pt[j] < 50 and abs(entry.Jet_eta[j]) > 2.65 and abs(entry.Jet_eta[j]) < 3.139 : continue  #remove noisy jets
+            if entry.Jet_pt[j] < 20. : continue
             if abs(entry.Jet_eta[j]) > 4.7 : continue
             phi1, eta1 = entry.Jet_phi[j], entry.Jet_eta[j]
             dPhi = min(abs(phi2_1-phi1),2.*pi-abs(phi2_1-phi1))
@@ -479,13 +482,9 @@ class outTuple() :
             if True  and abs(entry.Jet_eta[j]) < 2.5 and entry.Jet_btagDeepB[j] > bjet_discr : bJetList.append(j)
 	    if True  and abs(entry.Jet_eta[j]) < 2.5 and entry.Jet_btagDeepFlavB[j] > bjet_discrFlav : bJetListFlav.append(j)
             #if True and abs(entry.Jet_eta[j]) < 2.4 and entry.Jet_btagCSVV2[j] > 0.800 and entry.Jet_pt[j] > 30. : bJetList.append(j)
-	    #isjj = entry.Jet_jetId[j] & 2 
 	    #print '==================',entry.Jet_jetId[j], entry.Jet_pt[j],  entry.Jet_puId[j], isjj, entry.Jet_jetId[j]
-            if entry.Jet_jetId[j]  < 2  : continue  #require tigh jets
-            if entry.Jet_puId[j]  < 4  : continue #loose jetPU_iD
-            if str(era) == 2017  and entry.Jet_pt[j] > 20 and entry.Jet_pt[j] < 50 and abs(entry.Jet_eta[j]) > 2.65 and abs(entry.Jet_eta[j]) < 3.139 : continue  #remove noisy jets
-            if entry.Jet_pt[j] > 30 : nJet30 += 1
             jetList.append(j) 
+            if entry.Jet_pt[j] > 30 : nJet30 += 1
 
         return nJet30, jetList, bJetList,bJetListFlav
 
