@@ -12,6 +12,7 @@ for root, directories, filenames in os.walk('.'):
                 if 'warning' in lineLower : continue
                 if 'info in' in lineLower : continue
                 if 'mass expected' in lineLower : continue
+                if 'rm: no match.' in lineLower : continue
                 if i > iLast+1 : print('***') 
                 print("    [{0:4d}]={1:s}".format(i,line.strip()))
                 iLast = i
