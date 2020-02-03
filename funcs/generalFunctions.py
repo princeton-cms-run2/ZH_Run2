@@ -621,7 +621,7 @@ class pileUpWeight() :
         return bins, weights
 
     def getWeight(self,PU) :
-        iPU = int(PU)
+        iPU = min(98,int(PU))
         weight = self.sampleWeight*self.PUweights[iPU]
         #print 'weights', weight, self.sampleWeight, self.PUweights[iPU]
         return weight 
