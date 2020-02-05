@@ -38,7 +38,7 @@ WZTo2L2Q, Rare, 6.331, 27582164.0, 269154982.9, ,/WZTo2L2Q_13TeV_amcatnloFXFX_ma
 WminusHToTauTau, Signal, 0.533, 3860872.0, 2090430.4, ,/WminusHToTauTau_M125_13TeV_powheg_pythia8/alkaloge-Fall17_nAODv5_DeepTID_v2p1-72b4b5cc0cc1ac33fe3adb876613af24/USER
 WplusHToTauTau, Signal, 0.84, 4000000.0, 3469425.8, ,/WplusHToTauTau_M125_13TeV_powheg_pythia8/alkaloge-Fall17_nAODv5_DeepTID_v2p1-72b4b5cc0cc1ac33fe3adb876613af24/USER
 ZHToTauTau, Signal, 0.0593, 4940230.0, 3900363.0, ,/ZHToTauTau_M125_13TeV_powheg_pythia8/alkaloge-Fall17_nAODv5_DeepTID_v2p1-72b4b5cc0cc1ac33fe3adb876613af24/USER
-ZZ, Rare, 12.14, 1949768.0, 1949310.0, ,/ZZ_TuneCP5_13TeV-pythia8/RunIIFall17NanoAODv4-PU2017_12Apr2018_Nano14Dec2018_102X_mc2017_realistic_v6-v1/NANOAODSIM
+ZZ, Rare, 12.14, 1949768.0, 1949310.0, ,/ZZ_TuneCP5_13TeV-pythia8/RunIIFall17NanoAODv5_PU2017_12Apr2018_new_pmx_v2-DeepTauv2p1_TauPOG-v1/USER
 ZZTo2L2Nu, Rare, 1.325, 8649850.0, 5197326.9, ,/ZZTo2L2Nu_13TeV_powheg_pythia8/alkaloge-Fall17_nAODv5_DeepTID_v2p1-72b4b5cc0cc1ac33fe3adb876613af24/USER
 ZZTo2L2Q, Rare, 3.688, 27579240.0, 155505504.4, ,/ZZTo2L2Q_13TeV_amcatnloFXFX_madspin_pythia8/alkaloge-Fall17_nAODv5_DeepTID_v2p1-72b4b5cc0cc1ac33fe3adb876613af24/USER
 ZZTo4L, ZZ4L, 1.325, 98091559.0, 129907370.5, ,/ZZTo4L_13TeV_powheg_pythia8/alkaloge-Fall17_nAODv5_DeepTID_v2p1-72b4b5cc0cc1ac33fe3adb876613af24/USER
@@ -50,3 +50,4 @@ TTJets_SingleLeptFromTbar, Top,1,,,,/TTJets_SingleLeptFromTbar_TuneCP5_13TeV-mad
 TTJets_SingleLeptFromT, Top,1,,,,/TTJets_SingleLeptFromT_TuneCP5_13TeV-madgraphMLM-pythia8/alkaloge-Fall17_nAODv5_DeepTID_v2p1-72b4b5cc0cc1ac33fe3adb876613af24/USER
 WZTo1L3Nu,Rare,3.293,4994395.0,29030536.2,,/WZTo1L3Nu_13TeV_amcatnloFXFX_madspin_pythia8_v2/alkaloge-Fall17_nAODv5_DeepTID_v2p1-72b4b5cc0cc1ac33fe3adb876613af24/USER
 WZTo3LNu,Rare,5.052,10987679.0,94562208.9,,/WZTo3LNu_TuneCP5_13TeV-amcatnloFXFX-pythia8/alkaloge-Fall17_nAODv5_DeepTID_v2p1-72b4b5cc0cc1ac33fe3adb876613af24/USER
+WZ,Rare,27.6,,,,/WZ_TuneCP5_13TeV-pythia8/RunIIFall17NanoAODv5_PU2017_12Apr2018_v1-DeepTauv2p1_TauPOG-v1/USER
