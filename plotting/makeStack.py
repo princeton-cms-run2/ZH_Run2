@@ -2,13 +2,14 @@ import tdrstyle
 import CMS_lumi
 from ROOT import gSystem, gStyle, gROOT, kTRUE
 from ROOT import TCanvas, TH1D, TH1F, THStack, TFile, TPad, TLegend, TLatex, TLine, TAttMarker, TMarker, TColor
-from ROOT import kBlack, kBlue, kMagenta, kOrange, kAzure, kRed
+from ROOT import kBlack, kBlue, kMagenta, kOrange, kAzure, kRed, kGreen
+from math import sqrt
 import array
 import plotting
-
+import os
 
 # cat = 'eeet', 'eemt', 'eett', 'mmet', 'mmmt', or 'mmtt'
-# if cat = 'et', 'mt', or 'tt' plot Z->ee and Z->mumu combined
+# if cat = 'et', 'mt', or 'tt' plot Z.ee and Z.mumu combined
 # if cat = 'all', plot combined ee+mm for each tau pair combination 
 
 gROOT.SetBatch(kTRUE) # prevent displaying canvases
@@ -61,7 +62,7 @@ def convertToDNDM( histo) :
 
 
 
-groups = ['data','Rare','ZZ4L','Reducible','Top','DY','Signal']
+groups = ['data','WJets','Rare','Top','DY','ZZ','Signal']
 
 plotSettings = { # [nBins,xMin,xMax,units]
 
@@ -144,14 +145,135 @@ plotSettings = { # [nBins,xMin,xMax,units]
 
         "GenMatchTau_3":[10,-0.5,9.5,"","genMatch #tau_{3}"],
         "GenMatchTau_4":[10,-0.5,9.5,"","genMatch #tau_{4}"],
+        "DeepTauiD_VSjet_3":[256,-0.5,255.5,"","DeepVSjet_3"],
+        "DeepTauiD_VSjet_4":[256,-0.5,255.5,"","DeepVSjet_4"],
+        "DeepTauiD_VSe_3":[256,-0.5,255.5,"","DeepVSe_3"],
+        "DeepTauiD_VSe_4":[256,-0.5,255.5,"","DeepVSe_4"],
+        "DeepTauiD_VSmu_3":[256,-0.5,255.5,"","DeepVSmu_3"],
+        "DeepTauiD_VSmu_4":[256,-0.5,255.5,"","DeepVSmu_4"],
+
+        "inTimeMuon_1":[10,-5,5,"","inTimeMuon_1"],
+        "isGlobal_1":[10,-5,5,"","isGlobal_1"],
+        "isTracker_1":[10,-5,5,"","isTracker_1"],
+        "looseId_1":[10,-5,5,"","looseId_1"],
+        "mediumId_1":[10,-5,5,"","mediumId_1"],
+        "Electron_mvaFall17V2noIso_WP90_1":[10,-5,5,"","Electron_mvaFall17V2noIso_WP90_1"],
+        "gen_match_1":[30,-0.5,29.5,"","gen_match_1"],
+
+
+        "inTimeMuon_2":[10,-5,5,"","inTimeMuon_2"],
+        "isGlobal_2":[10,-5,5,"","isGlobal_2"],
+        "isTracker_2":[10,-5,5,"","isTracker_2"],
+        "looseId_2":[10,-5,5,"","looseId_2"],
+        "mediumId_2":[10,-5,5,"","mediumId_2"],
+        "Electron_mvaFall17V2noIso_WP90_2":[10,-5,5,"","Electron_mvaFall17V2noIso_WP90_2"],
+        "gen_match_2":[30,-0.5,29.5,"","gen_match_2"],
+
+
+
+        "inTimeMuon_3":[10,-5,5,"","inTimeMuon_3"],
+        "isGlobal_3":[10,-5,5,"","isGlobal_3"],
+        "isTracker_3":[10,-5,5,"","isTracker_3"],
+        "looseId_3":[10,-5,5,"","looseId_3"],
+        "mediumId_3":[10,-5,5,"","mediumId_3"],
+        "Electron_mvaFall17V2noIso_WP90_3":[10,-5,5,"","Electron_mvaFall17V2noIso_WP90_3"],
+        "gen_match_3":[30,-0.5,29.5,"","gen_match_3"],
+
+
+
+        "inTimeMuon_4":[10,-5,5,"","inTimeMuon_4"],
+        "isGlobal_4":[10,-5,5,"","isGlobal_4"],
+        "isTracker_4":[10,-5,5,"","isTracker_4"],
+        "looseId_4":[10,-5,5,"","looseId_4"],
+        "mediumId_4":[10,-5,5,"","mediumId_4"],
+        "Electron_mvaFall17V2noIso_WP90_4":[10,-5,5,"","Electron_mvaFall17V2noIso_WP90_4"],
+        "gen_match_4":[30,-0.5,29.5,"","gen_match_4"],
+
 
 }
 
-def makeDiTauStack(outDir,inFile,rootDi,dndm = False, doRatio = False, year=2020, sign='OS', LTcut=0., cat='mmtt') :
+
+
+
+def makeMultiPlots (year=2017,sign='OS', LTcut=0):
+    for plotVar in plotSettings :
+
+     print "montage -title {2:s} -tile 2x4 -geometry +10+5 -border 5 -page A4 *{0:s}*_{1:s}_{2:s}_log.png Multi_{0:s}_{1:s}_{2:s}.pdf -auto-orient;cd ..".format(str(year),sign,plotVar)
+     command="cd plots;montage -auto-orient -title {2:s} -tile 2x4 -geometry +5+5 -page A4 *{0:s}*_{1:s}_{2:s}_log.png Multi_{0:s}_{1:s}_{2:s}.pdf;cd ..".format(str(year),sign,plotVar)
+     os.system(command)
+
+
+def ErrorBand (histo, hdata):
+
+    bkgRatioErrH  = hdata.Clone("bkgRatioErrH")
+    bkgRatioErrH.Reset()
+    
+    bkgRatioErrH.SetLineColor(kBlack);
+    bkgRatioErrH.SetMarkerStyle(20)
+    bkgRatioErrH.SetMarkerSize(0)
+    bkgRatioErrH.Reset()
+
+    for iB in range(1,hdata.GetNbinsX()+1,1) :
+        datX = hdata.GetBinContent(iB);
+        datE = hdata.GetBinError(iB);
+        bkgX = histo.GetBinContent(iB);
+        bkgE = histo.GetBinError(iB);
+        datRatioX = 0.
+        datRatioE = 0.
+        bkgErr = 0.
+        if bkgX != 0 : 
+            datRatioX = datX/bkgX;
+            datatioE = datE/bkgX;
+            bkgErr = float(bkgE / bkgX);
+        syst_ = 0.02;
+
+        muer=0.02;
+        tauer=0.05;
+        lumierr = 0.025;
+
+        '''
+        allnofake = (allbkg.GetBinContent(iB)-hqcd.GetBinContent(iB))/allbkg.GetBinContent(iB);
+        fake = hqcd.GetBinContent(iB)/allbkg.GetBinContent(iB);
+        dy =(hdyj.GetBinContent(iB)+hztt.GetBinContent(iB))/allbkg.GetBinContent(iB);
+        dyall =(hdyj.GetBinContent(iB))/allbkg.GetBinContent(iB);
+        ztt =(hztt.GetBinContent(iB))/allbkg.GetBinContent(iB);
+        rest = (hdib.GetBinContent(iB)+httx.GetBinContent(iB)) /allbkg.GetBinContent(iB);
+        ww = (hww.GetBinCon tent(iB)) /allbkg.GetBinContent(iB);
+        top = htt.GetBinContent(iB)/allbkg.GetBinContent(iB);
+        stop = hstop.GetBinContent(iB)/allbkg.GetBinContent(iB);
+        '''
+
+        trigerr_ = 0.02
+	lumierr_ = 0.025
+	iderr_ = 0.02
+        #toterr_ =  top*0.05*0.05 + +ww*0.25*0.25 + stop*0.25*0.25+ 0.15*0.15*fake + 0.1*0.1*rest   +0.025*0.25*allnofake + 0.05*0.05*dyall + (muer*muer + tauer*tauer + bkgErr*bkgErr)*allnofake + 0.05*0.05*top +0.04*0.04*stop + 0.09*0.09*dy + 0.04*0.04*ztt + 0.1*0.1;
+        toterr_ = bkgErr*bkgErr + trigerr_*trigerr_ + lumierr_*lumierr_ + iderr_*iderr_
+
+        
+        bkgRatioErrH.SetBinContent(iB,1);
+        bkgRatioErrH.SetBinError(iB,sqrt(toterr_));
+        #print toterr_
+        #DataHErrP.SetBinContent(iB,datX);
+        #DataHErrP.SetBinError(iB,datE);
+        #DataHErrM.SetBinContent(iB,bkgX);
+        #DataHErrM.SetBinError(iB,bkgE);
+    bkgRatioErrH.SetFillColor(kGreen)
+    bkgRatioErrH.SetFillStyle(3002)
+    return bkgRatioErrH
+
+
+
+
+def makeDiTauStack(outDir,inFile,rootDi,dndm = False, doRatio = False, year=2020, sign='OS', LTcut=0., cat='mmtt', outFileName="plots.root") :
     
     if args.unBlind.lower() == 'true' or args.unBlind.lower() == 'yes' : doRatio = True
     #doRatio = False
+    
+    outFileName = "plots_{0:d}_{1:s}".format(year,sign)
+    if args.setlog.lower() == 'yes' or args.setlog.lower() == 'true' : outFileName +="_Log"
+    outFileName += ".root"
 
+    fOut = TFile( outFileName, 'update' )
     tdrstyle.setTDRStyle()
     writeExtraText = True       # if extra text
     extraText  = "Preliminary"  # default extra text is "Preliminary"
@@ -159,9 +281,12 @@ def makeDiTauStack(outDir,inFile,rootDi,dndm = False, doRatio = False, year=2020
     lumi_13TeV = cat+"   41.8 fb^{-1}, 2017"
     iPeriod = 4    # 2=2016+2017, 3=All 13TeV, 4 = 2016 5=2017 
     if year==2017: iPeriod = 5
-    if year==2018: iPeriod = 6
+    elif year==2018: iPeriod = 6
 
-    if year > 2018 : iPeriod = 2
+    #elif year > 2018 : iPeriod = 2
+    else : iPeriod = 3
+
+    print '========================================================>', year, iPeriod
 
     xR=0.65   #legend parameters
     xR=0.2    #legend parameters
@@ -240,7 +365,7 @@ def makeDiTauStack(outDir,inFile,rootDi,dndm = False, doRatio = False, year=2020
     hsumall ={}
     kTop = TColor.GetColor("#ffcc66")
     kDY = TColor.GetColor("#58d885")
-    colors = {'data':0,'Reducible':kMagenta-10,'Rare':kBlue-8,'ZZ4L':kAzure-9,'Top':kTop,'DY':kDY,'Signal':kRed}
+    colors = {'data':0,'WJets':kMagenta-10,'Rare':kBlue-8,'ZZ':kAzure-9,'Top':kTop,'DY':kDY,'Signal':kRed}
     for plotVar in plotSettings :
         histo[plotVar] ={}
         hsumall[plotVar] ={}
@@ -251,16 +376,38 @@ def makeDiTauStack(outDir,inFile,rootDi,dndm = False, doRatio = False, year=2020
         for group in groups :
             units = plotSettings[plotVar][3]
             labelX = plotSettings[plotVar][4]
-            histo[plotVar][group] ={}
+            try  : histo[plotVar][group] ={}
+	    except KeyError : continue
 	    h_ = "h{0:s}_{1:s}_{2:s}".format(group,cat,plotVar)
             #print 'will try ', "h{0:s}_{1:s}_{2:s}".format(group,cat,plotVar)
             if 'CutFlow' in plotVar : 
 	        if 'data' in group : h_ = "hCutFlow_{0:s}_data".format(cat)
 	        else : h_ = "hCutFlow_{0:s}_{1:s}".format(cat,group)
 
+
             try : histo[plotVar][group] = f.Get(h_)
             except KeyError : continue
             #print histo[plotVar][group].GetName(), histo[plotVar][group].GetNbinsX()
+
+            '''if 'GenMatchTau' in plotVar : 
+	        c.cd()
+		#c.Clear()
+		plotPad = TPad("pad1","",0.0,0.03,1.0,1.0)
+		plotPad.SetLeftMargin(L/W)
+		plotPad.SetRightMargin(R/W)
+		plotPad.SetTopMargin(T/H)
+		plotPad.SetBottomMargin(B/H)
+		ratioPad = TPad("pad2","",0.0,0.0,0.0,0.)
+		plotPad.Draw()
+		ratioPad.Draw()
+	    '''
+            if 'GenMatchTau' in plotVar : 
+	         histo[plotVar][group].GetXaxis().SetBinLabel(2,"prompt e")
+	         histo[plotVar][group].GetXaxis().SetBinLabel(3,"prompt #mu")
+	         histo[plotVar][group].GetXaxis().SetBinLabel(4,"#tau#rightarrow e")
+	         histo[plotVar][group].GetXaxis().SetBinLabel(5,"#tau#rightarrow #mu")
+	         histo[plotVar][group].GetXaxis().SetBinLabel(6,"#tau_{h}")
+	         histo[plotVar][group].GetXaxis().SetBinLabel(1,"unknown")
             
             if dndm : convertToDNDM(histo[plotVar][group])
             if group == 'data' :
@@ -283,8 +430,8 @@ def makeDiTauStack(outDir,inFile,rootDi,dndm = False, doRatio = False, year=2020
 	hsum.SetMinimum(0.)
 	if setLog : hsum.SetMinimum(0.015)
         hsum.SetMaximum(hMax)
-        if cat[:2] == 'ee': labelX = labelX.replace('l','e')
-        if cat[:2] == 'mm' : labelX = labelX.replace('l','#mu')
+        if cat[:2] == 'ee': labelX = labelX.replace('l_','e_')
+        if cat[:2] == 'mm' : labelX = labelX.replace('l_','#mu_')
         hsum.GetXaxis().SetTitleSize(0.045)
 	if doRatio :
 	    hsum.GetXaxis().SetLabelSize(0)
@@ -308,6 +455,11 @@ def makeDiTauStack(outDir,inFile,rootDi,dndm = False, doRatio = False, year=2020
 
 	if dndm : hsum.GetYaxis().SetTitle("dN/d"+labelX)
 
+	for i in range(1,hsum.GetNbinsX()+1) : 
+	    if histo[plotVar]['Signal'].GetBinContent(i) + hsum.GetBinContent(i) > 0 and float(histo[plotVar]['Signal'].GetBinContent(i)/sqrt(histo[plotVar]['Signal'].GetBinContent(i) + hsum.GetBinContent(i))) > 0.2 : 
+	        print 'will have to blind %i for var %s', i, plotVar
+	        histo[plotVar]['data'].SetBinContent(i,0)
+
 	hsum.Draw("hist")
 	hs.Draw("hist same")
 	if doRatio : 
@@ -316,11 +468,11 @@ def makeDiTauStack(outDir,inFile,rootDi,dndm = False, doRatio = False, year=2020
 
 	if doRatio :
 	    data2 = histo[plotVar]['data'].Clone("data")
-	    mc = histo[plotVar]['Rare']
-	    mc.Add(histo[plotVar]['Reducible'])
+	    mc = histo[plotVar]['Rare'].Clone("Rare")
+	    mc.Add(histo[plotVar]['WJets'])
 	    mc.Add(histo[plotVar]['Top'])
 	    mc.Add(histo[plotVar]['DY'])
-	    mc.Add(histo[plotVar]['ZZ4L'])
+	    mc.Add(histo[plotVar]['ZZ'])
 	    xmin = mc.GetXaxis().GetXmin()
 	    xmax = mc.GetXaxis().GetXmax()
 	    line = TLine(xmin,1.0,xmax,1.0)
@@ -338,7 +490,7 @@ def makeDiTauStack(outDir,inFile,rootDi,dndm = False, doRatio = False, year=2020
 	    data2.SetTitleSize(0.12,"X")
 	    data2.SetLabelSize(0.10,"X")
 	    data2.SetLabelSize(0.08,"Y")
-	    data2.GetYaxis().SetRangeUser(0.62,1.38)
+	    data2.GetYaxis().SetRangeUser(0.42,1.58)
 	    data2.GetYaxis().SetNdivisions(305)
 	    data2.GetYaxis().SetTitle("Obs/Exp   ")
 
@@ -347,15 +499,36 @@ def makeDiTauStack(outDir,inFile,rootDi,dndm = False, doRatio = False, year=2020
 	    else :
 		data2.GetXaxis().SetTitle(labelX)
 
+            ratioPad.cd()
+            leg = TLegend(0.55,0.8,0.85,0.92,"","brNDC")
+            leg.SetBorderSize(0);
+            leg.SetTextFont(42);
+            leg.SetLineColor(0);
+            leg.SetLineStyle(1);
+            leg.SetLineWidth(0);
+            leg.SetFillColor(0);
+            leg.SetFillStyle(1001);
+            leg.SetFillStyle(0);
+            herror = ErrorBand(mc,data2)
+            for iB in range(1,data2.GetNbinsX()+1,1) :
+                datX = data2.GetBinContent(iB)
+                datE = data2.GetBinError(iB)
+                bkgX = mc.GetBinContent(iB)
+		if bkgX > 0.000 : data2.SetBinError(iB,datE/bkgX)
+		else : data2.SetBinError(iB,0)
+
 	    data2.Draw("P")
 	    line.Draw()
+            entry=leg.AddEntry(herror,"Syst. unc.","f");
+            leg.Draw("same")
+            herror.Draw("same e2")
 
 	#c.cd()
 	plotPad.cd()
 	lg.Clear()
 	for group in groups :
 	    try :
-		if group == 'data' : print group, histo[plotVar][group].GetSumOfWeights()
+		#print group, histo[plotVar][group].GetSumOfWeights()
 
 		if group == 'data' : lg.AddEntry(histo[plotVar][group],group,"ple")
 		elif group == 'Signal' : lg.AddEntry(histo[plotVar][group],"ZH#rightarrow#tau#tau","pl")
@@ -381,15 +554,15 @@ def makeDiTauStack(outDir,inFile,rootDi,dndm = False, doRatio = False, year=2020
 	lTex1 = TLatex(120.,0.97*hMax,'Preliminary {0:d}'.format(year))
 	lTex1.SetTextSize(0.04) 
 	#lTex1.Draw("same")
-	signText = 'Same Sign'
+	signText = 'Same Sign_{0:s}'.format(cat)
 	#if sign == 'OS' : signText = 'Opposite Sign'
-	if sign == 'OS' : signText = 'OS'
+	if sign == 'OS' : signText = 'OS {0:s}'.format(cat)
         
-	lTex2 = TLatex(20, plotting.GetPadYMax(plotPad)-100,'{0:s}'.format(signText))
+	lTex2 = TLatex(histo[plotVar][group].GetBinLowEdge(2), hMax*0.5,'{0:s}'.format(signText))
 	#lTex2 = TLatex(30.,0.8*hMax,'{0:s}'.format(signText))
-	#if setLog : lTex2 = TLatex(150.,hMax-10e+03,'{0:s}'.format(signText))
-	lTex2.SetTextSize(0.04) 
-	#lTex2.Draw()
+        if setLog : lTex2 = TLatex(histo[plotVar][group].GetBinLowEdge(2),histo[plotVar][group].GetMinimum() + 1000,'{0:s}'.format(signText))
+	lTex2.SetTextSize(0.045) 
+	lTex2.Draw()
         CMS_lumi.CMS_lumi(c, iPeriod, 11)
 
 	#plotting.FixBoxPadding(plotPad,plotPad, 0.01);
@@ -404,6 +577,8 @@ def makeDiTauStack(outDir,inFile,rootDi,dndm = False, doRatio = False, year=2020
 	outFileBase = "Stack_{0:d}_{1:s}_{2:s}_{3:s}".format(year,cat,sign,plotVar) 
 	if setLog : outFileBase = "Stack_{0:d}_{1:s}_{2:s}_{3:s}_log".format(year,cat,sign,plotVar) 
 	c.SaveAs("./plots/{0:s}.png".format(outFileBase))
+	fOut.cd()
+        c.Write("{0:d}_{1:s}_{2:s}_{3:s}".format(year,cat,sign,plotVar))
         #f.Close()
 	#c.SaveAs("{0:s}.root".format(outFileBase))
     
@@ -422,11 +597,14 @@ if __name__ == '__main__':
     cats = { 1:'eeet', 2:'eemt', 3:'eett', 4:'eeem', 5:'mmet', 6:'mmmt', 7:'mmtt', 8:'mmem'}
     #cats = { 1:'eeet', 2:'mmmt'}
     #cats = { 1:'eeet'}
-    #cats = { 1:'mmem'}
+    #cats = { 6:'mmmt'}
 
     if args.cat.lower() == 'all' :
         for cat in cats.values() :
-            makeDiTauStack('.','{0:s}'.format(inFileName),'', False, False, year=year,sign=sign,LTcut=LTcut,cat=cat)
+	   print cat
+           makeDiTauStack('.','{0:s}'.format(inFileName),'', False, False, year=year,sign=sign,LTcut=LTcut,cat=cat)
+	     
+    makeMultiPlots(year=year,sign=sign,LTcut=LTcut)
 #def makeDiTauStack(outDir,inFile,rootDir,channel = "",  dndm = False, doRatio = False, year=2017, sign='OS', LTcut=0., cat='mmtt') :
         
    

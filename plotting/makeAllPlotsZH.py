@@ -17,6 +17,7 @@ import ScaleFactor as SF
 sys.path.append('../TauPOG')
 from TauPOG.TauIDSFs.TauIDSFTool import TauIDSFTool
 from TauPOG.TauIDSFs.TauIDSFTool import TauESTool
+from TauPOG.TauIDSFs.TauIDSFTool import TauFESTool
 
 def catToNumber(cat) :
     number = { 'eeet':1, 'eemt':2, 'eett':3, 'eeem':4, 'mmet':5, 'mmmt':6, 'mmtt':7, 'mmem':8, 'et':9, 'mt':10, 'tt':11 }
@@ -83,8 +84,6 @@ def runSVFit(entry, channel) :
 
 
 
-
-
 def getArgs() :
     import argparse
     parser = argparse.ArgumentParser()
@@ -143,7 +142,6 @@ def OverFlow(htest) :
     htest.SetBinContent(nb+1, 0.)
     htest.SetBinError(nb, sqrt(lastbinerror*lastbinerror + overbinerror*overbinerror))
     htest.SetBinError(nb+1, 0.)
-
 
 
     #return htest
@@ -233,8 +231,8 @@ dataDriven = not args.MConly
 unblind=False
 if args.unBlind.lower() == 'true' or args.unBlind.lower == 'yes' : unblind = True
 
-#groups = ['Signal','Reducible','Rare','ZZ4L','data']
-groups = ['Signal','ZZ4L','Reducible','Rare','Top','DY','data']
+#groups = ['Signal','WJets','Rare','ZZ','data']
+groups = ['Signal','ZZ','WJets','Rare','Top','DY','data']
 
 Pblumi = 1000.
 tauID_w = 1.
@@ -278,7 +276,9 @@ if era == '2016' :
     weights_muTotauES = {'DM0' : 0, 'DM1' : -0.5}
     weights_elTotauES = {'DM0' :-0.5, 'DM1' : 6}
 
-    TriggerSF={'dir' : 'SFs/TriggerEfficiencies/', 'fileMuon' : 'Muon_Run2016_IsoMu24orIsoMu27.root', 'fileElectron' : 'Electron_Run2016_Ele25orEle27.root'}
+
+    TriggerSF={'dir' : '../tools/ScaleFactors/TriggerEffs/', 'fileMuon' : 'Muon/SingleMuon_Run2016_IsoMu24orIsoMu27.root', 'fileElectron' : 'Electron/SingleElectron_Run2016_Ele25orEle27.root'}
+    LeptonSF={'dir' : '../tools/ScaleFactors/LeptonEffs/', 'fileMuon0p2' : 'Muon/Muon_Run2016_IdIso_0p2.root', 'fileMuon0p15' : 'Muon/Muon_Run2016_IdIso_0p15.root', 'fileElectron0p1' : 'Electron/Electron_Run2016_IdIso_0p1.root',  'fileElectron0p15' : 'Electron/Electron_Run2016_IdIso_0p15.root'}
     TESSF={'dir' : 'TauPOG/TauIDSFs/data/', 'fileTES' : 'TauES_dm_2016Legacy.root'}
 
 
@@ -295,7 +295,8 @@ if era == '2017' :
     weights_muTotauES = {'DM0' : -0.2, 'DM1' : -0.8}
     weights_elTotauES = {'DM0' :-1.8, 'DM1' : 1.8}
 
-    TriggerSF={'dir' : 'SFs/TriggerEfficiencies/', 'fileMuon' : 'Muon_Run2017_IsoMu24orIsoMu27.root', 'fileElectron' : 'Electron_Run2017_Ele32orEle35.root'}
+    TriggerSF={'dir' : '../tools/ScaleFactors/TriggerEffs/', 'fileMuon' : 'Muon/SingleMuon_Run2017_IsoMu24orIsoMu27.root', 'fileElectron' : 'Electron/SingleElectron_Run2017_Ele32orEle35.root'}
+    LeptonSF={'dir' : '../tools/ScaleFactors/LeptonEffs/', 'fileMuon0p2' : 'Muon/Muon_Run2017_IdIso_0p2.root', 'fileMuon0p15' : 'Muon/Muon_Run2017_IdIso_0p15.root', 'fileElectron0p1' : 'Electron/Electron_Run2017_IdIso_0p1.root',  'fileElectron0p15' : 'Electron/Electron_Run2017_IdIso_0p15.root'}
     TESSF={'dir' : 'TauPOG/TauIDSFs/data/', 'fileTES' : 'TauES_dm_2017ReReco.root'}
 
 if era == '2018' : 
@@ -472,8 +473,12 @@ print("Opening {0:s} as output.".format(outFileName))
 fOut = TFile( outFileName, 'recreate' )
 
 #fe, fm, ft_et, ft_mt, f1_tt, f2_tt   = 0.0456, 0.0935, 0.1391, 0.1284, 0.0715, 0.0609
-# values with nbtag = 0 cut 
-fe, fm, ft_et, ft_mt, f1_tt, f2_tt   = 0.0390, 0.0794, 0.1397, 0.1177, 0.0756, 0.0613
+# values with nbtag = 0 cut \
+
+fe, fm, ft_et, ft_mt, f1_tt, f2_tt   = 0.0083, 0.0481,  0.1377, 0.1284, 0.1388,0.1292
+if era == '2016' : fe, fm, ft_et, ft_mt, f1_tt, f2_tt   = 0.0068, 0.0342, 0.1322, 0.100, 0.1304, 0.1301
+if era == '2017' : fe, fm, ft_et, ft_mt, f1_tt, f2_tt   = 0.0051, 0.0344, 0.1206, 0.1075, 0.1108, 0.0604
+
 fW1, fW2, fW0 = {}, {}, {}
 fW1['et'], fW2['et'], fW0['et'] = getFakeWeights(fe,ft_et)
 fW1['mt'], fW2['mt'], fW0['mt'] = getFakeWeights(fm,ft_mt)
@@ -491,7 +496,7 @@ plotSettings = { # [nBins,xMin,xMax,units]
         "iso_1":[20,0,1,"","relIso(l_{1})"],
         "dZ_1":[20,-0.2,0.2,"[cm]","d_{z}(l_{1})"],
         "d0_1":[20,-0.2,0.2,"[cm]","d_{xy}(l_{1})"],
-        "q_1":[10,-5,5,"","charge(l_{1})"],
+        "q_1":[3,-1.5,1.5,"","charge(l_{1})"],
 
         "pt_2":[40,0,200,"[Gev]","P_{T}(l_{2})"],
         "eta_2":[60,-3,3,"","#eta(l_{2})"],
@@ -499,7 +504,7 @@ plotSettings = { # [nBins,xMin,xMax,units]
         "iso_2":[20,0,1,"","relIso(l_{2})"],
         "dZ_2":[20,-0.2,0.2,"[cm]","d_{z}(l_{2})"],
         "d0_2":[20,-0.2,0.2,"[cm]","d_{xy}(l_{2})"],
-        "q_2":[10,-5,5,"","charge(l_{2})"],
+        "q_2":[3,-1.5,1.5,"","charge(l_{2})"],
 
 	"iso_3":[20,0,1,"","relIso(l_{3})"],
         "pt_3":[40,0,200,"[Gev]","P_{T}(l_{3})"],
@@ -557,6 +562,47 @@ plotSettings = { # [nBins,xMin,xMax,units]
 
         "Z_Pt":[60,0,300,"[Gev]","P_T(l_{1}l_{2})"],
         "Z_DR":[60,0,6,"[Gev]","#Delta R(l_{1}l_{2})"],
+
+
+
+        "inTimeMuon_1":[3,-1.5,1.5,"","inTimeMuon_1"],
+        "isGlobal_1":[3,-1.5,1.5,"","isGlobal_1"],
+        "isTracker_1":[3,-1.5,1.5,"","isTracker_1"],
+        "looseId_1":[3,-1.5,1.5,"","looseId_1"],
+        "mediumId_1":[3,-1.5,1.5,"","mediumId_1"],
+        "Electron_mvaFall17V2noIso_WP90_1":[3,-1.5,1.5,"","Electron_mvaFall17V2noIso_WP90_1"],
+        "gen_match_1":[30,-0.5,29.5,"","gen_match_1"],
+
+
+        "inTimeMuon_2":[3,-1.5,1.5,"","inTimeMuon_2"],
+        "isGlobal_2":[3,-1.5,1.5,"","isGlobal_2"],
+        "isTracker_2":[3,-1.5,1.5,"","isTracker_2"],
+        "looseId_2":[3,-1.5,1.5,"","looseId_2"],
+        "mediumId_2":[3,-1.5,1.5,"","mediumId_2"],
+        "Electron_mvaFall17V2noIso_WP90_2":[3,-1.5,1.5,"","Electron_mvaFall17V2noIso_WP90_2"],
+        "gen_match_2":[30,-0.5,29.5,"","gen_match_2"],
+
+
+
+        "inTimeMuon_3":[3,-1.5,1.5,"","inTimeMuon_3"],
+        "isGlobal_3":[3,-1.5,1.5,"","isGlobal_3"],
+        "isTracker_3":[3,-1.5,1.5,"","isTracker_3"],
+        "looseId_3":[3,-1.5,1.5,"","looseId_3"],
+        "mediumId_3":[3,-1.5,1.5,"","mediumId_3"],
+        "Electron_mvaFall17V2noIso_WP90_3":[3,-1.5,1.5,"","Electron_mvaFall17V2noIso_WP90_3"],
+        "gen_match_3":[30,-0.5,29.5,"","gen_match_3"],
+
+
+
+        "inTimeMuon_4":[3,-1.5,1.5,"","inTimeMuon_4"],
+        "isGlobal_4":[3,-1.5,1.5,"","isGlobal_4"],
+        "isTracker_4":[3,-1.5,1.5,"","isTracker_4"],
+        "looseId_4":[3,-1.5,1.5,"","looseId_4"],
+        "mediumId_4":[3,-1.5,1.5,"","mediumId_4"],
+        "Electron_mvaFall17V2noIso_WP90_4":[3,-1.5,1.5,"","Electron_mvaFall17V2noIso_WP90_4"],
+        "gen_match_4":[30,-0.5,29.5,"","gen_match_4"],
+
+
         }
 
 
@@ -617,6 +663,7 @@ for icat,cat in cats.items()[0:8] :
 
 tauSFTool = TauIDSFTool(campaign[args.year],'DeepTau2017v2p1VSjet','Medium')
 testool = TauESTool(campaign[args.year])
+festool = TauESTool(campaign[args.year])
 sf_MuonTrig = SF.SFs()
 sf_MuonTrig.ScaleFactor("{0:s}{1:s}".format(TriggerSF['dir'],TriggerSF['fileMuon']))
 sf_EleTrig = SF.SFs()
@@ -731,6 +778,7 @@ for group in groups :
         nEvents, totalWeight = 0, 0.
         DYJets = ('DYJetsToLL' in nickName and 'M10' not in nickName)
         WJets  = ('WJetsToLNu' in nickName)
+        sWeight = sampleWeight[nickName]
 
 
 
@@ -741,11 +789,15 @@ for group in groups :
 	    weight=1.
             lepton_sf = 1.
             cat = cats[e.cat]
+            icat = catToNumber(cat)
 	    #if group != 'data' and  i > 5000 : continue
 
             #sampleWeight = lumi/(WIncl_totgenwt/WIncl_xsec + WxGenweightsArr[i]/(WNJetsXsecs[i]*WJets_kfactor))
-            
-            sWeight = sampleWeight[nickName]
+	    if e.q_1*e.q_2 > 0 : continue
+            if args.sign == 'SS':
+               if e.q_3*e.q_4 < 0. : continue
+            else :
+                if e.q_3*e.q_4 > 0. : continue
 
             if WJets and not WIncl_only: 
                 if e.LHE_Njets > 0 : sWeight = sampleWeight['W{0:d}JetsToLNu'.format(e.LHE_Njets)]
@@ -761,59 +813,94 @@ for group in groups :
             weight = e.weight * e.Generator_weight *sWeight
 
 	    ww = 1.
-	    
 	    if cat[:2] == 'mm' and  (e.iso_1 > 0.2 or e.iso_2 > 0.2) : continue
 	    if cat[:2] == 'ee' and  (e.iso_1 > 0.15 or e.iso_2 > 0.15) : continue
+	    #if cat[:2] == 'ee' : print goodIso,   e.iso_1, e.iso_2 
 
-	    if cat[2:] == 'em' and  (e.iso_3 > 0.15 or e.iso_4 > 0.2) : continue
-	    if cat[2:] == 'mt' and  (e.iso_3 > 0.2) : continue
-	    if cat[2:] == 'et' and  (e.iso_3 > 0.15) : continue
+	    if cat[2:] == 'em' and (e.iso_3 > 0.20 or e.iso_4 > 0.25) : continue
+	    if cat[2:] == 'et' and e.iso_3 > 0.20: continue
+	    if cat[2:] == 'mt' and e.iso_3 > 0.25 : continue
 
-	    if cat[2:] == 'mt' or cat[2:] == 'et' and  ( e.idDeepTau2017v2p1VSjet_4 < 15) : continue
-	    if cat[2:] == 'tt' and  (e.idDeepTau2017v2p1VSjet_3 < 15 or e.idDeepTau2017v2p1VSjet_4 < 15) : continue
 
-            if e.isTrig_1 == 0 and e.isTrig_2 == 0 : continue
+	    if cat[2:] == 'mt' and  (e.isGlobal_3 < 1 and e.isTracker_3 < 1) : continue
+	    if cat[2:] == 'em' and  (e.isGlobal_4 < 1 and e.isTracker_4 < 1) : continue
+	    
+	    if cat[2:] == 'mt' and   e.looseId_3 < 1 : continue
+	    if cat[2:] == 'em' and   e.looseId_4 < 1 : continue
+
+
+	    if abs(e.dZ_3) > 0.05 or abs(e.dZ_4) > 0.05 : continue
+
+
+	    if cat[2:] == 'et' and e.Electron_mvaFall17V2noIso_WP90_3 < 1 : continue
+            
+	    if cat[2:] == 'tt' and  (e.idDeepTau2017v2p1VSjet_3 < 15. or e.idDeepTau2017v2p1VSjet_4 < 15.) : continue
+	    if cat[2:] == 'mt' and e.idDeepTau2017v2p1VSjet_4 < 15. : continue
+	    if cat[2:] == 'et' and e.idDeepTau2017v2p1VSjet_4 < 15. : continue
+
+            if e.isTrig_1 == 0 : continue  
+            #if e.isTrig_1 == 0 and e.isDoubleTrig==0: continue  
+
+	    #if e.isDoubleTrig !=0 : continue
+	    #if e.isTrig_1 == 0 and e.isDoubleTrig !=0 : weight *= 0.9
+
 
             #leading fired the trigger
 	    if e.isTrig_1 == 1 and e.isTrig_2 == 0: 
-		if cat[:2] == 'mm' and e.pt_1 < 29 : continue
-		if cat[:2] == 'ee' and era == '2016' and e.pt_1 < 29 : continue
-		if cat[:2] == 'ee' and era != '2016' and e.pt_1 < 37 : continue
+		if cat[:2] == 'mm' and e.pt_1 < 28 : continue
+		if cat[:2] == 'ee' and era == '2016' and e.pt_1 < 28 : continue
+		if cat[:2] == 'ee' and era != '2016' and e.pt_1 < 36 : continue
 
             #subleading fired the trigger
 	    if e.isTrig_1 == -1 and e.isTrig_2 == 0: 
 		if cat[:2] == 'mm' and e.pt_2 < 29 : continue
-		if cat[:2] == 'ee' and era == '2016' and e.pt_2 < 29 : continue
-		if cat[:2] == 'ee' and era != '2016' and e.pt_2 < 37 : continue
+		if cat[:2] == 'ee' and era == '2016' and e.pt_2 < 28 : continue
+		if cat[:2] == 'ee' and era != '2016' and e.pt_2 < 36 : continue
 
             # both fired the trigger _isTrig_2 = 1
 	    if e.isTrig_2 == 1 : 
-		if cat[:2] == 'mm' and e.pt_1 < 29 and e.pt_2 < 29: continue
-		if cat[:2] == 'ee' and era == '2016' and e.pt_1 <  29 and  e.pt_2 < 29 : continue
-		if cat[:2] == 'ee' and era != '2016' and e.pt_1 < 37 and e.pt_2 < 37 : continue
+		if cat[:2] == 'mm' and e.pt_1 < 28 and e.pt_2 < 28: continue
+		if cat[:2] == 'ee' and era == '2016' and e.pt_1 <  28 and  e.pt_2 < 28 : continue
+		if cat[:2] == 'ee' and era != '2016' and e.pt_1 < 36 and e.pt_2 < 36 : continue
 
+	    #else : continue
 	    if e.nbtag > 0 : continue
 
-            icat = catToNumber(cat)
 
             pfmet_tree = e.met
             puppimet_tree = e.puppimet
-            
+            tight1 = True
+            tight2 = True
+	    ww = 1
+	    if group != 'Signal' and group != 'data' :
+		if not e.gen_match_3 == 1 and not e.gen_match_3 == 15 :
+		    if cat[2:] == 'et' or cat[2:] == 'em' :
+			tight1= e.Electron_mvaFall17V2noIso_WP90_3 >0  and  e.iso_3 < 0.1 
+
+		    if cat[2:] == 'mt' :
+			tight1 = e.iso_3< 0.15 and (e.isGlobal_3 > 0 or e.isTracker_3 > 0) 
+
+		if not e.gen_match_4 == 1 and not e.gen_match_4 == 15 :
+		    if cat[2:] == 'em' :
+			tight2 = e.iso_4< 0.15 and (e.isGlobal_4 > 0 or e.isTracker_4 > 0) 
+
+		    if cat[2:] == 'tt' :
+			if e.gen_match_3 !=5 :  tight1 =  e.idDeepTau2017v2p1VSjet_3 >= 15.
+			if e.gen_match_4 !=5 :  tight2 =  e.idDeepTau2017v2p1VSjet_4 >= 15.
+
+		if not tight1 and tight2 : ww = fW1[cat[2:]]
+		if tight1 and not tight2 : ww = fW2[cat[2:]]
+		if not (tight1 or tight2) : ww = -fW0[cat[2:]]
+
+	    
+                #if not tight1 or not tight2 : weight *= ww
+
             '''
             if tightCuts :
-                if cat[2:] == 'mt' : tight1 = e.iso_1 < 0.15 and e.againstMuonTight3_2 > 0.5
-
-
-                if cat[2:] == 'et' : tight1 = e.iso_1 < 0.15 and e.againstElectronTightMVA6_2 > 0.5
-                if cat[2:] == 'tt' : tight1 = e.iso_1_ID > 0.5
-                tight2 = e.iso_2_ID > 15
-                if cat[2:] == 'em' :
-                    tight1 = e.iso_1 < 0.15
-                    tight2 = e.iso_2 < 0.15 and e.iso_2_ID > 0.5
                     
                 if group == 'data' :
                     if dataDriven :
-                        hGroup = 'Reducible'
+                        hGroup = 'WJets'
                         if not tight1 and tight2 : ww = fW1[cat[2:]]
                         elif tight1 and not tight2 : ww = fW2[cat[2:]]
                         elif not (tight1 or tight2) : ww = -fW0[cat[2:]]
@@ -839,7 +926,7 @@ for group in groups :
                         else : 
                             if not e.gen_match_4 == 5 : continue
                                         
-                #elif group == 'Rare' or group == 'ZZ4L' or group == 'Signal' :
+                #elif group == 'Rare' or group == 'ZZ' or group == 'Signal' :
                 #    if not (tight1 and tight2) : continue         
             
             #print iCut, icat, cat, icat-1
@@ -849,10 +936,6 @@ for group in groups :
             iCut +=1
             WCounter[iCut-1][icat-1] += weight  
 
-            if args.sign == 'SS':
-                if e.q_1*e.q_2 < 0. : continue
-            else :
-                if e.q_1*e.q_2 > 0. : continue
                 #if hGroup == 'data' and not unblind and e.m_vis > 80. and e.m_vis < 140. : continue                 
                 #if hGroup == 'data' and not unblind and e.m_sv > 80. and e.m_sv < 140. : continue                 
 
@@ -860,10 +943,6 @@ for group in groups :
             if H_LT < args.LTcut : continue
             if group == 'data' :
                 if DD[cat].checkEvent(e) : continue 
-            #if cat == 'mmtt' :
-            #    totalWeight += ww
-            #    nEvents += 1
-
             
 
 
@@ -932,6 +1011,8 @@ for group in groups :
 
 
 		if e.gen_match_4 == 1 or e.gen_match_4 == 3 :
+
+		    #weight *= festool.getFES(e.eta_3,e.decayMode_3,e.gen_match_3)
 		    if e.decayMode_4 == 0 :  
 			if abs(e.eta_4) < 1.479     : weight *= weights_elToTauFR['lt1p479_DM0'] * weights_eljToTauFR['lt1p479_DM0']
 			if abs(e.eta_4) > 1.479     : weight *= weights_elToTauFR['gt1p479_DM0'] * weights_eljToTauFR['gt1p479_DM0']
@@ -967,6 +1048,7 @@ for group in groups :
 
                     # electron faking _3 tau
 		    if e.gen_match_3 == 1 or e.gen_match_3 == 3 :
+		        #weight *= festool.getFES(e.eta_3,e.decayMode_3,e.gen_match_3)
 			if e.decayMode_3 == 0 :  
 			    if abs(e.eta_3) < 1.479     : weight *= weights_elToTauFR['lt1p479_DM0'] * weights_eljToTauFR['lt1p479_DM0']
 			    if abs(e.eta_3) > 1.479     : weight *= weights_elToTauFR['gt1p479_DM0'] * weights_eljToTauFR['gt1p479_DM0']
@@ -1019,7 +1101,7 @@ for group in groups :
 	    eff_id_mc_1, eff_id_mc_2, eff_id_mc_3, eff_id_mc_4 = 1.,1.,1.,1.
 
             #leading firing the trigger
-	    if e.isTrig_1 == 1 and e.isTrig_2 == 0: 
+	    if e.isTrig_1 == 1 and e.isTrig_2 == 0 : 
 
 
 		if cat[:2] == 'mm' :                
@@ -1065,6 +1147,7 @@ for group in groups :
 		elif eff_trig_mc_1 == 0 and eff_trig_mc_2 != 0  : trigw = float(eff_trig_d_2/eff_trig_mc_2)
 		elif eff_trig_mc_1 == 0 and eff_trig_mc_2 == 0  : continue 
 		else : 	trigw = float(1- (1-eff_trig_d_1/eff_trig_mc_1) * (1-eff_trig_d_2/eff_trig_mc_2))
+
 
             #lepton SFs
 	    if cat[:2] == 'mm' :                 
