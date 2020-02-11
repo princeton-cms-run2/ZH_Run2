@@ -475,15 +475,16 @@ fOut = TFile( outFileName, 'recreate' )
 #fe, fm, ft_et, ft_mt, f1_tt, f2_tt   = 0.0456, 0.0935, 0.1391, 0.1284, 0.0715, 0.0609
 # values with nbtag = 0 cut \
 
-fe, fm, ft_et, ft_mt, f1_tt, f2_tt   = 0.0083, 0.0481,  0.1377, 0.1284, 0.1388,0.1292
-if era == '2016' : fe, fm, ft_et, ft_mt, f1_tt, f2_tt   = 0.0068, 0.0342, 0.1322, 0.100, 0.1304, 0.1301
-if era == '2017' : fe, fm, ft_et, ft_mt, f1_tt, f2_tt   = 0.0051, 0.0344, 0.1206, 0.1075, 0.1108, 0.0604
+fe_et, ft_et, fm_mt, ft_mt, f1_tt, f2_tt, fe_em, fm_em  = 0.0073, 0.1327, 0.0434, 0.1087,0.1318, 0.1327, 0.0101, 0.0380
+if era == '2017' : fe_et, ft_et, fm_mt, ft_mt, f1_tt, f2_tt, fe_em, fm_em  = 0.0082, 0.1236, 0.0581, 0.1083, 0.1146,0.1160,0.0081, 0.0346
+if era == '2018' : fe_et, ft_et, fm_mt, ft_mt, f1_tt, f2_tt, fe_em, fm_em  = 0.0083,0.1385, 0.0581, 0.1292, 0.1398, 0.1294, 0.0102, 0.0415
+
 
 fW1, fW2, fW0 = {}, {}, {}
-fW1['et'], fW2['et'], fW0['et'] = getFakeWeights(fe,ft_et)
-fW1['mt'], fW2['mt'], fW0['mt'] = getFakeWeights(fm,ft_mt)
+fW1['et'], fW2['et'], fW0['et'] = getFakeWeights(fe_et,ft_et)
+fW1['mt'], fW2['mt'], fW0['mt'] = getFakeWeights(fm_mt,ft_mt)
 fW1['tt'], fW2['tt'], fW0['tt'] = getFakeWeights(f1_tt,f2_tt)
-fW1['em'], fW2['em'], fW0['em'] = getFakeWeights(fe,fm)
+fW1['em'], fW2['em'], fW0['em'] = getFakeWeights(fe_em,fm_em)
 
 global getsf,sf
 
@@ -817,19 +818,19 @@ for group in groups :
 	    if cat[:2] == 'ee' and  (e.iso_1 > 0.15 or e.iso_2 > 0.15) : continue
 	    #if cat[:2] == 'ee' : print goodIso,   e.iso_1, e.iso_2 
 
-	    if cat[2:] == 'em' and (e.iso_3 > 0.20 or e.iso_4 > 0.25) : continue
-	    if cat[2:] == 'et' and e.iso_3 > 0.20: continue
-	    if cat[2:] == 'mt' and e.iso_3 > 0.25 : continue
+	    if cat[2:] == 'em' and (e.iso_3 > 0.15 or e.iso_4 > 0.20) : continue
+	    if cat[2:] == 'et' and e.iso_3 > 0.15: continue
+	    if cat[2:] == 'mt' and e.iso_3 > 0.15 : continue
 
 
 	    if cat[2:] == 'mt' and  (e.isGlobal_3 < 1 and e.isTracker_3 < 1) : continue
 	    if cat[2:] == 'em' and  (e.isGlobal_4 < 1 and e.isTracker_4 < 1) : continue
 	    
-	    if cat[2:] == 'mt' and   e.looseId_3 < 1 : continue
-	    if cat[2:] == 'em' and   e.looseId_4 < 1 : continue
+	    if cat[2:] == 'mt' and   e.mediumId_3 < 1 : continue
+	    if cat[2:] == 'em' and   e.mediumId_4 < 1 : continue
 
 
-	    if abs(e.dZ_3) > 0.05 or abs(e.dZ_4) > 0.05 : continue
+	    #if abs(e.dZ_3) > 0.05 or abs(e.dZ_4) > 0.05 : continue
 
 
 	    if cat[2:] == 'et' and e.Electron_mvaFall17V2noIso_WP90_3 < 1 : continue
@@ -878,22 +879,22 @@ for group in groups :
 			tight1= e.Electron_mvaFall17V2noIso_WP90_3 >0  and  e.iso_3 < 0.1 
 
 		    if cat[2:] == 'mt' :
-			tight1 = e.iso_3< 0.15 and (e.isGlobal_3 > 0 or e.isTracker_3 > 0) 
+			tight1 = e.iso_3< 0.15 and (e.isGlobal_3 > 0 or e.isTracker_3 > 0) and e.mediumId_3 > 0
 
 		if not e.gen_match_4 == 1 and not e.gen_match_4 == 15 :
 		    if cat[2:] == 'em' :
-			tight2 = e.iso_4< 0.15 and (e.isGlobal_4 > 0 or e.isTracker_4 > 0) 
+			tight2 = e.iso_4< 0.15 and (e.isGlobal_4 > 0 or e.isTracker_4 > 0) and e.mediumId_3 > 0
 
-		    if cat[2:] == 'tt' :
-			if e.gen_match_3 !=5 :  tight1 =  e.idDeepTau2017v2p1VSjet_3 >= 15.
-			if e.gen_match_4 !=5 :  tight2 =  e.idDeepTau2017v2p1VSjet_4 >= 15.
+		if cat[2:] == 'tt' :
+		    if e.gen_match_3 !=5 :  tight1 =  e.idDeepTau2017v2p1VSjet_3 >= 15.
+		    if e.gen_match_4 !=5 :  tight2 =  e.idDeepTau2017v2p1VSjet_4 >= 15.
 
 		if not tight1 and tight2 : ww = fW1[cat[2:]]
 		if tight1 and not tight2 : ww = fW2[cat[2:]]
 		if not (tight1 or tight2) : ww = -fW0[cat[2:]]
 
 	    
-                #if not tight1 or not tight2 : weight *= ww
+                weight *= ww
 
             '''
             if tightCuts :
