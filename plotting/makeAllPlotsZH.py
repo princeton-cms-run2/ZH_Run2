@@ -327,12 +327,12 @@ for cat in cats.values() :
 
 # dictionary where the group is the key
 hMC = {}
+hMCFM = {}
+
 hm_sv_new = {}
 hmt_sv_new = {}
 hCutFlow = {}
 hW = {}
-hGenMatchTau_3 = {}
-hGenMatchTau_4 = {}
 hCutFlowPerGroup = {}
 WCounter = {}
 hidDeepTau2017v2p1VSjet_3 = {}
@@ -679,10 +679,9 @@ sf_ElectronId.ScaleFactor("{0:s}{1:s}".format(LeptonSF['dir'],LeptonSF['fileElec
 for group in groups :
     fOut.cd()
     hMC[group] = {}
+    hMCFM[group] = {}
     hm_sv_new[group] = {}
     hmt_sv_new[group] = {}
-    hGenMatchTau_3[group] = {}
-    hGenMatchTau_4[group] = {}
     hidDeepTau2017v2p1VSjet_3[group] = {}
     hidDeepTau2017v2p1VSjet_4[group] = {}
     hidDeepTau2017v2p1VSmu_3[group] = {}
@@ -692,14 +691,13 @@ for group in groups :
     #hCutFlowPerGroup[group] = {}
     for icat, cat in cats.items()[0:8] :
         hMC[group][cat] = {}
+        hMCFM[group][cat] = {}
         hName = 'h{0:s}_{1:s}'.format(group,cat)
         hm_sv_new[group][cat] = TH1D(hName+'_m_sv_new',hName+'_m_sv_new',60,0,300)
         hm_sv_new[group][cat].SetDefaultSumw2()
         hmt_sv_new[group][cat] = TH1D(hName+'_mt_sv_new',hName+'_mt_sv_new',60,0,300)
         hmt_sv_new[group][cat].SetDefaultSumw2()
         hName = 'h{0:s}_{1:s}'.format(group,cat)
-        hGenMatchTau_3[group][cat] = TH1D(hName+'_GenMatchTau_3',hName+'_TauMatch',10,-0.5,9.5)
-        hGenMatchTau_4[group][cat] = TH1D(hName+'_GenMatchTau_4',hName+'_TauMatch',10,-0.5,9.5)
         hidDeepTau2017v2p1VSjet_3[group][cat] =  TH1D(hName+'_DeepTauiD_VSjet_3',hName+'_VSjet_3',256,-0.5,255.5)
         hidDeepTau2017v2p1VSjet_4[group][cat] =  TH1D(hName+'_DeepTauiD_VSjet_4',hName+'_VSjet_4',256,-0.5,255.5)
         hidDeepTau2017v2p1VSmu_3[group][cat] =  TH1D(hName+'_DeepTauiD_VSmu_3',hName+'_VSmu_3',256,-0.5,255.5)
@@ -713,6 +711,7 @@ for group in groups :
 
         for plotVar in plotSettings:
             hMC[group][cat][plotVar] = {}
+            hMCFM[group][cat][plotVar] = {}
             nBins = plotSettings[plotVar][0]
             xMin = plotSettings[plotVar][1]
             xMax = plotSettings[plotVar][2]
@@ -726,6 +725,13 @@ for group in groups :
             hMC[group][cat][plotVar].GetXaxis().SetTitle(lTitle + ' ' + units)
             if 'GeV' in units : hMC[group][cat][plotVar].GetYaxis().SetTitle("Events / "+str(binwidth)+" {0:s}".format(units))
             if 'GeV' not in units : hMC[group][cat][plotVar].GetYaxis().SetTitle("Events / "+str(binwidth))
+
+            hName = 'h{0:s}_{1:s}_{2:s}_FM'.format(group,cat,plotVar)
+            hMCFM[group][cat][plotVar] = TH1D(hName,hName,nBins,xMin,xMax)
+            hMCFM[group][cat][plotVar].SetDefaultSumw2()
+            hMCFM[group][cat][plotVar].GetXaxis().SetTitle(lTitle + ' ' + units)
+            if 'GeV' in units : hMCFM[group][cat][plotVar].GetYaxis().SetTitle("Events / "+str(binwidth)+" {0:s}".format(units))
+            if 'GeV' not in units : hMCFM[group][cat][plotVar].GetYaxis().SetTitle("Events / "+str(binwidth))
 
             #print '=======', nBins, xMin, xMax, hMC[group][cat][plotVar].GetName(), hMC[group][cat][plotVar].GetTitle()
 
@@ -788,6 +794,7 @@ for group in groups :
             hGroup = group
             trigw = 1.
 	    weight=1.
+	    weightFM=1.
             lepton_sf = 1.
             cat = cats[e.cat]
             icat = catToNumber(cat)
@@ -812,6 +819,7 @@ for group in groups :
 
             # the pu weight is the e.weight in the ntuples
             weight = e.weight * e.Generator_weight *sWeight
+            weightFM = e.weight * e.Generator_weight *sWeight
 
 	    ww = 1.
 	    if cat[:2] == 'mm' and  (e.iso_1 > 0.2 or e.iso_2 > 0.2) : continue
@@ -883,7 +891,7 @@ for group in groups :
 
 		if not e.gen_match_4 == 1 and not e.gen_match_4 == 15 :
 		    if cat[2:] == 'em' :
-			tight2 = e.iso_4< 0.15 and (e.isGlobal_4 > 0 or e.isTracker_4 > 0) and e.mediumId_3 > 0
+			tight2 = e.iso_4< 0.15 and (e.isGlobal_4 > 0 or e.isTracker_4 > 0) and e.mediumId_4 > 0
 
 		if cat[2:] == 'tt' :
 		    if e.gen_match_3 !=5 :  tight1 =  e.idDeepTau2017v2p1VSjet_3 >= 15.
@@ -894,7 +902,7 @@ for group in groups :
 		if not (tight1 or tight2) : ww = -fW0[cat[2:]]
 
 	    
-                weight *= ww
+                weightFM *= ww
 
             '''
             if tightCuts :
@@ -940,7 +948,7 @@ for group in groups :
                 #if hGroup == 'data' and not unblind and e.m_vis > 80. and e.m_vis < 140. : continue                 
                 #if hGroup == 'data' and not unblind and e.m_sv > 80. and e.m_sv < 140. : continue                 
 
-            H_LT = e.pt_1 + e.pt_2
+            H_LT = e.pt_3 + e.pt_4
             if H_LT < args.LTcut : continue
             if group == 'data' :
                 if DD[cat].checkEvent(e) : continue 
@@ -993,7 +1001,7 @@ for group in groups :
             
                 #print weight, tauSFTool.getSFvsPT(e.pt_3,e.gen_match_3), 'pt', float(e.pt_3), float(e.pt_3_tr), i, 'g_match', e.gen_match_3, nickName
                 #tau energy scale
-
+                '''
 		if e.gen_match_4 == 2 or e.gen_match_4 == 4 :
 		    if e.decayMode_4 == 1 :  
 		        weight *= weights_muToTauFR['DM1']
@@ -1063,9 +1071,10 @@ for group in groups :
 			    tauV3cor  *= (1 +  weights_elTotauES['DM1']*0.01)
 			    MetVcor +=   tauV3*(1 +  weights_elTotauES['DM1']*0.01)
 
-
+                '''
 		if cat[2:] == 'tt' and e.gen_match_3 == 5 : 
 			weight *= tauSFTool.getSFvsPT(e.pt_3,e.gen_match_3)
+			weightFM *= tauSFTool.getSFvsPT(e.pt_3,e.gen_match_3)
 			tauV3cor *= testool.getTES(e.decayMode_3)
 			if e.decayMode_3 == 1 : 
 			    e.m_3 =  0.1396  
@@ -1075,6 +1084,7 @@ for group in groups :
                 if  cat[2:] == 'tt' or cat[2:] == 'mt' or cat[2:] == 'et' :
 		    if e.gen_match_4 == 5 : 
 			weight *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4)
+			weightFM *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4)
 			tauV4cor *= testool.getTES(e.decayMode_4)
 			if e.decayMode_4 == 1 : 
 			    e.m_4 =  0.1396  
@@ -1191,15 +1201,17 @@ for group in groups :
 		#print plotVar
 		val = getattr(e, plotVar, None)
 		if val is not None: 
-		    if group != ' data' : hMC[hGroup][cat][plotVar].Fill(val,weight *trigw *lepton_sf)
-		    else : hMC[hGroup][cat][plotVar].Fill(val,1)
+		    if group != ' data' : 
+		        hMC[hGroup][cat][plotVar].Fill(val,weight *trigw *lepton_sf)
+		        hMCFM[hGroup][cat][plotVar].Fill(val,weightFM *trigw *lepton_sf)
+		    else : 
+		        hMC[hGroup][cat][plotVar].Fill(val,1)
+		        hMCFM[hGroup][cat][plotVar].Fill(val,1)
 		    #print hGroup, cat, plotVar, val
 		    #if val < hGroup][cat][plotVar].GetNbinsX() * hGroup][cat][plotVar].GetBinWidth(1) : hMC[hGroup][cat][plotVar].Fill(val,ww*trigw_)
 		    #else : hMC[hGroup][cat][plotVar].Fill(val,ww*trigw_)
 	    hm_sv_new[hGroup][cat].Fill(fastMTTmass,weight *trigw *lepton_sf)
 	    hmt_sv_new[hGroup][cat].Fill(fastMTTtransverseMass,weight *trigw *lepton_sf)
-	    hGenMatchTau_3[hGroup][cat].Fill(e.gen_match_3,weight *trigw *lepton_sf)
-	    hGenMatchTau_4[hGroup][cat].Fill(e.gen_match_4,weight *trigw *lepton_sf)
             hidDeepTau2017v2p1VSjet_3[hGroup][cat].Fill((e.idDeepTau2017v2p1VSjet_3), weight *trigw *lepton_sf)
             hidDeepTau2017v2p1VSjet_4[hGroup][cat].Fill((e.idDeepTau2017v2p1VSjet_4), weight *trigw *lepton_sf)
             hidDeepTau2017v2p1VSmu_3[hGroup][cat].Fill((e.idDeepTau2017v2p1VSmu_3), weight *trigw *lepton_sf)
@@ -1250,8 +1262,6 @@ for group in groups :
         hmt_sv_new[group][cat].GetXaxis().SetTitle('mt_sv(new)  [GeV]')
         hm_sv_new[group][cat].Write()
         hmt_sv_new[group][cat].Write()
-        hGenMatchTau_3[group][cat].Write()
-        hGenMatchTau_4[group][cat].Write()
         hidDeepTau2017v2p1VSjet_3[group][cat].Write()
         hidDeepTau2017v2p1VSjet_4[group][cat].Write()
         hidDeepTau2017v2p1VSmu_3[group][cat].Write()
@@ -1261,6 +1271,8 @@ for group in groups :
         for plotVar in plotSettings:
             OverFlow(hMC[group][cat][plotVar])
             hMC[group][cat][plotVar].Write()
+            OverFlow(hMCFM[group][cat][plotVar])
+            hMCFM[group][cat][plotVar].Write()
 
 for cat in cats.values():
     print("Duplicate summary for {0:s}".format(cat))

@@ -1,6 +1,6 @@
 import tdrstyle
 import CMS_lumi
-from ROOT import gSystem, gStyle, gROOT, kTRUE
+from ROOT import gSystem, gStyle, gROOT, kTRUE, gDirectory
 from ROOT import TCanvas, TH1D, TH1F, THStack, TFile, TPad, TLegend, TLatex, TLine, TAttMarker, TMarker, TColor
 from ROOT import kBlack, kBlue, kMagenta, kOrange, kAzure, kRed, kGreen
 from math import sqrt
@@ -131,11 +131,9 @@ plotSettings = { # [nBins,xMin,xMax,units]
         "H_DR":[60,0,6,"","#Delta R(#tau#tau)"],
         "H_tot":[30,0,200,"[GeV]","m_{T}tot(#tau#tau)"],
 
-        "mt_sv":[60,0,300,"[Gev]","m_{T}(#tau#tau)"],
         "m_sv":[60,0,300,"[Gev]","m(#tau#tau)(SV)"],
         "m_sv_new":[60,0,300,"[Gev]","m(#tau#tau)(newSV)"],
         "mt_sv":[60,0,300,"[Gev]","m_{T}(#tau#tau)(SV)"],
-        #"mt_sv_new":[60,0,300,"[Gev]","m_{T}(#tau#tau)(newSV)"],
         "AMass":[100,50,550,"[Gev]","m_{Z+H}(SV)"],
         #"CutFlowWeighted":[15,0.5,15.5,"","cutflow"],
         #"CutFlow":[15,0.5,15.5,"","cutflow"]
@@ -143,8 +141,6 @@ plotSettings = { # [nBins,xMin,xMax,units]
         "Z_Pt":[60,0,300,"[Gev]","P_T(l_{1}l_{2})"],
         "Z_DR":[60,0,6,"","#Delta R(l_{1}l_{2})"],
 
-        "GenMatchTau_3":[10,-0.5,9.5,"","genMatch #tau_{3}"],
-        "GenMatchTau_4":[10,-0.5,9.5,"","genMatch #tau_{4}"],
         "DeepTauiD_VSjet_3":[256,-0.5,255.5,"","DeepVSjet_3"],
         "DeepTauiD_VSjet_4":[256,-0.5,255.5,"","DeepVSjet_4"],
         "DeepTauiD_VSe_3":[256,-0.5,255.5,"","DeepVSe_3"],
@@ -189,9 +185,110 @@ plotSettings = { # [nBins,xMin,xMax,units]
         "Electron_mvaFall17V2noIso_WP90_4":[10,-5,5,"","Electron_mvaFall17V2noIso_WP90_4"],
         "gen_match_4":[30,-0.5,29.5,"","gen_match_4"],
 
+        "pt_1_FM":[40,0,200,"[Gev]","P_{T}(#tau_{1})"],
+        "eta_1_FM":[60,-3,3,"","#eta(l_{1})"],
+        "phi_1_FM":[60,-3,3,"","#phi(l_{1})"],
+        "iso_1_FM":[20,0,1,"","relIso(l_{1})"],
+        "dZ_1_FM":[10,0,0.2,"[cm]","d_{z}(l_{1})"],
+        "d0_1_FM":[10,0,0.2,"[cm]","d_{xy}(l_{1})"],
+        "q_1_FM":[10,-5,5,"","charge(l_{1})"],
 
+        "pt_2_FM":[40,0,200,"[Gev]","P_{T}(l_{2})"],
+        "eta_2_FM":[60,-3,3,"","#eta(l_{2})"],
+        "phi_2_FM":[60,-3,3,"","#phi(l_{2})"],
+        "iso_2_FM":[20,0,1,"","relIso(l_{2})"],
+        "dZ_2_FM":[10,0,0.2,"[cm]","d_{z}(l_{2})"],
+        "d0_2_FM":[10,0,0.2,"[cm]","d_{xy}(l_{2})"],
+        "q_2_FM":[10,-5,5,"","charge(l_{2})"],
+
+	"iso_3_FM":[20,0,1,"","relIso(l_{3})"],
+        "pt_3_FM":[40,0,200,"[Gev]","P_{T}(l_{3})"],
+        "eta_3_FM":[60,-3,3,"","#eta(l_{3})"],
+        "phi_3_FM":[60,-3,3,"","#phi(l_{3})"],
+        "dZ_3_FM":[10,0,0.2,"[cm]","d_{z}(l_{3})"],
+        "d0_3_FM":[10,0,0.2,"[cm]","d_{xy}(l_{3})"],
+
+        "iso_4_FM":[20,0,1,"","relIso(l_{4})"],
+        "pt_4_FM":[40,0,200,"[Gev]","P_{T}(l_{4})"],
+        "eta_4_FM":[60,-3,3,"","#eta(l_{4})"],
+        "phi_4_FM":[60,-3,3,"","#phi(l_{4})"],
+        "dZ_4_FM":[10,0,0.2,"[cm]","d_{z}(l_{4})"],
+        "d0_4_FM":[10,0,0.2,"[cm]","d_{xy}(l_{4})"],
+
+
+        "njets_FM":[10,-0.5,9.5,"","nJets"],
+
+        "jpt_1_FM":[60,0,300,"[GeV]","Jet^{1} P_{T}"], 
+        "jeta_1_FM":[60,-3,3,"","Jet^{1} #eta"],
+        "jpt_2_FM":[60,0,300,"[GeV]","Jet^{2} P_{T}"], 
+        "jeta_2_FM":[6,-3,3,"","Jet^{2} #eta"],
+
+        "bpt_1_FM":[40,0,200,"[GeV]","BJet^{1} P_{T}"], 
+        "bpt_2_FM":[40,0,200,"[GeV]","BJet^{2} P_{T}"], 
+
+        "nbtag_FM":[5,-0.5,4.5,"","nBTag"],
+        "beta_1_FM":[60,-3,3,"","BJet^{1} #eta"],
+        "beta_2_FM":[60,-3,3,"","BJet^{2} #eta"],
+
+        "met_FM":[50,0,250,"[GeV]","#it{p}_{T}^{miss}"], 
+        "met_phi_FM":[60,-3,3,"","#it{p}_{T}^{miss} #phi"], 
+        "puppi_phi_FM":[60,-3,3,"","PUPPI#it{p}_{T}^{miss} #phi"], 
+        "puppimet_FM":[50,0,250,"[GeV]","#it{p}_{T}^{miss}"], 
+
+        "mll_FM":[40,50,130,"[Gev]","m(l^{+}l^{-})"],
+
+        "m_vis_FM":[30,50,200,"[Gev]","m(#tau#tau)"],
+        "pt_tt_FM":[40,0,200,"[GeV]","P_{T}(#tau#tau)"],
+        "H_DR_FM":[60,0,6,"","#Delta R(#tau#tau)"],
+        #"H_tot_FM":[30,0,200,"[GeV]","m_{T}tot(#tau#tau)"],
+
+        "m_sv_FM":[60,0,300,"[Gev]","m(#tau#tau)(SV)"],
+        "mt_sv_FM":[60,0,300,"[Gev]","m_{T}(#tau#tau)(SV)"],
+        "AMass_FM":[100,50,550,"[Gev]","m_{Z+H}(SV)"],
+
+        "Z_Pt_FM":[60,0,300,"[Gev]","P_T(l_{1}l_{2})"],
+        "Z_DR_FM":[60,0,6,"","#Delta R(l_{1}l_{2})"],
+
+
+        "inTimeMuon_1_FM":[10,-5,5,"","inTimeMuon_1"],
+        "isGlobal_1_FM":[10,-5,5,"","isGlobal_1"],
+        "isTracker_1_FM":[10,-5,5,"","isTracker_1"],
+        "looseId_1_FM":[10,-5,5,"","looseId_1"],
+        "mediumId_1_FM":[10,-5,5,"","mediumId_1"],
+        "Electron_mvaFall17V2noIso_WP90_1_FM":[10,-5,5,"","Electron_mvaFall17V2noIso_WP90_1"],
+        "gen_match_1_FM":[30,-0.5,29.5,"","gen_match_1"],
+
+
+        "inTimeMuon_2_FM":[10,-5,5,"","inTimeMuon_2"],
+        "isGlobal_2_FM":[10,-5,5,"","isGlobal_2"],
+        "isTracker_2_FM":[10,-5,5,"","isTracker_2"],
+        "looseId_2_FM":[10,-5,5,"","looseId_2"],
+        "mediumId_2_FM":[10,-5,5,"","mediumId_2"],
+        "Electron_mvaFall17V2noIso_WP90_2_FM":[10,-5,5,"","Electron_mvaFall17V2noIso_WP90_2"],
+        "gen_match_2_FM":[30,-0.5,29.5,"","gen_match_2"],
+
+        "inTimeMuon_3_FM":[10,-5,5,"","inTimeMuon_3"],
+        "isGlobal_3_FM":[10,-5,5,"","isGlobal_3"],
+        "isTracker_3_FM":[10,-5,5,"","isTracker_3"],
+        "looseId_3_FM":[10,-5,5,"","looseId_3"],
+        "mediumId_3_FM":[10,-5,5,"","mediumId_3"],
+        "Electron_mvaFall17V2noIso_WP90_3_FM":[10,-5,5,"","Electron_mvaFall17V2noIso_WP90_3"],
+        "gen_match_3_FM":[30,-0.5,29.5,"","gen_match_3"],
+
+
+
+        "inTimeMuon_4_FM":[10,-5,5,"","inTimeMuon_4"],
+        "isGlobal_4_FM":[10,-5,5,"","isGlobal_4"],
+        "isTracker_4_FM":[10,-5,5,"","isTracker_4"],
+        "looseId_4_FM":[10,-5,5,"","looseId_4"],
+        "mediumId_4_FM":[10,-5,5,"","mediumId_4"],
+        "Electron_mvaFall17V2noIso_WP90_4_FM":[10,-5,5,"","Electron_mvaFall17V2noIso_WP90_4"],
+        "gen_match_4_FM":[30,-0.5,29.5,"","gen_match_4"],
 }
 
+#for plotVar in plotSettings :
+#    name = plotVar+"_FM"
+#    plotSettings.update(name :[plotVar[0],plotVar[1],plotVar[2],plotVar[3],plotVar[4]])
 
 
 
@@ -366,6 +463,8 @@ def makeDiTauStack(outDir,inFile,rootDi,dndm = False, doRatio = False, year=2020
     kTop = TColor.GetColor("#ffcc66")
     kDY = TColor.GetColor("#58d885")
     colors = {'data':0,'WJets':kMagenta-10,'Rare':kBlue-8,'ZZ':kAzure-9,'Top':kTop,'DY':kDY,'Signal':kRed}
+	
+
     for plotVar in plotSettings :
         histo[plotVar] ={}
         hsumall[plotVar] ={}
@@ -385,30 +484,49 @@ def makeDiTauStack(outDir,inFile,rootDi,dndm = False, doRatio = False, year=2020
 	        else : h_ = "hCutFlow_{0:s}_{1:s}".format(cat,group)
 
 
-            try : histo[plotVar][group] = f.Get(h_)
+            try :
+	        #print 'will try to read', h_
+	        histo[plotVar][group] = f.Get(h_)
+
             except KeyError : continue
+	    if not histo[plotVar][group] : continue
+
+
             #print histo[plotVar][group].GetName(), histo[plotVar][group].GetNbinsX()
 
-            '''if 'GenMatchTau' in plotVar : 
-	        c.cd()
-		#c.Clear()
-		plotPad = TPad("pad1","",0.0,0.03,1.0,1.0)
-		plotPad.SetLeftMargin(L/W)
-		plotPad.SetRightMargin(R/W)
-		plotPad.SetTopMargin(T/H)
-		plotPad.SetBottomMargin(B/H)
-		ratioPad = TPad("pad2","",0.0,0.0,0.0,0.)
-		plotPad.Draw()
-		ratioPad.Draw()
-	    '''
-            if 'GenMatchTau' in plotVar : 
-	         histo[plotVar][group].GetXaxis().SetBinLabel(2,"prompt e")
-	         histo[plotVar][group].GetXaxis().SetBinLabel(3,"prompt #mu")
-	         histo[plotVar][group].GetXaxis().SetBinLabel(4,"#tau#rightarrow e")
-	         histo[plotVar][group].GetXaxis().SetBinLabel(5,"#tau#rightarrow #mu")
-	         histo[plotVar][group].GetXaxis().SetBinLabel(6,"#tau_{h}")
-	         histo[plotVar][group].GetXaxis().SetBinLabel(1,"unknown")
-            
+	    if 'gen_match' in plotVar : 
+		if ('gen_match_3' and ('mmet' or 'mmem')) or ('ee' and ('gen_match_1' or 'gen_match_2')) in plotVar :
+
+		    histo[plotVar][group].GetXaxis().SetBinLabel(1,"unmatched")
+		    histo[plotVar][group].GetXaxis().SetBinLabel(2,"prompt e")
+		    histo[plotVar][group].GetXaxis().SetBinLabel(16,"prompt #tau")
+		    histo[plotVar][group].GetXaxis().SetBinLabel(23,"prompt g")
+		    histo[plotVar][group].GetXaxis().SetBinLabel(6,"b#rightarrow b")
+		    histo[plotVar][group].GetXaxis().SetBinLabel(5,"c#rightarrow e")
+		    histo[plotVar][group].GetXaxis().SetBinLabel(4,"lq#rightarrow e/unkn")
+
+
+		if ('mt' and'gen_match_3') or ( ('eeem' or 'mmem') and'gen_match_4') or ('mm' and ('gen_match_1' or 'gen_match_2')) in plotVar :
+
+			histo[plotVar][group].GetXaxis().SetBinLabel(1,"unmatched")
+			histo[plotVar][group].GetXaxis().SetBinLabel(2,"prompt #mu")
+			histo[plotVar][group].GetXaxis().SetBinLabel(16,"prompt #tau")
+			histo[plotVar][group].GetXaxis().SetBinLabel(6,"b#rightarrow b")
+			histo[plotVar][group].GetXaxis().SetBinLabel(5,"c#rightarrow e")
+			histo[plotVar][group].GetXaxis().SetBinLabel(4,"lq#rightarrow e/unkn")
+
+
+		if 'gen_match_3' or 'gen_match_4' in plotVar :
+		    if 'mmmt' or 'mmet' or 'mmtt' or 'eemt' or 'eeet' or 'eett'  in plotVar :  #tau
+
+			histo[plotVar][group].GetXaxis().SetBinLabel(1,"unmachted")
+			histo[plotVar][group].GetXaxis().SetBinLabel(2,"prompt e")
+			histo[plotVar][group].GetXaxis().SetBinLabel(3,"prompt #mu")
+			histo[plotVar][group].GetXaxis().SetBinLabel(4,"#tau #rightarrow e")
+			histo[plotVar][group].GetXaxis().SetBinLabel(5,"#tau #rightarrow #mu")
+			histo[plotVar][group].GetXaxis().SetBinLabel(6,"#tau_{h}")
+
+
             if dndm : convertToDNDM(histo[plotVar][group])
             if group == 'data' :
                 try : applyDATAStyle(histo[plotVar][group])
@@ -420,13 +538,18 @@ def makeDiTauStack(outDir,inFile,rootDi,dndm = False, doRatio = False, year=2020
         
             if group != 'data' and group != 'Signal' : hs.Add(histo[plotVar][group]) 
             #if '_met' in plotVar : print '============', group, histo[plotVar][group].GetSumOfWeights()
+	try : hs.GetStack().Last()
+	except ReferenceError  : continue
+
+	hsum = hs.GetStack().Last()
         hMax = 75e+03+hs.GetMaximum()
 	if not setLog : hMax = 300+hs.GetMaximum()
 	hs.SetMinimum(0.)
+	if not hs : continue
         #if setLog : 
 	#    hs.SetMaximum(10e+05*hs.GetMaximum())
         #else :     hs.SetMinimum(0.)
-        hsum=hs.GetStack().Last()
+         
 	hsum.SetMinimum(0.)
 	if setLog : hsum.SetMinimum(0.015)
         hsum.SetMaximum(hMax)
@@ -456,7 +579,7 @@ def makeDiTauStack(outDir,inFile,rootDi,dndm = False, doRatio = False, year=2020
 	if dndm : hsum.GetYaxis().SetTitle("dN/d"+labelX)
 
 	for i in range(1,hsum.GetNbinsX()+1) : 
-	    if histo[plotVar]['Signal'].GetBinContent(i) + hsum.GetBinContent(i) > 0 and float(histo[plotVar]['Signal'].GetBinContent(i)/sqrt(histo[plotVar]['Signal'].GetBinContent(i) + hsum.GetBinContent(i))) > 0.2 : 
+	    if hsum.GetBinContent(i) > 0 and float(histo[plotVar]['Signal'].GetBinContent(i)/sqrt(histo[plotVar]['Signal'].GetBinContent(i) + hsum.GetBinContent(i))) > 0.2 : 
 	        print 'will have to blind %i for var %s', i, plotVar
 	        histo[plotVar]['data'].SetBinContent(i,0)
 
