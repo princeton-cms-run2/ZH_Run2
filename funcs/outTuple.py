@@ -41,6 +41,7 @@ class outTuple() :
         self.evt              = array('l',[0])
         self.cat              = array('l',[0])
         self.weight           = array('f',[0])
+        self.PUweight         = array('f',[0])
         self.LHEweight        = array('f',[0])
         self.Generator_weight = array('f',[0])
         self.LHE_Njets        = array('l',[0])
@@ -241,6 +242,7 @@ class outTuple() :
         self.t.Branch('evt',              self.evt,               'evt/I' )
         self.t.Branch('cat',              self.cat,               'cat/I' )
         self.t.Branch('weight',           self.weight,            'weight/F' )
+        self.t.Branch('PUweight',         self.PUweight,            'PUweight/F' )
         self.t.Branch('LHEweight',        self.LHEweight,         'LHEweight/F' )
         self.t.Branch('LHE_Njets',        self.LHE_Njets,         'LHE_Njets/I' )
         self.t.Branch('Generator_weight', self.Generator_weight,  'Generator_weight/F' )
@@ -1141,7 +1143,7 @@ class outTuple() :
         return
 
     def setWeight(self,weight) :
-        self.weight[0] = weight
+        self.PUweight[0] = weight
         #print("outTuple.setWeight() weight={0:f}".format(weight))
         return
 
