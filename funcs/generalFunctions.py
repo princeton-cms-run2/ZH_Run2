@@ -591,6 +591,8 @@ class pileUpWeight() :
         print("sum of pMC={0:f}".format(np.sum(pMC)))
         weights = np.divide(pData,pMC)
         self.PUweights = weights
+	#print 'inside', weights, len(weights)
+	#print '========', self.PU, hMC.FindBin(PU), hData.FindBin(PU), hData.GetBinContent(hData.FindBin(PU))/hMC.GetBinContent(hMC.FindBin(PU)), 'is it the same?', weights
         xMin = hData.GetBinLowEdge(1)
         xMax = xMin + hData.GetNbinsX()*hData.GetBinWidth(1) 
         bins = np.linspace(xMin+0.5*binWidth,xMax-0.5*binWidth,nBins)
@@ -616,14 +618,15 @@ class pileUpWeight() :
             legend.AddEntry(gMC,"MC") 
             legend.Draw()
             c1.Draw()
-            raw_input()
+            #raw_input()
             
         return bins, weights
 
     def getWeight(self,PU) :
         iPU = min(98,int(PU))
-        weight = self.sampleWeight*self.PUweights[iPU]
-        #print 'weights', weight, self.sampleWeight, self.PUweights[iPU]
+        #weight = self.sampleWeight*self.PUweights[iPU]
+        weight = self.PUweights[iPU] #the sampleWeight should be taken from the MC later on
+        #print 'weights', iPU, weight, self.sampleWeight, self.PUweights[iPU], 'old', self.sampleWeight*self.PUweights[iPU]
         return weight 
         
     def displayWeights(self, bins, weights) :
