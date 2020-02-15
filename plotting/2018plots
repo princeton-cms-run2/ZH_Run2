@@ -1,0 +1,3 @@
+python makeAllPlotsZH.py -f MCsamples_2018_ZH.csv -u yes -a ZH -s OS --MConly --looseCuts -y 2018  -r no
+python makeStack.py -f allGroups_2018_OS_LT00_noSV.root -L yes -u yes
+cp plots/*2018* /publicweb/a/alkaloge/plots/ZH_2017/.

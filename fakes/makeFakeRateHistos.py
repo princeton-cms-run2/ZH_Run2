@@ -2,225 +2,912 @@
 # estimate fake rate for irreducilble backgrounds 
 #
 
-from ROOT import TFile, TTree, TH1D, TCanvas, TLorentzVector, TLatex, kRed
+import ROOT
+from ROOT import TFile, TTree, TH1D, TCanvas, TLorentzVector, TLegend, TAxis, TGraphAsymmErrors,  gInterpreter
+from ROOT import gSystem, gStyle, gROOT, kTRUE, TMatrixD
+from math import sqrt, sin, cos, pi
+from array import array
+import os
+import os.path
+import sys
+sys.path.append('../modules/')
+import ScaleFactor as SF
+sys.path.append('../TauPOG')
+from TauPOG.TauIDSFs.TauIDSFTool import TauIDSFTool
+from TauPOG.TauIDSFs.TauIDSFTool import TauESTool
+from TauPOG.TauIDSFs.TauIDSFTool import TauFESTool
+
+gROOT.SetBatch(True)
 import tdrstyle 
 
 def getArgs() :
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("-v","--verbose",default=0,type=int,help="Print level.")
-    parser.add_argument("-f","--inFileName",default='./VBF_sync_input.root',help="File to be analyzed.")
+    parser.add_argument("-i","--inFileRoot",default='./VBF_sync_input.root',help="File to be analyzed.")
+    parser.add_argument("-f","--inFileName",default='./MCsamples_2017_small.csv',help="File to be analyzed.")
     parser.add_argument("-y","--year",default=2017,type=int,help="Year for data.")
-    parser.add_argument("-l","--LTcut",default=80.,type=float,help="LT cut")
+    parser.add_argument("-l","--LTcut",default=0,type=float,help="LT cut")
+    parser.add_argument("-s","--selection",default='ZH',type=str,help="Selection")
+    parser.add_argument("-r","--region",default='SS',type=str,help="OS or SS")
+    parser.add_argument("-w","--workingPoint",default='16',type=int,help="16 = Medium, 32 = Tight, 64 = VTight, 128 = VVTight")
     return parser.parse_args()
+
+
+def OverFlow(htest) :
+
+    nb = htest.GetNbinsX()
+
+    lastbincont = htest.GetBinContent(nb)
+    overbincont = htest.GetBinContent(nb+1)
+    lastbinerror = htest.GetBinError(nb)
+    overbinerror = htest.GetBinError(nb+1)
+
+    htest.SetBinContent(nb, 0)
+    htest.SetBinContent(nb, lastbincont+overbincont)
+    htest.SetBinContent(nb+1, 0.)
+    htest.SetBinError(nb, sqrt(lastbinerror*lastbinerror + overbinerror*overbinerror))
+    htest.SetBinError(nb+1, 0.)
+
+
+
+
+def search(values, searchFor):
+    for k in values:
+        for v in values[k]:
+            if searchFor in v:
+                return True
+    return False
 
 class dupeDetector() :
     
     def __init__(self):
         self.nCalls = 0 
         self.runEventList = []
+        self.DuplicatedEvents = []
 
     def checkEvent(self,entry) :
         self.nCalls += 1 
-        runEvent = "{0:d}:{1:d}".format(entry.run,entry.evt)
+        runEvent = "{0:d}:{1:d}:{2:d}".format(entry.lumi,entry.run,entry.evt)
         if runEvent in self.runEventList :
             #print("Event in list: runEventList={0:s}".format(str(self.runEventList)))
+            self.DuplicatedEvents.append(runEvent)
+	    #print 'duplicated event', entry.lumi,entry.run,entry.evt
             return True
         else :
             self.runEventList.append(runEvent)
             #print("New event: runEventList={0:s}".format(str(self.runEventList)))
             return False
 
+        print 'print report', self.DuplicatedEvents
+
     def printSummary(self) :
         print("Duplicate Event Summary: Calls={0:d} Unique Events={1:d}".format(self.nCalls,len(self.runEventList)))
         return
 
+
+def OverFlow(htest) :
+
+    nb = htest.GetNbinsX()
+
+    lastbincont = htest.GetBinContent(nb)
+    overbincont = htest.GetBinContent(nb+1)
+    lastbinerror = htest.GetBinError(nb)
+    overbinerror = htest.GetBinError(nb+1)
+
+    htest.SetBinContent(nb, 0)
+    htest.SetBinContent(nb, lastbincont+overbincont)
+    htest.SetBinContent(nb+1, 0.)
+    htest.SetBinError(nb, sqrt(lastbinerror*lastbinerror + overbinerror*overbinerror))
+    htest.SetBinError(nb+1, 0.)
+
+
+    #return htest
+campaign = {2016:'2016Legacy', 2017:'2017ReReco', 2018:'2018ReReco'}
+
 args = getArgs()
 era = str(args.year)
 nBins, xMin, xMax = 10, 0., 200.
-lumi = 1000.*41.8 
-cats = { 1:'eeet', 2:'eemt', 3:'eett', 4:'mmet', 5:'mmmt', 6:'mmtt', 7:'et', 8:'mt', 9:'tt' }
-preCutOff = False  
+cats = { 1:'eeet', 2:'eemt', 3:'eett', 4:'eeem', 5:'mmet', 6:'mmmt', 7:'mmtt', 8:'mmem'}
+preCutOff = True
+et = TLorentzVector()
+mut = TLorentzVector()
+ptMiss = TLorentzVector() 
+
+isW = False
+isDY = False
+muonMass = 0.106
+electronMass = 0.000511
+
+antiJet = args.workingPoint - 1
+
+MetV = TLorentzVector()
+MetVcor = TLorentzVector()
+tauV3 = TLorentzVector()
+tauV4 = TLorentzVector()
+tauV3cor = TLorentzVector()
+tauV4cor = TLorentzVector()
+L1 = TLorentzVector()
+L2 = TLorentzVector()
+L1.SetXYZM(0,0,0,0)
+L2.SetXYZM(0,0,0,0)
+MetV.SetXYZM(0,0,0,0)
+MetVcor.SetXYZM(0,0,0,0)
+tauV3.SetXYZM(0,0,0,0)
+tauV4.SetXYZM(0,0,0,0)
+tauV3cor.SetXYZM(0,0,0,0)
+tauV4cor.SetXYZM(0,0,0,0)
+
+gInterpreter.ProcessLine(".include .")
+for baseName in ['../SVFit/MeasuredTauLepton','../SVFit/svFitAuxFunctions','../SVFit/FastMTT', '../HTT-utilities/RecoilCorrections/src/MEtSys', '../HTT-utilities/RecoilCorrections/src/RecoilCorrector'] : 
+    if os.path.isfile("{0:s}_cc.so".format(baseName)) :
+	gInterpreter.ProcessLine(".L {0:s}_cc.so".format(baseName))
+    else :
+	gInterpreter.ProcessLine(".L {0:s}.cc++".format(baseName))   
+	# .L is not just for .so files, also .cc
+
+
+
+if era == '2016' : 
+    weights = {'lumi':35.92, 'tauID_w' :0.87, 'tauES_DM0' : -0.6, 'tauES_DM1' : -0.5,'tauES_DM10' : 0.0, 'mutauES_DM0' : -0.2, 'mutauES_DM1' : 1.5, 'eltauES_DM0' : 0.0, 'eltauES_DM1' : 9.5}
+
+    TriggerSF={'dir' : '../tools/ScaleFactors/TriggerEffs/', 'fileMuon' : 'Muon/SingleMuon_Run2016_IsoMu24orIsoMu27.root', 'fileElectron' : 'Electron/SingleElectron_Run2016_Ele25orEle27.root'}
+    LeptonSF={'dir' : '../tools/ScaleFactors/LeptonEffs/', 'fileMuon0p2' : 'Muon/Muon_Run2016_IdIso_0p2.root', 'fileMuon0p15' : 'Muon/Muon_Run2016_IdIso_0p15.root', 'fileElectron0p1' : 'Electron/Electron_Run2016_IdIso_0p1.root',  'fileElectron0p15' : 'Electron/Electron_Run2016_IdIso_0p15.root'}
+    TESSF={'dir' : 'TauPOG/TauIDSFs/data/', 'fileTES' : 'TauES_dm_2016Legacy.root'}
+
+
+
+if era == '2017' : 
+    weights = {'lumi':41.53, 'tauID_w' :0.89, 'tauES_DM0' : 0.7, 'tauES_DM1' : -0.2,'tauES_DM10' : 0.1, 'mutauES_DM0' : 0.0, 'mutauES_DM1' : 0.0, 'eltauES_DM0' : 0.3, 'eltauES_DM1' : 3.6}
+
+
+    TriggerSF={'dir' : '../tools/ScaleFactors/TriggerEffs/', 'fileMuon' : 'Muon/SingleMuon_Run2017_IsoMu24orIsoMu27.root', 'fileElectron' : 'Electron/SingleElectron_Run2017_Ele32orEle35.root'}
+    LeptonSF={'dir' : '../tools/ScaleFactors/LeptonEffs/', 'fileMuon0p2' : 'Muon/Muon_Run2017_IdIso_0p2.root', 'fileMuon0p15' : 'Muon/Muon_Run2017_IdIso_0p15.root', 'fileElectron0p1' : 'Electron/Electron_Run2017_IdIso_0p1.root',  'fileElectron0p15' : 'Electron/Electron_Run2017_IdIso_0p15.root'}
+    TESSF={'dir' : 'TauPOG/TauIDSFs/data/', 'fileTES' : 'TauES_dm_2017ReReco.root'}
+
+if era == '2018' : 
+    weights = {'lumi':59.74, 'tauID_w' :0.90, 'tauES_DM0' : -1.3, 'tauES_DM1' : -0.5,'tauES_DM10' : -1.2, 'mutauES_DM0' : 0.0, 'mutauES_DM1' : 0.0, 'eltauES_DM0' : 0.0, 'eltauES_DM1' : 0.0}
+
+    TriggerSF={'dir' : '../tools/ScaleFactors/TriggerEffs/', 'fileMuon' : 'Muon/SingleMuon_Run2018_IsoMu24orIsoMu27.root', 'fileElectron' : 'Electron/SingleElectron_Run2018_Ele32orEle35.root'}
+    LeptonSF={'dir' : '../tools/ScaleFactors/LeptonEffs/', 'fileMuon0p2' : 'Muon/Muon_Run2018_IdIso_0p2.root', 'fileMuon0p15' : 'Muon/Muon_Run2018_IdIso_0p15.root', 'fileElectron0p1' : 'Electron/Electron_Run2018_IdIso_0p1.root',  'fileElectron0p15' : 'Electron/Electron_Run2018_IdIso_0p15.root'}
+    TESSF={'dir' : 'TauPOG/TauIDSFs/data/', 'fileTES' : 'TauES_dm_2018ReReco.root'}
+
+
+
+if era == '2016' : recoilCorrector  = ROOT.RecoilCorrector("HTT-utilities/RecoilCorrections/data/Type1_PFMET_Run2016BtoH.root");
+if era == '2017' : recoilCorrector  = ROOT.RecoilCorrector("HTT-utilities/RecoilCorrections/data/Type1_PFMET_2017.root");
+if era == '2018' : recoilCorrector  = ROOT.RecoilCorrector("HTT-utilities/RecoilCorrections/data/TypeI-PFMet_Run2018.root");
+
+
+
+########## initializing triggers
+
+tauSFTool = TauIDSFTool(campaign[args.year],'DeepTau2017v2p1VSjet','Medium')
+testool = TauESTool(campaign[args.year])
+festool = TauESTool(campaign[args.year])
+sf_MuonTrig = SF.SFs()
+sf_MuonTrig.ScaleFactor("{0:s}{1:s}".format(TriggerSF['dir'],TriggerSF['fileMuon']))
+sf_EleTrig = SF.SFs()
+sf_EleTrig.ScaleFactor("{0:s}{1:s}".format(TriggerSF['dir'],TriggerSF['fileElectron']))
+
+sf_MuonId = SF.SFs()
+sf_MuonId.ScaleFactor("{0:s}{1:s}".format(LeptonSF['dir'],LeptonSF['fileMuon0p2']))
+sf_ElectronId = SF.SFs()
+sf_ElectronId.ScaleFactor("{0:s}{1:s}".format(LeptonSF['dir'],LeptonSF['fileElectron0p15']))
+
+
 
 # use this utility class to screen out duplicate events
 DD = dupeDetector()
 
 # open an output file
-fOut = TFile('FakeRates.root', 'recreate' )
+fin = 'FakeRates_{0:s}_{1:s}_{2:s}.root'.format(str(args.year),str(args.region),str(args.workingPoint))
+fOut = TFile(fin, 'recreate' )
 
 # create histograms
+hList = ['e_et','t_et','m_mt','t_mt','t1_tt','t2_tt', 'e_em', 'm_em']
+hModes = ['0','1','10','11']
+
 hBase, hTight = {}, {}
-hList = ['e_et','m_mt','t_et','t_mt','t1_tt','t2_tt']
+hBasePrompt, hTightPrompt = {}, {}
+hBasePromptMode, hTightPromptMode = {}, {}
+hBasenoPrompt, hTightnoPrompt = {}, {}
+hBasenoPromptMode, hTightnoPromptMode = {}, {}
+
+groups = ['ZZ','WJets','Rare','Top','DY']
+nickNames, xsec, totalWeight, sampleWeight = {}, {}, {}, {}
+for group in groups :
+    nickNames[group] = []
+
+
+nBins = 5
+Bins = [0,10,20,30,40,100]
+
 for h in hList :
     hName = "{0:s}Base".format(h)
-    hBase[h] = TH1D(hName,hName,10,0.,100.)
+    #hBase[h] = TH1D(hName,hName,10,0.,100.)
+    hBase[h] = TH1D(hName,hName,nBins, array('d',Bins))
     hName = "{0:s}Tight".format(h)
-    hTight[h] = TH1D(hName,hName,10,0.,100.)
-    
+    #hTight[h] = TH1D(hName,hName,10,0.,100.)
+    hTight[h] = TH1D(hName,hName,nBins, array('d',Bins))
+ 
+
+print hList
+
 # loop over the data to fill the histograms
-for era in ['2017B','2017C','2017D','2017E','2017F'] :
-    for dataset in ['SingleElectron','SingleMuon','DoubleEG','DoubleMuon'] :
-        inFileName = './data/{0:s}_Run{1:s}/{0:s}_Run{1:s}.root'.format(dataset,era)
-        print("Opening {0:s}".format(inFileName)) 
-        inFile = TFile.Open(inFileName)
+#for era in ['2017B','2017C','2017D','2017E','2017F'] :
+for era in [str(args.year)] :
+    for dataset in ['data'] :
+        inFileRoot = './data/{0:s}/{1:s}_{2:s}/{1:s}_{2:s}.root'.format(args.selection,dataset,era)
+        print("Opening {0:s}".format(inFileRoot)) 
+        inFile = TFile.Open(inFileRoot)
         inFile.cd()
         inTree = inFile.Get("Events")
         nentries = inTree.GetEntries()
         for i, e in enumerate(inTree) :
+ 
+            #if i > 1000 : continue
+            cat = cats[e.cat]
 
             # impose any common selection criteria here
             # include only same sign events 
-            if e.q_1*e.q_2 < 0. : continue
+            if e.q_1*e.q_2 > 0. : continue
+            if args.region == 'SS' and  e.q_3*e.q_4 < 0. : continue
+            if args.region == 'OS' and  e.q_3*e.q_4 > 0. : continue
+            #if e.q_3*e.q_4 > 0. : continue
             if e.nbtag > 0 : continue
+
+	    #if abs(e.dZ_3) > 0.05 or abs(e.dZ_4) > 0.05 : continue
+	    if cat[:2] == 'mm' and  (e.iso_1 > 0.2 or e.iso_2 > 0.2) : continue
+	    if cat[:2] == 'ee' and  (e.iso_1 > 0.15 or e.iso_2 > 0.15) : continue
+
+            if e.isTrig_1 == 0 : continue  
+            #if e.isTrig_1 == 0 and e.isDoubleTrig==0: continue  
+
+	    #if e.isDoubleTrig !=0 : continue
+	    #if e.isTrig_1 == 0 and e.isDoubleTrig !=0 : weight *= 0.9
             
             # skip duplicate events
             if DD.checkEvent(e) : continue 
 
-            cat = cats[e.cat]
+	    et.SetPtEtaPhiM(e.pt_3,e.eta_3,e.phi_3,0.000511)
+	    ptMiss.SetPtEtaPhiM(e.met,0.,e.metphi,0.)
+	    eMET = et + ptMiss
+
+	    preCut =  eMET.Mt() < 40. 
+	    mut.SetPtEtaPhiM(e.pt_3,e.eta_3,e.phi_3,0.102)
+	    muMET = mut + ptMiss
+	    preCutt =  muMET.Mt() < 40. 
+
             if cat[2:] == 'et' :
                 # apply transverse mass cut on electron-MET system
-                et = TLorentzVector()
-                et.SetPtEtaPhiM(e.pt_1,0.,e.phi_1,0.000511)
-                ptMiss = TLorentzVector() 
-                ptMiss.SetPtEtaPhiM(e.met,0.,e.metphi,0.)
-                eMET = et + ptMiss
-                preCut = preCutOff or eMET.Mt() > 40.  
-                if preCut : hBase['e_et'].Fill(e.pt_1)
-                hBase['t_et'].Fill(e.pt_2)
-                if e.iso_1 > 0.5 :
-                    if preCut : hTight['e_et'].Fill(e.pt_1)
-                if e.iso_2_ID > 15 :
-                    hTight['t_et'].Fill(e.pt_2)
-                    
-            elif cat[2:] == 'mt' :
-                # apply transverse mass cut on muon-MET system
-                mut = TLorentzVector()
-                mut.SetPtEtaPhiM(e.pt_1,0.,e.phi_1,0.102)
-                ptMiss = TLorentzVector() 
-                ptMiss.SetPtEtaPhiM(e.met,0.,e.metphi,0.)
-                muMET = mut + ptMiss
-                preCut = preCutOff or muMET.Mt() > 40. 
-                if preCut : hBase['m_mt'].Fill(e.pt_1)
-                hBase['t_mt'].Fill(e.pt_2)
-                if e.iso_1 < 0.25 and e.iso_1_ID > 0 : 
-                    if preCut : hTight['m_mt'].Fill(e.pt_1)
-                if e.iso_2_ID > 15 :
-                    hTight['t_mt'].Fill(e.pt_2)
+                if preCutOff or preCut : hBase['e_et'].Fill(e.pt_3)
+                hBase['t_et'].Fill(e.pt_4)
 
-            else :
-                H_LT = e.pt_1 + e.pt_2
-                if not preCutOff and H_LT < args.LTcut : continue
-                hBase['t1_tt'].Fill(e.pt_1)
-                hBase['t2_tt'].Fill(e.pt_2)
-                if e.iso_1_ID > 15 :
-                    hTight['t1_tt'].Fill(e.pt_1)
-                if e.iso_2_ID > 15 : 
-                    hTight['t2_tt'].Fill(e.pt_2)
+	        if e.Electron_mvaFall17V2noIso_WP90_3 >0  and  e.iso_3 < 0.15 : hTight['e_et'].Fill(e.pt_3)
+	        if e.idDeepTau2017v2p1VSjet_4 >= antiJet : hTight['t_et'].Fill(e.pt_4)
+                    
+            if cat[2:] == 'mt' :
+                # apply transverse mass cut on muon-MET system
+                if preCutOff or preCutt and  (e.isGlobal_3 > 0 or e.isTracker_3 > 0) :  hBase['m_mt'].Fill(e.pt_3)
+                hBase['t_mt'].Fill(e.pt_4)
+
+	        if e.iso_3 < 0.2 and  (e.isGlobal_3 > 0 or e.isTracker_3 > 0) and e.mediumId_3 > 0: hTight['m_mt'].Fill(e.pt_3)
+	        if e.idDeepTau2017v2p1VSjet_4 >= antiJet :  hTight['t_mt'].Fill(e.pt_4)
+
+
+            if cat[2:] == 'tt' :
+                H_LT = e.pt_3 + e.pt_4
+                #if not preCutOff and H_LT < args.LTcut : continue
+                hBase['t1_tt'].Fill(e.pt_3)
+                hBase['t2_tt'].Fill(e.pt_4)
+	        if e.idDeepTau2017v2p1VSjet_3 >= antiJet :    hTight['t1_tt'].Fill(e.pt_3)
+	        if e.idDeepTau2017v2p1VSjet_4 >= antiJet :    hTight['t2_tt'].Fill(e.pt_4)
+
+            if cat[2:] == 'em' :
+
+	        mut.SetPtEtaPhiM(e.pt_4,e.eta_4,e.phi_4,0.102)
+	        muMET = mut + ptMiss
+	        preCutt =  muMET.Mt() < 40.
+
+                if preCutOff or preCut : hBase['e_em'].Fill(e.pt_3)
+
+                if preCutOff or preCutt and  (e.isGlobal_4 > 0 or e.isTracker_4 > 0): hBase['m_em'].Fill(e.pt_4)
+
+	        if e.iso_3 < 0.15 and  e.Electron_mvaFall17V2noIso_WP90_3 > 0 : hTight['e_em'].Fill(e.pt_3)
+	        if e.iso_4 < 0.20 and  (e.isGlobal_4 > 0 or e.isTracker_4 > 0) and e.mediumId_4 > 0: hTight['m_em'].Fill(e.pt_4)
+
+        #print hTight['e_et'].GetSumOfWeights(), hTight['t_et'].GetSumOfWeights(), hTight['m_mt'].GetSumOfWeights(), hTight['t_mt'].GetSumOfWeights()
             
         inFile.Close()
 
 DD.printSummary()
 
+#do the Overflow
+for h in hList :
+    OverFlow(hTight[h])
+    OverFlow(hBase[h])
 
-# create a similar set of histograms for the MC
-# dictionaries where the nickName is the key
-xsec, totalWeight, sampleWeight = {}, {}, {}
-nickNames = []
 
-#       0                 1       2        3        4        5            6
-# GluGluHToTauTau	Signal	48.58	9259000	198813970.4	 	/GluGluHToTauTau_...
-# make a first pass to get the weights 
-for line in open('MCsamples_'+era+'.csv','r').readlines() :
+
+Pblumi = 1000.
+
+WNJetsXsecs = [47297.3] # first entry: W0Jets xsec (not in file redirector)
+DYNJetsXsecs = [4263.5] # first entry: DY0Jets xsec (not in file redirector)
+
+WIncl_xsec = 61526.7
+DYIcl_xsec = 6225.42
+
+WJets_kfactor = 1.221
+DY_kfactor = 1.1637
+
+WxGenweightsArr = []
+DYxGenweightsArr = []
+
+
+print ' Will use the ' ,args.inFileName
+for line in open(args.inFileName,'r').readlines() :
     vals = line.split(',')
+    if '#' in vals[0] : continue
+    if vals[0][0] == "W" and  "JetsToLNu" in vals[0][2:] :
+        WNJetsXsecs.append(float(vals[2]))
+        filein = '../MC/condor/{0:s}/{1:s}_{2:s}/{1:s}_{2:s}.root'.format(args.selection,vals[0],era)
+        fIn = TFile.Open(filein,"READ")
+        WxGenweightsArr.append(fIn.Get("hWeights").GetSumOfWeights())
+
+
+    if vals[0][:2] == "DY" and "JetsToLL" in vals[0][3:] and 'M10to50' not in vals[0]:
+        DYNJetsXsecs.append(float(vals[2]))
+        filein = '../MC/condor/{0:s}/{1:s}_{2:s}/{1:s}_{2:s}.root'.format(args.selection,vals[0],era)
+        fIn = TFile.Open(filein,"READ")
+        DYxGenweightsArr.append(fIn.Get("hWeights").GetSumOfWeights())
+        #DYxGenweightsArr.append(fIn.Get("DY"+str(i)+"genWeights").GetSumOfWeights())
+
+
+WIncl_only = False
+DYIncl_only = False
+
+for line in open(args.inFileName,'r').readlines() :
+    vals = line.split(',')
+    if '#' in vals[0] : continue
     nickName = vals[0]
     group = vals[1]
-    #if not group.lower() == 'reducible' : continue 
-    nickNames.append(nickName) 
+    if 'Signal' not in group : nickNames[group].append(nickName)
     xsec[nickName] = float(vals[2])
-    totalWeight[nickName] = float(vals[4])
-    sampleWeight[nickName]= lumi*xsec[nickName]/totalWeight[nickName]
+    #totalWeight[nickName] = float(vals[4])
+    filein = '../MC/condor/{0:s}/{1:s}_{2:s}/{1:s}_{2:s}.root'.format(args.selection,vals[0],era)
+    fIn = TFile.Open(filein,"READ")
+    totalWeight[nickName] = float(fIn.Get("hWeights").GetSumOfWeights())
+    sampleWeight[nickName]= Pblumi*weights['lumi']*xsec[nickName]/totalWeight[nickName]
+
     print("group={0:10s} nickName={1:20s} xSec={2:10.3f} totalWeight={3:11.1f} sampleWeight={4:10.6f}".format(
         group,nickName,xsec[nickName],totalWeight[nickName],sampleWeight[nickName]))
 
-# Stitch the DYJets and WJets samples
+    #print("{0:100s}  & {1:10.3f} & {2:11.1f} & {3:10.6f}\\\\\\hline".format(
+    #     str(vals[6]),xsec[nickName],totalWeight[nickName],sampleWeight[nickName]))
+   
+if not search(nickNames, 'W1') and not search(nickNames, 'W2') and not search(nickNames, 'W3') and not search(nickNames, 'W4') : WIncl_only = True
+if not search(nickNames, 'DY1') and not search(nickNames, 'DY2') and not search(nickNames, 'DY3') and not search(nickNames, 'DY4') : DYIncl_only = True
+
+
+print 'done with that============================'
 
 for i in range(1,5) :
-    nn = 'DY{0:d}JetsToLL'.format(i) 
-    sampleWeight[nn] = lumi/(totalWeight['DYJetsToLL']/xsec['DYJetsToLL'] + totalWeight[nn]/xsec[nn])
+    nn = 'DY{0:d}JetsToLL'.format(i)
+    if search(nickNames, nn) :
+        sampleWeight[nn] = Pblumi*weights['lumi']/(totalWeight['DYJetsToLL']/xsec['DYJetsToLL'] + DYxGenweightsArr[i-1]/(xsec[nn]*DY_kfactor))
+        #print 'DY', totalWeight['DYJetsToLL']/xsec['DYJetsToLL'], DYxGenweightsArr[i-1], 'xsec', xsec[nn], 'weight ? ', sampleWeight[nn]
 
 for i in range(1,4) :
-    nn = 'W{0:d}JetsToLNu'.format(i) 
-    sampleWeight[nn] = lumi/(totalWeight['WJetsToLNu']/xsec['WJetsToLNu'] + totalWeight[nn]/xsec[nn])
+    nn = 'W{0:d}JetsToLNu'.format(i)
+    if search(nickNames, nn) : sampleWeight[nn] = Pblumi*weights['lumi']/(totalWeight['WJetsToLNu']/xsec['WJetsToLNu'] + WNJetsXsecs[i-1]/(xsec[nn]*WJets_kfactor))
 
+#print '========================================',  sampleWeight['DY1JetsToLL'], sampleWeight['W1JetsToLNu'], WIncl_only,  DYIncl_only
+
+
+print 'NickNames===========================>', nickNames
 # create histograms
-hBasePrompt, hTightPrompt = {}, {}
-for h in hList :
-    hName = "{0:s}BasePrompt".format(h)
-    hBasePrompt[h] = TH1D(hName,hName,10,0.,100.)
-    hName = "{0:s}TightPrompt".format(h)
-    hTightPrompt[h] = TH1D(hName,hName,10,0.,100.)
+for group in groups :
+    hBasePrompt[group], hTightPrompt[group] = {}, {}
+    hBasePromptMode[group], hTightPromptMode[group] = {}, {}
+    hBasenoPrompt[group], hTightnoPrompt[group] = {}, {}
+    hBasenoPromptMode[group], hTightnoPromptMode[group] = {}, {}
+    '''
+    for h in hList :
+	hName = "{0:s}_{1:s}BasePrompt".format(group,h)
+	hBasePrompt[group][h] = TH1D(hName,hName,10,0.,100.)
+	hName = "{0:s}_{1:s}TightPrompt".format(group,h)
+	hTightPrompt[group][h] = TH1D(hName,hName,10,0.,100.)
+	hName = "{0:s}_{1:s}BasenoPrompt".format(group,h)
+	hBasenoPrompt[group][h] = TH1D(hName,hName,10,0.,100.)
+	hName = "{0:s}_{1:s}TightnoPrompt".format(group,h)
+	hTightnoPrompt[group][h] = TH1D(hName,hName,10,0.,100.)
 
-for nickName in nickNames :
-    inFileName = './MC/{0:s}/{0:s}.root'.format(nickName)
-    print("Opening {0:s}".format(inFileName)) 
-    inFile = TFile.Open(inFileName)
-    inFile.cd()
-    inTree = inFile.Get("Events")
-    nentries = inTree.GetEntries()
-    
-    nEvents, totalWeight = 0, 0.
-    sWeight = sampleWeight[nickName]
-    DYJets = (nickName == 'DYJetsToLL')
-    WJets  = (nickName == 'WJetsToLNu')
-        
-    for i, e in enumerate(inTree) :
-        # impose any common selection criteria here
-        # include only same sign events 
-        if e.q_1*e.q_2 < 0. : continue
-        H_LT = e.pt_1 + e.pt_2
-        if H_LT > args.LTcut : continue
+	print 'making', group, h, hName
+        hBasePromptMode[group][h], hTightPromptMode[group][h] = {}, {}
+        hBasenoPromptMode[group][h], hTightnoPromptMode[group][h] = {}, {}
+        for m in hModes :
+	    hName = "{0:s}_{1:s}_{2:s}Mode_BasePrompt".format(group,h,m)
+	    hBasePromptMode[group][h][m] = TH1D(hName,hName,10,0.,100.)
+	    hName = "{0:s}_{1:s}_{2:s}Mode_TightPrompt".format(group,h,m)
+	    hTightPromptMode[group][h][m] = TH1D(hName,hName,10,0.,100.)
+	    hName = "{0:s}_{1:s}_{2:s}Mode_BasenoPrompt".format(group,h,m)
+	    hBasenoPromptMode[group][h][m] = TH1D(hName,hName,10,0.,100.)
+	    hName = "{0:s}_{1:s}_{2:s}Mode_TightnoPrompt".format(group,h,m)
+	    hTightnoPromptMode[group][h][m] = TH1D(hName,hName,10,0.,100.)
+    '''
+    for h in hList :
+	hName = "{0:s}_{1:s}BasePrompt".format(group,h)
+	hBasePrompt[group][h] = TH1D(hName,hName,nBins,array('d',Bins))
+	hName = "{0:s}_{1:s}TightPrompt".format(group,h)
+	hTightPrompt[group][h] = TH1D(hName,hName,nBins,array('d',Bins))
+	hName = "{0:s}_{1:s}BasenoPrompt".format(group,h)
+	hBasenoPrompt[group][h] = TH1D(hName,hName,nBins,array('d',Bins))
+	hName = "{0:s}_{1:s}TightnoPrompt".format(group,h)
+	hTightnoPrompt[group][h] = TH1D(hName,hName,nBins,array('d',Bins))
 
-        sw = sWeight
-        if e.LHE_Njets > 0 :
-            if DYJets : sw = sampleWeight['DY{0:d}JetsToLL'.format(e.LHE_Njets)]
-            if WJets  : sw = sampleWeight['W{0:d}JetsToLNu'.format(e.LHE_Njets)] 
-        weight = e.weight*sw
-        
-        cat = cats[e.cat]
-        if cat[2:] == 'et' :
-            if e.gen_match_1 == 1 or e.gen_match_1 == 15 :
-                hBasePrompt['e_et'].Fill(e.pt_1,weight)
-                if e.iso_1 > 0.5 : hTightPrompt['e_et'].Fill(e.pt_1,weight)
-            if e.gen_match_2 == 5 :
-                hBasePrompt['t_et'].Fill(e.pt_2,weight)
-                if e.iso_2_ID > 15 : hTightPrompt['t_et'].Fill(e.pt_2,weight)
-        elif cat[2:] == 'mt' :
-            if e.gen_match_1 == 1 or e.gen_match_1 == 15 :
-                hBasePrompt['m_mt'].Fill(e.pt_1,weight)
-                if e.iso_1 < 0.25 and e.iso_1_ID > 0 : hTightPrompt['m_mt'].Fill(e.pt_1,weight)
-            if e.gen_match_2 == 5 :
-                hBasePrompt['t_mt'].Fill(e.pt_2,weight)
-                if e.iso_2_ID > 15 : hTightPrompt['t_mt'].Fill(e.pt_2,weight)
-        else :
-            if e.gen_match_1 == 5 :
-                hBasePrompt['t1_tt'].Fill(e.pt_1,weight)
-                if e.iso_1_ID > 15 : hTightPrompt['t1_tt'].Fill(e.pt_1,weight)
-            if e.gen_match_2 == 5 :
-                hBasePrompt['t2_tt'].Fill(e.pt_2,weight)
-                if e.iso_2_ID > 15 : hTightPrompt['t2_tt'].Fill(e.pt_2,weight)
+	print 'making', group, h, hName
+        hBasePromptMode[group][h], hTightPromptMode[group][h] = {}, {}
+        hBasenoPromptMode[group][h], hTightnoPromptMode[group][h] = {}, {}
+        for m in hModes :
+	    hName = "{0:s}_{1:s}_{2:s}Mode_BasePrompt".format(group,h,m)
+	    hBasePromptMode[group][h][m] = TH1D(hName,hName,nBins,array('d',Bins))
+	    hName = "{0:s}_{1:s}_{2:s}Mode_TightPrompt".format(group,h,m)
+	    hTightPromptMode[group][h][m] = TH1D(hName,hName,nBins,array('d',Bins))
+	    hName = "{0:s}_{1:s}_{2:s}Mode_BasenoPrompt".format(group,h,m)
+	    hBasenoPromptMode[group][h][m] = TH1D(hName,hName,nBins,array('d',Bins))
+	    hName = "{0:s}_{1:s}_{2:s}Mode_TightnoPrompt".format(group,h,m)
+	    hTightnoPromptMode[group][h][m] = TH1D(hName,hName,nBins,array('d',Bins))
 
- 
-    print("{0:30s} {1:7d} {2:10.6f} {3:5d} {4:8.3f}".format(nickName,nentries,sampleWeight[nickName],nEvents,totalWeight))
-    inFile.Close()
+
+for group in groups :
+
+    for nickName in nickNames[group] :
+	inFileName = './MC/{0:s}/{1:s}_{2:s}/{1:s}_{2:s}.root'.format(args.selection,nickName,str(args.year))
+	print("Opening {0:s}".format(inFileName)) 
+	inFile = TFile.Open(inFileName)
+	inFile.cd()
+	inTree = inFile.Get("Events")
+	nentries = inTree.GetEntries()
+	print ''
+	print 'this has', nentries, nickName
+	if nentries == 0 : continue
+
+	if 'DY' in nickName : isDY = True
+	if 'JetsToLNu' in nickName : isW = True
+	
+	nEvents, totalWeight = 0, 0.
+	DYJets = ('DYJetsToLL' in nickName and 'M10' not in nickName)
+	WJets  = ('WJetsToLNu' in nickName)
+	sWeight = sampleWeight[nickName]
+		
+	for i, e in enumerate(inTree) :
+	    
+	    #if i > 2000 : continue
+
+	    # impose any common selection criteria here
+	    # include only same sign events 
+	    cat = cats[e.cat]
+	    trigw = 1.
+	    weight=1.
+	    lepton_sf = 1.
+
+	    if e.q_1*e.q_2 > 0. : continue
+            if args.region == 'SS' and  e.q_3*e.q_4 < 0. : continue
+            if args.region == 'OS' and  e.q_3*e.q_4 > 0. : continue
+	    if e.nbtag > 0 : continue
+
+	    H_LT = e.pt_3 + e.pt_4
+	    #if H_LT > args.LTcut : continue
+
+	    if cat[:2] == 'mm' and  (e.iso_1 > 0.2 or e.iso_2 > 0.2) : continue
+	    if cat[:2] == 'ee' and  (e.iso_1 > 0.15 or e.iso_2 > 0.15) : continue
+	    #if abs(e.dZ_3) > 0.05 or abs(e.dZ_4) > 0.05 : continue
+
+	    if e.isTrig_1 == 0 : continue 
+
+	    tauV3.SetPtEtaPhiM(e.pt_3, e.eta_3, e.phi_3, e.m_3)
+	    tauV4.SetPtEtaPhiM(e.pt_4, e.eta_4, e.phi_4, e.m_4)
+	    tauV3cor.SetPtEtaPhiM(e.pt_3, e.eta_3, e.phi_3, e.m_3)
+	    tauV4cor.SetPtEtaPhiM(e.pt_4, e.eta_4, e.phi_4, e.m_4)
+	    MetV.SetPx(e.met * cos (e.metphi))
+	    MetV.SetPy(e.met * sin (e.metphi))
+	    MetVcor.SetPx(e.met * cos (e.metphi))
+	    MetVcor.SetPy(e.met * sin (e.metphi))
+	    met_x = e.met * cos(e.metphi)
+	    met_y = e.met * sin(e.metphi)
+	    metcor = e.met
+
+
+	    #if e.isTrig_1 == 0 and e.isDoubleTrig==0: continue  
+
+	    #if e.isDoubleTrig !=0 : continue
+	    #if e.isTrig_1 == 0 and e.isDoubleTrig !=0 : weight *= 0.9
+
+
+	    #leading fired the trigger
+	    if e.isTrig_1 == 1 and e.isTrig_2 == 0: 
+		if cat[:2] == 'mm' and e.pt_1 < 28 : continue
+		if cat[:2] == 'ee' and era == '2016' and e.pt_1 < 28 : continue
+		if cat[:2] == 'ee' and era != '2016' and e.pt_1 < 36 : continue
+
+	    #subleading fired the trigger
+	    if e.isTrig_1 == -1 and e.isTrig_2 == 0: 
+		if cat[:2] == 'mm' and e.pt_2 < 29 : continue
+		if cat[:2] == 'ee' and era == '2016' and e.pt_2 < 28 : continue
+		if cat[:2] == 'ee' and era != '2016' and e.pt_2 < 36 : continue
+
+	    # both fired the trigger _isTrig_2 = 1
+	    if e.isTrig_2 == 1 : 
+		if cat[:2] == 'mm' and e.pt_1 < 28 and e.pt_2 < 28: continue
+		if cat[:2] == 'ee' and era == '2016' and e.pt_1 <  28 and  e.pt_2 < 28 : continue
+		if cat[:2] == 'ee' and era != '2016' and e.pt_1 < 36 and e.pt_2 < 36 : continue
+
+	    #else : continue
+
+
+
+	    if WJets and not WIncl_only: 
+		if e.LHE_Njets > 0 : sWeight = sampleWeight['W{0:d}JetsToLNu'.format(e.LHE_Njets)]
+		elif e.LHE_Njets == 0 : sWeight = sampleWeight['WJetsToLNu']
+		#print 'will now be using ',sWeight, e.LHE_Njets, nickName
+	    if DYJets and not DYIncl_only: 
+		if e.LHE_Njets > 0 : sWeight = sampleWeight['DY{0:d}JetsToLL'.format(e.LHE_Njets)]
+		elif e.LHE_Njets  : sWeight = sampleWeight['DYJetsToLL']
+		#print 'will now be using ',sWeight, e.LHE_Njets, nickName
+	   #recoils 
+
+
+	    njetsforrecoil = e.njets
+	    if (isW)  : njetsforrecoil = e.njets + 1
+	    if isW or isDY :
+		boson = TLorentzVector()
+		if cat[:2] == 'mm' :  
+		    L1.SetPtEtaPhiM(e.pt_1_tr, e.eta_1_tr,e.phi_1_tr,muonMass)
+		    L2.SetPtEtaPhiM(e.pt_2_tr, e.eta_2_tr,e.phi_2_tr,muonMass)
+		    boson += L1
+		    boson += L2
+
+		if cat[:2] == 'ee' :  
+		    L1.SetPtEtaPhiM(e.pt_1_tr, e.eta_1_tr,e.phi_1_tr,electronMass)
+		    L2.SetPtEtaPhiM(e.pt_2_tr, e.eta_2_tr,e.phi_2_tr,electronMass)
+		    boson += L1
+		    boson += L2
+		mett = recoilCorrector.CorrectByMeanResolution( met_x, met_y, boson.Px(), boson.Py(), boson.Px(), boson.Py(), int(njetsforrecoil))
+		metcor = sqrt(mett[0]* mett[0] + mett[1]*mett[1])
+		met_x = mett[0]
+		met_y = mett[1]
+		MetVcor.SetPx(mett[0])
+		MetVcor.SetPy(mett[1])
+
+	    #weight = e.weight * e.Generator_weight *sWeight
+	    weight = e.Generator_weight *sWeight
+
+
+	    eff_trig_d_1, eff_trig_d_2 = 1.,1.
+	    eff_trig_mc_1, eff_trig_mc_2 = 1.,1.
+
+	    eff_id_d_1, eff_id_d_2, eff_id_d_3, eff_id_d_4 = 1.,1.,1.,1.
+	    eff_id_mc_1, eff_id_mc_2, eff_id_mc_3, eff_id_mc_4 = 1.,1.,1.,1.
+
+	    #leading firing the trigger
+	    if e.isTrig_1 == 1 and e.isTrig_2 == 0 : 
+
+		if cat[:2] == 'mm' :                
+		    eff_trig_d_1 =  sf_MuonTrig.get_EfficiencyData(e.pt_1,e.eta_1)
+		    eff_trig_mc_1 =  sf_MuonTrig.get_EfficiencyMC(e.pt_1,e.eta_1)
+
+		if cat[:2] == 'ee' :                 
+		    eff_trig_d_1 =  sf_EleTrig.get_EfficiencyData(e.pt_1,e.eta_1)
+		    eff_trig_mc_1 =  sf_EleTrig.get_EfficiencyMC(e.pt_1,e.eta_1)
+		if eff_trig_mc_1 !=0 :		trigw = float(eff_trig_d_1/eff_trig_mc_1)
+		else : continue
+
+	    #subleading firing the trigger
+	    if e.isTrig_1 == -1 and e.isTrig_2 == 0: 
+		if cat[:2] == 'mm' :                 
+		    eff_trig_d_2 =  sf_MuonTrig.get_EfficiencyData(e.pt_2,e.eta_2)
+		    eff_trig_mc_2 =  sf_MuonTrig.get_EfficiencyMC(e.pt_2,e.eta_2)
+
+		if cat[:2] == 'ee' :                 
+		    eff_trig_d_2 =  sf_EleTrig.get_EfficiencyData(e.pt_2,e.eta_2)
+		    eff_trig_mc_2 =  sf_EleTrig.get_EfficiencyMC(e.pt_2,e.eta_2)
+
+		if eff_trig_mc_2 !=0 :		trigw = float(eff_trig_d_2/eff_trig_mc_2)
+		else : continue
+
+
+	    #both firing the trigger
+	    if e.isTrig_1 == 1 and e.isTrig_2 == 1 : 
+		if cat[:2] == 'mm' :                 
+		    eff_trig_d_1 =  sf_MuonTrig.get_EfficiencyData(e.pt_1,e.eta_1)
+		    eff_trig_mc_1 = sf_MuonTrig.get_EfficiencyMC(e.pt_1,e.eta_1)
+		    eff_trig_d_2 =  sf_MuonTrig.get_EfficiencyData(e.pt_2,e.eta_2)
+		    eff_trig_mc_2 = sf_MuonTrig.get_EfficiencyMC(e.pt_2,e.eta_2)
+
+		if cat[:2] == 'ee' :                 
+		    eff_trig_d_1 =  sf_EleTrig.get_EfficiencyData(e.pt_1,e.eta_1)
+		    eff_trig_mc_1 =  sf_EleTrig.get_EfficiencyMC(e.pt_1,e.eta_1)
+		    eff_trig_d_2 =  sf_EleTrig.get_EfficiencyData(e.pt_2,e.eta_2)
+		    eff_trig_mc_2 =  sf_EleTrig.get_EfficiencyMC(e.pt_2,e.eta_2)
+
+		#print '===================>>>>>>>>>>>>>', eff_trig_d_1, eff_trig_mc_1, eff_trig_d_2, eff_trig_mc_2, e.pt_2, e.eta_2, 'Trigerrred ????', e.isTrig_1, e.isTrig_2
+		if eff_trig_mc_1 != 0 and eff_trig_mc_2 == 0  : 	trigw = float(eff_trig_d_1/eff_trig_mc_1)
+		elif eff_trig_mc_1 == 0 and eff_trig_mc_2 != 0  : trigw = float(eff_trig_d_2/eff_trig_mc_2)
+		elif eff_trig_mc_1 == 0 and eff_trig_mc_2 == 0  : continue 
+		else : 	trigw = float(1- (1-eff_trig_d_1/eff_trig_mc_1) * (1-eff_trig_d_2/eff_trig_mc_2))
+
+
+	    #lepton SFs
+	    if cat[:2] == 'mm' :                 
+		    eff_id_d_1 =  sf_MuonId.get_EfficiencyData(e.pt_1,e.eta_1)
+		    eff_id_mc_1 = sf_MuonId.get_EfficiencyMC(e.pt_1,e.eta_1)
+
+		    eff_id_d_2 =  sf_MuonId.get_EfficiencyData(e.pt_2,e.eta_2)
+		    eff_id_mc_2 = sf_MuonId.get_EfficiencyMC(e.pt_2,e.eta_2)
+
+	    if cat[:2] == 'ee' :                 
+		    eff_id_d_1 =  sf_ElectronId.get_EfficiencyData(e.pt_1,e.eta_1)
+		    eff_id_mc_1 = sf_ElectronId.get_EfficiencyMC(e.pt_1,e.eta_1)
+
+		    eff_id_d_2 =  sf_ElectronId.get_EfficiencyData(e.pt_2,e.eta_2)
+		    eff_id_mc_2 = sf_ElectronId.get_EfficiencyMC(e.pt_2,e.eta_2)
+
+	    if cat[2:] == 'mt' :
+		    eff_id_d_3 =  sf_MuonId.get_EfficiencyData(e.pt_3,e.eta_3)
+		    eff_id_mc_3 = sf_MuonId.get_EfficiencyMC(e.pt_3,e.eta_3)
+
+	    if cat[2:] == 'et' :
+		    eff_id_d_3 =  sf_ElectronId.get_EfficiencyData(e.pt_3,e.eta_3)
+		    eff_id_mc_3 = sf_ElectronId.get_EfficiencyMC(e.pt_3,e.eta_3)
+
+	    if cat[2:] == 'em' :               
+		    eff_id_d_3 =  sf_ElectronId.get_EfficiencyData(e.pt_3,e.eta_3)
+		    eff_id_mc_3 = sf_ElectronId.get_EfficiencyMC(e.pt_3,e.eta_3)
+		    eff_id_d_4 =  sf_MuonId.get_EfficiencyData(e.pt_4,e.eta_4)
+		    eff_id_mc_4 = sf_MuonId.get_EfficiencyMC(e.pt_4,e.eta_4)
+
+
+	    leptons_sf = float (eff_id_d_1/eff_id_mc_1 * eff_id_d_2/eff_id_mc_2 * eff_id_d_3/eff_id_mc_3 * eff_id_d_4/eff_id_mc_4)
+
+
+	    #weight *= leptons_sf * trigw
+	    weight *= trigw
+
+	    et.SetPtEtaPhiM(e.pt_3,e.eta_3,e.phi_3,0.000511)
+	    ptMiss.SetPtEtaPhiM(e.met,0.,e.metphi,0.)
+	    eMET = et + ptMiss
+	    preCut =  eMET.Mt() < 40.  
+
+	    mut.SetPtEtaPhiM(e.pt_3,e.eta_3,e.phi_3,0.102)
+	    muMET = mut + ptMiss
+	    preCutt =  muMET.Mt() < 40.  
+
+
+	    if cat[2:] == 'et' :
+		if e.gen_match_3 == 1 or e.gen_match_3 == 15 :
+		    if preCutOff or preCut : 
+		        hBasePrompt[group]['e_et'].Fill(e.pt_3,weight)
+
+		    if e.Electron_mvaFall17V2noIso_WP90_3 >0  and  e.iso_3 < 0.15 : hTightPrompt[group]['e_et'].Fill(e.pt_3,weight)
+
+		if  e.gen_match_3 != 1 and  e.gen_match_3 != 15 :
+		    if preCutOff or preCut : 
+		        hBasenoPrompt[group]['e_et'].Fill(e.pt_3,weight)
+
+		    if e.Electron_mvaFall17V2noIso_WP90_3 ==0  or  e.iso_3 > 0.15 : hTightnoPrompt[group]['e_et'].Fill(e.pt_3,weight)
+
+
+
+		if e.gen_match_4 == 5 :
+		    weight *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4)
+		    tauV4cor *= testool.getTES(e.decayMode_4)
+		    if e.decayMode_4 == 1 : 
+			e.m_4 =  0.1396  
+			tauV4cor.SetE(0.1396)
+		    MetVcor+=   tauV4- tauV4cor
+		    hBasePrompt[group]['t_et'].Fill(e.pt_4,weight)
+		    if e.decayMode_4 != -1 : hBasePromptMode[group]['t_et'][str(e.decayMode_4)].Fill(e.pt_4,weight)
+
+		    if e.idDeepTau2017v2p1VSjet_4 >= antiJet : 
+		        hTightPrompt[group]['t_et'].Fill(e.pt_4,weight)
+		        if e.decayMode_4 != -1 : hTightPromptMode[group]['t_et'][str(e.decayMode_4)].Fill(e.pt_4,weight)
+
+
+		if e.gen_match_4 != 5 :
+		    hBasenoPrompt[group]['t_et'].Fill(e.pt_4,weight)
+		    if e.decayMode_4 != -1 : hBasenoPromptMode[group]['t_et'][str(e.decayMode_4)].Fill(e.pt_4,weight)
+
+		    if e.idDeepTau2017v2p1VSjet_4 < antiJet : 
+		        hTightnoPrompt[group]['t_et'].Fill(e.pt_4,weight)
+		        if e.decayMode_4 != -1 : hTightnoPromptMode[group]['t_et'][str(e.decayMode_4)].Fill(e.pt_4,weight)
+
+
+	    if cat[2:] == 'mt' :
+		if e.gen_match_3 == 1 or e.gen_match_3 == 15 :
+
+		    if preCutOff or preCutt and (e.isGlobal_3 > 0 or e.isTracker_3 > 0) : hBasePrompt[group]['m_mt'].Fill(e.pt_3,weight)
+
+		    if e.iso_3 < 0.2 and  (e.isGlobal_3 > 0 or e.isTracker_3 > 0) and e.mediumId_3 > 0: hTightPrompt[group]['m_mt'].Fill(e.pt_3,weight)
+
+
+		if e.gen_match_3 != 1 and not e.gen_match_3 != 15 :
+
+		    if preCutOff or preCutt and not (e.isGlobal_3 > 0 or e.isTracker_3 > 0) : hBasenoPrompt[group]['m_mt'].Fill(e.pt_3,weight)
+
+		    if not (e.iso_3 < 0.2 and  (e.isGlobal_3 > 0 or e.isTracker_3 > 0) and e.mediumId_3 > 0): hTightnoPrompt[group]['m_mt'].Fill(e.pt_3,weight)
+
+		if e.gen_match_4 == 5 :
+		    weight *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4)
+		    tauV4cor *= testool.getTES(e.decayMode_4)
+		    if e.decayMode_4 == 1 : 
+			e.m_4 =  0.1396  
+			tauV4cor.SetE(0.1396)
+		    MetVcor+=   tauV4 - tauV4cor
+		    hBasePrompt[group]['t_mt'].Fill(e.pt_4,weight)
+		    if e.decayMode_4 != -1 : hBasePromptMode[group]['t_mt'][str(e.decayMode_4)].Fill(e.pt_4,weight)
+		    if e.idDeepTau2017v2p1VSjet_4 >= antiJet : 
+		        hTightPrompt[group]['t_mt'].Fill(e.pt_4,weight)
+		        if e.decayMode_4 != -1 : hTightPromptMode[group]['t_mt'][str(e.decayMode_4)].Fill(e.pt_4,weight)
+
+		if e.gen_match_4 != 5 :
+		    weight *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4)
+		    tauV4cor *= testool.getTES(e.decayMode_4)
+		    if e.decayMode_4 == 1 : 
+			e.m_4 =  0.1396  
+			tauV4cor.SetE(0.1396)
+		    MetVcor+=   tauV4 - tauV4cor
+		    hBasenoPrompt[group]['t_mt'].Fill(e.pt_4,weight)
+		    if e.decayMode_4 != -1 : hBasenoPromptMode[group]['t_mt'][str(e.decayMode_4)].Fill(e.pt_4,weight)
+		    if e.idDeepTau2017v2p1VSjet_4 < antiJet : 
+		        hTightnoPrompt[group]['t_mt'].Fill(e.pt_4,weight)
+		        if e.decayMode_4 != -1 : hTightnoPromptMode[group]['t_mt'][str(e.decayMode_4)].Fill(e.pt_4,weight)
+
+
+
+	    if cat[2:] == 'tt':
+		if e.gen_match_3 == 5 :
+		    weight *= tauSFTool.getSFvsPT(e.pt_3,e.gen_match_3)
+		    tauV3cor *= testool.getTES(e.decayMode_3)
+		    if e.decayMode_3 == 1 : 
+			e.m_3 =  0.1396  
+			tauV3cor.SetE(0.1396)
+		    MetVcor +=   tauV3 - tauV3cor
+
+		    hBasePrompt[group]['t1_tt'].Fill(e.pt_3,weight)
+		    if str(e.decayMode_3) != -1 : hBasePromptMode[group]['t1_tt'][str(e.decayMode_3)].Fill(e.pt_3,weight)
+		    if e.idDeepTau2017v2p1VSjet_3 >= antiJet : 
+		        hTightPrompt[group]['t1_tt'].Fill(e.pt_3,weight)
+		        if str(e.decayMode_3) != -1 : hTightPromptMode[group]['t1_tt'][str(e.decayMode_3)].Fill(e.pt_3,weight)
+
+		if e.gen_match_3 != 5 :
+		    weight *= tauSFTool.getSFvsPT(e.pt_3,e.gen_match_3)
+		    tauV3cor *= testool.getTES(e.decayMode_3)
+		    if e.decayMode_3 == 1 : 
+			e.m_3 =  0.1396  
+			tauV3cor.SetE(0.1396)
+		    MetVcor +=   tauV3 - tauV3cor
+
+		    hBasenoPrompt[group]['t1_tt'].Fill(e.pt_3,weight)
+		    if str(e.decayMode_3) != -1 : hBasenoPromptMode[group]['t1_tt'][str(e.decayMode_3)].Fill(e.pt_3,weight)
+		    if e.idDeepTau2017v2p1VSjet_3 < antiJet : 
+		        hTightnoPrompt[group]['t1_tt'].Fill(e.pt_3,weight)
+		        if str(e.decayMode_3) != -1 : hTightnoPromptMode[group]['t1_tt'][str(e.decayMode_3)].Fill(e.pt_3,weight)
+
+
+
+		if e.gen_match_4 == 5 :
+		    weight *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4)
+		    tauV4cor *= testool.getTES(e.decayMode_4)
+		    if e.decayMode_4 == 1 : 
+			e.m_4 =  0.1396  
+			tauV4cor.SetE(0.1396)
+		    MetVcor +=   tauV4 - tauV4cor
+
+		    hBasePrompt[group]['t2_tt'].Fill(e.pt_4,weight)
+		    if e.decayMode_4 != -1 : hBasePromptMode[group]['t2_tt'][str(e.decayMode_4)].Fill(e.pt_4,weight)
+		    if e.idDeepTau2017v2p1VSjet_4 >= antiJet : 
+		        hTightPrompt[group]['t2_tt'].Fill(e.pt_4,weight)
+		        if e.decayMode_4 != -1 : hTightPromptMode[group]['t2_tt'][str(e.decayMode_4)].Fill(e.pt_4,weight)
+
+		if e.gen_match_4 != 5 :
+		    weight *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4)
+		    tauV4cor *= testool.getTES(e.decayMode_4)
+		    if e.decayMode_4 == 1 : 
+			e.m_4 =  0.1396  
+			tauV4cor.SetE(0.1396)
+		    MetVcor +=   tauV4 - tauV4cor
+
+		    hBasenoPrompt[group]['t2_tt'].Fill(e.pt_4,weight)
+		    if e.decayMode_4 != -1 : hBasenoPromptMode[group]['t2_tt'][str(e.decayMode_4)].Fill(e.pt_4,weight)
+		    if e.idDeepTau2017v2p1VSjet_4 < antiJet : 
+		        hTightnoPrompt[group]['t2_tt'].Fill(e.pt_4,weight)
+		        if e.decayMode_4 != -1 : hTightnoPromptMode[group]['t2_tt'][str(e.decayMode_4)].Fill(e.pt_4,weight)
+
+
+
+	    if cat[2:] == 'em' : 
+
+	        mut.SetPtEtaPhiM(e.pt_4,e.eta_4,e.phi_4,0.102)
+	        muMET = mut + ptMiss
+	        preCutt =  muMET.Mt() < 40.  
+
+		if e.gen_match_3 == 1 or e.gen_match_3 == 15 :
+		    if preCutOff or preCut : hBasePrompt[group]['e_em'].Fill(e.pt_3,weight)
+		    if e.iso_3 < 0.15 and  e.Electron_mvaFall17V2noIso_WP90_3 > 0 : hTightPrompt[group]['e_em'].Fill(e.pt_3,weight)
+
+
+		if e.gen_match_4 == 1 or e.gen_match_4 == 15 :
+		    if preCutOff or preCutt and (e.isGlobal_4 > 0 or e.isTracker_4 > 0): hBasePrompt[group]['m_em'].Fill(e.pt_4,weight)
+		    if e.iso_4 < 0.20 and  (e.isGlobal_4 > 0 or e.isTracker_4 > 0) and e.mediumId_4 > 0: hTightPrompt[group]['m_em'].Fill(e.pt_4,weight)
+
+		if e.gen_match_3 != 1 and e.gen_match_3 != 15 :
+		    if preCutOff or preCut   : hBasenoPrompt[group]['e_em'].Fill(e.pt_3,weight)
+		    if not (e.iso_3 < 0.15 and  e.Electron_mvaFall17V2noIso_WP90_3 > 0 ): hTightnoPrompt[group]['e_em'].Fill(e.pt_3,weight)
+		if e.gen_match_4 != 1 or e.gen_match_4 != 15 :
+		    if preCutOff or preCutt and not (e.isGlobal_4 > 0 or e.isTracker_4 > 0): hBasenoPrompt[group]['m_em'].Fill(e.pt_4,weight)
+		    if not (e.iso_4 < 0.20 and  (e.isGlobal_4 > 0 or e.isTracker_4 > 0) and e.mediumId_4 > 0): hTightnoPrompt[group]['m_em'].Fill(e.pt_4,weight)
+
+
+
+     
+	print("{0:30s} {1:7d} {2:10.6f} {3:5d} {4:8.3f}".format(nickName,nentries,sampleWeight[nickName],nEvents,totalWeight))
+	inFile.Close()
+
+
 
 fOut.cd()
+hsumB, hsumT = 0,0
+hsumnB, hsumnT = 0,0
 for h in hList :
+    OverFlow(hBase[h])
+    OverFlow(hTight[h])
     hBase[h].Write()
     hTight[h].Write()
-    hBasePrompt[h].Write()
-    hTightPrompt[h].Write()
+    hsumB += hBase[h].GetSumOfWeights()
+    hsumT += hTight[h].GetSumOfWeights()
+
+    print 'data T, Base',h, hTight[h].GetSumOfWeights(), hBase[h].GetSumOfWeights()
+print 'total data T, Base', hsumT, hsumB
+
+
+for group in groups:
+    for h in hList :
+        
+	try :
+            OverFlow(hBasePrompt[group][h]) 
+            OverFlow(hTightPrompt[group][h]) 
+	    hBasePrompt[group][h].Write()
+	    hTightPrompt[group][h].Write()
+            OverFlow(hBasenoPrompt[group][h]) 
+            OverFlow(hTightnoPrompt[group][h]) 
+	    hBasenoPrompt[group][h].Write()
+	    hTightnoPrompt[group][h].Write()
+            hsumB += hBasePrompt[group][h].GetSumOfWeights()
+            hsumT += hTightPrompt[group][h].GetSumOfWeights()
+            hsumnB += hBasenoPrompt[group][h].GetSumOfWeights()
+            hsumnT += hTightnoPrompt[group][h].GetSumOfWeights()
+            print 'MC Prompt T, Base', h, hsumT, hsumB, 'no Prompt', hsumnT, hsumnB
+
+	except AttributeError : print 'sorry for that', group, h
+        for m in hModes :
+            try: 
+	        OverFlow(hBasePromptMode[group][h][m]) 
+	        OverFlow(hTightPromptMode[group][h][m]) 
+	        hBasePromptMode[group][h][m].Write()
+	        hTightPromptMode[group][h][m].Write()
+	        OverFlow(hBasenoPromptMode[group][h][m]) 
+	        OverFlow(hTightnoPromptMode[group][h][m]) 
+	        hBasenoPromptMode[group][h][m].Write()
+	        hTightnoPromptMode[group][h][m].Write()
+	    except AttributeError : print 'sorry for that', group, h, m
     
-    
+print 'total MC Prompt T, Base', hsumT, hsumB, 'no Prompt', hsumnT, hsumnB
+fOut.Close()
+
+print 'all done now!'
+
+
 exit()
 
     
@@ -282,7 +969,6 @@ for i, h in enumerate(hList) :
     c.Update()
     
 c.Draw()
-raw_input()
 
 fOut.cd()
 fOut.Write()
