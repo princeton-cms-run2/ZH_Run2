@@ -33,15 +33,25 @@ class outTuple() :
 
         self.entries          = 0 
         self.run              = array('l',[0])
+        self.nElectron        = array('l',[0])
+        self.nMuon            = array('l',[0])
+        self.nTau            = array('l',[0])
         self.lumi             = array('l',[0])
         self.is_trig          = array('l',[0])
         self.is_trigH         = array('l',[0])
         self.is_trigZ         = array('l',[0])
         self.is_trigZH        = array('l',[0])
         self.evt              = array('l',[0])
+        self.nPU              = array('l',[0])
+        self.nPUEOOT              = array('l',[0])
+        self.nPULOOT              = array('l',[0])
+        self.nPUtrue              = array('f',[0])
+        self.nPV              = array('l',[0])
+        self.nPVGood              = array('l',[0])
         self.cat              = array('l',[0])
         self.weight           = array('f',[0])
-        self.PUweight         = array('f',[0])
+        self.weightPU           = array('f',[0])
+        self.weightPUtrue           = array('f',[0])
         self.LHEweight        = array('f',[0])
         self.Generator_weight = array('f',[0])
         self.LHE_Njets        = array('l',[0])
@@ -234,15 +244,25 @@ class outTuple() :
         self.bcsvfv_2    = array('f',[0])
       
         self.t.Branch('run',              self.run,               'run/l' )
+        self.t.Branch('nElectron',              self.nElectron,               'nElectron/l' )
+        self.t.Branch('nMuon',              self.nMuon,               'nMuon/l' )
+        self.t.Branch('nTau',              self.nTau,               'nTau/l' )
         self.t.Branch('lumi',             self.lumi,              'lumi/I' )
         self.t.Branch('is_trig',          self.is_trig,           'is_trig/I' )
         self.t.Branch('is_trigH',         self.is_trigH,          'is_trigH/I' )
         self.t.Branch('is_trigZ',         self.is_trigZ,          'is_trigZ/I' )
         self.t.Branch('is_trigZH',        self.is_trigZH,         'is_trigZH/I' )
         self.t.Branch('evt',              self.evt,               'evt/I' )
+        self.t.Branch('nPU',              self.nPU,               'nPU/I' )
+        self.t.Branch('nPUEOOT',              self.nPUEOOT,               'nPUEOOT/I' )
+        self.t.Branch('nPULOOT',              self.nPULOOT,               'nPULOOT/I' )
+        self.t.Branch('nPUtrue',              self.nPUtrue,               'nPUtrue/F' )
+        self.t.Branch('nPV',              self.nPV,               'nPV/I' )
+        self.t.Branch('nPVGood',              self.nPVGood,               'nPVGood/I' )
         self.t.Branch('cat',              self.cat,               'cat/I' )
         self.t.Branch('weight',           self.weight,            'weight/F' )
-        self.t.Branch('PUweight',         self.PUweight,            'PUweight/F' )
+        self.t.Branch('weightPU',           self.weightPU,            'weightPU/F' )
+        self.t.Branch('weightPUtrue',           self.weightPUtrue,            'weightPUtrue/F' )
         self.t.Branch('LHEweight',        self.LHEweight,         'LHEweight/F' )
         self.t.Branch('LHE_Njets',        self.LHE_Njets,         'LHE_Njets/I' )
         self.t.Branch('Generator_weight', self.Generator_weight,  'Generator_weight/F' )
@@ -587,6 +607,9 @@ class outTuple() :
         self.entries += 1
 
         self.run[0]  = entry.run
+        self.nElectron[0]  = entry.nElectron
+        self.nMuon[0]  = entry.nMuon
+        self.nTau[0]  = entry.nTau
         self.lumi[0] = entry.luminosityBlock 
         self.evt[0]  = entry.event
         self.cat[0]  = tauFun.catToNumber(cat)
@@ -605,15 +628,31 @@ class outTuple() :
         
         try :
             self.weight[0]           = entry.genWeight
+            #self.weightPU[0]           = entry.Pileup_nPU
+            #self.weightPUtrue[0]           = entry.Pileup_nTrueInt
             self.LHEweight[0]        = entry.LHEWeight_originalXWGTUP
             self.Generator_weight[0] = entry.Generator_weight
             self.LHE_Njets[0]        = ord(entry.LHE_Njets) 
+	    self.nPU[0]  = entry.Pileup_nPU
+	    self.nPUEOOT[0]  = entry.Pileup_sumEOOT
+	    self.nPULOOT[0]  = entry.Pileup_sumLOOT
+	    self.nPUtrue[0]  = entry.Pileup_nTrueInt
+	    self.nPV[0]  = entry.PV_npvs
+	    self.nPVGood[0]  = entry.PV_npvsGood
                         
         except AttributeError :
             self.weight[0]           = 1. 
+            self.weightPU[0]         = -1
+            self.weightPUtrue[0]     = -1
             self.LHEweight[0]        = 1. 
             self.Generator_weight[0] = 1.
             self.LHE_Njets[0] = -1
+	    self.nPU[0]  = -1
+	    self.nPUEOOT[0]  = -1
+	    self.nPULOOT[0]  = -1
+	    self.nPUtrue[0]  = -1
+	    self.nPV[0]  = -1
+	    self.nPVGood[0]  = -1
 
         # pack trigger bits into integer word
         year = int(era)
@@ -1143,7 +1182,15 @@ class outTuple() :
         return
 
     def setWeight(self,weight) :
-        self.PUweight[0] = weight
+        self.weight[0] = weight
+        #print("outTuple.setWeight() weight={0:f}".format(weight))
+        return
+    def setWeightPU(self,weight) :
+        self.weightPU[0] = weight
+        #print("outTuple.setWeight() weight={0:f}".format(weight))
+        return
+    def setWeightPUtrue(self,weight) :
+        self.weightPUtrue[0] = weight
         #print("outTuple.setWeight() weight={0:f}".format(weight))
         return
 
