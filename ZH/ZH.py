@@ -239,6 +239,7 @@ for count, e in enumerate(inTree) :
                 
         LepP, LepM = pairList[0], pairList[1]
         M = (LepM + LepP).M()
+	
         if not tauFun.mllCut(M) :
             if unique :
                 print("Zmass Fail: : Event ID={0:d} cat={1:s} M={2:.2f}".format(e.event,cat,M))
@@ -254,11 +255,9 @@ for count, e in enumerate(inTree) :
             for cat in cats[4:]: 
 	        cutCounter[cat].count('FoundZ')
 	        if  MC :   cutCounterGenWeight[cat].countGenWeight('FoundZ', e.genWeight)
-        
         for tauMode in ['et','mt','tt','em'] :
             if args.category != 'none' and tauMode != args.category[2:] : continue
             cat = lepMode + tauMode
-
             if tauMode == 'tt' :
                 tauList = tauFun.getTauList(cat, e, pairList=pairList)
                 bestTauPair = tauFun.getBestTauPair(cat, e, tauList )
@@ -270,7 +269,7 @@ for count, e in enumerate(inTree) :
             elif tauMode == 'em' :
                 bestTauPair = tauFun.getBestEMuTauPair(e,cat=cat,pairList=pairList)
 	    else : continue
-
+            
             if len(bestTauPair) < 1 :
                 if unique :
                     print("Tau Pair Fail: Event ID={0:d} cat={1:s}".format(e.event,cat))
@@ -287,7 +286,6 @@ for count, e in enumerate(inTree) :
                     GF.printEvent(e)
                     GF.printMC(e)
                 continue
-
             cutCounter[cat].count("GoodTauPair")
 	    if  MC :   cutCounterGenWeight[cat].countGenWeight('GoodTauPair', e.genWeight)
 
@@ -295,15 +293,15 @@ for count, e in enumerate(inTree) :
                 jt1, jt2 = bestTauPair[0], bestTauPair[1]
             else :
                 continue
-
             if MC :
-                #outTuple.setWeight(PU.getWeight(e.Pileup_nPU)) ## we store the GenWeight * PUweight ?  
-                outTuple.setWeightPU(PU.getWeight(e.Pileup_nPU)) ## we store the GenWeight * PUweight ?  
-                outTuple.setWeightPUtrue(PU.getWeight(e.Pileup_nTrueInt)) ## we store the GenWeight * PUweight ?  
-                outTuple.setWeight(PU.getWeight(e.PV_npvs)) ## we store the GenWeight * PUweight ?  
+                outTuple.setWeight(PU.getWeight(e.PV_npvs)) 
+                outTuple.setWeightPU(PU.getWeight(e.Pileup_nPU)) 
+                outTuple.setWeightPUtrue(PU.getWeight(e.Pileup_nTrueInt)) 
 		#print 'nPU', e.Pileup_nPU, e.Pileup_nTrueInt, PU.getWeight(e.Pileup_nPU), PU.getWeight(e.Pileup_nTrueInt), PU.getWeight(e.PV_npvs), PU.getWeight(e.PV_npvsGood)
 	    else : 
-                outTuple.setWeight(1.) ## we store weight = 1 for data
+                outTuple.setWeight(1.) 
+                outTuple.setWeightPU(1.) ##
+                outTuple.setWeightPUtrue(1.)
 
 
             cutCounter[cat].count("VVtightTauPair")
