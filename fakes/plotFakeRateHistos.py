@@ -14,7 +14,7 @@ def getArgs() :
     parser.add_argument("-f","--inFileName",default='./FakeRates.root',help="File to be analyzed.")
     parser.add_argument("-y","--year",default=2018,type=int,help="Year for data.")
     parser.add_argument("-r","--region",default='SS',type=str,help="Year for data.")
-    parser.add_argument("-w","--workingPoint",default='16',type=int,help="16 = Medium, 32 = Tight, 64 = VTight, 128 = VVTight")
+    parser.add_argument("-w","--workingPoint",default='16',type=str,help="16 = Medium, 32 = Tight, 64 = VTight, 128 = VVTight")
     return parser.parse_args()
 
 
@@ -71,9 +71,10 @@ T_ratio = 0.03*H_ref
 #margin required for lebal on bottom of raito plot
 B_ratio_label = 0.3*H_ref
 
+wp = str(args.workingPoint)
 # Read in fake-rate histograms and use them to calculate the fake rate factors
 
-fin='FakeRates_{0:s}_{1:s}_{2:s}.root'.format(str(args.year),args.region,str(args.workingPoint))
+fin='FakeRates_{0:s}_{1:s}.root'.format(str(args.year),args.region)
 f = TFile(fin)
 hBase, hTight, hBasePrompt, hTightPrompt, hBasePromptMode, hTightPromptMode, hBasenoPrompt, hTightnoPrompt, hBasenoPromptMode, hTightnoPromptMode= {}, {}, {}, {}, {}, {}, {} ,{}, {}, {}
 #groups = ['ZZ','WJets','Rare','Top','DY']
@@ -82,8 +83,8 @@ groups = ['WJets','Rare','Top','DY','ZZ']
 for h in hList :
     hName = "{0:s}Base".format(h)
     hBase[h] = f.Get(hName) 
-    hTight[h] = f.Get("{0:s}Tight".format(h))
     hBase[h].Sumw2()
+    hTight[h]= f.Get("{0:s}_{1:s}Tight".format(h,wp))
     hTight[h].Sumw2()
 
 for group in groups :
@@ -96,7 +97,7 @@ for group in groups :
 	hBasePrompt[group][h] = f.Get(hName)
 	hBasePrompt[group][h].Sumw2()
 
-	hName = "{0:s}_{1:s}TightPrompt".format(group,h)
+	hName = "{0:s}_{1:s}_{2:s}TightPrompt".format(group,h,wp)
 	hTightPrompt[group][h] = f.Get(hName)
 	hTightPrompt[group][h].Sumw2()
 
@@ -104,7 +105,7 @@ for group in groups :
 	hBasenoPrompt[group][h] = f.Get(hName)
 	hBasenoPrompt[group][h].Sumw2()
 
-	hName = "{0:s}_{1:s}TightnoPrompt".format(group,h)
+	hName = "{0:s}_{1:s}_{2:s}TightnoPrompt".format(group,h,wp)
 	hTightnoPrompt[group][h] = f.Get(hName)
 	hTightnoPrompt[group][h].Sumw2()
 
@@ -116,12 +117,12 @@ for group in groups :
         for m in hModes :
 	    hName = "{0:s}_{1:s}_{2:s}Mode_BasePrompt".format(group,h,m)
 	    hBasePromptMode[group][h][m] = f.Get(hName)
-	    hName = "{0:s}_{1:s}_{2:s}Mode_TightPrompt".format(group,h,m)
+	    hName = "{0:s}_{1:s}_{2:s}_{3:s}Mode_TightPrompt".format(group,h,m,wp)
 	    hTightPromptMode[group][h][m] = f.Get(hName)
 
 	    hName = "{0:s}_{1:s}_{2:s}Mode_BasenoPrompt".format(group,h,m)
 	    hBasenoPromptMode[group][h][m] = f.Get(hName)
-	    hName = "{0:s}_{1:s}_{2:s}Mode_TightnoPrompt".format(group,h,m)
+	    hName = "{0:s}_{1:s}_{2:s}_{3:s}Mode_TightnoPrompt".format(group,h,m,wp)
 	    hTightnoPromptMode[group][h][m] = f.Get(hName)
 
 
@@ -212,8 +213,8 @@ if True :
         #leg[h].Draw()
         c11.Update()
 
-    c11.SaveAs("Tight_Base_Data_Hist_"+era+"_"+args.region+"_"+str(args.workingPoint)+".pdf")
-    c11.SaveAs("Tight_Base_Data_Hist_"+era+"_"+args.region+"_"+str(args.workingPoint)+".png")
+    c11.SaveAs("Tight_Base_Data_Hist_"+era+"_"+args.region+"_"+str(wp)+".pdf")
+    c11.SaveAs("Tight_Base_Data_Hist_"+era+"_"+args.region+"_"+str(wp)+".png")
 
 
 ######################## Per decay Mode
@@ -331,8 +332,8 @@ if True :
 
 
 	c12.Update()
-    c12.SaveAs("Tight_Base_MC_Hist_DM_"+era+"_"+args.region+"_"+str(args.workingPoint)+".pdf")
-    c12.SaveAs("Tight_Base_MC_Hist_DM_"+era+"_"+args.region+"_"+str(args.workingPoint)+".png")
+    c12.SaveAs("Tight_Base_MC_Hist_DM_"+era+"_"+args.region+"_"+str(wp)+".pdf")
+    c12.SaveAs("Tight_Base_MC_Hist_DM_"+era+"_"+args.region+"_"+str(wp)+".png")
 #################### no Prompt
 ######################## Per decay Mode
 
@@ -452,8 +453,8 @@ if True :
 
 
 	c12.Update()
-    c12.SaveAs("Tight_Base_noPrompt_MC_Hist_DM_"+era+"_"+args.region+"_"+str(args.workingPoint)+".pdf")
-    c12.SaveAs("Tight_Base_noPrompt_MC_Hist_DM_"+era+"_"+args.region+"_"+str(args.workingPoint)+".png")
+    c12.SaveAs("Tight_Base_noPrompt_MC_Hist_DM_"+era+"_"+args.region+"_"+str(wp)+".pdf")
+    c12.SaveAs("Tight_Base_noPrompt_MC_Hist_DM_"+era+"_"+args.region+"_"+str(wp)+".png")
 
 
 
@@ -564,8 +565,8 @@ if True :
 
 
 	c12.Update()
-    c12.SaveAs("Tight_Base_noPromptMC_Hist_"+era+"_"+args.region+"_"+str(args.workingPoint)+".pdf")
-    c12.SaveAs("Tight_Base_noPromptMC_Hist_"+era+"_"+args.region+"_"+str(args.workingPoint)+".png")
+    c12.SaveAs("Tight_Base_noPromptMC_Hist_"+era+"_"+args.region+"_"+str(wp)+".pdf")
+    c12.SaveAs("Tight_Base_noPromptMC_Hist_"+era+"_"+args.region+"_"+str(wp)+".png")
 
 
 
@@ -687,8 +688,8 @@ if True :
 
 
 	c12.Update()
-    c12.SaveAs("Tight_Base_MC_Hist_"+era+"_"+args.region+"_"+str(args.workingPoint)+".pdf")
-    c12.SaveAs("Tight_Base_MC_Hist_"+era+"_"+args.region+"_"+str(args.workingPoint)+".png")
+    c12.SaveAs("Tight_Base_MC_Hist_"+era+"_"+args.region+"_"+str(wp)+".pdf")
+    c12.SaveAs("Tight_Base_MC_Hist_"+era+"_"+args.region+"_"+str(wp)+".png")
 ########################## noPrompt
 
 if True :
@@ -795,8 +796,8 @@ if True :
 
 
 	c12.Update()
-    c12.SaveAs("Tight_Base_noPrompt_MC_Hist_"+era+"_"+args.region+"_"+str(args.workingPoint)+".pdf")
-    c12.SaveAs("Tight_Base_noPrompt_MC_Hist_"+era+"_"+args.region+"_"+str(args.workingPoint)+".png")
+    c12.SaveAs("Tight_Base_noPrompt_MC_Hist_"+era+"_"+args.region+"_"+wp+".pdf")
+    c12.SaveAs("Tight_Base_noPrompt_MC_Hist_"+era+"_"+args.region+"_"+wp+".png")
 
 
 
@@ -815,7 +816,7 @@ if True :
 	hsumm=hsBaseTight.GetStack().Last()
 	hsumm.Draw('SAME')
 	c13.Update()
-    c13.SaveAs("Tight_Base_MC_Hist_"+era+"_"+args.region+"_"+str(args.workingPoint)+".png")
+    c13.SaveAs("Tight_Base_MC_Hist_"+era+"_"+args.region+"_"+wp+".png")
 '''
 
 # Cases
@@ -866,7 +867,7 @@ if True :
         lTeX[h].SetTextSize(0.06) 
         lTeX[h].Draw()
         c1.Update()
-    c1.SaveAs("Tight_Base_Data_ratio_"+era+"_"+args.region+"_"+str(args.workingPoint)+".png")
+    c1.SaveAs("Tight_Base_Data_ratio_"+era+"_"+args.region+"_"+wp+".png")
 
 if True :
     c2 = TCanvas('c2','Prompt Tight/Prompt Base (MC)',50,50,W,H)
@@ -988,7 +989,7 @@ if True :
 	lTeX[h].Draw()
 	c3.Update()
 	
-    c3.SaveAs("Tight_MC_Tight_Data_ratio_"+era+"_"+args.region+"_"+str(args.workingPoint)+".png")
+    c3.SaveAs("Tight_MC_Tight_Data_ratio_"+era+"_"+args.region+"_"+wp+".png")
 #################### Tight - noPromptTight / Base -noPromptBase
 if True :
     c4 = TCanvas('c4','(Tight - noPrompt Tight)/(Base - noPrompt Base)',50,50,W,H)
@@ -1011,11 +1012,12 @@ if True :
     lTeX, lTex1, lTex2, fit0 = {}, {}, {}, {}
     hNum, hDen = {}, {}
     xMin, xMax, yMin, yMax = 0., 100., 0., 0.5
+    
+
     if True : 
 	for i, h in enumerate(hList) :
 	    gStyle.SetOptFit(0)
 	    c4.cd(i+1)
-
 	    
 	    hNum[h] = hTight[h].Clone()
 	    hNum[h].SetLineColor(kBlack)
@@ -1056,10 +1058,11 @@ if True :
 	    lTex2[h]= TLatex(0.1*xMax,0.8*yMax,"chi2/DOF = {0:.2f} / {1:d}".format(fit0[h].GetChisquare(),fit0[h].GetNDF()))
 	    lTex2[h].Draw()
 	    c4.Update()
-	    
+	     
+	
 	c4.Draw()
-	c4.SaveAs("Corrected_noPrompt_Fake_"+era+"_"+args.region+"_"+str(args.workingPoint)+".pdf")
-	c4.SaveAs("Corrected_noPrompt_Fake_"+era+"_"+args.region+"_"+str(args.workingPoint)+".png")
+	c4.SaveAs("Corrected_noPrompt_Fake_"+era+"_"+args.region+"_"+wp+".pdf")
+	c4.SaveAs("Corrected_noPrompt_Fake_"+era+"_"+args.region+"_"+wp+".png")
 
 
 
@@ -1091,10 +1094,15 @@ if True :
     lTeX, lTex1, lTex2, fit0 = {}, {}, {}, {}
     hNum, hDen = {}, {}
     xMin, xMax, yMin, yMax = 0., 100., 0., 0.3
+    outFileName = 'FakesResult_{0:s}_{1:s}_{2:s}WP.root'.format( str(args.year), str(args.region), wp)
+    histo={}
     if True : 
 	for i, h in enumerate(hList) :
 	    gStyle.SetOptFit(0)
 	    c4.cd(i+1)
+            histo[h] = {}
+	    hName = '{0:s}'.format(h)
+            histo[h] =  TH1D(hName,hName+'_Fakes',1, -0.5,  0.5)
 
 	    
 	    hNum[h] = hTight[h].Clone()
@@ -1135,10 +1143,17 @@ if True :
 	    lTex1[h].Draw()
 	    lTex2[h]= TLatex(0.1*xMax,0.8*yMax,"chi2/DOF = {0:.2f} / {1:d}".format(fit0[h].GetChisquare(),fit0[h].GetNDF()))
 	    lTex2[h].Draw()
+	    histo[h].Fill(0,fit0[h].GetParameter(0))
 	    c4.Update()
-	    
-	c4.SaveAs("Corrected_Fake_"+era+"_"+args.region+"_"+str(args.workingPoint)+".pdf")
-	c4.SaveAs("Corrected_Fake_"+era+"_"+args.region+"_"+str(args.workingPoint)+".png")
+
+	#fOut.Close()    
+	c4.SaveAs("Corrected_Fake_"+era+"_"+args.region+"_"+wp+".pdf")
+	c4.SaveAs("Corrected_Fake_"+era+"_"+args.region+"_"+wp+".png")
+        fOut = TFile( outFileName, 'recreate' )
+        fOut.cd()
+	for h in hList : 
+	    histo[h].Write()
+        fOut.Close()
 
 
 
@@ -1254,8 +1269,8 @@ if True :
 	leg[h].Draw('same')
 	c1.Update()
         CMS_lumi.CMS_lumi(c1, iPeriod, 11)
-        c1.SaveAs("Base_MC_composition_"+h+"_"+era+"_"+args.region+"_"+str(args.workingPoint)+".png")
-        c1.SaveAs("Base_MC_composition_"+h+"_"+era+"_"+args.region+"_"+str(args.workingPoint)+".pdf")
+        c1.SaveAs("Base_MC_composition_"+h+"_"+era+"_"+args.region+"_"+wp+".png")
+        c1.SaveAs("Base_MC_composition_"+h+"_"+era+"_"+args.region+"_"+wp+".pdf")
 
 	c1.cd()
 	hsumm=hsTightPrompt[h].GetStack().Last()
@@ -1266,8 +1281,8 @@ if True :
 	c1.Update()
         
         CMS_lumi.CMS_lumi(c1, iPeriod, 11)
-        c1.SaveAs("Tight_MC_composition_"+h+"_"+era+"_"+args.region+"_"+str(args.workingPoint)+".png")
-        c1.SaveAs("Tight_MC_composition_"+h+"_"+era+"_"+args.region+"_"+str(args.workingPoint)+".pdf")
+        c1.SaveAs("Tight_MC_composition_"+h+"_"+era+"_"+args.region+"_"+wp+".png")
+        c1.SaveAs("Tight_MC_composition_"+h+"_"+era+"_"+args.region+"_"+wp+".pdf")
 
 
     #CMS_lumi.CMS_lumi(c12, iPeriod, 11)
@@ -1279,8 +1294,8 @@ if True :
     lTex1.Draw("same")
 
     #CMS_lumi.CMS_lumi(c12a, iPeriod, 11)
-    c12.SaveAs("Tight_MC_composition_"+era+"_"+args.region+"_"+str(args.workingPoint)+".png")
-    c12a.SaveAs("Base_MC_composition_"+era+"_"+args.region+"_"+str(args.workingPoint)+".png")
+    c12.SaveAs("Tight_MC_composition_"+era+"_"+args.region+"_"+wp+".png")
+    c12a.SaveAs("Base_MC_composition_"+era+"_"+args.region+"_"+wp+".png")
 
 
 ####################### no Prompt composition
@@ -1417,6 +1432,6 @@ if True :
     #CMS_lumi.CMS_lumi(c12, iPeriod, 11)
 
     #CMS_lumi.CMS_lumi(c12a, iPeriod, 11)
-    c12.SaveAs("Tight_MC_noPrompt_composition_"+era+"_"+args.region+"_"+str(args.workingPoint)+".png")
-    c12a.SaveAs("Base_MC_noPrompt_composition_"+era+"_"+args.region+"_"+str(args.workingPoint)+".png")
+    c12.SaveAs("Tight_MC_noPrompt_composition_"+era+"_"+args.region+"_"+wp+".png")
+    c12a.SaveAs("Base_MC_noPrompt_composition_"+era+"_"+args.region+"_"+wp+".png")
 
