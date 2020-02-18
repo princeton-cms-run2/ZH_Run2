@@ -24,9 +24,10 @@ def getArgs() :
     #parser.add_argument("-l","--LTcut",default=0.,type=float,help="H_LTcut")
     #parser.add_argument("-s","--sign",default='OS',help="Opposite or same sign (OS or SS).")
     parser.add_argument("-c","--cat",default='all',help="Category")
-    parser.add_argument("-w","--wait",default='wait',help="Wait for enter")
     parser.add_argument("-L","--setlog",default='yes',help="Set log scale")
     parser.add_argument("-u","--unBlind",default='yes',help="Unblind data")
+    parser.add_argument("-w","--workingPoint",default=16, type=int,help="Unblind data")
+    parser.add_argument("-b","--bruteworkingPoint",default=16, type=int,help="Unblind data")
     
     return parser.parse_args()
 
@@ -63,8 +64,17 @@ def convertToDNDM( histo) :
 
 
 groups = ['data','WJets','Rare','Top','DY','ZZ','Signal']
+#groups = ['data','WJets','Rare','Top','WZincl','ZZincl','WWincl', 'DY','Signal']
 
 plotSettings = { # [nBins,xMin,xMax,units]
+        "m_sv":[10,0,200,"[Gev]","m(#tau#tau)(SV)"],
+        "mt_sv":[10,0,200,"[Gev]","m_{T}(#tau#tau)(SV)"],
+        "met":[50,0,250,"[GeV]","#it{p}_{T}^{miss}"], 
+        "njets":[10,-0.5,9.5,"","nJets"],
+        "mll":[40,50,130,"[Gev]","m(l^{+}l^{-})"],
+        "m_vis":[30,50,200,"[Gev]","m(#tau#tau)"],
+        "pt_tt":[40,0,200,"[GeV]","P_{T}(#tau#tau)"],
+        "H_LT":[30,50,200,"[Gev]","H_{LT}(#tau#tau)"],
 
         "pt_1":[40,0,200,"[Gev]","P_{T}(#tau_{1})"],
         "eta_1":[60,-3,3,"","#eta(l_{1})"],
@@ -96,16 +106,96 @@ plotSettings = { # [nBins,xMin,xMax,units]
         "dZ_4":[10,0,0.2,"[cm]","d_{z}(l_{4})"],
         "d0_4":[10,0,0.2,"[cm]","d_{xy}(l_{4})"],
 
+        "H_LT_FM":[30,50,200,"[Gev]","H_{LT}(#tau#tau)"],
 
+        
+        "m_sv_FM":[10,0,200,"[Gev]","m(#tau#tau)(SV)"],
+        "mt_sv_FM":[10,0,200,"[Gev]","m_{T}(#tau#tau)(SV)"],
+        "met_FM":[50,0,250,"[GeV]","#it{p}_{T}^{miss}"], 
+        "njets_FM":[10,-0.5,9.5,"","nJets"],
+        "mll_FM":[40,50,130,"[Gev]","m(l^{+}l^{-})"],
+        "m_vis_FM":[30,50,200,"[Gev]","m(#tau#tau)"],
+        "pt_tt_FM":[40,0,200,"[GeV]","P_{T}(#tau#tau)"],
+
+        "weight":[20,-10,10,"","PUWeight"],
+        "weightPUtrue":[20,-10,10,"","PUtrue"],
+        "weightPU":[20,-10,10,"","PU"],
+        "nPV":[40,-0.5,39.5,"","nPV"],
+        "nPU":[130,-0.5,129.5,"","nPU"],
+        "nPUtrue":[130,-0.5,129.5,"","nPUtrue"],
+        "Generator_weight":[2000,1000,1000,"","genWeight"],
+        "gen_match_1":[30,-0.5,29.5,"","gen_match_1"],
+        "gen_match_2":[30,-0.5,29.5,"","gen_match_2"],
+        "gen_match_3":[30,-0.5,29.5,"","gen_match_3"],
+        "gen_match_4":[30,-0.5,29.5,"","gen_match_4"],
+
+        "dPhi_l1H":[20,-4,4,"#delta#Phi(l1,H)",""],
+        "dPhi_l2H":[20,-4,4,"#delta#Phi(l2,H)",""],
+        "dPhi_lH":[20,-4,4,"#delta#Phi(l,H)",""],
+
+        "dEta_l1H":[20,-4,4,"#delta#eta(l1,H)",""],
+        "dEta_l2H":[20,-4,4,"#delta#eta(l2,H)",""],
+        "dEta_lH":[20,-4,4,"#delta#eta(l,H)",""],
+
+        "dR_l1H":[20,-4,4,"#delta#R(l1,H)",""],
+        "dR_l2H":[20,-4,4,"#delta#R(l2,H)",""],
+        "dR_lH":[20,-4,4,"#delta#R(l,H)",""],
+
+}
+
+
+
+plotSettings2 = { # [nBins,xMin,xMax,units]
+        "m_sv":[10,0,200,"[Gev]","m(#tau#tau)(SV)"],
+        "met":[50,0,250,"[GeV]","#it{p}_{T}^{miss}"], 
         "njets":[10,-0.5,9.5,"","nJets"],
+
+        "weight":[20,-10,10,"","PUWeight"],
+        "weightPUtrue":[20,-10,10,"","PUtrue"],
+        "weightPU":[20,-10,10,"","PU"],
+        "nPV":[40,-0.5,39.5,"","nPV"],
+        "nPU":[130,-0.5,129.5,"","nPU"],
+        "nPUtrue":[130,-0.5,129.5,"","nPUtrue"],
+        "Generator_weight":[2000,1000,1000,"","genWeight"],
+        "pt_1":[40,0,200,"[Gev]","P_{T}(#tau_{1})"],
+        "eta_1":[60,-3,3,"","#eta(l_{1})"],
+        "phi_1":[60,-3,3,"","#phi(l_{1})"],
+        "iso_1":[20,0,1,"","relIso(l_{1})"],
+        "dZ_1":[10,0,0.2,"[cm]","d_{z}(l_{1})"],
+        "d0_1":[10,0,0.2,"[cm]","d_{xy}(l_{1})"],
+        "q_1":[10,-5,5,"","charge(l_{1})"],
+
+        "pt_2":[40,0,200,"[Gev]","P_{T}(l_{2})"],
+        "eta_2":[60,-3,3,"","#eta(l_{2})"],
+        "phi_2":[60,-3,3,"","#phi(l_{2})"],
+        "iso_2":[20,0,1,"","relIso(l_{2})"],
+        "dZ_2":[10,0,0.2,"[cm]","d_{z}(l_{2})"],
+        "d0_2":[10,0,0.2,"[cm]","d_{xy}(l_{2})"],
+        "q_2":[10,-5,5,"","charge(l_{2})"],
+
+	"iso_3":[20,0,1,"","relIso(l_{3})"],
+        "pt_3":[40,0,200,"[Gev]","P_{T}(l_{3})"],
+        "eta_3":[60,-3,3,"","#eta(l_{3})"],
+        "phi_3":[60,-3,3,"","#phi(l_{3})"],
+        "dZ_3":[10,0,0.2,"[cm]","d_{z}(l_{3})"],
+        "d0_3":[10,0,0.2,"[cm]","d_{xy}(l_{3})"],
+
+        "iso_4":[20,0,1,"","relIso(l_{4})"],
+        "pt_4":[40,0,200,"[Gev]","P_{T}(l_{4})"],
+        "eta_4":[60,-3,3,"","#eta(l_{4})"],
+        "phi_4":[60,-3,3,"","#phi(l_{4})"],
+        "dZ_4":[10,0,0.2,"[cm]","d_{z}(l_{4})"],
+        "d0_4":[10,0,0.2,"[cm]","d_{xy}(l_{4})"],
+
+
         #"Jet_pt":[100,0,500,"[GeV]","Jet P_{T}"], 
         #"Jet_eta":[60,-3,3,"","Jet #eta"],
         #"Jet_phi":[60,-3,3,"","Jet #phi"],
         #"Jet_ht":[100,0,800,"[GeV]","H_{T}"],
 
-        "jpt_1":[60,0,300,"[GeV]","Jet^{1} P_{T}"], 
+        "jpt_1":[10,0,200,"[GeV]","Jet^{1} P_{T}"], 
         "jeta_1":[60,-3,3,"","Jet^{1} #eta"],
-        "jpt_2":[60,0,300,"[GeV]","Jet^{2} P_{T}"], 
+        "jpt_2":[10,0,200,"[GeV]","Jet^{2} P_{T}"], 
         "jeta_2":[6,-3,3,"","Jet^{2} #eta"],
 
         "bpt_1":[40,0,200,"[GeV]","BJet^{1} P_{T}"], 
@@ -117,7 +207,6 @@ plotSettings = { # [nBins,xMin,xMax,units]
         "beta_1":[60,-3,3,"","BJet^{1} #eta"],
         "beta_2":[60,-3,3,"","BJet^{2} #eta"],
 
-        "met":[50,0,250,"[GeV]","#it{p}_{T}^{miss}"], 
         "met_phi":[60,-3,3,"","#it{p}_{T}^{miss} #phi"], 
         "puppi_phi":[60,-3,3,"","PUPPI#it{p}_{T}^{miss} #phi"], 
         "puppimet":[50,0,250,"[GeV]","#it{p}_{T}^{miss}"], 
@@ -131,14 +220,14 @@ plotSettings = { # [nBins,xMin,xMax,units]
         "H_DR":[60,0,6,"","#Delta R(#tau#tau)"],
         "H_tot":[30,0,200,"[GeV]","m_{T}tot(#tau#tau)"],
 
-        "m_sv":[60,0,300,"[Gev]","m(#tau#tau)(SV)"],
-        "m_sv_new":[60,0,300,"[Gev]","m(#tau#tau)(newSV)"],
-        "mt_sv":[60,0,300,"[Gev]","m_{T}(#tau#tau)(SV)"],
+
+        "m_sv_new":[10,0,200,"[Gev]","m(#tau#tau)(newSV)"],
+        "mt_sv":[10,0,200,"[Gev]","m_{T}(#tau#tau)(SV)"],
         "AMass":[100,50,550,"[Gev]","m_{Z+H}(SV)"],
         #"CutFlowWeighted":[15,0.5,15.5,"","cutflow"],
         #"CutFlow":[15,0.5,15.5,"","cutflow"]
 
-        "Z_Pt":[60,0,300,"[Gev]","P_T(l_{1}l_{2})"],
+        "Z_Pt":[10,0,200,"[Gev]","P_T(l_{1}l_{2})"],
         "Z_DR":[60,0,6,"","#Delta R(l_{1}l_{2})"],
 
         "DeepTauiD_VSjet_3":[256,-0.5,255.5,"","DeepVSjet_3"],
@@ -147,6 +236,8 @@ plotSettings = { # [nBins,xMin,xMax,units]
         "DeepTauiD_VSe_4":[256,-0.5,255.5,"","DeepVSe_4"],
         "DeepTauiD_VSmu_3":[256,-0.5,255.5,"","DeepVSmu_3"],
         "DeepTauiD_VSmu_4":[256,-0.5,255.5,"","DeepVSmu_4"],
+        "TriggerW":[10,0,200,"","TriggerW"],
+        "LeptonW":[10,0,200,"","TriggerW"],
 
         "inTimeMuon_1":[10,-5,5,"","inTimeMuon_1"],
         "isGlobal_1":[10,-5,5,"","isGlobal_1"],
@@ -218,9 +309,9 @@ plotSettings = { # [nBins,xMin,xMax,units]
 
         "njets_FM":[10,-0.5,9.5,"","nJets"],
 
-        "jpt_1_FM":[60,0,300,"[GeV]","Jet^{1} P_{T}"], 
+        "jpt_1_FM":[10,0,200,"[GeV]","Jet^{1} P_{T}"], 
         "jeta_1_FM":[60,-3,3,"","Jet^{1} #eta"],
-        "jpt_2_FM":[60,0,300,"[GeV]","Jet^{2} P_{T}"], 
+        "jpt_2_FM":[10,0,200,"[GeV]","Jet^{2} P_{T}"], 
         "jeta_2_FM":[6,-3,3,"","Jet^{2} #eta"],
 
         "bpt_1_FM":[40,0,200,"[GeV]","BJet^{1} P_{T}"], 
@@ -242,11 +333,11 @@ plotSettings = { # [nBins,xMin,xMax,units]
         "H_DR_FM":[60,0,6,"","#Delta R(#tau#tau)"],
         #"H_tot_FM":[30,0,200,"[GeV]","m_{T}tot(#tau#tau)"],
 
-        "m_sv_FM":[60,0,300,"[Gev]","m(#tau#tau)(SV)"],
-        "mt_sv_FM":[60,0,300,"[Gev]","m_{T}(#tau#tau)(SV)"],
+        "m_sv_FM":[10,0,200,"[Gev]","m(#tau#tau)(SV)"],
+        "mt_sv_FM":[10,0,200,"[Gev]","m_{T}(#tau#tau)(SV)"],
         "AMass_FM":[100,50,550,"[Gev]","m_{Z+H}(SV)"],
 
-        "Z_Pt_FM":[60,0,300,"[Gev]","P_T(l_{1}l_{2})"],
+        "Z_Pt_FM":[10,0,200,"[Gev]","P_T(l_{1}l_{2})"],
         "Z_DR_FM":[60,0,6,"","#Delta R(l_{1}l_{2})"],
 
 
@@ -295,10 +386,10 @@ plotSettings = { # [nBins,xMin,xMax,units]
 def makeMultiPlots (year=2017,sign='OS', LTcut=0):
     for plotVar in plotSettings :
 
-     print "montage -title {2:s} -tile 2x4 -geometry +10+5 -border 5 -page A4 *{0:s}*_{1:s}_{2:s}_log.png Multi_{0:s}_{1:s}_{2:s}.pdf -auto-orient;cd ..".format(str(year),sign,plotVar)
-     command="cd plots;montage -auto-orient -title {2:s} -tile 2x4 -geometry +5+5 -page A4 *{0:s}*_{1:s}_{2:s}_log.png Multi_{0:s}_{1:s}_{2:s}.pdf;cd ..".format(str(year),sign,plotVar)
+     command="cd plots;montage -auto-orient -title {2:s} -tile 2x4 -geometry +5+5 -page A4 *{0:s}*_{1:s}_{2:s}_{3:s}_log_{4:s}brute.png Multi_{0:s}_{1:s}_{2:s}_{3:s}_{4:s}brute.pdf;cd ..".format(str(year),sign,plotVar, str(args.workingPoint),str(args.bruteworkingPoint))
+     #else : command="cd plots;montage -auto-orient -title {2:s} -tile 2x4 -geometry +5+5 -page A4 *{0:s}*_{1:s}_{2:s}_{3:s}_log.png Multi_{0:s}_{1:s}_{2:s}_{3:s}.pdf;cd ..".format(str(year),sign,plotVar, str(args.workingPoint))
      os.system(command)
-
+     print command
 
 def ErrorBand (histo, hdata):
 
@@ -383,7 +474,6 @@ def makeDiTauStack(outDir,inFile,rootDi,dndm = False, doRatio = False, year=2020
     #elif year > 2018 : iPeriod = 2
     else : iPeriod = 3
 
-    print '========================================================>', year, iPeriod
 
     xR=0.65   #legend parameters
     xR=0.2    #legend parameters
@@ -462,7 +552,7 @@ def makeDiTauStack(outDir,inFile,rootDi,dndm = False, doRatio = False, year=2020
     hsumall ={}
     kTop = TColor.GetColor("#ffcc66")
     kDY = TColor.GetColor("#58d885")
-    colors = {'data':0,'WJets':kMagenta-10,'Rare':kBlue-8,'ZZ':kAzure-9,'Top':kTop,'DY':kDY,'Signal':kRed}
+    colors = {'data':0,'WJets':kMagenta-10,'Rare':kBlue-8,'ZZ':kAzure-9,'Top':kTop,'DY':kDY,'Signal':kRed, 'ZZincl':kAzure-9, 'Topp':kTop, 'WZincl':kBlue-8, 'WWincl':kBlue-8}
 	
 
     for plotVar in plotSettings :
@@ -579,9 +669,11 @@ def makeDiTauStack(outDir,inFile,rootDi,dndm = False, doRatio = False, year=2020
 	if dndm : hsum.GetYaxis().SetTitle("dN/d"+labelX)
 
 	for i in range(1,hsum.GetNbinsX()+1) : 
-	    if hsum.GetBinContent(i) > 0 and float(histo[plotVar]['Signal'].GetBinContent(i)/sqrt(histo[plotVar]['Signal'].GetBinContent(i) + hsum.GetBinContent(i))) > 0.2 : 
-	        print 'will have to blind %i for var %s', i, plotVar
-	        histo[plotVar]['data'].SetBinContent(i,0)
+	    try :
+	        if hsum.GetBinContent(i) > 0 and float(histo[plotVar]['Signal'].GetBinContent(i)/sqrt(histo[plotVar]['Signal'].GetBinContent(i) + hsum.GetBinContent(i))) > 20 : 
+	            #print 'will have to blind %i for var %s', i, plotVar
+	            histo[plotVar]['data'].SetBinContent(i,0)
+	    except ValueError : continue
 
 	hsum.Draw("hist")
 	hs.Draw("hist same")
@@ -592,10 +684,9 @@ def makeDiTauStack(outDir,inFile,rootDi,dndm = False, doRatio = False, year=2020
 	if doRatio :
 	    data2 = histo[plotVar]['data'].Clone("data")
 	    mc = histo[plotVar]['Rare'].Clone("Rare")
-	    mc.Add(histo[plotVar]['WJets'])
-	    mc.Add(histo[plotVar]['Top'])
-	    mc.Add(histo[plotVar]['DY'])
-	    mc.Add(histo[plotVar]['ZZ'])
+	    for ig in groups : 
+	        if ig != 'Signal' and ig != 'data' and ig != 'Rare' : mc.Add(histo[plotVar][ig])
+
 	    xmin = mc.GetXaxis().GetXmin()
 	    xmax = mc.GetXaxis().GetXmax()
 	    line = TLine(xmin,1.0,xmax,1.0)
@@ -605,7 +696,8 @@ def makeDiTauStack(outDir,inFile,rootDi,dndm = False, doRatio = False, year=2020
 	    #ratioPad.Draw()
 	    ratioPad.cd()
 
-	    data2.Divide(data2,mc)
+	    mc.Sumw2()
+	    data2.Divide(mc)
 
 	    data2.SetMarkerStyle(20)
 	    data2.SetTitleSize(0.12,"Y")
@@ -613,7 +705,7 @@ def makeDiTauStack(outDir,inFile,rootDi,dndm = False, doRatio = False, year=2020
 	    data2.SetTitleSize(0.12,"X")
 	    data2.SetLabelSize(0.10,"X")
 	    data2.SetLabelSize(0.08,"Y")
-	    data2.GetYaxis().SetRangeUser(0.42,1.58)
+	    data2.GetYaxis().SetRangeUser(0.22,1.98)
 	    data2.GetYaxis().SetNdivisions(305)
 	    data2.GetYaxis().SetTitle("Obs/Exp   ")
 
@@ -697,8 +789,9 @@ def makeDiTauStack(outDir,inFile,rootDi,dndm = False, doRatio = False, year=2020
         #frame = c.GetFrame()
         #frame.Draw()
 
-	outFileBase = "Stack_{0:d}_{1:s}_{2:s}_{3:s}".format(year,cat,sign,plotVar) 
-	if setLog : outFileBase = "Stack_{0:d}_{1:s}_{2:s}_{3:s}_log".format(year,cat,sign,plotVar) 
+	outFileBase = "Stack_{0:d}_{1:s}_{2:s}_{3:s}_{4:s}".format(year,cat,sign,plotVar, str(args.workingPoint)) 
+	if setLog : outFileBase = "Stack_{0:d}_{1:s}_{2:s}_{3:s}_{4:s}_log".format(year,cat,sign,plotVar, str(args.workingPoint)) 
+	outFileBase = outFileBase +"_"+str(args.bruteworkingPoint)+"brute"
 	c.SaveAs("./plots/{0:s}.png".format(outFileBase))
 	fOut.cd()
         c.Write("{0:d}_{1:s}_{2:s}_{3:s}".format(year,cat,sign,plotVar))

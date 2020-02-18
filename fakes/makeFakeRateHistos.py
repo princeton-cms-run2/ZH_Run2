@@ -287,7 +287,7 @@ for era in [str(args.year)] :
 
 	        for wp in WP : 
 	            if e.Electron_mvaFall17V2noIso_WP90_3 >0  and  e.iso_3 < 0.15 : hTight['e_et'][wp].Fill(e.pt_3)
-		    if int(e.idDeepTau2017v2p1VSjet_4) >= int(wp) : hTight['t_et'][wp].Fill(e.pt_4)
+		    if int(e.idDeepTau2017v2p1VSjet_4) >= int(wp)-1 : hTight['t_et'][wp].Fill(e.pt_4)
                     
             if cat[2:] == 'mt' :
                 # apply transverse mass cut on muon-MET system
@@ -296,7 +296,7 @@ for era in [str(args.year)] :
 
 	        for wp in WP : 
 	            if e.iso_3 < 0.2 and  (e.isGlobal_3 > 0 or e.isTracker_3 > 0) and e.mediumId_3 > 0: hTight['m_mt'][wp].Fill(e.pt_3)
-		    if int(e.idDeepTau2017v2p1VSjet_4) >= int(wp) : hTight['t_mt'][wp].Fill(e.pt_4)
+		    if int(e.idDeepTau2017v2p1VSjet_4) >= int(wp)-1 : hTight['t_mt'][wp].Fill(e.pt_4)
 
 
             if cat[2:] == 'tt' :
@@ -305,8 +305,8 @@ for era in [str(args.year)] :
                 hBase['t1_tt'].Fill(e.pt_3)
                 hBase['t2_tt'].Fill(e.pt_4)
 	        for wp in WP : 
-		    if int(e.idDeepTau2017v2p1VSjet_3) >= int(wp) :    hTight['t1_tt'][wp].Fill(e.pt_3)
-		    if int(e.idDeepTau2017v2p1VSjet_4) >= int(wp) :    hTight['t2_tt'][wp].Fill(e.pt_4)
+		    if int(e.idDeepTau2017v2p1VSjet_3) >= int(wp)-1 :    hTight['t1_tt'][wp].Fill(e.pt_3)
+		    if int(e.idDeepTau2017v2p1VSjet_4) >= int(wp)-1 :    hTight['t2_tt'][wp].Fill(e.pt_4)
 
             if cat[2:] == 'em' :
 
@@ -714,17 +714,19 @@ for group in groups :
 
 
 		if e.gen_match_4 == 5 :
+		    '''
 		    weight *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4)
 		    tauV4cor *= testool.getTES(e.decayMode_4)
 		    if e.decayMode_4 == 1 : 
 			e.m_4 =  0.1396  
 			tauV4cor.SetE(0.1396)
 		    MetVcor+=   tauV4- tauV4cor
+		    '''
 		    hBasePrompt[group]['t_et'].Fill(e.pt_4,weight)
 		    if e.decayMode_4 != -1 : hBasePromptMode[group]['t_et'][str(e.decayMode_4)].Fill(e.pt_4,weight)
 
                     for wp in WP : 
-		        if int(e.idDeepTau2017v2p1VSjet_4) >= int(wp) : 
+		        if int(e.idDeepTau2017v2p1VSjet_4) >= int(wp)-1 : 
 			    hTightPrompt[group]['t_et'][wp].Fill(e.pt_4,weight)
 			    if e.decayMode_4 != -1 : 
 				hTightPromptMode[group]['t_et'][str(e.decayMode_4)][wp].Fill(e.pt_4,weight)
@@ -735,7 +737,7 @@ for group in groups :
 		    if e.decayMode_4 != -1 : hBasenoPromptMode[group]['t_et'][str(e.decayMode_4)].Fill(e.pt_4,weight)
 
                     for wp in WP : 
-		        if int(e.idDeepTau2017v2p1VSjet_4) >= int(wp) : 
+		        if int(e.idDeepTau2017v2p1VSjet_4) >= int(wp)-1 : 
 			    hTightnoPrompt[group]['t_et'][wp].Fill(e.pt_4,weight)
 			    if e.decayMode_4 != -1 : 
 				hTightnoPromptMode[group]['t_et'][str(e.decayMode_4)][wp].Fill(e.pt_4,weight)
@@ -758,30 +760,34 @@ for group in groups :
 		        for wp in WP : hTightnoPrompt[group]['m_mt'][wp].Fill(e.pt_3,weight)
 
 		if e.gen_match_4 == 5 :
+                    '''
 		    weight *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4)
 		    tauV4cor *= testool.getTES(e.decayMode_4)
 		    if e.decayMode_4 == 1 : 
 			e.m_4 =  0.1396  
 			tauV4cor.SetE(0.1396)
 		    MetVcor+=   tauV4 - tauV4cor
+		    '''
 		    hBasePrompt[group]['t_mt'].Fill(e.pt_4,weight)
 		    if e.decayMode_4 != -1 : hBasePromptMode[group]['t_mt'][str(e.decayMode_4)].Fill(e.pt_4,weight)
 		    for wp in WP : 
-		        if int(e.idDeepTau2017v2p1VSjet_4) >= int(wp) : 
+		        if int(e.idDeepTau2017v2p1VSjet_4) >= int(wp)-1 : 
 			        hTightPrompt[group]['t_mt'][wp].Fill(e.pt_4,weight)
 			        if e.decayMode_4 != -1 : hTightPromptMode[group]['t_mt'][str(e.decayMode_4)][wp].Fill(e.pt_4,weight)
 
 		if e.gen_match_4 != 5 :
+		    '''
 		    weight *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4)
 		    tauV4cor *= testool.getTES(e.decayMode_4)
 		    if e.decayMode_4 == 1 : 
 			e.m_4 =  0.1396  
 			tauV4cor.SetE(0.1396)
 		    MetVcor+=   tauV4 - tauV4cor
+		    '''
 		    hBasenoPrompt[group]['t_mt'].Fill(e.pt_4,weight)
 		    if e.decayMode_4 != -1 : hBasenoPromptMode[group]['t_mt'][str(e.decayMode_4)].Fill(e.pt_4,weight)
 		    for wp in WP : 
-		        if int(e.idDeepTau2017v2p1VSjet_4) >= int(wp) : 
+		        if int(e.idDeepTau2017v2p1VSjet_4) >= int(wp)-1 : 
 			        hTightnoPrompt[group]['t_mt'][wp].Fill(e.pt_4,weight)
 			        if e.decayMode_4 != -1 : hTightnoPromptMode[group]['t_mt'][str(e.decayMode_4)][wp].Fill(e.pt_4,weight)
 
@@ -789,65 +795,69 @@ for group in groups :
 
 	    if cat[2:] == 'tt':
 		if e.gen_match_3 == 5 :
+		    '''
 		    weight *= tauSFTool.getSFvsPT(e.pt_3,e.gen_match_3)
 		    tauV3cor *= testool.getTES(e.decayMode_3)
 		    if e.decayMode_3 == 1 : 
 			e.m_3 =  0.1396  
 			tauV3cor.SetE(0.1396)
 		    MetVcor +=   tauV3 - tauV3cor
-
+                    '''
 		    hBasePrompt[group]['t1_tt'].Fill(e.pt_3,weight)
 		    if str(e.decayMode_3) != -1 : hBasePromptMode[group]['t1_tt'][str(e.decayMode_3)].Fill(e.pt_3,weight)
 		    for wp in WP : 
-		        if int(e.idDeepTau2017v2p1VSjet_3) >= int(wp) : 
+		        if int(e.idDeepTau2017v2p1VSjet_3) >= int(wp)-1 : 
 		            hTightPrompt[group]['t1_tt'][wp].Fill(e.pt_3,weight)
 		            if str(e.decayMode_3) != -1 : hTightPromptMode[group]['t1_tt'][str(e.decayMode_3)][wp].Fill(e.pt_3,weight)
 
 		if e.gen_match_3 != 5 :
+		    '''
 		    weight *= tauSFTool.getSFvsPT(e.pt_3,e.gen_match_3)
 		    tauV3cor *= testool.getTES(e.decayMode_3)
 		    if e.decayMode_3 == 1 : 
 			e.m_3 =  0.1396  
 			tauV3cor.SetE(0.1396)
 		    MetVcor +=   tauV3 - tauV3cor
-
+                    '''
 		    hBasenoPrompt[group]['t1_tt'].Fill(e.pt_3,weight)
 		    if str(e.decayMode_3) != -1 : hBasenoPromptMode[group]['t1_tt'][str(e.decayMode_3)].Fill(e.pt_3,weight)
 
 		    for wp in WP : 
-		        if int(e.idDeepTau2017v2p1VSjet_3) >= int(wp) : 
+		        if int(e.idDeepTau2017v2p1VSjet_3) >= int(wp)-1 : 
 		            hTightnoPrompt[group]['t1_tt'][wp].Fill(e.pt_3,weight)
 		            if str(e.decayMode_4) != -1 : hTightnoPromptMode[group]['t1_tt'][str(e.decayMode_3)][wp].Fill(e.pt_3,weight)
 
 
 		if e.gen_match_4 == 5 :
+		    '''
 		    weight *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4)
 		    tauV4cor *= testool.getTES(e.decayMode_4)
 		    if e.decayMode_4 == 1 : 
 			e.m_4 =  0.1396  
 			tauV4cor.SetE(0.1396)
 		    MetVcor +=   tauV4 - tauV4cor
-
+                    '''
 		    hBasePrompt[group]['t2_tt'].Fill(e.pt_4,weight)
 		    if e.decayMode_4 != -1 : hBasePromptMode[group]['t2_tt'][str(e.decayMode_4)].Fill(e.pt_4,weight)
 		    for wp in WP : 
-		        if int(e.idDeepTau2017v2p1VSjet_4) >= int(wp) : 
+		        if int(e.idDeepTau2017v2p1VSjet_4) >= int(wp)-1 : 
 		            hTightPrompt[group]['t2_tt'][wp].Fill(e.pt_4,weight)
 		            if str(e.decayMode_4) != -1 : hTightPromptMode[group]['t2_tt'][str(e.decayMode_4)][wp].Fill(e.pt_4,weight)
 
 		if e.gen_match_4 != 5 :
+		    '''
 		    weight *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4)
 		    tauV4cor *= testool.getTES(e.decayMode_4)
 		    if e.decayMode_4 == 1 : 
 			e.m_4 =  0.1396  
 			tauV4cor.SetE(0.1396)
 		    MetVcor +=   tauV4 - tauV4cor
-
+                    '''
 		    hBasenoPrompt[group]['t2_tt'].Fill(e.pt_4,weight)
 		    if e.decayMode_4 != -1 : hBasenoPromptMode[group]['t2_tt'][str(e.decayMode_4)].Fill(e.pt_4,weight)
 
 		    for wp in WP : 
-		        if int(e.idDeepTau2017v2p1VSjet_4) >= int(wp) : 
+		        if int(e.idDeepTau2017v2p1VSjet_4) >= int(wp)-1 : 
 		            hTightnoPrompt[group]['t2_tt'][wp].Fill(e.pt_4,weight)
 		            if str(e.decayMode_4) != -1 : hTightnoPromptMode[group]['t2_tt'][str(e.decayMode_4)][wp].Fill(e.pt_4,weight)
 

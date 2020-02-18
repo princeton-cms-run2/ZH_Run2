@@ -8,7 +8,8 @@ from ROOT import gSystem, gStyle, gROOT, kTRUE, TMatrixD
 from ROOT import TFile, TTree, TH1D, TCanvas, TLorentzVector, TLegend, TAxis, THStack, TGraphAsymmErrors, vector, gInterpreter
 gROOT.SetBatch(True) # don't pop up any plots
 gStyle.SetOptStat(0) # don't show any stats
-from math import sqrt, sin, cos, pi
+from math import sqrt, sin, cos, pi, tan, acos, atan2,log
+#import math
 import os
 import os.path
 import sys
@@ -98,6 +99,8 @@ def getArgs() :
     parser.add_argument("--looseCuts",action='store_true',help="Loose cuts")
     parser.add_argument("-u", "--unBlind",default='no',help="Unblind signal region for OS")
     parser.add_argument("-r", "--redoFit",default='no',help="redo FastMTT and adjust MET after to Tau ES corrections")
+    parser.add_argument("-w", "--workingPoint",type=int, default=16, help="working point for fakes 16 (M), 32(T), 64(VT), 128(VVT)")
+    parser.add_argument("-b", "--bruteworkingPoint",type=int, default=16, help="make working point for fakes 16 (M), 32(T), 64(VT), 128(VVT)")
     
     return parser.parse_args()
 
@@ -146,8 +149,61 @@ def OverFlow(htest) :
 
     #return htest
 
+def PtoEta( Px,  Py,  Pz) :
 
-def getFakeWeights(f1,f2) :
+   P = sqrt(Px*Px+Py*Py+Pz*Pz);
+   if P> 0 : 
+       cosQ = Pz/P;
+       Q = acos(cosQ);
+       Eta = - log(tan(0.5*Q));
+       return Eta
+   else: return -99
+
+def PtoPhi( Px,  Py) : return atan2(Py,Px)
+
+
+def PtoPt( Px,  Py) : return sqrt(Px*Px+Py*Py)
+
+
+def dPhiFrom2P( Px1,  Py1, Px2,  Py2) :
+   prod = Px1*Px2 + Py1*Py2;
+   mod1 = sqrt(Px1*Px1+Py1*Py1);
+   mod2 = sqrt(Px2*Px2+Py2*Py2);
+   cosDPhi = prod/(mod1*mod2);
+   return acos(cosDPhi)
+
+
+def DRobj(eta1,phi1,eta2,phi2) :
+    dPhi = min(abs(phi2-phi1),2.*pi-abs(phi2-phi1))
+    return sqrt(dPhi**2 + (eta2-eta1)**2)
+
+def DPhiobj(phi1,phi2) :
+    dPhi = min(abs(phi2-phi1),2.*pi-abs(phi2-phi1))
+    return dPhi
+
+def deltaEta(Px1, Py1, Pz1, Px2,  Py2,  Pz2):
+
+  eta1 = PtoEta(Px1,Py1,Pz1)
+  eta2 = PtoEta(Px2,Py2,Pz2)
+
+  dEta = eta1 - eta2
+
+  return dEta
+
+
+
+
+def getFakeWeights(p1,p2, WP) :
+    
+    filein = '../fakes/FakesResult_{0:s}_SS_{1:s}WP.root'.format(str(args.year),str(WP))
+    fin = TFile.Open(filein,"READ")         
+    h1 = fin.Get('{0:s}'.format(p1))
+    h2 = fin.Get('{0:s}'.format(p2))
+    f1 = h1.GetSumOfWeights()
+    f2 = h2.GetSumOfWeights()
+
+    print '================= now reading fake rate for', p1, p2 ,' to be', f1, f2, 'and for WP', WP
+
     w1 = f1/(1.-f1)
     w2 = f2/(1.-f2)
     w0 = w1*w2
@@ -232,7 +288,7 @@ unblind=False
 if args.unBlind.lower() == 'true' or args.unBlind.lower == 'yes' : unblind = True
 
 #groups = ['Signal','WJets','Rare','ZZ','data']
-groups = ['Signal','ZZ','WJets','Rare','Top','DY','data']
+groups = ['Signal','ZZ','WJets','Rare','Top','DY','data','Topp','WZincl','ZZincl','WWincl']
 
 Pblumi = 1000.
 tauID_w = 1.
@@ -330,9 +386,22 @@ hMC = {}
 hMCFM = {}
 
 hm_sv_new = {}
+hdPhi_l1H = {}
+hdPhi_l2H = {}
+hdPhi_lH = {}
+hdEta_l1H = {}
+hdEta_l2H = {}
+hdEta_lH = {}
+hdR_l1H = {}
+hdR_l2H = {}
+hdR_lH = {}
 hmt_sv_new = {}
+hH_LT= {}
+hH_LT_FM= {}
 hCutFlow = {}
 hW = {}
+hTriggerW= {}
+hLeptonW= {}
 hCutFlowPerGroup = {}
 WCounter = {}
 hidDeepTau2017v2p1VSjet_3 = {}
@@ -352,6 +421,8 @@ MetV = TLorentzVector()
 MetVcor = TLorentzVector()
 tauV3 = TLorentzVector()
 tauV4 = TLorentzVector()
+tauV = TLorentzVector()
+LeptV = TLorentzVector()
 tauV3cor = TLorentzVector()
 tauV4cor = TLorentzVector()
 L1 = TLorentzVector()
@@ -364,6 +435,8 @@ tauV3.SetXYZM(0,0,0,0)
 tauV4.SetXYZM(0,0,0,0)
 tauV3cor.SetXYZM(0,0,0,0)
 tauV4cor.SetXYZM(0,0,0,0)
+tauV.SetXYZM(0,0,0,0)
+LeptV.SetXYZM(0,0,0,0)
 
 # dictionary where the nickName is the key
 nickNames, xsec, totalWeight, sampleWeight = {}, {}, {}, {}
@@ -421,12 +494,13 @@ for line in open(args.inFileName,'r').readlines() :
     fIn = TFile.Open(filein,"READ")
     totalWeight[nickName] = float(fIn.Get("hWeights").GetSumOfWeights())
     sampleWeight[nickName]= Pblumi*weights['lumi']*xsec[nickName]/totalWeight[nickName]
+    
 
-    #print("group={0:10s} nickName={1:20s} xSec={2:10.3f} totalWeight={3:11.1f} sampleWeight={4:10.6f}".format(
-    #    group,nickName,xsec[nickName],totalWeight[nickName],sampleWeight[nickName]))
+    print("group={0:10s} nickName={1:20s} xSec={2:10.3f} totalWeight={3:11.1f} sampleWeight={4:10.6f}".format(
+        group,nickName,xsec[nickName],totalWeight[nickName],sampleWeight[nickName]))
 
-    print("{0:100s}  & {1:10.3f} & {2:11.1f} & {3:10.6f}\\\\\\hline".format(
-         str(vals[6]),xsec[nickName],totalWeight[nickName],sampleWeight[nickName]))
+    #print("{0:100s}  & {1:10.3f} & {2:11.1f} & {3:10.6f}\\\\\\hline".format(
+    #     str(vals[6]),xsec[nickName],totalWeight[nickName],sampleWeight[nickName]))
    
 if not search(nickNames, 'W1') and not search(nickNames, 'W2') and not search(nickNames, 'W3') and not search(nickNames, 'W4') : WIncl_only = True
 if not search(nickNames, 'DY1') and not search(nickNames, 'DY2') and not search(nickNames, 'DY3') and not search(nickNames, 'DY4') : DYIncl_only = True
@@ -448,7 +522,6 @@ for i in range(1,4) :
 #for eras in ['2017B','2017C','2017D','2017E','2017F'] :
 for eras in [era] :
     #for dataset in ['SingleElectron','SingleMuon','DoubleEG','DoubleMuon'] :
-    #for dataset in ['SingleMuon'] :
     for dataset in ['data'] :
         #nickName = '{0:s}_Run{1:s}'.format(dataset,eras)
         nickName = '{0:s}_{1:s}'.format(dataset,eras)
@@ -467,102 +540,125 @@ if tightCuts :
 else :
     outFileName = 'allGroups_{0:d}_{1:s}_LT{2:02d}_loose.root'.format(args.year,args.sign,int(args.LTcut))
     
-if args.redoFit.lower() == 'no' : outFileName = 'allGroups_{0:d}_{1:s}_LT{2:02d}_noSV.root'.format(args.year,args.sign,int(args.LTcut))
+if args.redoFit.lower() == 'no' : outFileName = 'allGroups_{0:d}_{1:s}_LT{2:02d}_{3:s}noSV'.format(args.year,args.sign,int(args.LTcut), str(args.workingPoint))
+
+
+WP = args.workingPoint
+WPSR= 16
+if args.workingPoint == args.bruteworkingPoint : WPSR = WP
+outFileName = outFileName +"_"+str(args.bruteworkingPoint)+"brute"
+
 
 print("Opening {0:s} as output.".format(outFileName))
-fOut = TFile( outFileName, 'recreate' )
+fOut = TFile( outFileName+".root", 'recreate' )
 
 #fe, fm, ft_et, ft_mt, f1_tt, f2_tt   = 0.0456, 0.0935, 0.1391, 0.1284, 0.0715, 0.0609
 # values with nbtag = 0 cut \
 
 fe_et, ft_et, fm_mt, ft_mt, f1_tt, f2_tt, fe_em, fm_em  = 0.0073, 0.1327, 0.0434, 0.1087,0.1318, 0.1327, 0.0101, 0.0380
 if era == '2017' : fe_et, ft_et, fm_mt, ft_mt, f1_tt, f2_tt, fe_em, fm_em  = 0.0082, 0.1236, 0.0581, 0.1083, 0.1146,0.1160,0.0081, 0.0346
-if era == '2018' : fe_et, ft_et, fm_mt, ft_mt, f1_tt, f2_tt, fe_em, fm_em  = 0.0083,0.1385, 0.0581, 0.1292, 0.1398, 0.1294, 0.0102, 0.0415
+if era == '2018' : fe_et, ft_et, fm_mt, ft_mt, f1_tt, f2_tt, fe_em, fm_em  = 0.0083,0.1199, 0.0598, 0.1105, 0.1178, 0.1121, 0.01009, 0.0440
+
+
+#    weightsFakes = {'fe_et': 0.0083, 'ft_et':0.1199, 'fm_mt':0.0598, 'ft_tt':0.1105, 'ft1_tt':0.1178, 'ft2_tt':0.1121, 'fe_em':0.01009, 'fm_em':0.0440 } 
+
+#    weightsFakes = {'fe_et': 0.0083, 'ft_et':0.1199, 'fm_mt':0.0598, 'ft_tt':0.1105, 'ft1_tt':0.1178, 'ft2_tt':0.1121, 'fe_em':0.01009, 'fm_em':0.0440 } 
+#    weightsFakes = {'fe_et': 0.0083, 'ft_et':0.1199, 'fm_mt':0.0598, 'ft_tt':0.1105, 'ft1_tt':0.1178, 'ft2_tt':0.1121, 'fe_em':0.01009, 'fm_em':0.0440 } 
+
+#define the tightiD WP
 
 
 fW1, fW2, fW0 = {}, {}, {}
-fW1['et'], fW2['et'], fW0['et'] = getFakeWeights(fe_et,ft_et)
-fW1['mt'], fW2['mt'], fW0['mt'] = getFakeWeights(fm_mt,ft_mt)
-fW1['tt'], fW2['tt'], fW0['tt'] = getFakeWeights(f1_tt,f2_tt)
-fW1['em'], fW2['em'], fW0['em'] = getFakeWeights(fe_em,fm_em)
+fW1['et'], fW2['et'], fW0['et'] = getFakeWeights('e_et','t_et', WP)
+fW1['mt'], fW2['mt'], fW0['mt'] = getFakeWeights('m_mt','t_mt', WP)
+fW1['tt'], fW2['tt'], fW0['tt'] = getFakeWeights('t1_tt','t2_tt', WP)
+fW1['em'], fW2['em'], fW0['em'] = getFakeWeights('e_em','m_em', WP)
 
 global getsf,sf
 
 
 plotSettings = { # [nBins,xMin,xMax,units]
 
-        "pt_1":[40,0,200,"[Gev]","P_{T}(#tau_{1})"],
-        "eta_1":[60,-3,3,"","#eta(l_{1})"],
-        "phi_1":[60,-3,3,"","#phi(l_{1})"],
+        "weight":[20,-10,10,"","PUWeight"],
+        "weightPUtrue":[20,-10,10,"","PUtrue"],
+        "weightPUtrue":[20,-10,10,"","PU"],
+        "nPV":[120,-0.5,119.5,"","nPV"],
+        "nPU":[130,-0.5,129.5,"","nPU"],
+        "nPUtrue":[130,-0.5,129.5,"","nPUtrue"],
+        "Generator_weight":[20,-10,10,"","genWeight"],
+
+        "pt_1":[10,0,200,"[Gev]","P_{T}(#tau_{1})"],
+        "eta_1":[30,-3,3,"","#eta(l_{1})"],
+        "phi_1":[30,-3,3,"","#phi(l_{1})"],
         "iso_1":[20,0,1,"","relIso(l_{1})"],
         "dZ_1":[20,-0.2,0.2,"[cm]","d_{z}(l_{1})"],
         "d0_1":[20,-0.2,0.2,"[cm]","d_{xy}(l_{1})"],
         "q_1":[3,-1.5,1.5,"","charge(l_{1})"],
 
-        "pt_2":[40,0,200,"[Gev]","P_{T}(l_{2})"],
-        "eta_2":[60,-3,3,"","#eta(l_{2})"],
-        "phi_2":[60,-3,3,"","#phi(l_{2})"],
+        "pt_2":[10,0,200,"[Gev]","P_{T}(l_{2})"],
+        "eta_2":[30,-3,3,"","#eta(l_{2})"],
+        "phi_2":[30,-3,3,"","#phi(l_{2})"],
         "iso_2":[20,0,1,"","relIso(l_{2})"],
         "dZ_2":[20,-0.2,0.2,"[cm]","d_{z}(l_{2})"],
         "d0_2":[20,-0.2,0.2,"[cm]","d_{xy}(l_{2})"],
         "q_2":[3,-1.5,1.5,"","charge(l_{2})"],
 
 	"iso_3":[20,0,1,"","relIso(l_{3})"],
-        "pt_3":[40,0,200,"[Gev]","P_{T}(l_{3})"],
-        "eta_3":[60,-3,3,"","#eta(l_{3})"],
-        "phi_3":[60,-3,3,"","#phi(l_{3})"],
+        "pt_3":[10,0,200,"[Gev]","P_{T}(l_{3})"],
+        "eta_3":[30,-3,3,"","#eta(l_{3})"],
+        "phi_3":[30,-3,3,"","#phi(l_{3})"],
         "dZ_3":[20,-0.2,0.2,"[cm]","d_{z}(l_{3})"],
         "d0_3":[20,-0.2,0.2,"[cm]","d_{xy}(l_{3})"],
 
         "iso_4":[20,0,1,"","relIso(l_{4})"],
-        "pt_4":[40,0,200,"[Gev]","P_{T}(l_{4})"],
-        "eta_4":[60,-3,3,"","#eta(l_{4})"],
-        "phi_4":[60,-3,3,"","#phi(l_{4})"],
+        "pt_4":[10,0,200,"[Gev]","P_{T}(l_{4})"],
+        "eta_4":[30,-3,3,"","#eta(l_{4})"],
+        "phi_4":[30,-3,3,"","#phi(l_{4})"],
         "dZ_4":[20,-0.2,0.2,"[cm]","d_{z}(l_{4})"],
         "d0_4":[20,-0.2,0.2,"[cm]","d_{xy}(l_{4})"],
 
         "njets":[10,-0.5,9.5,"","nJets"],
         #"Jet_pt":[100,0,500,"[GeV]","Jet P_{T}"], 
-        #"Jet_eta":[60,-3,3,"","Jet #eta"],
-        #"Jet_phi":[60,-3,3,"","Jet #phi"],
+        #"Jet_eta":[30,-3,3,"","Jet #eta"],
+        #"Jet_phi":[30,-3,3,"","Jet #phi"],
         #"Jet_ht":[100,0,800,"[GeV]","H_{T}"],
 
-        "jpt_1":[60,0,300,"[GeV]","Jet^{1} P_{T}"], 
-        "jeta_1":[60,-3,3,"","Jet^{1} #eta"],
-        "jpt_2":[60,0,300,"[GeV]","Jet^{2} P_{T}"], 
+        "jpt_1":[10,0,200,"[GeV]","Jet^{1} P_{T}"], 
+        "jeta_1":[30,-3,3,"","Jet^{1} #eta"],
+        "jpt_2":[10,0,200,"[GeV]","Jet^{2} P_{T}"], 
         "jeta_2":[6,-3,3,"","Jet^{2} #eta"],
 
-        "bpt_1":[40,0,200,"[GeV]","BJet^{1} P_{T}"], 
-        "bpt_2":[40,0,200,"[GeV]","BJet^{2} P_{T}"], 
+        "bpt_1":[10,0,200,"[GeV]","BJet^{1} P_{T}"], 
+        "bpt_2":[10,0,200,"[GeV]","BJet^{2} P_{T}"], 
 
         "nbtag":[5,-0.5,4.5,"","nBTag"],
         #"nbtagLoose":[10,0,10,"","nBTag Loose"],
         #"nbtagTight":[5,0,5,"","nBTag Tight"],
-        "beta_1":[60,-3,3,"","BJet^{1} #eta"],
-        "beta_2":[60,-3,3,"","BJet^{2} #eta"],
+        "beta_1":[30,-3,3,"","BJet^{1} #eta"],
+        "beta_2":[30,-3,3,"","BJet^{2} #eta"],
 
-        "met":[20,0,200,"[GeV]","#it{p}_{T}^{miss}"], 
-        "met_phi":[60,-3,3,"","#it{p}_{T}^{miss} #phi"], 
-        "puppi_phi":[60,-3,3,"","PUPPI#it{p}_{T}^{miss} #phi"], 
-        "puppimet":[20,0,200,"[GeV]","#it{p}_{T}^{miss}"], 
+        "met":[10,0,200,"[GeV]","#it{p}_{T}^{miss}"], 
+        "met_phi":[30,-3,3,"","#it{p}_{T}^{miss} #phi"], 
+        "puppi_phi":[30,-3,3,"","PUPPI#it{p}_{T}^{miss} #phi"], 
+        "puppimet":[10,0,200,"[GeV]","#it{p}_{T}^{miss}"], 
         #"mt_tot":[100,0,1000,"[GeV]"], # sqrt(mt1^2 + mt2^2)
         #"mt_sum":[100,0,1000,"[GeV]"], # mt1 + mt2
 
         "mll":[40,50,130,"[Gev]","m(l^{+}l^{-})"],
 
-        "m_vis":[30,50,200,"[Gev]","m(#tau#tau)"],
-        "pt_tt":[40,0,200,"[GeV]","P_{T}(#tau#tau)"],
+        "m_vis":[15,50,200,"[Gev]","m(#tau#tau)"],
+        "pt_tt":[10,0,200,"[GeV]","P_{T}(#tau#tau)"],
         "H_DR":[60,0,6,"","#Delta R(#tau#tau)"],
         "H_tot":[30,0,200,"[GeV]","m_{T}tot(#tau#tau)"],
 
-        "mt_sv":[30,0,300,"[Gev]","m_{T}(#tau#tau)"],
-        "m_sv":[30,0,300,"[Gev]","m(#tau#tau)(SV)"],
+        "mt_sv":[10,0,200,"[Gev]","m_{T}(#tau#tau)"],
+        "m_sv":[10,0,200,"[Gev]","m(#tau#tau)(SV)"],
         "AMass":[50,50,550,"[Gev]","m_{Z+H}(SV)"],
         #"CutFlowWeighted":[15,0.5,15.5,"","cutflow"],
         #"CutFlow":[15,0.5,15.5,"","cutflow"]
 
-        "Z_Pt":[60,0,300,"[Gev]","P_T(l_{1}l_{2})"],
-        "Z_DR":[60,0,6,"[Gev]","#Delta R(l_{1}l_{2})"],
+        "Z_Pt":[10,0,200,"[Gev]","P_T(l_{1}l_{2})"],
+        "Z_DR":[30,0,6,"[Gev]","#Delta R(l_{1}l_{2})"],
 
 
 
@@ -681,7 +777,21 @@ for group in groups :
     hMC[group] = {}
     hMCFM[group] = {}
     hm_sv_new[group] = {}
+    hdPhi_l1H[group] = {}
+    hdPhi_l2H[group] = {}
+    hdPhi_lH[group] = {}
+    hdR_l1H[group] = {}
+    hdR_l2H[group] = {}
+    hdR_lH[group] = {}
+    hdEta_l1H[group] = {}
+    hdEta_l2H[group] = {}
+    hdEta_lH[group] = {}
+
+    hTriggerW[group] = {}
+    hLeptonW[group] = {}
     hmt_sv_new[group] = {}
+    hH_LT[group] = {}
+    hH_LT_FM[group] = {}
     hidDeepTau2017v2p1VSjet_3[group] = {}
     hidDeepTau2017v2p1VSjet_4[group] = {}
     hidDeepTau2017v2p1VSmu_3[group] = {}
@@ -693,10 +803,40 @@ for group in groups :
         hMC[group][cat] = {}
         hMCFM[group][cat] = {}
         hName = 'h{0:s}_{1:s}'.format(group,cat)
-        hm_sv_new[group][cat] = TH1D(hName+'_m_sv_new',hName+'_m_sv_new',60,0,300)
+        hm_sv_new[group][cat] = TH1D(hName+'_m_sv_new',hName+'_m_sv_new',10,0,200)
         hm_sv_new[group][cat].SetDefaultSumw2()
-        hmt_sv_new[group][cat] = TH1D(hName+'_mt_sv_new',hName+'_mt_sv_new',60,0,300)
+
+        hdPhi_l1H[group][cat] = TH1D(hName+'_dPhi_l1H',hName+'_l1H',20,-4,4)
+        hdPhi_l2H[group][cat] = TH1D(hName+'_dPhi_l2H',hName+'_l2H',20,-4,4)
+        hdPhi_lH[group][cat] = TH1D(hName+'_dPhi_lH',hName+'_lH',20,-4,4)
+	hdPhi_l1H[group][cat].SetDefaultSumw2()
+	hdPhi_l2H[group][cat].SetDefaultSumw2()
+	hdPhi_lH[group][cat].SetDefaultSumw2()
+
+        hdEta_l1H[group][cat] = TH1D(hName+'_dEta_l1H',hName+'_l1H',10,0,5)
+        hdEta_l2H[group][cat] = TH1D(hName+'_dEta_l2H',hName+'_l2H',10,0,5)
+        hdEta_lH[group][cat] = TH1D(hName+'_dEta_lH',hName+'_lH',10,0,5)
+	hdEta_l1H[group][cat].SetDefaultSumw2()
+	hdEta_l2H[group][cat].SetDefaultSumw2()
+	hdEta_lH[group][cat].SetDefaultSumw2()
+
+        hdR_l1H[group][cat] = TH1D(hName+'_dR_l1H',hName+'_l1H',10,0,5)
+        hdR_l2H[group][cat] = TH1D(hName+'_dR_l2H',hName+'_l2H',10,0,5)
+        hdR_lH[group][cat] = TH1D(hName+'_dR_lH',hName+'_lH',10,0,5)
+	hdR_l1H[group][cat].SetDefaultSumw2()
+	hdR_l2H[group][cat].SetDefaultSumw2()
+	hdR_lH[group][cat].SetDefaultSumw2()
+
+        hH_LT[group][cat] = TH1D(hName+'_H_LT',hName+'_H_LT',10,0,200)
+        hH_LT[group][cat].SetDefaultSumw2()
+        hH_LT_FM[group][cat] = TH1D(hName+'_H_LT_FM',hName+'_H_LT',10,0,200)
+        hH_LT_FM[group][cat].SetDefaultSumw2()
+        hmt_sv_new[group][cat] = TH1D(hName+'_mt_sv_new',hName+'_mt_sv_new',10,0,200)
         hmt_sv_new[group][cat].SetDefaultSumw2()
+        hTriggerW[group][cat] = TH1D (hName+'_TriggerW',hName+'_TriggerW',75,0.75,1.50)
+        hLeptonW[group][cat] = TH1D (hName+'_LeptonW',hName+'_LeptonW',40,0.8,1.2)
+        hTriggerW[group][cat].SetDefaultSumw2()
+        hLeptonW[group][cat].SetDefaultSumw2()
         hName = 'h{0:s}_{1:s}'.format(group,cat)
         hidDeepTau2017v2p1VSjet_3[group][cat] =  TH1D(hName+'_DeepTauiD_VSjet_3',hName+'_VSjet_3',256,-0.5,255.5)
         hidDeepTau2017v2p1VSjet_4[group][cat] =  TH1D(hName+'_DeepTauiD_VSjet_4',hName+'_VSjet_4',256,-0.5,255.5)
@@ -783,6 +923,7 @@ for group in groups :
 
         # resume here
         nEvents, totalWeight = 0, 0.
+	sWeight = 0.
         DYJets = ('DYJetsToLL' in nickName and 'M10' not in nickName)
         WJets  = ('WJetsToLNu' in nickName)
         sWeight = sampleWeight[nickName]
@@ -816,10 +957,14 @@ for group in groups :
                 elif e.LHE_Njets  : sWeight = sampleWeight['DYJetsToLL']
                 #print 'will now be using ',sWeight, e.LHE_Njets, nickName
 
-
-            # the pu weight is the e.weight in the ntuples
-            weight = e.weight * e.Generator_weight *sWeight
-            weightFM = e.weight * e.Generator_weight *sWeight
+            if group != 'data':
+		# the pu weight is the e.weight in the ntuples
+		#print 'weights', group, nickName, e.Generator_weight, e.weight, i
+		weight = e.weightPUtrue * e.Generator_weight *sWeight
+		#weight = e.weight * e.Generator_weight 
+		#weight =  e.Generator_weight *sWeight
+		#weightFM = e.Generator_weight *sWeight
+		weightFM = e.weightPUtrue * e.Generator_weight *sWeight
 
 	    ww = 1.
 	    if cat[:2] == 'mm' and  (e.iso_1 > 0.2 or e.iso_2 > 0.2) : continue
@@ -838,14 +983,15 @@ for group in groups :
 	    if cat[2:] == 'em' and   e.mediumId_4 < 1 : continue
 
 
-	    #if abs(e.dZ_3) > 0.05 or abs(e.dZ_4) > 0.05 : continue
+	    if abs(e.dZ_3) > 0.02 or abs(e.dZ_4) > 0.02 : continue
+	    if abs(e.d0_3) > 0.02 or abs(e.d0_4) > 0.02 : continue
 
 
 	    if cat[2:] == 'et' and e.Electron_mvaFall17V2noIso_WP90_3 < 1 : continue
             
-	    if cat[2:] == 'tt' and  (e.idDeepTau2017v2p1VSjet_3 < 15. or e.idDeepTau2017v2p1VSjet_4 < 15.) : continue
-	    if cat[2:] == 'mt' and e.idDeepTau2017v2p1VSjet_4 < 15. : continue
-	    if cat[2:] == 'et' and e.idDeepTau2017v2p1VSjet_4 < 15. : continue
+	    if cat[2:] == 'tt' and  (e.idDeepTau2017v2p1VSjet_3 < WPSR-1 or e.idDeepTau2017v2p1VSjet_4 < WPSR-1.) : continue
+	    if cat[2:] == 'mt' and e.idDeepTau2017v2p1VSjet_4 < WPSR -1. : continue
+	    if cat[2:] == 'et' and e.idDeepTau2017v2p1VSjet_4 < WPSR -1. : continue
 
             if e.isTrig_1 == 0 : continue  
             #if e.isTrig_1 == 0 and e.isDoubleTrig==0: continue  
@@ -894,8 +1040,8 @@ for group in groups :
 			tight2 = e.iso_4< 0.15 and (e.isGlobal_4 > 0 or e.isTracker_4 > 0) and e.mediumId_4 > 0
 
 		if cat[2:] == 'tt' :
-		    if e.gen_match_3 !=5 :  tight1 =  e.idDeepTau2017v2p1VSjet_3 >= 15.
-		    if e.gen_match_4 !=5 :  tight2 =  e.idDeepTau2017v2p1VSjet_4 >= 15.
+		    if e.gen_match_3 !=5 :  tight1 =  e.idDeepTau2017v2p1VSjet_3 >= WPSR-1.
+		    if e.gen_match_4 !=5 :  tight2 =  e.idDeepTau2017v2p1VSjet_4 >= WPSR-1.
 
 		if not tight1 and tight2 : ww = fW1[cat[2:]]
 		if tight1 and not tight2 : ww = fW2[cat[2:]]
@@ -971,6 +1117,12 @@ for group in groups :
 	    metcor = e.met
 	    
 
+	    if cat[:2] == 'mm' :  
+		L1.SetPtEtaPhiM(e.pt_1_tr, e.eta_1_tr,e.phi_1_tr,muonMass)
+		L2.SetPtEtaPhiM(e.pt_2_tr, e.eta_2_tr,e.phi_2_tr,muonMass)
+	    if cat[:2] == 'ee' :  
+		L1.SetPtEtaPhiM(e.pt_1_tr, e.eta_1_tr,e.phi_1_tr,electronMass)
+		L2.SetPtEtaPhiM(e.pt_2_tr, e.eta_2_tr,e.phi_2_tr,electronMass)
             if group != 'data' :
 
 
@@ -980,14 +1132,10 @@ for group in groups :
                 if isW or isDY :
 		    boson = TLorentzVector()
 		    if cat[:2] == 'mm' :  
-			L1.SetPtEtaPhiM(e.pt_1_tr, e.eta_1_tr,e.phi_1_tr,muonMass)
-			L2.SetPtEtaPhiM(e.pt_2_tr, e.eta_2_tr,e.phi_2_tr,muonMass)
 			boson += L1
 			boson += L2
 
 		    if cat[:2] == 'ee' :  
-			L1.SetPtEtaPhiM(e.pt_1_tr, e.eta_1_tr,e.phi_1_tr,electronMass)
-			L2.SetPtEtaPhiM(e.pt_2_tr, e.eta_2_tr,e.phi_2_tr,electronMass)
 			boson += L1
 			boson += L2
                     mett = recoilCorrector.CorrectByMeanResolution( met_x, met_y, boson.Px(), boson.Py(), boson.Px(), boson.Py(), int(njetsforrecoil))
@@ -998,10 +1146,8 @@ for group in groups :
 		    MetVcor.SetPy(mett[1])
                     
             if group != 'data' and (cat[2:] == 'et' or cat[2:]  == 'mt' or  cat[2:] == 'tt') :
-            
                 #print weight, tauSFTool.getSFvsPT(e.pt_3,e.gen_match_3), 'pt', float(e.pt_3), float(e.pt_3_tr), i, 'g_match', e.gen_match_3, nickName
                 #tau energy scale
-                '''
 		if e.gen_match_4 == 2 or e.gen_match_4 == 4 :
 		    if e.decayMode_4 == 1 :  
 		        weight *= weights_muToTauFR['DM1']
@@ -1070,8 +1216,6 @@ for group in groups :
 
 			    tauV3cor  *= (1 +  weights_elTotauES['DM1']*0.01)
 			    MetVcor +=   tauV3*(1 +  weights_elTotauES['DM1']*0.01)
-
-                '''
 		if cat[2:] == 'tt' and e.gen_match_3 == 5 : 
 			weight *= tauSFTool.getSFvsPT(e.pt_3,e.gen_match_3)
 			weightFM *= tauSFTool.getSFvsPT(e.pt_3,e.gen_match_3)
@@ -1089,7 +1233,7 @@ for group in groups :
 			if e.decayMode_4 == 1 : 
 			    e.m_4 =  0.1396  
 			    tauV4cor.SetE(0.1396)
-			MetVcor+=   tauV3 - tauV3cor
+			MetVcor+=   tauV4 - tauV4cor
 
                 #if isW or isDY : print 'try', MetVcor.Pt(), MetV.Pt()
                 '''   
@@ -1104,7 +1248,6 @@ for group in groups :
 		e.eta_4 = tauV4cor.Eta()
 		e.m3_4 = tauV4cor.M()
                 '''
-
 	    eff_trig_d_1, eff_trig_d_2 = 1.,1.
 	    eff_trig_mc_1, eff_trig_mc_2 = 1.,1.
 
@@ -1190,7 +1333,7 @@ for group in groups :
 		    eff_id_mc_4 = sf_MuonId.get_EfficiencyMC(e.pt_4,e.eta_4)
 
 
-	    leptons_sf = float (eff_id_d_1/eff_id_mc_1 * eff_id_d_2/eff_id_mc_2 * eff_id_d_3/eff_id_mc_3 * eff_id_d_4/eff_id_mc_4)
+	    lepton_sf = float (eff_id_d_1/eff_id_mc_1 * eff_id_d_2/eff_id_mc_2 * eff_id_d_3/eff_id_mc_3 * eff_id_d_4/eff_id_mc_4)
 
             #print 'made thus far', leptons_sf
 	    fastMTTmass, fastMTTtransverseMass = -1, -1
@@ -1210,7 +1353,36 @@ for group in groups :
 		    #print hGroup, cat, plotVar, val
 		    #if val < hGroup][cat][plotVar].GetNbinsX() * hGroup][cat][plotVar].GetBinWidth(1) : hMC[hGroup][cat][plotVar].Fill(val,ww*trigw_)
 		    #else : hMC[hGroup][cat][plotVar].Fill(val,ww*trigw_)
+            
+            tauV = tauV3cor + tauV4cor
+            LeptV = L1+ L2
+
+            dRl1H = DRobj (L1.Eta(), L1.Phi(), tauV.Eta(), tauV.Phi())
+            dRl2H = DRobj (L2.Eta(), L2.Phi(), tauV.Eta(), tauV.Phi())
+            dRlH = DRobj (LeptV.Eta(), LeptV.Phi(), tauV.Eta(), tauV.Phi())
+	    hdR_l1H[hGroup][cat].Fill(dRl1H, weight *trigw *lepton_sf)
+	    hdR_l2H[hGroup][cat].Fill(dRl2H, weight *trigw *lepton_sf)
+	    hdR_lH[hGroup][cat].Fill(dRlH, weight *trigw *lepton_sf)
+
+            dPhil1H = DPhiobj (L1.Phi(), tauV.Phi())
+            dPhil2H = DPhiobj (L2.Phi(), tauV.Phi())
+            dPhilH = DPhiobj ( LeptV.Phi(), tauV.Phi())
+
+	    hdPhi_l1H[hGroup][cat].Fill(dPhil1H, weight *trigw *lepton_sf)
+	    hdPhi_l2H[hGroup][cat].Fill(dPhil2H, weight *trigw *lepton_sf)
+	    hdPhi_lH[hGroup][cat].Fill(dPhilH, weight *trigw *lepton_sf)
+
+            dEtal1H = deltaEta(L1.Px(), L1.Py(), L1.Pz(), tauV.Px(), tauV.Py(), tauV.Pz())
+            dEtal2H = deltaEta(L2.Px(), L2.Py(), L2.Pz(), tauV.Px(), tauV.Py(), tauV.Pz())
+            dEtalH = deltaEta(LeptV.Px(), LeptV.Py(), LeptV.Pz(), tauV.Px(), tauV.Py(), tauV.Pz())
+	    hdEta_l1H[hGroup][cat].Fill(dEtal1H, weight *trigw *lepton_sf)
+	    #print dEtal1H, L1.Eta() - L2.Eta()
+	    hdEta_l2H[hGroup][cat].Fill(dEtal2H, weight *trigw *lepton_sf)
+	    hdEta_lH[hGroup][cat].Fill(dEtalH, weight *trigw *lepton_sf)
+
 	    hm_sv_new[hGroup][cat].Fill(fastMTTmass,weight *trigw *lepton_sf)
+	    hH_LT[hGroup][cat].Fill(H_LT,weight *trigw *lepton_sf)
+	    hH_LT_FM[hGroup][cat].Fill(H_LT,weightFM *trigw *lepton_sf)
 	    hmt_sv_new[hGroup][cat].Fill(fastMTTtransverseMass,weight *trigw *lepton_sf)
             hidDeepTau2017v2p1VSjet_3[hGroup][cat].Fill((e.idDeepTau2017v2p1VSjet_3), weight *trigw *lepton_sf)
             hidDeepTau2017v2p1VSjet_4[hGroup][cat].Fill((e.idDeepTau2017v2p1VSjet_4), weight *trigw *lepton_sf)
@@ -1218,13 +1390,16 @@ for group in groups :
             hidDeepTau2017v2p1VSmu_4[hGroup][cat].Fill((e.idDeepTau2017v2p1VSmu_4), weight *trigw *lepton_sf)
             hidDeepTau2017v2p1VSe_3[hGroup][cat].Fill((e.idDeepTau2017v2p1VSe_3), weight *trigw *lepton_sf)
             hidDeepTau2017v2p1VSe_4[hGroup][cat].Fill((e.idDeepTau2017v2p1VSe_4), weight *trigw *lepton_sf)
+            if group != 'data' : 
+	        hLeptonW[group][cat].Fill(lepton_sf)
+                hTriggerW[group][cat].Fill(trigw)
                     
 
 	    nEvents += 1
 
-	print("{0:30s} {1:7d} {2:10.6f} {3:5d} {4:8.3f}".format(nickName,nentries,sampleWeight[nickName],nEvents,totalWeight))
         
          
+
 
         for icat, cat in cats.items()[0:8] : 
 	    nn = nickName
@@ -1248,7 +1423,10 @@ for group in groups :
 
             fOut.cd()
             hCutFlow[cat][nickName].Write()
+            #hW[cat][nickName].SetName('hWeights_'+cat+'_'+nn)
+            #hW[cat][nickName].Write()
         
+	print("{0:30s} {1:7d} {2:10.6f} {3:5d}".format(nickName,nentries,sampleWeight[nickName],nEvents))
 
         
         inFile.Close()
@@ -1258,9 +1436,34 @@ for group in groups :
     for cat in cats.values()[0:8] : 
         OverFlow(hm_sv_new[group][cat])
         OverFlow(hmt_sv_new[group][cat])
+        OverFlow(hH_LT[group][cat])
+        OverFlow(hH_LT_FM[group][cat])
+        OverFlow(hdPhi_l1H[group][cat])
+        OverFlow(hdPhi_l2H[group][cat])
+        OverFlow(hdPhi_lH[group][cat])
+        OverFlow(hdR_l1H[group][cat])
+        OverFlow(hdR_l2H[group][cat])
+        OverFlow(hdR_lH[group][cat])
+        OverFlow(hdEta_l1H[group][cat])
+        OverFlow(hdEta_l2H[group][cat])
+        OverFlow(hdEta_lH[group][cat])
+
         hm_sv_new[group][cat].GetXaxis().SetTitle('m_sv(new)  [GeV]')
         hmt_sv_new[group][cat].GetXaxis().SetTitle('mt_sv(new)  [GeV]')
         hm_sv_new[group][cat].Write()
+        hdPhi_l1H[group][cat].Write()
+        hdPhi_l2H[group][cat].Write()
+        hdPhi_lH[group][cat].Write()
+        hdR_l1H[group][cat].Write()
+        hdR_l2H[group][cat].Write()
+        hdR_lH[group][cat].Write()
+
+        hdEta_l1H[group][cat].Write()
+        hdEta_l2H[group][cat].Write()
+        hdEta_lH[group][cat].Write()
+
+        hH_LT[group][cat].Write()
+        hH_LT_FM[group][cat].Write()
         hmt_sv_new[group][cat].Write()
         hidDeepTau2017v2p1VSjet_3[group][cat].Write()
         hidDeepTau2017v2p1VSjet_4[group][cat].Write()
@@ -1268,6 +1471,8 @@ for group in groups :
         hidDeepTau2017v2p1VSmu_4[group][cat].Write()
         hidDeepTau2017v2p1VSe_3[group][cat].Write()
         hidDeepTau2017v2p1VSe_4[group][cat].Write()
+        hLeptonW[group][cat].Write()
+        hTriggerW[group][cat].Write()
         for plotVar in plotSettings:
             OverFlow(hMC[group][cat][plotVar])
             hMC[group][cat][plotVar].Write()
