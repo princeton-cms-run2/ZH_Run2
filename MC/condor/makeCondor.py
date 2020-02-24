@@ -84,9 +84,11 @@ for nFile in range(0, len(dataset),mjobs) :
     for j in range(0,maxx) :
         #print 'shoud see', nFile+maxx, maxx, len(dataset)
         fileloop=dataset[nFile:nFile+maxx][j]
-        outLines.append("xrdcp root://cms-xrd-global.cern.ch/{0:s} inFile.root\n".format(fileloop)) 
+        if 'lpcsusyhiggs' not in fileName : outLines.append("xrdcp root://cms-xrd-global.cern.ch/{0:s} inFile.root\n".format(fileloop)) 
+        else : outLines.append("xrdcp root://cmsxrootd.fnal.gov/{0:s} inFile.root\n".format(fileloop)) 
         outFileName = "{0:s}_{1:03d}.root".format(args.nickName,nFile+j)
-        outLines.append("python ZH.py -f inFile.root -o {0:s} --nickName {1:s} -y {2:s} -s {3:s} -w 1\n".format(outFileName,args.nickName, args.year, args.selection))
+        if 'ZPeak' not in args.selection :  outLines.append("python ZH.py -f inFile.root -o {0:s} --nickName {1:s} -y {2:s} -s {3:s} -w 1\n".format(outFileName,args.nickName, args.year, args.selection))
+        else : outLines.append("python ZPeak.py -f inFile.root -o {0:s} --nickName {1:s} -y {2:s} -s {3:s} -w 1\n".format(outFileName,args.nickName, args.year, args.selection))
         outLines.append("rm inFile.root\n")
 
 
@@ -126,7 +128,7 @@ for file in scriptList :
     outLines.append('Log = {0:s}.log\n'.format(base))
     print("dir={0:s}".format(dir))
     #outLines.append('transfer_input_files = {0:s}ZH.py, {0:s}MC_{1:s}.root, {0:s}data_pileup_{1:s}.root, {0:s}MCsamples_{1:s}.csv, {0:s}ScaleFactor.py, {0:s}SFs.tar.gz, {0:s}cuts_{2:s}.yaml, '.format(dir,args.year, args.selection))
-    outLines.append('transfer_input_files = {0:s}ZH.py, {0:s}MC_{1:s}.root, {0:s}data_pileup_{1:s}.root, {0:s}MCsamples_{1:s}.csv, {0:s}cuts_{2:s}.yaml, '.format(dir,args.year, args.selection))
+    outLines.append('transfer_input_files = {0:s}ZH.py, {0:s}ZPeak.py, {0:s}MC_{1:s}.root, {0:s}data_pileup_{1:s}.root, {0:s}MCsamples_{1:s}.csv, {0:s}cuts_{2:s}.yaml, '.format(dir,args.year, args.selection))
     #outLines.append('{0:s}*txt, '.format(dirData))
     outLines.append('{0:s}tauFun.py, {0:s}generalFunctions.py, {0:s}outTuple.py,'.format(funcsDir))
     outLines.append('{0:s}FastMTT.h, {0:s}MeasuredTauLepton.h, {0:s}svFitAuxFunctions.h,'.format(SVFitDir)) 

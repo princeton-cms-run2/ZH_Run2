@@ -161,12 +161,16 @@ for count, e in enumerate(inTree) :
         #print("Event not in JSON: Run:{0:d} LS:{1:d}".format(e.run,e.luminosityBlock))
         continue
 
-    for cat in cats: cutCounter[cat].count('InJSON')
+    for cat in cats: 
+        cutCounter[cat].count('InJSON')
+	if  MC :   cutCounterGenWeight[cat].countGenWeight('InJSON', e.genWeight)
     
     MetFilter = GF.checkMETFlags(e,args.year)
     if MetFilter : continue
     
-    for cat in cats: cutCounter[cat].count('METfilter') 
+    for cat in cats: 
+        cutCounter[cat].count('METfilter') 
+	if  MC :   cutCounterGenWeight[cat].countGenWeight('METfilter', e.genWeight)
 
     if unique :
         if e.event in uniqueEvents :
@@ -209,6 +213,7 @@ for count, e in enumerate(inTree) :
                     if MC : GF.printMC(e)
                 continue
             cutCounter[cat].count('GoodLeptons')
+	    if  MC :   cutCounterGenWeight[cat].countGenWeight('GoodLeptons', e.genWeight)
 
             pairList, lepList = tauFun.findZ(goodElectronList,[], e)
             if len(lepList) != 2 :
@@ -222,6 +227,7 @@ for count, e in enumerate(inTree) :
         if lepMode == 'mm' :
             if len(goodMuonList) < 2 : continue
             cutCounter[cat].count('GoodLeptons')
+	    if  MC :   cutCounterGenWeight[cat].countGenWeight('GoodLeptons', e.genWeight)
 
             pairList, lepList = tauFun.findZ([],goodMuonList, e)
             if len(lepList) != 2 : continue
@@ -335,7 +341,9 @@ for cat in cats :
     hNameW="hCutFlowWeighted_"+str(cat)
     hCutFlow.append( TH1D(hName,hName,15,0.5,15.5))
     if MC  : hCutFlowW.append( TH1D(hNameW,hNameW,15,0.5,15.5))
-    lcount=len(cutCounter[cat].getYield())
+
+    lcount=len(cutCounter[cat].getYield()) #lcount stands for how many different values you have
+    print lcount, cat
     for i in range(lcount) :
         #hCutFlow[cat].Fill(1, float(cutCounter[cat].getYield()[i]))
         yields = cutCounter[cat].getYield()[i]
