@@ -1,7 +1,5 @@
 # output ntuple for H->tautau analysis for CMSSW_10_2_X
 
-
-
 from ROOT import TLorentzVector, TH1
 from math import sqrt, sin, cos, pi
 import tauFun 
@@ -9,7 +7,6 @@ import ROOT
 import os
 import sys
 import generalFunctions as GF
-
 
 class outTuple() :
     
@@ -658,13 +655,36 @@ class outTuple() :
         e = entry
 	bits=[]
         if year == 2016 :
-            bits = [e.HLT_Ele27_eta2p1_WPTight_Gsf, e.HLT_Ele25_eta2p1_WPTight_Gsf, e.HLT_IsoMu24, e.HLT_IsoTkMu24, e.HLT_IsoMu27,
-                    e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ, e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ,
-                    e.HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ]
+            try : bits.append(e.HLT_Ele27_eta2p1_WPTight_Gsf)
+            except AttributeError : bits.append(False) 
+            try : bits.append(e.HLT_Ele25_eta2p1_WPTight_Gsf)
+            except AttributeError : bits.append(False) 
+            try : bits.append(e.HLT_IsoMu24)
+            except AttributeError : bits.append(False) 
+            try : bits.append(e.HLT_IsoTkMu24)
+            except AttributeError : bits.append(False) 
+            try : bits.append(e.HLT_IsoMu27)
+            except AttributeError : bits.append(False) 
+            try : bits.append(e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ)
+            except AttributeError : bits.append(False) 
+            try : bits.append(e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ)
+            except AttributeError : bits.append(False) 
+            try : bits.append(e.HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ)
+            except AttributeError : bits.append(False) 
+
         if (year == 2017 or year == 2018) :
-            bits = [e.HLT_Ele35_WPTight_Gsf, e.HLT_Ele32_WPTight_Gsf, e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL,
-                    e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ, e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass8,
-                    e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass3p8 ]
+            try : bits.append(e.HLT_Ele35_WPTight_Gsf)
+            except AttributeError : bits.append(False)
+            try : bits.append(e.HLT_Ele32_WPTight_Gsf)
+            except AttributeError : bits.append(False)
+            try : bits.append(e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL)
+            except AttributeError : bits.append(False)
+            try : bits.append(e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ)
+            except AttributeError : bits.append(False)
+            try : bits.append(e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass8)
+            except AttributeError : bits.append(False)
+            try : bits.append(e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass3p8)
+            except AttributeError : bits.append(False)
 
         self.triggerWord[0] = 0
         for i, bit in enumerate(bits) :
