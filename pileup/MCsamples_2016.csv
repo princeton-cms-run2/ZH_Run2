@@ -19,7 +19,6 @@ ST_tW_antitop,Reducible,35.85,997870.0,997870.0,,/ST_tW_antitop_5f_DS_inclusiveD
 ST_tW_top,Reducible,35.85,1000000.0,999999.0,,/ST_tW_top_5f_DS_inclusiveDecays_13TeV-powheg-pythia8_TuneCUETP8M1/alkaloge-Summer2016_nAODv5_DeepTID_v2p1-cb78e6d6915917e4b63fd5940fa9ea0f/USER
 ST_t_antitop,Reducible,80.95,38811017.0,38811011.0,,/ST_t-channel_antitop_4f_inclusiveDecays_13TeV-powhegV2-madspin-pythia8_TuneCUETP8M1/RunIISummer16NanoAODv5_PUMoriond17_v1-DeepTauv2p1_TauPOG-v1/USER
 ST_t_top,Reducible,136.02,67105876.0,67105866.0,,/ST_t-channel_top_4f_inclusiveDecays_13TeV-powhegV2-madspin-pythia8_TuneCUETP8M1/RunIISummer16NanoAODv5_PUMoriond17_v1-DeepTauv2p1_TauPOG-v1/USER
-TTGamma_Hadr,Rare,0.7953,4966500.0,4966500.0,,/TTGamma_Hadronic_TuneCUETP8M2T4_13TeV-amcatnlo-pythia8/alkaloge-Summer2016_nAODv5_DeepTID_v2p1-cb78e6d6915917e4b63fd5940fa9ea0f/USER
 TTGamma_1LT,Rare,0.7659,4711856.0,4711856.0,,/TTGamma_SingleLeptFromT_TuneCUETP8M2T4_13TeV-amcatnlo-pythia8/alkaloge-Summer2016_nAODv5_DeepTID_v2p1-cb78e6d6915917e4b63fd5940fa9ea0f/USER
 TTGamma_1LTbar,Rare,0.7659,4873181.0,4873181.0,,/TTGamma_SingleLeptFromTbar_TuneCUETP8M2T4_13TeV-amcatnlo-pythia8/alkaloge-Summer2016_nAODv5_DeepTID_v2p1-cb78e6d6915917e4b63fd5940fa9ea0f/USER
 TTGamma_2L,Rare,0.6343,4773650.0,4773648.0,,/TTGamma_Dilept_TuneCUETP8M2T4_13TeV-amcatnlo-pythia8/alkaloge-Summer2016_nAODv5_DeepTID_v2p1-cb78e6d6915917e4b63fd5940fa9ea0f/USER
@@ -45,11 +44,9 @@ W3JetsToLNuext,Reducible,992.5,39501912.0,39501903.0,,/W3JetsToLNu_TuneCUETP8M1_
 W4JetsToLNu,Reducible,604,9116657.0,9116656.0,,/W4JetsToLNu_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISummer16NanoAODv5_PUMoriond17_v2-DeepTauv2p1_TauPOG-v1/USER
 W4JetsToLNuext1,Reducible,604,2073275.0,2073275.0,,/W4JetsToLNu_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISummer16NanoAODv5_PUMoriond17_ext1_v2-DeepTauv2p1_TauPOG-v1/USER
 W4JetsToLNuext2,Reducible,604,18751462.0,18751461.0,,/W4JetsToLNu_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISummer16NanoAODv5_PUMoriond17_ext2_v1-DeepTauv2p1_TauPOG-v1/USER
-WJetsToLNu,Reducible,61526.7,29514020.0,29514015.0,,/WJetsToLNu_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISummer16NanoAODv5_PUMoriond17_v2-DeepTauv2p1_TauPOG-v1/USER
 WW,Rare,64.3,994012.0,994032.2,,/WW_TuneCUETP8M1_13TeV-pythia8/RunIISummer16NanoAODv5_PUMoriond17_v2-DeepTauv2p1_TauPOG-v1/USER
 WWext,Rare,64.3,6988168.0,6988277.1,,/WW_TuneCUETP8M1_13TeV-pythia8/RunIISummer16NanoAODv5_PUMoriond17_ext1_v2-DeepTauv2p1_TauPOG-v1/USER
 WZext,Rare,23.43,2997571.0,2997571.0,,/WZ_TuneCUETP8M1_13TeV-pythia8/RunIISummer16NanoAODv5_PUMoriond17_ext1_v2-DeepTauv2p1_TauPOG-v1/USER
-WJetsToLNuext,Reducible,61526.7,57402435.0,57402424.0,,/WJetsToLNu_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISummer16NanoAODv5_PUMoriond17_ext2_v2-DeepTauv2p1_TauPOG-v1/USER
 WminusHToTauTau,Signal5,,445200.0,237055.2,,/WminusHToTauTau_M125_13TeV_powheg_pythia8/alkaloge-Summer2016_nAODv5_DeepTID_v2p1-cb78e6d6915917e4b63fd5940fa9ea0f/USER
 WplusHToTauTau,Signal6,,437656.0,372379.7,,/WplusHToTauTau_M125_13TeV_powheg_pythia8/alkaloge-Summer2016_nAODv5_DeepTID_v2p1-cb78e6d6915917e4b63fd5940fa9ea0f/USER
 ZHToTauTau,Signal7,0.0593,599803.0,451664.6,,/ZHToTauTau_M125_13TeV_powheg_pythia8/alkaloge-Summer2016_nAODv5_DeepTID_v2p1-cb78e6d6915917e4b63fd5940fa9ea0f/USER
