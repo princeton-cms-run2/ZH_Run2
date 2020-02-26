@@ -220,12 +220,6 @@ for count, e in enumerate(inTree) :
             cutCounter[cat].count('GoodLeptons')
 
             pairList, lepList = tauFun.findZ(goodElectronList,[], e)
-            if len(lepList) != 2 :
-                if unique :
-                    print("LepList Fail: : Event ID={0:d} cat={1:s}".format(e.event,cat))
-                    GF.printEvent(e)
-                    if MC : GF.printMC(e)
-                continue
             
         
         if lepMode == 'mm' :
@@ -234,10 +228,13 @@ for count, e in enumerate(inTree) :
             cutCounter[cat].count('GoodLeptons')
 
             pairList, lepList = tauFun.findZ([],goodMuonList, e)
-            if len(lepList) != 2 : continue
+            
+        if len(lepList) != 2 : continue
 
         if len(pairList) < 1 : continue
 
+
+        print lepList, '<<<<<<<<<<<<<<<-------------', cat, lepMode
         LepP, LepM = pairList[0], pairList[1]
 	M = (LepM + LepP).M()
 
@@ -245,10 +242,11 @@ for count, e in enumerate(inTree) :
         #    print e.event, 'goodEl', goodElectronList, 'goodM', goodMuonList, 'ExtraEl', goodElectronListExtraLepton, 'ExtraM', goodMuonListExtraLepton, 'taus', tauList,lepMode, cat, M
 
 	#just use the highest pT object for mu/el
+	'''
         if len(goodElectronListExtraLepton) > 0 and len(goodMuonListExtraLepton) > 0 :
 	    if e.Electron_pt[goodElectronListExtraLepton[0]] > e.Muon_pt[goodMuonListExtraLepton[0]] : goodMuonListExtraLepton = []
 	    else : goodElectronListExtraLepton = []
-
+        '''
 
         if lepMode == 'ee' :
             for cat in cats[:4] : 
@@ -294,7 +292,6 @@ for count, e in enumerate(inTree) :
 	    if len(goodElectronListExtraLepton) == 0 and len(goodMuonListExtraLepton) > 0 : cat = cat+'m'
             '''
 
-            #if e.nbtag == 0 : continue
             if len(goodMuonListExtraLepton) == 0 and len(goodElectronListExtraLepton) == 0 and len(tauList) == 0 : continue
 
             if not MC : isMC = False

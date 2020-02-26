@@ -1,5 +1,7 @@
 # output ntuple for H->tautau analysis for CMSSW_10_2_X
 
+
+
 from ROOT import TLorentzVector, TH1
 from math import sqrt, sin, cos, pi
 import tauFun 
@@ -7,6 +9,7 @@ import ROOT
 import os
 import sys
 import generalFunctions as GF
+
 
 class outTuple() :
     
@@ -690,6 +693,7 @@ class outTuple() :
         for i, bit in enumerate(bits) :
             if bit : self.triggerWord[0] += 2**i
        
+       
         self.decayMode_3[0]        = -1
         self.idDecayModeNewDMs_3[0]= -1
         self.idDeepTau2017v2p1VSe_3[0] = -1
@@ -1179,7 +1183,7 @@ class outTuple() :
         hltListLep  = []
 
         #channel_ll = 'mm' or 'ee'
-        channel_ll = cat[:-2]
+        channel_ll = cat[:2]
 
 	TrigListLep, hltListLep  = GF.findSingleLeptTrigger(lepList, entry, channel_ll, era)
 
@@ -1218,9 +1222,9 @@ class outTuple() :
         self.entries += 1
 
         self.run[0]  = entry.run
-        self.nElectron[0]  = entry.nElectron
-        self.nMuon[0]  = entry.nMuon
-        self.nTau[0]  = entry.nTau
+        self.nElectron[0]  = nelectrons
+        self.nMuon[0]  = nmuons
+        self.nTau[0]  = ntaus
         self.lumi[0] = entry.luminosityBlock 
         self.evt[0]  = entry.event
         self.iso_1[0]  = -99
@@ -1405,6 +1409,8 @@ class outTuple() :
 	    lep_index_1 = lepList[1]
 	    lep_index_2 = lepList[0]
 	#relIso 
+	#print 'inside', lepList, lep_index_1, lep_index_2, lepList[1], lepList[0], 'nm', nmuons, 'ne', nelectrons, 'nt', ntaus
+
 	if channel_ll == 'ee' : 
       
             self.iso_1[0]  = entry.Electron_pfRelIso03_all[lep_index_1]
