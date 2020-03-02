@@ -198,8 +198,10 @@ for count, e in enumerate(inTree) :
 	        if  MC :   cutCounterGenWeight[cat].countGenWeight('LeptonCount', e.genWeight)
 
 	lepList=[]
-
 	pairList=[]
+
+	lepList_2=[]
+	pairList_2=[]
 
         goodElectronList = tauFun.makeGoodElectronList(e)
         goodMuonList = tauFun.makeGoodMuonList(e)
@@ -229,25 +231,21 @@ for count, e in enumerate(inTree) :
 
             pairList, lepList = tauFun.findZ([],goodMuonList, e)
             
-        if len(lepList) != 2 : continue
+        #if len(lepList) != 2 : continue
 
-        if len(pairList) < 1 : continue
+        #if len(pairList) < 1 : continue
 
 
-        print lepList, '<<<<<<<<<<<<<<<-------------', cat, lepMode
-        LepP, LepM = pairList[0], pairList[1]
-	M = (LepM + LepP).M()
+        newList=[]
+        #print lepList, '<<<<<<<<<<<<<<<-------------', cat, lepMode
+        LepP, LepM = TLorentzVector(), TLorentzVector()
+        M=0
+        if len(pairList)>1 : 
+            LepP, LepM = pairList[0], pairList[1]
+	    M = (LepM + LepP).M()
 
-        #if (len( goodMuonList)>1 or len( goodElectronList) >0 ) and len(goodElectronListExtraLepton)> 0 or len(goodMuonListExtraLepton) > 0 or len(tauList): 
-        #    print e.event, 'goodEl', goodElectronList, 'goodM', goodMuonList, 'ExtraEl', goodElectronListExtraLepton, 'ExtraM', goodMuonListExtraLepton, 'taus', tauList,lepMode, cat, M
-
-	#just use the highest pT object for mu/el
-	'''
-        if len(goodElectronListExtraLepton) > 0 and len(goodMuonListExtraLepton) > 0 :
-	    if e.Electron_pt[goodElectronListExtraLepton[0]] > e.Muon_pt[goodMuonListExtraLepton[0]] : goodMuonListExtraLepton = []
-	    else : goodElectronListExtraLepton = []
-        '''
-
+        #print e.event, 'goodEl', goodElectronList, 'goodM', goodMuonList, 'ExtraEl', goodElectronListExtraLepton, 'ExtraM', goodMuonListExtraLepton, 'taus', tauList,lepMode, cat, M, 'pair ?', lepList
+        
         if lepMode == 'ee' :
             for cat in cats[:4] : 
 	        cutCounter[cat].count('LeptonPair')
@@ -256,9 +254,55 @@ for count, e in enumerate(inTree) :
             for cat in cats[4:] : 
 	        cutCounter[cat].count('LeptonPair')
 	        if  MC :   cutCounterGenWeight[cat].countGenWeight('LeptonPair', e.genWeight)
+
+        # in case we have more than two good El/Muon, move the extra lepton to the ExtraLepton list and check if satisfies extra set of requirements
+        if len(goodMuonList)>2 and lepMode == 'mm':
+            for i in goodMuonList :
+                del newList[:]
+                if i not in lepList and i not in goodMuonListExtraLepton: 
+                    newList.append(i)
+                    iL= tauFun.makeGoodMuonListExtraLepton(e,newList)
+                    if len(iL)>0 : 
+                        goodMuonListExtraLepton.append(i)
+                        goodMuonList.remove(i)
+                        #print e.event, '-----------again------------- goodEl', goodElectronList, 'goodM', goodMuonList, 'ExtraEl', goodElectronListExtraLepton, 'ExtraM', goodMuonListExtraLepton, 'taus', tauList,lepMode, cat, M, 'pair ?', lepList, 'hadd to remove', i
+
+        if len(goodElectronList)>2 and lepMode == 'ee':
+            for j in goodElectronList :
+                del newList[:]
+                if j not in lepList and j not in goodElectronListExtraLepton:
+                    newList.append(j)
+                    iLj= tauFun.makeGoodElectronListExtraLepton(e,newList)
+                    if len(iLj)>0 : 
+                        goodElectronListExtraLepton.append(j)
+                        #print e.event, '-----------again  EE------------- goodEl', goodElectronList, 'goodM', goodMuonList, 'ExtraEl', goodElectronListExtraLepton, 'ExtraM', goodMuonListExtraLepton, 'taus', tauList,lepMode, 'Mass-------', M, 'pair ?', lepList, 'hadd to remove', j, newList
+                        goodElectronList.remove(j)
+
+       
+	#just use the highest pT object for mu/el
                 
-        if not tauFun.mllCut(M) :
-            continue 
+
+	if len(goodMuonListExtraLepton) == 0 and len(goodElectronListExtraLepton) == 0 and len(tauList) == 0 : continue
+
+
+        LepP_2, LepM_2 = TLorentzVector(), TLorentzVector()
+        M_2 = 0
+        if len(goodElectronListExtraLepton)>1 : 
+            pairList_2, lepList_2 = tauFun.findZ(goodElectronListExtraLepton, [],e)
+
+        if len(goodMuonListExtraLepton)>1 : 
+            pairList_2, lepList_2 = tauFun.findZ([], goodMuonListExtraLepton,e)
+
+
+	if len(pairList_2) > 1 :
+	    LepP_2, LepM_2 = pairList_2[0], pairList_2[1]
+	    M_2 = (LepM_2 + LepP_2).M()
+
+
+        if len(pairList)<1 and len(pairList_2)<1 : continue
+
+        if not tauFun.mllCut(M) and not tauFun.mllCut(M_2): continue 
+	#print 'and now lepList', lepList, 'cat=====', lepMode, 'lepList_2', lepList_2, 'mass', M, 'mass_2', M_2 , 'extraEl==========>', len(goodElectronListExtraLepton), 'extraMu=========>', len(goodMuonListExtraLepton), len(tauList)
 
         if lepMode == 'ee' :
             for cat in cats[:4]: 
@@ -279,33 +323,20 @@ for count, e in enumerate(inTree) :
 	    outTuple.setWeight(1.) 
 	    outTuple.setWeightPU(1.) ##
 	    outTuple.setWeightPUtrue(1.)
+        
 
+	if not MC : isMC = False
 
-        for cat in ['ee','mm'] :
+	outTuple.Fill3L(e,lepMode,LepP,LepM,lepList,lepList_2,goodElectronListExtraLepton, goodMuonListExtraLepton, tauList, isMC,era) 
 
-            '''            
-	    if len(goodElectronListExtraLepton) > 0 and len(goodMuonListExtraLepton) > 0 :
-                if e.Electron_pt[goodElectronListExtraLepton[0]]  > e.Muon_pt[goodMuonListExtraLepton[0]] : cat = cat+'e'
-                else : cat = cat+'m'
-
-	    if len(goodElectronListExtraLepton) > 0 and len(goodMuonListExtraLepton) == 0 : cat = cat+'e'
-	    if len(goodElectronListExtraLepton) == 0 and len(goodMuonListExtraLepton) > 0 : cat = cat+'m'
-            '''
-
-            if len(goodMuonListExtraLepton) == 0 and len(goodElectronListExtraLepton) == 0 and len(tauList) == 0 : continue
-
-            if not MC : isMC = False
-
-            outTuple.Fill3L(e,cat,LepP,LepM,lepList,goodElectronListExtraLepton, goodMuonListExtraLepton, tauList, isMC,era) 
-
-            if maxPrint > 0 :
-                maxPrint -= 1
-                print("\n\nGood Event={0:d} cat={1:s}  MCcat={2:s}".format(e.event,cat,GF.eventID(e)))
-                print("goodMuonList={0:s} goodElectronList={1:s} Mll={2:.1f} bestTauPair={3:s}".format(
-                    str(goodMuonList),str(goodElectronList),M,str(bestTauPair)))
-                print("Lep1.pt() = {0:.1f} Lep2.pt={1:.1f}".format(pairList[0].Pt(),pairList[1].Pt()))
-                GF.printEvent(e)
-                print("Event ID={0:s} cat={1:s}".format(GF.eventID(e),cat))
+	if maxPrint > 0 :
+	    maxPrint -= 1
+	    print("\n\nGood Event={0:d} cat={1:s}  MCcat={2:s}".format(e.event,cat,GF.eventID(e)))
+	    print("goodMuonList={0:s} goodElectronList={1:s} Mll={2:.1f} bestTauPair={3:s}".format(
+		str(goodMuonList),str(goodElectronList),M,str(bestTauPair)))
+	    print("Lep1.pt() = {0:.1f} Lep2.pt={1:.1f}".format(pairList[0].Pt(),pairList[1].Pt()))
+	    GF.printEvent(e)
+	    print("Event ID={0:s} cat={1:s}".format(GF.eventID(e),cat))
                 
 
 dT = time.time() - tStart

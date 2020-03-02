@@ -11,6 +11,8 @@ import sys
 import generalFunctions as GF
 
 
+electronMass = 0.0005
+muonMass  = 0.105
 class outTuple() :
     
     def __init__(self,fileName, era):
@@ -82,6 +84,7 @@ class outTuple() :
         self.Electron_mvaFall17V2noIso_WP90_1 = array('f',[0])
         self.Electron_mvaFall17V2noIso_WP90_2 = array('f',[0])
         self.Electron_mvaFall17V2noIso_WP90_3 = array('f',[0])
+        self.Electron_mvaFall17V2noIso_WP90_4 = array('f',[0])
         self.gen_match_3 = array('l',[0])
         self.mediumId_3       = array('f',[0])
         self.mediumPromptId_3       = array('f',[0])
@@ -135,6 +138,24 @@ class outTuple() :
         self.rawMVAnewDM2017v2_4 = array('f',[0])
 
 
+
+        self.pt_5        = array('f',[0])
+        self.phi_5       = array('f',[0])
+        self.eta_5       = array('f',[0])
+        self.m_5         = array('f',[0])
+        self.q_5         = array('f',[0])
+        self.d0_5        = array('f',[0])
+        self.dZ_5      = array('f',[0])
+        self.gen_match_5 = array('l',[0])
+        self.decayMode_5 = array('l',[0])
+
+        self.idDecayModeNewDMs_5 = array('f',[0])
+        self.idDeepTau2017v2p1VSe_5 = array('f',[0])
+        self.idDeepTau2017v2p1VSjet_5 = array('f',[0])
+        self.idDeepTau2017v2p1VSmu_5 = array('f',[0])
+        self.idMVAnewDM2017v2_5 = array('f',[0])
+        self.rawMVAnewDM2017v2_5 = array('f',[0])
+
         self.trigweight_4  = array('f',[0])
         self.idisoweight_4 = array('f',[0])
         self.decayMode_4   = array('l',[0])
@@ -153,6 +174,7 @@ class outTuple() :
         # di-lepton variables.   1 and 2 refer to plus and minus charge
         # ll_lmass is mass of decay lepton 
         self.mll       = array('f',[0])
+        self.mll2       = array('f',[0])
         self.Z_Pt       = array('f',[0])
         self.Z_DR       = array('f',[0])
         self.Z_SS       = array('f',[0])
@@ -288,6 +310,7 @@ class outTuple() :
         self.t.Branch('Electron_mvaFall17V2noIso_WP90_1', self.Electron_mvaFall17V2noIso_WP90_1, 'Electron_mvaFall17V2noIso_WP90_1/F')
         self.t.Branch('Electron_mvaFall17V2noIso_WP90_2', self.Electron_mvaFall17V2noIso_WP90_2, 'Electron_mvaFall17V2noIso_WP90_2/F')
         self.t.Branch('Electron_mvaFall17V2noIso_WP90_3', self.Electron_mvaFall17V2noIso_WP90_3, 'Electron_mvaFall17V2noIso_WP90_3/F')
+        self.t.Branch('Electron_mvaFall17V2noIso_WP90_4', self.Electron_mvaFall17V2noIso_WP90_4, 'Electron_mvaFall17V2noIso_WP90_4/F')
         self.t.Branch('gen_match_3', self.gen_match_3, 'gen_match_3/l')
         self.t.Branch('mediumId_3', self.mediumId_3, 'mediumId_3/F')
         self.t.Branch('mediumPromptId_3', self.mediumPromptId_3, 'mediumPromptId_3/F')
@@ -344,6 +367,28 @@ class outTuple() :
         self.t.Branch('idisoweight_4', self.idisoweight_4, 'idisoweight_4/F')
         self.t.Branch('decayMode_4',   self.decayMode_4,   'decayMode_4/I')
 
+
+        self.t.Branch('pt_5',        self.pt_5,        'pt_5/F')
+        self.t.Branch('phi_5',       self.phi_5,       'phi_5/F')
+        self.t.Branch('eta_5',       self.eta_5,       'eta_5/F')
+        self.t.Branch('m_5',         self.m_5,         'm_5/F')
+        self.t.Branch('q_5',         self.q_5,         'q_5/F')
+        self.t.Branch('dZ_5',        self.dZ_5,        'dZ_5/F')
+        self.t.Branch('d0_5',        self.d0_5,        'd0_5/F')
+        self.t.Branch('gen_match_5', self.gen_match_5, 'gen_match_5/l')
+        self.t.Branch('decayMode_5',   self.decayMode_5,   'decayMode_5/I')
+
+
+        self.t.Branch('idDecayModeNewDMs_5', self.idDecayModeNewDMs_5, 'idDecayModeNewDMs_5/F')
+        self.t.Branch('idDeepTau2017v2p1VSe_5', self.idDeepTau2017v2p1VSe_5, 'idDeepTau2017v2p1VSe_5/F')
+        self.t.Branch('idDeepTau2017v2p1VSjet_5', self.idDeepTau2017v2p1VSjet_5, 'idDeepTau2017v2p1VSjet_5/F')
+        self.t.Branch('idDeepTau2017v2p1VSmu_5', self.idDeepTau2017v2p1VSmu_5, 'idDeepTau2017v2p1VSmu_5/F')
+        self.t.Branch('idMVAnewDM2017v2_5', self.idMVAnewDM2017v2_5, 'idMVAnewDM2017v2_5/F')
+        self.t.Branch('rawMVAnewDM2017v2_5', self.rawMVAnewDM2017v2_5, 'rawMVAnewDM2017v2_5/F')
+
+
+
+
         # di-tau variables
         self.t.Branch('pt_tt', self.pt_tt, 'pt_tt/F')
         self.t.Branch('mt_tot', self.mt_tot, 'mt_tot/F')
@@ -355,6 +400,7 @@ class outTuple() :
 
         # di-lepton variables. 
         self.t.Branch('mll',         self.mll,         'mll/F')   
+        self.t.Branch('mll2',         self.mll2,         'mll2/F')   
         self.t.Branch('Z_Pt',       self.Z_Pt,       'Z_Pt/F')   
         self.t.Branch('Z_DR',       self.Z_DR,       'Z_DR/F')   
         self.t.Branch('Z_SS',       self.Z_SS,       'Z_SS/F')   
@@ -1169,7 +1215,7 @@ class outTuple() :
         #self.weight[0] = 1.
         return
 
-    def Fill3L(self, entry, cat, LepP, LepM, lepList, ElList, MuList, TauList, isMC, era ) :
+    def Fill3L(self, entry, cat, LepP, LepM, lepList, lepList_2, ElList, MuList, TauList, isMC, era ) :
         ''' - jt1 point to the selected tau candidates according to the table below.
             - LepP and LepM are TLorentz vectors for the positive and negative members of the dilepton pair
         ''' 
@@ -1177,7 +1223,7 @@ class outTuple() :
         nmuons = len(MuList)
         ntaus = len(TauList)
 
-        is_trig_1, is_trig_2, is_Dtrig_1 = 0., 0., 0.
+        is_trig_1, is_trig_2, is_Dtrig_1 = 0,0,0
         TrigListLep = []
         TrigListTau = []
         hltListLep  = []
@@ -1185,11 +1231,11 @@ class outTuple() :
         #channel_ll = 'mm' or 'ee'
         channel_ll = cat[:2]
 
-	TrigListLep, hltListLep  = GF.findSingleLeptTrigger(lepList, entry, channel_ll, era)
+	TrigListLep, hltListLep  = GF.findSingleLeptTrigger(lepList+lepList_2, entry, channel_ll, era)
 
 	TrigListLep = list(dict.fromkeys(TrigListLep))
 
-	TrigListLepD, hltListLepD  = GF.findDoubleLeptTrigger(lepList, entry, channel_ll, era)
+	TrigListLepD, hltListLepD  = GF.findDoubleLeptTrigger(lepList+lepList_2, entry, channel_ll, era)
 
 	TrigListLepD = list(dict.fromkeys(TrigListLepD))
 
@@ -1201,23 +1247,26 @@ class outTuple() :
 	        is_Dtrig_1 = -1
 
 
-        if len(TrigListLep) == 1 :
+        #if len(TrigListLep) == 1 :
 
-	    if lepList[0] == TrigListLep[0] :
-	        is_trig_1 = 1.
-	    else:
-	        is_trig_1 = -1. #that means that the subleading fired the trigger
+	for i in TrigListLep :
+	    is_trig_1 += 2**i
+            #print 'trig_1', i, '2^i', 2**i, entry.event, is_trig_1
+
+	for i in TrigListLepD : 
+	    is_trig_2 += 2**i
+            #print 'trig_2', i, '2^i', 2**i, entry.event, is_trig_2, '===============>', is_trig_1
+	    #else:
+	    #    is_trig_1 = -1. #that means that a subleading lepton fired the trigger
 
 
-        if len(TrigListLep) == 2 :
-            if 'BothLept' in hltListLep :
-	        is_trig_1 = 1.
-	        is_trig_2 = 1.
+        #if len(TrigListLep) == 2 :
+        #    if 'BothLept' in hltListLep :
+	#        is_trig_1 = 1.
+	#        is_trig_2 = 1.
 
 
-        # channel = 'e', 'm'
         channel = cat[-2:]
-        #self.cat[0]  = tauFun.catToNumber3L(cat)
         
         self.entries += 1
 
@@ -1273,17 +1322,101 @@ class outTuple() :
         e = entry
 	bits=[]
         if year == 2016 :
-            bits = [e.HLT_Ele27_eta2p1_WPTight_Gsf, e.HLT_Ele25_eta2p1_WPTight_Gsf, e.HLT_IsoMu24, e.HLT_IsoTkMu24, e.HLT_IsoMu27,
-                    e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ, e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ,
-                    e.HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ]
+            try : bits.append(e.HLT_Ele27_eta2p1_WPTight_Gsf)
+            except AttributeError : bits.append(False) 
+            try : bits.append(e.HLT_Ele25_eta2p1_WPTight_Gsf)
+            except AttributeError : bits.append(False) 
+            try : bits.append(e.HLT_IsoMu24)
+            except AttributeError : bits.append(False) 
+            try : bits.append(e.HLT_IsoTkMu24)
+            except AttributeError : bits.append(False) 
+            try : bits.append(e.HLT_IsoMu27)
+            except AttributeError : bits.append(False) 
+            try : bits.append(e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ)
+            except AttributeError : bits.append(False) 
+            try : bits.append(e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ)
+            except AttributeError : bits.append(False) 
+            try : bits.append(e.HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ)
+            except AttributeError : bits.append(False) 
+
         if (year == 2017 or year == 2018) :
-            bits = [e.HLT_Ele35_WPTight_Gsf, e.HLT_Ele32_WPTight_Gsf, e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL,
-                    e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ, e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass8,
-                    e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass3p8 ]
+            try : bits.append(e.HLT_Ele35_WPTight_Gsf)
+            except AttributeError : bits.append(False)
+            try : bits.append(e.HLT_Ele32_WPTight_Gsf)
+            except AttributeError : bits.append(False)
+            try : bits.append(e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL)
+            except AttributeError : bits.append(False)
+            try : bits.append(e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ)
+            except AttributeError : bits.append(False)
+            try : bits.append(e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass8)
+            except AttributeError : bits.append(False)
+            try : bits.append(e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass3p8)
+            except AttributeError : bits.append(False)
 
         self.triggerWord[0] = 0
         for i, bit in enumerate(bits) :
             if bit : self.triggerWord[0] += 2**i
+
+
+        # Sort the di-lepton system by Pt
+        Lep1, Lep2 = TLorentzVector(), TLorentzVector()
+	lep_index_1 = lepList[0]
+	lep_index_2 = lepList[1]
+
+        if (LepP.Pt() > LepM.Pt()): 
+            Lep1 = LepP
+            Lep2 = LepM
+        else:
+            Lep1 = LepM
+            Lep2 = LepP
+	    lep_index_1 = lepList[1]
+	    lep_index_2 = lepList[0]
+
+        # di-lepton variables.   _p and _m refer to plus and minus charge
+        self.mll[0]       = (Lep1 + Lep2).M()
+        self.Z_DR[0]       = self.getDR(entry,Lep1,Lep2)
+           
+        self.pt_1[0]   = Lep1.Pt()
+        self.phi_1[0]  = Lep1.Phi()
+        self.eta_1[0]  = Lep1.Eta()
+        self.pt_2[0]   = Lep2.Pt()
+        self.phi_2[0]  = Lep2.Phi()
+        self.eta_2[0]  = Lep2.Eta()
+
+	if channel_ll == 'ee' : 
+      
+            self.iso_1[0]  = entry.Electron_pfRelIso03_all[lep_index_1]
+            self.iso_2[0]  = entry.Electron_pfRelIso03_all[lep_index_2]
+            self.q_1[0]  = entry.Electron_charge[lep_index_1]
+            self.q_2[0]  = entry.Electron_charge[lep_index_2]
+            self.d0_1[0]   = entry.Electron_dxy[lep_index_1]
+            self.dZ_1[0]   = entry.Electron_dz[lep_index_1]
+            self.d0_2[0]   = entry.Electron_dxy[lep_index_2]
+            self.dZ_2[0]   = entry.Electron_dz[lep_index_2]
+            self.Electron_mvaFall17V2noIso_WP90_1[0]  = entry.Electron_mvaFall17V2noIso_WP90[lep_index_1]
+            self.Electron_mvaFall17V2noIso_WP90_2[0]  = entry.Electron_mvaFall17V2noIso_WP90[lep_index_2]
+
+	if channel_ll == 'mm' : 
+
+            self.iso_1[0]  = entry.Muon_pfRelIso04_all[lep_index_1]
+	    self.iso_2[0]  = entry.Muon_pfRelIso04_all[lep_index_2]
+	    self.q_1[0]  = entry.Muon_charge[lep_index_1]
+	    self.q_2[0]  = entry.Muon_charge[lep_index_2]
+	    self.d0_1[0]   = entry.Muon_dxy[lep_index_1]
+	    self.dZ_1[0]   = entry.Muon_dz[lep_index_1]
+	    self.d0_2[0]   = entry.Muon_dxy[lep_index_2]
+	    self.dZ_2[0]   = entry.Muon_dz[lep_index_2]
+	    self.looseId_1[0]   = entry.Muon_looseId[lep_index_1] 
+	    self.looseId_2[0]   = entry.Muon_looseId[lep_index_2] 
+	    self.mediumId_1[0]   = entry.Muon_mediumId[lep_index_1] 
+	    self.mediumId_2[0]   = entry.Muon_mediumId[lep_index_2] 
+	    self.mediumPromptId_1[0]   = entry.Muon_mediumPromptId[lep_index_1] 
+	    self.mediumPromptId_2[0]   = entry.Muon_mediumPromptId[lep_index_2] 
+	    self.isGlobal_1[0]   = entry.Muon_isGlobal[lep_index_1] 
+	    self.isGlobal_2[0]   = entry.Muon_isGlobal[lep_index_2] 
+	    self.isTracker_1[0]   = entry.Muon_isTracker[lep_index_1] 
+	    self.isTracker_2[0]   = entry.Muon_isTracker[lep_index_2] 
+
        
         self.decayMode_3[0]        = -1
         self.idDecayModeNewDMs_3[0]= -1
@@ -1315,9 +1448,26 @@ class outTuple() :
         self.ip3d_4[0]          = -1
         self.inTimeMuon_4[0]    = -1
 
+        self.decayMode_5[0]      = -1
+        self.idDecayModeNewDMs_5[0] = -1
+        self.idDeepTau2017v2p1VSe_5[0] = -1
+        self.idDeepTau2017v2p1VSjet_5[0] = -1
+        self.idDeepTau2017v2p1VSmu_5[0] = -1
+        self.idMVAnewDM2017v2_5[0] = -1
+        self.rawMVAnewDM2017v2_5[0] = -1
+
         #print ElList, MuList, TauList
         if nelectrons > 0 :
 	    ie = ElList[0]
+            iee = ElList[0]
+
+            if len(ElList)>1 :
+                if entry.Electron_pt[ElList[0]] > entry.Electron_pt[ElList[1]] : 
+		    ie = ElList[0] 
+		    iee = ElList[1] 
+		else : 
+		    ie = ElList[1] 
+		    iee = ElList[0] 
 
 	    self.pt_3[0]   = entry.Electron_pt[ie]
 	    self.phi_3[0]  = entry.Electron_phi[ie]
@@ -1331,9 +1481,38 @@ class outTuple() :
 	    try : self.gen_match_3[0] = ord(entry.Electron_genPartFlav[ie])
 	    except AttributeError : self.gen_match_3[0] = -1
 
-        if nmuons > 0:
+            if len(ElList) >1:
 
+		self.pt_4[0]   = entry.Electron_pt[iee]
+		self.phi_4[0]  = entry.Electron_phi[iee]
+		self.eta_4[0]  = entry.Electron_eta[iee]
+		self.m_4[0]    = entry.Electron_mass[iee]
+		self.q_4[0]    = entry.Electron_charge[iee]
+		self.d0_4[0]   = entry.Electron_dxy[iee]
+		self.dZ_4[0]   = entry.Electron_dz[iee]
+		self.iso_4[0]  = entry.Electron_pfRelIso03_all[iee]
+		self.Electron_mvaFall17V2noIso_WP90_4[0]  = entry.Electron_mvaFall17V2noIso_WP90[iee]
+		try : self.gen_match_4[0] = ord(entry.Electron_genPartFlav[iee])
+		except AttributeError : self.gen_match_4[0] = -1
+
+                eL1, eL2= TLorentzVector(), TLorentzVector()  
+                eL1.SetPtEtaPhiM(entry.Electron_pt[ElList[0]],entry.Electron_eta[ElList[0]], entry.Electron_phi[ElList[0]], electronMass)
+                eL2.SetPtEtaPhiM(entry.Electron_pt[ElList[1]],entry.Electron_eta[ElList[1]], entry.Electron_phi[ElList[1]], electronMass)
+                self.mll2[0] = (eL1 + eL2).M()
+
+
+        if nmuons > 0:
+            
 	    im = MuList[0]
+            imm = MuList[0]
+
+            if len(MuList)>1 :
+                if  entry.Muon_pt[MuList[0]] > entry.Muon_pt[MuList[1]] : 
+		    im = MuList[0] 
+		    imm = MuList[1] 
+		else : 
+		    im = MuList[1] 
+		    imm = MuList[0] 
 
 	    self.pt_3[0]     = entry.Muon_pt[im]
 	    self.phi_3[0]    = entry.Muon_phi[im]
@@ -1352,6 +1531,32 @@ class outTuple() :
 	    self.inTimeMuon_3[0]    = entry.Muon_inTimeMuon[im]
 	    try : self.gen_match_3[0] = ord(entry.Muon_genPartFlav[im])
 	    except AttributeError : self.gen_match_3[0] = -1
+
+
+            if len(MuList)>1 : 
+
+		self.pt_4[0]     = entry.Muon_pt[imm]
+		self.phi_4[0]    = entry.Muon_phi[imm]
+		self.eta_4[0]    = entry.Muon_eta[imm]
+		self.m_4[0]      = entry.Muon_mass[imm]
+		self.q_4[0]      = entry.Muon_charge[imm]
+		self.d0_4[0]     = entry.Muon_dxy[imm]
+		self.dZ_4[0]     = entry.Muon_dz[imm]
+		self.iso_4[0]    = entry.Muon_pfRelIso04_all[imm]
+		self.mediumId_4[0]      = entry.Muon_mediumId[imm]
+		self.mediumPromptId_4[0]   = entry.Muon_mediumPromptId[imm]
+		self.looseId_4[0]       = entry.Muon_looseId[imm]
+		self.isGlobal_4[0]      = entry.Muon_isGlobal[imm]
+		self.isTracker_4[0]     = entry.Muon_isTracker[imm]
+		self.ip3d_4[0]       = entry.Muon_ip3d[imm]
+		self.inTimeMuon_4[0]    = entry.Muon_inTimeMuon[imm]
+		try : self.gen_match_4[0] = ord(entry.Muon_genPartFlav[imm])
+		except AttributeError : self.gen_match_4[0] = -1
+                eL1, eL2= TLorentzVector(), TLorentzVector()  
+                eL1.SetPtEtaPhiM(entry.Muon_pt[MuList[0]],entry.Muon_eta[MuList[0]], entry.Muon_phi[MuList[0]], muonMass)
+                eL2.SetPtEtaPhiM(entry.Muon_pt[MuList[1]],entry.Muon_eta[MuList[1]], entry.Muon_phi[MuList[1]], muonMass)
+                self.mll2[0] = (eL1 + eL2).M()
+
 
 	    
 	    # Fill variables for Leg3 and Leg4, where 3->tau(had) and 4->tau(had)
@@ -1379,71 +1584,28 @@ class outTuple() :
 
 	    try : self.decayMode_4[0] = int(entry.Tau_decayMode[it])
 	    except AttributeError : self.decayMode_4[0] = -1
+            if len(TauList)>1 :
+                it = TauList[1]
+		self.pt_5[0]     = entry.Tau_pt[it]
+		self.phi_5[0]    = entry.Tau_phi[it]
+		self.eta_5[0]    = entry.Tau_eta[it]
+		self.m_5[0]      = entry.Tau_mass[it]
+		self.q_5[0]      = entry.Tau_charge[it]
+		self.d0_5[0]     = entry.Tau_dxy[it]
+		self.dZ_5[0]     = entry.Tau_dz[it]
+     
 
+		self.idDecayModeNewDMs_5[0] = entry.Tau_idDecayModeNewDMs[it]
+		self.idDeepTau2017v2p1VSe_5[0] = ord(entry.Tau_idDeepTau2017v2p1VSe[it])
+		self.idDeepTau2017v2p1VSjet_5[0] = ord(entry.Tau_idDeepTau2017v2p1VSjet[it])
+		self.idDeepTau2017v2p1VSmu_5[0] = ord(entry.Tau_idDeepTau2017v2p1VSmu[it])
+		self.idMVAnewDM2017v2_5[0] = ord(entry.Tau_idMVAnewDM2017v2[it])
+		self.rawMVAnewDM2017v2_5[0] = entry.Tau_rawMVAnewDM2017v2[it]
+		try : self.gen_match_5[0] = ord(entry.Tau_genPartFlav[it])
+		except AttributeError : self.gen_match_5[0] = -1
 
-        # Sort the di-lepton system by Pt
-        Lep1, Lep2 = TLorentzVector(), TLorentzVector()
-        if (LepP.Pt() > LepM.Pt()): 
-            Lep1 = LepP
-            Lep2 = LepM
-        else:
-            Lep1 = LepM
-            Lep2 = LepP
-
-
-        # di-lepton variables.   _p and _m refer to plus and minus charge
-        self.mll[0]       = (Lep1 + Lep2).M()
-        self.Z_DR[0]       = self.getDR(entry,Lep1,Lep2)
-           
-        self.pt_1[0]   = Lep1.Pt()
-        self.phi_1[0]  = Lep1.Phi()
-        self.eta_1[0]  = Lep1.Eta()
-        self.pt_2[0]   = Lep2.Pt()
-        self.phi_2[0]  = Lep2.Phi()
-        self.eta_2[0]  = Lep2.Eta()
-
-	lep_index_1 = lepList[0]
-	lep_index_2 = lepList[1]
-
-	if (LepP.Pt() < LepM.Pt()):
-	    lep_index_1 = lepList[1]
-	    lep_index_2 = lepList[0]
-	#relIso 
-	#print 'inside', lepList, lep_index_1, lep_index_2, lepList[1], lepList[0], 'nm', nmuons, 'ne', nelectrons, 'nt', ntaus
-
-	if channel_ll == 'ee' : 
-      
-            self.iso_1[0]  = entry.Electron_pfRelIso03_all[lep_index_1]
-            self.iso_2[0]  = entry.Electron_pfRelIso03_all[lep_index_2]
-            self.q_1[0]  = entry.Electron_charge[lep_index_1]
-            self.q_2[0]  = entry.Electron_charge[lep_index_2]
-            self.d0_1[0]   = entry.Electron_dxy[lep_index_1]
-            self.dZ_1[0]   = entry.Electron_dz[lep_index_1]
-            self.d0_2[0]   = entry.Electron_dxy[lep_index_2]
-            self.dZ_2[0]   = entry.Electron_dz[lep_index_2]
-            self.Electron_mvaFall17V2noIso_WP90_1[0]  = entry.Electron_mvaFall17V2noIso_WP90[lep_index_1]
-            self.Electron_mvaFall17V2noIso_WP90_2[0]  = entry.Electron_mvaFall17V2noIso_WP90[lep_index_2]
-
-
-	if channel_ll == 'mm' : 
-            self.iso_1[0]  = entry.Muon_pfRelIso04_all[lep_index_1]
-	    self.iso_2[0]  = entry.Muon_pfRelIso04_all[lep_index_2]
-	    self.q_1[0]  = entry.Muon_charge[lep_index_1]
-	    self.q_2[0]  = entry.Muon_charge[lep_index_2]
-	    self.d0_1[0]   = entry.Muon_dxy[lep_index_1]
-	    self.dZ_1[0]   = entry.Muon_dz[lep_index_1]
-	    self.d0_2[0]   = entry.Muon_dxy[lep_index_2]
-	    self.dZ_2[0]   = entry.Muon_dz[lep_index_2]
-	    self.looseId_1[0]   = entry.Muon_looseId[lep_index_1] 
-	    self.looseId_2[0]   = entry.Muon_looseId[lep_index_2] 
-	    self.mediumId_1[0]   = entry.Muon_mediumId[lep_index_1] 
-	    self.mediumId_2[0]   = entry.Muon_mediumId[lep_index_2] 
-	    self.mediumPromptId_1[0]   = entry.Muon_mediumPromptId[lep_index_1] 
-	    self.mediumPromptId_2[0]   = entry.Muon_mediumPromptId[lep_index_2] 
-	    self.isGlobal_1[0]   = entry.Muon_isGlobal[lep_index_1] 
-	    self.isGlobal_2[0]   = entry.Muon_isGlobal[lep_index_2] 
-	    self.isTracker_1[0]   = entry.Muon_isTracker[lep_index_1] 
-	    self.isTracker_2[0]   = entry.Muon_isTracker[lep_index_2] 
+		try : self.decayMode_5[0] = int(entry.Tau_decayMode[it])
+		except AttributeError : self.decayMode_5[0] = -1
 
         
         # genMatch the di-lepton variables
