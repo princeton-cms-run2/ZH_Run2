@@ -12,7 +12,7 @@ __author__ = "Dan Marlow, Alexis Kalogeropoulos, Gage DeZoort"
 __date__   = "Monday, Oct. 28th, 2019"
 
 # get selections from configZH.yaml:
-with io.open('cuts_ZH.yaml', 'r') as stream:
+with io.open('cuts.yaml', 'r') as stream:
     selections = yaml.load(stream)
 print "Using selections:\n", selections
 
