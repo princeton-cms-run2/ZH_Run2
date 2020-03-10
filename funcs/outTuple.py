@@ -1,7 +1,5 @@
 # output ntuple for H->tautau analysis for CMSSW_10_2_X
 
-
-
 from ROOT import TLorentzVector, TH1
 from math import sqrt, sin, cos, pi
 import tauFun 
@@ -57,7 +55,8 @@ class outTuple() :
         self.LHEweight        = array('f',[0])
         self.Generator_weight = array('f',[0])
         self.LHE_Njets        = array('l',[0])
-        self.triggerWord      = array('l',[0])         
+        self.electronTriggerWord  = array('l',[0])
+        self.muonTriggerWord  = array('l',[0])         
         
         self.nGoodElectron    = array('l',[0])
         self.nGoodMuon        = array('l',[0])
@@ -288,7 +287,8 @@ class outTuple() :
         self.t.Branch('LHEweight',        self.LHEweight,         'LHEweight/F' )
         self.t.Branch('LHE_Njets',        self.LHE_Njets,         'LHE_Njets/I' )
         self.t.Branch('Generator_weight', self.Generator_weight,  'Generator_weight/F' )
-        self.t.Branch('triggerWord',      self.triggerWord,       'triggerWord/I' )
+        self.t.Branch('electronTriggerWord',  self.electronTriggerWord, 'electronTriggerWord/I' )
+        self.t.Branch('muonTriggerWord',      self.muonTriggerWord,  'muonTriggerWord/I' )
         
         self.t.Branch('nGoodElectron',    self.nGoodElectron,     'nGoodElectron/I' )
         self.t.Branch('nGoodMuon',        self.nGoodMuon,         'nGoodMuon/I' )
@@ -700,46 +700,52 @@ class outTuple() :
 	    self.nPVGood[0]  = -1
 
         # pack trigger bits into integer word
-        year = int(era)
+
         e = entry
 	bits=[]
-        if year == 2016 :
-            try : bits.append(e.HLT_Ele27_eta2p1_WPTight_Gsf)
-            except AttributeError : bits.append(False) 
-            try : bits.append(e.HLT_Ele25_eta2p1_WPTight_Gsf)
-            except AttributeError : bits.append(False) 
-            try : bits.append(e.HLT_IsoMu24)
-            except AttributeError : bits.append(False) 
-            try : bits.append(e.HLT_IsoTkMu24)
-            except AttributeError : bits.append(False) 
-            try : bits.append(e.HLT_IsoMu27)
-            except AttributeError : bits.append(False) 
-            try : bits.append(e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ)
-            except AttributeError : bits.append(False) 
-            try : bits.append(e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ)
-            except AttributeError : bits.append(False) 
-            try : bits.append(e.HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ)
-            except AttributeError : bits.append(False) 
 
-        if (year == 2017 or year == 2018) :
-            try : bits.append(e.HLT_Ele35_WPTight_Gsf)
-            except AttributeError : bits.append(False)
-            try : bits.append(e.HLT_Ele32_WPTight_Gsf)
-            except AttributeError : bits.append(False)
-            try : bits.append(e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL)
-            except AttributeError : bits.append(False)
-            try : bits.append(e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ)
-            except AttributeError : bits.append(False)
-            try : bits.append(e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass8)
-            except AttributeError : bits.append(False)
-            try : bits.append(e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass3p8)
-            except AttributeError : bits.append(False)
+        try : bits.append(e.HLT_Ele35_WPTight_Gsf)
+        except AttributeError : bits.append(False)
+        try : bits.append(e.HLT_Ele32_WPTight_Gsf)
+        except AttributeError : bits.append(False)
+        try : bits.append(e.HLT_Ele27_eta2p1_WPTight_Gsf)
+        except AttributeError : bits.append(False) 
+        try : bits.append(e.HLT_Ele25_eta2p1_WPTight_Gsf)
+        except AttributeError : bits.append(False)
 
-        self.triggerWord[0] = 0
+        try : bits.append(e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL)
+        except AttributeError : bits.append(False)
+        try : bits.append(e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ)
+        except AttributeError : bits.append(False) 
+
+        self.electronTriggerWord[0] = 0
         for i, bit in enumerate(bits) :
-            if bit : self.triggerWord[0] += 2**i
-       
-       
+            if bit : self.electronTriggerWord[0] += 2**i
+
+        bits=[]
+        try : bits.append(e.HLT_IsoMu27)
+        except AttributeError : bits.append(False) 
+        try : bits.append(e.HLT_IsoMu24)
+        except AttributeError : bits.append(False) 
+        try : bits.append(e.HLT_IsoTkMu24)
+        except AttributeError : bits.append(False)
+        for i in range(5) : bits.append(False)         # pad rest of this byte 
+        
+        try : bits.append(e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ)
+        except AttributeError : bits.append(False) 
+        try : bits.append(e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass8)
+        except AttributeError : bits.append(False)
+        try : bits.append(e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass3p8)
+        except AttributeError : bits.append(False)
+        try : bits.append(e.HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ)
+        except AttributeError : bits.append(False) 
+        try : bits.append(e.HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_Mass8)
+        except AttributeError : bits.append(False) 
+
+        self.muonTriggerWord[0] = 0
+        for i, bit in enumerate(bits) :
+            if bit : self.muonTriggerWord[0] += 2**i
+
         self.decayMode_3[0]        = -1
         self.idDecayModeNewDMs_3[0]= -1
         self.idDeepTau2017v2p1VSe_3[0] = -1
