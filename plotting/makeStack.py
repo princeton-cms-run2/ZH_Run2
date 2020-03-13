@@ -1,6 +1,6 @@
 import tdrstyle
 import CMS_lumi
-from ROOT import gSystem, gStyle, gROOT, kTRUE, gDirectory
+from ROOT import gSystem, gStyle, gROOT, kTRUE, gDirectory, gPad
 from ROOT import TCanvas, TH1D, TH1F, THStack, TFile, TPad, TLegend, TLatex, TLine, TAttMarker, TMarker, TColor
 from ROOT import kBlack, kBlue, kMagenta, kOrange, kAzure, kRed, kGreen
 from math import sqrt
@@ -63,8 +63,15 @@ def convertToDNDM( histo) :
 
 
 
-groups = ['data','WJets','Rare','Top','DY','ZZ','Signal']
-#groups = ['data','WJets','Rare','Top','WZincl','ZZincl','WWincl', 'DY','Signal']
+hsW={}
+
+groups = ['Signal','Other','Top','DY','WZ','ZZ','data']
+
+hW = {}
+hWc = {}
+for group in groups : 
+    hW[group]={}
+    hWc[group]={}
 
 plotSettings = { # [nBins,xMin,xMax,units]
         "m_sv":[10,0,200,"[Gev]","m(#tau#tau)(SV)"],
@@ -72,6 +79,8 @@ plotSettings = { # [nBins,xMin,xMax,units]
         "met":[50,0,250,"[GeV]","#it{p}_{T}^{miss}"], 
         "njets":[10,-0.5,9.5,"","nJets"],
         "mll":[40,50,130,"[Gev]","m(l^{+}l^{-})"],
+        "mll2":[40,50,130,"[Gev]","m(l^{+}l^{-})"],
+        "mllall":[40,50,130,"[Gev]","m(l^{+}l^{-})"],
         "m_vis":[30,50,200,"[Gev]","m(#tau#tau)"],
         "pt_tt":[40,0,200,"[GeV]","P_{T}(#tau#tau)"],
         "H_LT":[30,50,200,"[Gev]","H_{LT}(#tau#tau)"],
@@ -129,17 +138,17 @@ plotSettings = { # [nBins,xMin,xMax,units]
         "gen_match_3":[30,-0.5,29.5,"","gen_match_3"],
         "gen_match_4":[30,-0.5,29.5,"","gen_match_4"],
 
-        "dPhi_l1H":[20,-4,4,"#delta#Phi(l1,H)",""],
-        "dPhi_l2H":[20,-4,4,"#delta#Phi(l2,H)",""],
-        "dPhi_lH":[20,-4,4,"#delta#Phi(l,H)",""],
+        "dPhi_l1H":[20,-4,4,"#Delta#Phi(l1,H)",""],
+        "dPhi_l2H":[20,-4,4,"#Delta#Phi(l2,H)",""],
+        "dPhi_lH":[20,-4,4,"#Delta#Phi(l,H)",""],
 
-        "dEta_l1H":[20,-4,4,"#delta#eta(l1,H)",""],
-        "dEta_l2H":[20,-4,4,"#delta#eta(l2,H)",""],
-        "dEta_lH":[20,-4,4,"#delta#eta(l,H)",""],
+        "dEta_l1H":[20,-4,4,"#Delta#eta(l1,H)",""],
+        "dEta_l2H":[20,-4,4,"#Delta#eta(l2,H)",""],
+        "dEta_lH":[20,-4,4,"#Delta#eta(l,H)",""],
 
-        "dR_l1H":[20,-4,4,"#delta#R(l1,H)",""],
-        "dR_l2H":[20,-4,4,"#delta#R(l2,H)",""],
-        "dR_lH":[20,-4,4,"#delta#R(l,H)",""],
+        "dR_l1H":[20,-4,4,"#Delta#R(l1,H)",""],
+        "dR_l2H":[20,-4,4,"#Delta#R(l2,H)",""],
+        "dR_lH":[20,-4,4,"#Delta#R(l,H)",""],
 
 }
 
@@ -461,7 +470,8 @@ def makeDiTauStack(outDir,inFile,rootDi,dndm = False, doRatio = False, year=2020
     if args.setlog.lower() == 'yes' or args.setlog.lower() == 'true' : outFileName +="_Log"
     outFileName += ".root"
 
-    fOut = TFile( outFileName, 'update' )
+    if cat =='eeet' :    fOut = TFile( outFileName, 'recreate' )
+    else :    fOut = TFile( outFileName, 'recreate' )
     tdrstyle.setTDRStyle()
     writeExtraText = True       # if extra text
     extraText  = "Preliminary"  # default extra text is "Preliminary"
@@ -549,23 +559,96 @@ def makeDiTauStack(outDir,inFile,rootDi,dndm = False, doRatio = False, year=2020
 
 
     histo = {}
+    
+    hsW[cat] = THStack("hsW","")
     hsumall ={}
     kTop = TColor.GetColor("#ffcc66")
     kDY = TColor.GetColor("#58d885")
-    colors = {'data':0,'WJets':kMagenta-10,'Rare':kBlue-8,'ZZ':kAzure-9,'Top':kTop,'DY':kDY,'Signal':kRed, 'ZZincl':kAzure-9, 'Topp':kTop, 'WZincl':kBlue-8, 'WWincl':kBlue-8}
-	
+    kWZ = TColor.GetColor('#d88558')
+    kVVV = TColor.GetColor('#3e80db')
+    colors = {'data':0,'WJets':kMagenta-10,'Other':kBlue-8,'ZZ':kAzure-9,'Top':kTop,'DY':kDY,'Signal':kRed, 'ZZincl':kAzure-9, 'Topp':kTop, 'WZincl':kBlue-8, 'WZ':kWZ, 'WWincl':kBlue-8, 'WW':kRed-8, 'VVV':kVVV, 'TTX':kTop}
+
+	    
+    lg.SetBorderSize(0)
+    lg.SetFillColor(0)
+    lg.SetFillStyle (0)
+    lg.SetTextSize(0.035)
+    lg.Draw("same")
+
+    for group in groups :
+	f.cd()
+	#if group !='data' : hW[group] = f.Get("hCutFlowWeighted_"+group+"_"+cat)
+	hW[group] = f.Get("hCutFlowPerGroup_"+group+"_"+cat)
+
+       
+        hW[group].GetXaxis().SetRange(3,20)
+
+	if group == 'data' :
+	    try : applyDATAStyle(hW[group])
+	    except KeyError : pass
+	elif group == 'Signal' :
+	    applySignalStyle(hW[group])
+	else :
+	    applyStyle(hW[group],colors[group],1,1001)
+	    hsW[cat].Add(hW[group])
+
+	if group == 'data' : lg.AddEntry(hW['data'],group,"ple")
+	elif group == 'Signal' : lg.AddEntry(hW['Signal'],"ZH#rightarrow#tau#tau","pl")
+	else : lg.AddEntry(hW[group],group,"f")
+
+    c2 = TCanvas('c2','c2',90,90,W,H)
+    c2.SetFillColor(0)
+    c2.SetBorderMode(0)
+    c2.SetFrameFillStyle(0)
+    c2.SetFrameBorderMode(0)
+
+    c2.SetLeftMargin(L/W)
+    c2.SetRightMargin(R/W)
+    c2.SetTopMargin(T/H)
+    c2.SetBottomMargin(B/H)
+
+    c2.cd()
+    if args.setlog.lower() == 'yes' or args.setlog.lower() == 'true' : setLog = True
+
+    plotPadd = TPad("pad1","",0.0,0.03,1.0,1.0)
+    plotPadd.SetLeftMargin(L/W)
+    plotPadd.SetRightMargin(R/W)
+    plotPadd.SetTopMargin(T/H)
+    plotPadd.SetBottomMargin(B/H)
+    c2.cd()
+    plotPadd.Draw()
+    hsWLast = hsW[cat].GetStack().Last()
+    hsWLast.SetMinimum(0.01)
+    hsWLast.SetMaximum(hW['data'].GetMaximum())
+    hsWLast.Draw("hist ")
+    hW['data'].Draw("same ep hist")
+    hsW[cat].Draw("hist same")
+    hW['Signal'].Draw("same e1 hist")
+    lg.Draw("same")
+    for i in range(1,10) : 
+        print 'cat', cat, 'sums allbkg', hsWLast.GetBinContent(i), hW['data'].GetBinContent(i),  hW['Signal'].GetBinContent(i) , hW['Signal'].GetXaxis().GetBinLabel(i)
+
+    gPad.RedrawAxis()
+    gPad.Modified()
+    gPad.Update()
+    c2.SaveAs("./plots/hCutFlow_{0:s}_{1:s}.png".format( str(cat), str(year)))
+
+
 
     for plotVar in plotSettings :
         histo[plotVar] ={}
         hsumall[plotVar] ={}
         hsum ={}
         hs = THStack("hs","")
+        hsOther = THStack("hsOther","")
+        hsumOther ={}
         hsall = THStack("hsall","")
         f.cd()
         for group in groups :
             units = plotSettings[plotVar][3]
             labelX = plotSettings[plotVar][4]
-            try  : histo[plotVar][group] ={}
+            try  : 
+	        histo[plotVar][group] ={}
 	    except KeyError : continue
 	    h_ = "h{0:s}_{1:s}_{2:s}".format(group,cat,plotVar)
             #print 'will try ', "h{0:s}_{1:s}_{2:s}".format(group,cat,plotVar)
@@ -627,28 +710,40 @@ def makeDiTauStack(outDir,inFile,rootDi,dndm = False, doRatio = False, year=2020
                 applyStyle(histo[plotVar][group],colors[group],1,1001)
         
             if group != 'data' and group != 'Signal' : hs.Add(histo[plotVar][group]) 
+            if group == 'Other' or 'WZ' in group or 'TTX' in group  or 'WW' in group or 'VVV' in group or 'WZ' in group : hsOther.Add(histo[plotVar][group]) 
             #if '_met' in plotVar : print '============', group, histo[plotVar][group].GetSumOfWeights()
 	try : hs.GetStack().Last()
 	except ReferenceError  : continue
 
 	hsum = hs.GetStack().Last()
+	hsumOther = hsOther.GetStack().Last()
+
         hMax = 75e+03+hs.GetMaximum()
 	if not setLog : hMax = 300+hs.GetMaximum()
 	hs.SetMinimum(0.)
+	hsOther.SetMinimum(0.)
 	if not hs : continue
         #if setLog : 
 	#    hs.SetMaximum(10e+05*hs.GetMaximum())
         #else :     hs.SetMinimum(0.)
          
 	hsum.SetMinimum(0.)
-	if setLog : hsum.SetMinimum(0.015)
+	hsumOther.SetMinimum(0.)
+	if setLog : 
+	    hsum.SetMinimum(0.015)
+	    hsumOther.SetMinimum(0.015)
         hsum.SetMaximum(hMax)
+        hsumOther.SetMaximum(hMax)
+
         if cat[:2] == 'ee': labelX = labelX.replace('l_','e_')
         if cat[:2] == 'mm' : labelX = labelX.replace('l_','#mu_')
         hsum.GetXaxis().SetTitleSize(0.045)
+        hsumOther.GetXaxis().SetTitleSize(0.045)
 	if doRatio :
 	    hsum.GetXaxis().SetLabelSize(0)
 	    hsum.GetXaxis().SetTitle('')
+	    hsumOther.GetXaxis().SetLabelSize(0)
+	    hsumOther.GetXaxis().SetTitle('')
 	else :
 	    if units!="" :
 		hsum.GetXaxis().SetTitle(labelX+" "+units)
@@ -683,9 +778,9 @@ def makeDiTauStack(outDir,inFile,rootDi,dndm = False, doRatio = False, year=2020
 
 	if doRatio :
 	    data2 = histo[plotVar]['data'].Clone("data")
-	    mc = histo[plotVar]['Rare'].Clone("Rare")
+	    mc = histo[plotVar]['Other'].Clone("Other")
 	    for ig in groups : 
-	        if ig != 'Signal' and ig != 'data' and ig != 'Rare' : mc.Add(histo[plotVar][ig])
+	        if ig != 'Signal' and ig != 'data' and ig != 'Other' : mc.Add(histo[plotVar][ig])
 
 	    xmin = mc.GetXaxis().GetXmin()
 	    xmax = mc.GetXaxis().GetXmax()
@@ -792,11 +887,12 @@ def makeDiTauStack(outDir,inFile,rootDi,dndm = False, doRatio = False, year=2020
 	outFileBase = "Stack_{0:d}_{1:s}_{2:s}_{3:s}_{4:s}".format(year,cat,sign,plotVar, str(args.workingPoint)) 
 	if setLog : outFileBase = "Stack_{0:d}_{1:s}_{2:s}_{3:s}_{4:s}_log".format(year,cat,sign,plotVar, str(args.workingPoint)) 
 	outFileBase = outFileBase +"_"+str(args.bruteworkingPoint)+"brute"
+	c.SetName(outFileBase)
+	c.SetTitle(outFileBase)
 	c.SaveAs("./plots/{0:s}.png".format(outFileBase))
 	fOut.cd()
-        c.Write("{0:d}_{1:s}_{2:s}_{3:s}".format(year,cat,sign,plotVar))
-        #f.Close()
-	#c.SaveAs("{0:s}.root".format(outFileBase))
+        #c.Write("{0:d}_{1:s}_{2:s}_{3:s}".format(year,cat,sign,plotVar))
+        c.Write()	#c.SaveAs("{0:s}.root".format(outFileBase))
     
     
 if __name__ == '__main__':
@@ -808,6 +904,8 @@ if __name__ == '__main__':
     year  = int(inFileName.split('_')[1])
     sign  = inFileName.split('_')[2]
     LTcut = float(inFileName.split('_')[3][2:4])
+
+
 
 #   see comments on cat argument at top of file
     cats = { 1:'eeet', 2:'eemt', 3:'eett', 4:'eeem', 5:'mmet', 6:'mmmt', 7:'mmtt', 8:'mmem'}

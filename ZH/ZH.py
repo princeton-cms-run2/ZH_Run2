@@ -292,13 +292,14 @@ for count, e in enumerate(inTree) :
                     GF.printEvent(e)
                     GF.printMC(e)
                 continue
-            cutCounter[cat].count("GoodTauPair")
-	    if  MC :   cutCounterGenWeight[cat].countGenWeight('GoodTauPair', e.genWeight)
 
             if len(bestTauPair) > 1 :
                 jt1, jt2 = bestTauPair[0], bestTauPair[1]
             else :
                 continue
+            cutCounter[cat].count("GoodTauPair")
+	    if  MC:   cutCounterGenWeight[cat].countGenWeight('GoodTauPair', e.genWeight)
+
             if MC :
                 outTuple.setWeight(PU.getWeight(e.PV_npvs)) 
                 outTuple.setWeightPU(PU.getWeight(e.Pileup_nPU)) 
@@ -310,8 +311,8 @@ for count, e in enumerate(inTree) :
                 outTuple.setWeightPUtrue(1.)
 
 
-            cutCounter[cat].count("VVtightTauPair")
-	    if MC :   cutCounterGenWeight[cat].countGenWeight('VVtightTauPair', e.genWeight)
+            #cutCounter[cat].count("VVtightTauPair")
+	    #if MC :   cutCounterGenWeight[cat].countGenWeight('VVtightTauPair', e.genWeight)
                         
             SVFit = True
 	    
@@ -331,35 +332,48 @@ for count, e in enumerate(inTree) :
 dT = time.time() - tStart
 print("Run time={0:.2f} s  time/event={1:.1f} us".format(dT,1000000.*dT/count))
 
+hLabels=[]
+hLabels.append('All')
+hLabels.append('inJSON')
+hLabels.append('METfilter')
+hLabels.append('Trigger')
+hLabels.append('LeptonCount')
+hLabels.append('GoogLeptons')
+hLabels.append('LeptonPairs')
+hLabels.append('foundZ')
+hLabels.append('GoodTauPair')
+
 hCutFlow=[]
 hCutFlowW=[]
-countt=0
-for cat in cats :
+for icat,cat in enumerate(cats) :
     print('\nSummary for {0:s}'.format(cat))
     cutCounter[cat].printSummary()
     hName="hCutFlow_"+str(cat)
     hNameW="hCutFlowWeighted_"+str(cat)
-    hCutFlow.append( TH1D(hName,hName,15,0.5,15.5))
-    if MC  : hCutFlowW.append( TH1D(hNameW,hNameW,15,0.5,15.5))
+    hCutFlow.append( TH1D(hName,hName,20,0.5,20.5))
+    if MC  : hCutFlowW.append( TH1D(hNameW,hNameW,20,0.5,20.5))
+    #if not MC : lcount=len(cutCounter[cat].getYield()) #lcount stands for how many different values you have
+    #else : lcount=len(cutCounterGenWeight[cat].getYieldWeighted()) #lcount stands for how many different values you have
+    lcount=len(hLabels)
+    print lcount, cat, icat
+    for i in range(len(hLabels)) :
+        hCutFlow[icat].GetXaxis().SetBinLabel(i+1,hLabels[i])
+        hCutFlowW[icat].GetXaxis().SetBinLabel(i+1,hLabels[i])
 
-    lcount=len(cutCounter[cat].getYield()) #lcount stands for how many different values you have
-    print lcount, cat
     for i in range(lcount) :
         #hCutFlow[cat].Fill(1, float(cutCounter[cat].getYield()[i]))
         yields = cutCounter[cat].getYield()[i]
-        hCutFlow[countt].Fill(i+1, float(yields))
-        hCutFlow[countt].GetXaxis().SetBinLabel(i+1,str(cutCounter[cat].getLabels()[i]))
+        hCutFlow[icat].Fill(i+1, float(yields))
 
         if MC : 
 	    yieldsW = cutCounterGenWeight[cat].getYieldWeighted()[i]
-            hCutFlowW[countt].Fill(i+1, float(yieldsW))
-            hCutFlowW[countt].GetXaxis().SetBinLabel(i+1,str(cutCounterGenWeight[cat].getLabels()[i]))
+            hCutFlowW[icat].Fill(i+1, float(yieldsW))
         #print cutCounter[cat].getYield()[i], i, cutCounter[cat].getLabels()[i]
 
     
-    hCutFlow[countt].Sumw2()
-    if MC : hCutFlowW[countt].Sumw2()
-    countt+=1
+    hCutFlow[icat].Sumw2()
+    if MC : hCutFlowW[icat].Sumw2()
+    icat+=1
 
 if not MC : CJ.printJSONsummary()
 
