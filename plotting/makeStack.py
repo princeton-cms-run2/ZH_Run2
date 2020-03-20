@@ -42,10 +42,10 @@ def applyStyle( h, fill, line, fillStyle) :
 def applySignalStyle(h) :
     h.SetLineWidth(3)
     h.SetFillColor(0)
-    h.SetLineColor(kRed)
+    h.SetLineColor(kRed+1)
     h.SetLineStyle(2)
     h.SetMarkerSize(1.5);
-    h.SetMarkerColor(kRed);
+    h.SetMarkerColor(kRed+1);
 
 
 
@@ -74,6 +74,13 @@ for group in groups :
     hWc[group]={}
 
 plotSettings = { # [nBins,xMin,xMax,units]
+        "m_sv":[10,0,200,"[Gev]","m(#tau#tau)(SV)"],
+
+        
+
+}
+
+plotSettingss = { # [nBins,xMin,xMax,units]
         "m_sv":[10,0,200,"[Gev]","m(#tau#tau)(SV)"],
         "mt_sv":[10,0,200,"[Gev]","m_{T}(#tau#tau)(SV)"],
         "met":[50,0,250,"[GeV]","#it{p}_{T}^{miss}"], 
@@ -151,7 +158,6 @@ plotSettings = { # [nBins,xMin,xMax,units]
         "dR_lH":[20,-4,4,"#Delta#R(l,H)",""],
 
 }
-
 
 
 plotSettings2 = { # [nBins,xMin,xMax,units]
@@ -487,7 +493,7 @@ def makeDiTauStack(outDir,inFile,rootDi,dndm = False, doRatio = False, year=2020
 
     xR=0.65   #legend parameters
     xR=0.2    #legend parameters
-    lg = TLegend(xR+0.4,0.6,xR+0.8,0.9)
+    lg = TLegend(xR+0.3,0.6,xR+0.75,0.9)
     lg.SetNColumns(2)
     H = 600
     W = 600
@@ -566,7 +572,7 @@ def makeDiTauStack(outDir,inFile,rootDi,dndm = False, doRatio = False, year=2020
     kDY = TColor.GetColor("#58d885")
     kWZ = TColor.GetColor('#d88558')
     kVVV = TColor.GetColor('#3e80db')
-    colors = {'data':0,'WJets':kMagenta-10,'Other':kBlue-8,'ZZ':kAzure-9,'Top':kTop,'DY':kDY,'Signal':kRed, 'ZZincl':kAzure-9, 'Topp':kTop, 'WZincl':kBlue-8, 'WZ':kWZ, 'WWincl':kBlue-8, 'WW':kRed-8, 'VVV':kVVV, 'TTX':kTop}
+    colors = {'data':0,'WJets':kMagenta-10,'Other':kBlue-8,'ZZ':kAzure-9,'Top':kTop,'DY':kDY,'Signal':kRed+1, 'ZZincl':kAzure-9, 'Topp':kTop, 'WZincl':kBlue-8, 'WZ':kWZ, 'WWincl':kBlue-8, 'WW':kRed-8, 'VVV':kVVV, 'TTX':kTop}
 
 	    
     lg.SetBorderSize(0)
@@ -581,7 +587,7 @@ def makeDiTauStack(outDir,inFile,rootDi,dndm = False, doRatio = False, year=2020
 	hW[group] = f.Get("hCutFlowPerGroup_"+group+"_"+cat)
 
        
-        hW[group].GetXaxis().SetRange(3,20)
+        hW[group].GetXaxis().SetRange(11,16)
 
 	if group == 'data' :
 	    try : applyDATAStyle(hW[group])
@@ -590,11 +596,14 @@ def makeDiTauStack(outDir,inFile,rootDi,dndm = False, doRatio = False, year=2020
 	    applySignalStyle(hW[group])
 	else :
 	    applyStyle(hW[group],colors[group],1,1001)
+            print 'will be adding bkg process now', group, hW[group].GetSumOfWeights()
 	    hsW[cat].Add(hW[group])
 
 	if group == 'data' : lg.AddEntry(hW['data'],group,"ple")
-	elif group == 'Signal' : lg.AddEntry(hW['Signal'],"ZH#rightarrow#tau#tau","pl")
+	elif group == 'Signal' : lg.AddEntry(hW['Signal'],"ZH#rightarrow#tau#tau X 10","pl")
 	else : lg.AddEntry(hW[group],group,"f")
+    #for i in range(1,hW['Signal'].GetNbinsX()) : 
+    #     hW['Signal'].SetBinError(i,0)
 
     c2 = TCanvas('c2','c2',90,90,W,H)
     c2.SetFillColor(0)
@@ -615,26 +624,47 @@ def makeDiTauStack(outDir,inFile,rootDi,dndm = False, doRatio = False, year=2020
     plotPadd.SetRightMargin(R/W)
     plotPadd.SetTopMargin(T/H)
     plotPadd.SetBottomMargin(B/H)
+    plotPadd.SetLogy()
+    gPad.SetLogy()
     c2.cd()
     plotPadd.Draw()
     hsWLast = hsW[cat].GetStack().Last()
-    hsWLast.SetMinimum(0.01)
-    hsWLast.SetMaximum(hW['data'].GetMaximum())
-    hsWLast.Draw("hist ")
-    hW['data'].Draw("same ep hist")
+    #hsWLast.SetMinimum(0.5)
+    hW['data'].SetMinimum(0.5)
+    hsWLast.SetMaximum(hW['data'].GetMaximum()*10e+03)
+    hW['data'].SetMaximum(5000)
+    hW['data'].Draw("ep hist")
+    hsWLast.Draw("hist same")
     hsW[cat].Draw("hist same")
-    hW['Signal'].Draw("same e1 hist")
+    hW['data'].Draw("ep same hist")
+    hW['Signal'].Scale(10)
+    #hW['Signal'].SetLineColor(0)
+    #hW['Signal'].SetMarkerSize(2)
+    #hW['Signal'].SetLineColor(0)
+    hW['Signal'].Draw("same  hist")
     lg.Draw("same")
-    for i in range(1,10) : 
-        print 'cat', cat, 'sums allbkg', hsWLast.GetBinContent(i), hW['data'].GetBinContent(i),  hW['Signal'].GetBinContent(i) , hW['Signal'].GetXaxis().GetBinLabel(i)
+    #for i in range(8,18) : 
+    #    print '===============CutFlows, cat', cat, 'sums allbkg',  "{:.3e}".format(hsWLast.GetBinContent(i)),  "data {:.3e}".format(hW['data'].GetBinContent(i)),  hW['Signal'].GetBinContent(i) , hW['Signal'].GetXaxis().GetBinLabel(i)
+    #print '===============CutFlows Total, cat', cat, 'sums allbkg', "{:.3e}".format(hsWLast.GetSumOfWeights()), "data, {:.3e}".format(hW['data'].GetSumOfWeights()),  hW['Signal'].GetSumOfWeights(), 'ratio', float(hsWLast.GetSumOfWeights()/hW['data'].GetSumOfWeights())
+
+    signText = 'Same Sign_{0:s}'.format(cat)
+    if sign == 'OS' : signText = 'OS {0:s}'.format(cat)
+    hMax = hW['data'].GetMaximum()
+    lTex2a = TLatex(hW['data'].GetBinLowEdge(11), hMax*0.5,'{0:s}'.format(signText))
+    lTex2a = TLatex(hW['data'].GetBinLowEdge(11)+0.5,hW['data'].GetMinimum() + 500,'{0:s}'.format(signText))
+    lTex2a.SetTextSize(0.035) 
+    lTex2a.Draw()
+    CMS_lumi.CMS_lumi(c2, iPeriod, 10)
+
 
     gPad.RedrawAxis()
     gPad.Modified()
     gPad.Update()
     c2.SaveAs("./plots/hCutFlow_{0:s}_{1:s}.png".format( str(cat), str(year)))
 
+    command="cd plots;montage -auto-orient -title CutFlow -tile 2x4 -geometry +5+5 -page A4 hCutFlow_*_{0:s}.png Multi_hCutFlow_{0:s}_{1:s}_{2:s}_{3:s}brute.pdf;cd ..".format(str(year),sign, str(args.workingPoint),str(args.bruteworkingPoint))
 
-
+    os.system(command)
     for plotVar in plotSettings :
         histo[plotVar] ={}
         hsumall[plotVar] ={}
@@ -763,12 +793,14 @@ def makeDiTauStack(outDir,inFile,rootDi,dndm = False, doRatio = False, year=2020
 
 	if dndm : hsum.GetYaxis().SetTitle("dN/d"+labelX)
 
-	for i in range(1,hsum.GetNbinsX()+1) : 
+	'''
+        for i in range(1,hsum.GetNbinsX()+1) : 
 	    try :
 	        if hsum.GetBinContent(i) > 0 and float(histo[plotVar]['Signal'].GetBinContent(i)/sqrt(histo[plotVar]['Signal'].GetBinContent(i) + hsum.GetBinContent(i))) > 20 : 
 	            #print 'will have to blind %i for var %s', i, plotVar
 	            histo[plotVar]['data'].SetBinContent(i,0)
 	    except ValueError : continue
+        '''
 
 	hsum.Draw("hist")
 	hs.Draw("hist same")

@@ -216,6 +216,8 @@ for count, e in enumerate(inTree) :
 	    if  MC :   cutCounterGenWeight[cat].countGenWeight('GoodLeptons', e.genWeight)
 
             pairList, lepList = tauFun.findZ(goodElectronList,[], e)
+            #print 'counting leptons -> lepList', lepList, lepMode
+
             if len(lepList) != 2 :
                 if unique :
                     print("LepList Fail: : Event ID={0:d} cat={1:s}".format(e.event,cat))
@@ -230,6 +232,8 @@ for count, e in enumerate(inTree) :
 	    if  MC :   cutCounterGenWeight[cat].countGenWeight('GoodLeptons', e.genWeight)
 
             pairList, lepList = tauFun.findZ([],goodMuonList, e)
+        
+            #print 'counting leptons -> lepList', lepList, lepMode
             if len(lepList) != 2 : continue
 
         if len(pairList) < 1 : continue
@@ -245,13 +249,13 @@ for count, e in enumerate(inTree) :
                 
         LepP, LepM = pairList[0], pairList[1]
         M = (LepM + LepP).M()
-	
+
         if not tauFun.mllCut(M) :
             if unique :
                 print("Zmass Fail: : Event ID={0:d} cat={1:s} M={2:.2f}".format(e.event,cat,M))
                 #GF.printEvent(e)
                 #if MC : GF.printMC(e)
-            continue ##cut valid for both AZH and ZHa
+            continue ##cut valid for both AZH and ZH
 
         if lepMode == 'ee' :
             for cat in cats[:4]: 
@@ -261,6 +265,7 @@ for count, e in enumerate(inTree) :
             for cat in cats[4:]: 
 	        cutCounter[cat].count('FoundZ')
 	        if  MC :   cutCounterGenWeight[cat].countGenWeight('FoundZ', e.genWeight)
+
         for tauMode in ['et','mt','tt','em'] :
             if args.category != 'none' and tauMode != args.category[2:] : continue
             cat = lepMode + tauMode
@@ -338,7 +343,7 @@ hLabels.append('inJSON')
 hLabels.append('METfilter')
 hLabels.append('Trigger')
 hLabels.append('LeptonCount')
-hLabels.append('GoogLeptons')
+hLabels.append('GoodLeptons')
 hLabels.append('LeptonPairs')
 hLabels.append('foundZ')
 hLabels.append('GoodTauPair')
@@ -368,7 +373,7 @@ for icat,cat in enumerate(cats) :
         if MC : 
 	    yieldsW = cutCounterGenWeight[cat].getYieldWeighted()[i]
             hCutFlowW[icat].Fill(i+1, float(yieldsW))
-        #print cutCounter[cat].getYield()[i], i, cutCounter[cat].getLabels()[i]
+        print cutCounter[cat].getYield()[i], i, cutCounter[cat].getLabels()[i], hCutFlowW[icat].Fill(i+1, float(yieldsW))
 
     
     hCutFlow[icat].Sumw2()

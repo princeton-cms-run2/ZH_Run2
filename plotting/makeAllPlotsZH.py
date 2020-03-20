@@ -418,7 +418,6 @@ hTriggerW= {}
 hLeptonW= {}
 hCutFlowPerGroup = {}
 WCounter = {}
-#hLabels = {}
 hidDeepTau2017v2p1VSjet_3 = {}
 hidDeepTau2017v2p1VSjet_4 = {}
 hidDeepTau2017v2p1VSmu_3 = {}
@@ -726,7 +725,7 @@ plotSettings = { # [nBins,xMin,xMax,units]
 canvasDict = {}
 legendDict = {}
 cols = len(cats.items()[0:8])
-icut=9 ########last filled bin from first round of ntuples
+icut=10 ########last filled bin from first round of ntuples
 hLabels=[]
 rows, cols,nicks = (8, 25,100) 
 #hLabels = [[0]*cols]*rows 
@@ -740,14 +739,14 @@ hLabels.append('GoogLeptons')
 hLabels.append('LeptonPairs')
 hLabels.append('foundZ')
 hLabels.append('GoodTauPair')
-#hLabels.append('TightTauPair')
+#hLabels.append('TightTauPair') #bin 10
 
-hLabels.append(str(args.sign))
+hLabels.append(str(args.sign)) #bin 11
 hLabels.append('goodIso_Id')
+hLabels.append('H_LT > '+str(args.LTcut))
 hLabels.append('nbtag=0')
 hLabels.append('TriggerSF')
 hLabels.append('LeptonSF')
-hLabels.append('H_LT > '+str(args.LTcut))
 hLabels.append('TauID')
 
 WCounter = [[[0 for k in xrange(cols)] for j in xrange(rows)] for i in xrange(nicks)]
@@ -787,7 +786,6 @@ for group in groups :
     for inick, nickName in enumerate(nickNames[group]) :
         if group == 'data':
 	    inFileName = './data/{0:s}/{1:s}/{1:s}.root'.format(args.analysis,nickName)
-	    print 'for data will use this one',inFileName
         for icat, cat in cats.items()[0:8] :
 	    #setting up the CutFlow histogram
 	    hCutFlow[cat][nickName] = {}
@@ -802,13 +800,15 @@ for group in groups :
 	    inFile = TFile.Open(inFileName)
 	    inFile.cd()
 
+	    print '========================================> will use this one',inFileName, inick, nickName
 	    if group != 'data' :
 		hCutFlow[cat][nickName] = inFile.Get("hCutFlowWeighted_{0:s}".format(cat))
 	    else :
 		hCutFlow[cat][nickName] = inFile.Get("hCutFlow_{0:s}".format(cat))
 
             #hCutFlowN[cat][nickName] = hCutFlow[cat][nickName].Clone("hCutFlow_"+nickName+"_"+cat)
-	    for i in range(1,hCutFlow[cat][nickName].GetNbinsX()+1) :
+	    #for i in range(1,hCutFlow[cat][nickName].GetNbinsX()+1) :
+	    for i in range(1,10) :
 		WCounter[i-1][icat-1][inick] = float(hCutFlow[cat][nickName].GetBinContent(i))
                 #hCutFlowN[cat][nickName].SetBinContent(i,WCounter[i-1][icat-1][inick])
 		print i, hCutFlow[cat][nickName].GetBinContent(i), hCutFlow[cat][nickName].GetXaxis().GetBinLabel(i), cat, ' <===>', WCounter[i-1][icat-1][inick], nickName
@@ -923,7 +923,7 @@ for group in groups :
 	print("\nInstantiating TH1D {0:s}".format(hName))
 	print("      Nickname                 Entries    Wt/Evt  Ngood   Tot Wt")
 
-    for nickName in nickNames[group] :
+    for inick, nickName in enumerate(nickNames[group]) :
 
         if 'DY' in nickName : isDY = True
 	if 'JetsToLNu' in nickName : isW = True
@@ -954,6 +954,7 @@ for group in groups :
         DYJets = ('DYJetsToLL' in nickName and 'M10' not in nickName)
         WJets  = ('WJetsToLNu' in nickName)
         sWeight = sampleWeight[nickName]
+	print '========================================> start looping on events now',inFileName, inick, nickName
 
         for i, e in enumerate(inTree) :
             iCut=icut
@@ -967,9 +968,10 @@ for group in groups :
             cat = cats[e.cat]
             icat = catToNumber(cat)
 	    #if group != 'data' and  i > 5000 : continue
-	    #if i > 500 : continue
+	    #if i > 2000 : continue
 
             #sampleWeight = lumi/(WIncl_totgenwt/WIncl_xsec + WxGenweightsArr[i]/(WNJetsXsecs[i]*WJets_kfactor))
+            if e.isTrig_1 == 0 : continue  
 	    if e.q_1*e.q_2 > 0 : continue
             if args.sign == 'SS':
                if e.q_3*e.q_4 < 0. : continue
@@ -990,8 +992,9 @@ for group in groups :
 		# the pu weight is the e.weight in the ntuples
 		#print 'weights', group, nickName, e.Generator_weight, e.weight, i
 		weight = e.weightPUtrue * e.Generator_weight *sWeight * trigw * lepton_sf * weightTID
-		weightCF = e.weightPUtrue * e.Generator_weight * trigw * lepton_sf * weightTID
+		#weightCF = e.Generator_weight
 		weightFM = e.weightPUtrue * e.Generator_weight *sWeight * trigw * lepton_sf
+            weightCF = weight
 
 	    ww = 1.
 
@@ -999,6 +1002,7 @@ for group in groups :
             iCut +=1
             #if i<100 : print 'for i', i , WCounter[iCut-1][icat-1][inick], nickName, cat, weightCF
             WCounter[iCut-1][icat-1][inick] += weightCF
+            hCutFlowN[cat][nickName].SetBinContent(iCut-1, hCutFlowN[cat][nickName].GetBinContent(iCut-1)+weight)
 
             ##############good ISO
 	    if cat[:2] == 'mm' and  (e.iso_1 > 0.2 or e.iso_2 > 0.2) : continue
@@ -1027,18 +1031,31 @@ for group in groups :
 	    if cat[2:] == 'mt' and e.idDeepTau2017v2p1VSjet_4 < WPSR -1. : continue
 	    if cat[2:] == 'et' and e.idDeepTau2017v2p1VSjet_4 < WPSR -1. : continue
 
+            if group == 'data' :
+                if DD[cat].checkEvent(e) : continue 
+
             iCut +=1
             WCounter[iCut-1][icat-1][inick] += weightCF
+            hCutFlowN[cat][nickName].SetBinContent(iCut-1, hCutFlowN[cat][nickName].GetBinContent(iCut-1)+weight)
+
+            ########H_LT
+            H_LT = e.pt_3 + e.pt_4
+            if H_LT < args.LTcut : continue
+
+
+            iCut +=1
+            WCounter[iCut-1][icat-1][inick] += weightCF
+            hCutFlowN[cat][nickName].SetBinContent(iCut-1, hCutFlowN[cat][nickName].GetBinContent(iCut-1)+weight)
 
             ######### nbtag
-
 	    if e.nbtag > 0 : continue
+
 
             iCut +=1
             WCounter[iCut-1][icat-1][inick] += weightCF
+            hCutFlowN[cat][nickName].SetBinContent(iCut-1, hCutFlowN[cat][nickName].GetBinContent(iCut-1)+weight)
 
             ########### Trigger
-            if e.isTrig_1 == 0 : continue  
             ################### Trigger SF
             #if e.isTrig_1 == 0 and e.isDoubleTrig==0: continue  
 
@@ -1126,6 +1143,7 @@ for group in groups :
 
             iCut +=1
             WCounter[iCut-1][icat-1][inick] += weightCF
+            hCutFlowN[cat][nickName].SetBinContent(iCut-1, hCutFlowN[cat][nickName].GetBinContent(iCut-1)+weight)
 
             #############3lepton SFs
 	    if cat[:2] == 'mm' :                 
@@ -1160,6 +1178,7 @@ for group in groups :
 	    lepton_sf = float (eff_id_d_1/eff_id_mc_1 * eff_id_d_2/eff_id_mc_2 * eff_id_d_3/eff_id_mc_3 * eff_id_d_4/eff_id_mc_4)
             iCut +=1
             WCounter[iCut-1][icat-1][inick] += weightCF
+            hCutFlowN[cat][nickName].SetBinContent(iCut-1, hCutFlowN[cat][nickName].GetBinContent(iCut-1)+weight)
 
             ##########
             pfmet_tree = e.met
@@ -1232,16 +1251,6 @@ for group in groups :
                 #if hGroup == 'data' and not unblind and e.m_vis > 80. and e.m_vis < 140. : continue                 
                 #if hGroup == 'data' and not unblind and e.m_sv > 80. and e.m_sv < 140. : continue                 
 
-            ########H_LT
-            H_LT = e.pt_3 + e.pt_4
-            if H_LT < args.LTcut : continue
-            if group == 'data' :
-                if DD[cat].checkEvent(e) : continue 
-            
-
-
-            iCut +=1
-            WCounter[iCut-1][icat-1][inick] += weightCF
 
             ########### tauID
             tauV3.SetPtEtaPhiM(e.pt_3, e.eta_3, e.phi_3, e.m_3)
@@ -1360,7 +1369,7 @@ for group in groups :
 		if cat[2:] == 'tt' and e.gen_match_3 == 5 : 
 			weightTID *= tauSFTool.getSFvsPT(e.pt_3,e.gen_match_3)
 			weightFM *= tauSFTool.getSFvsPT(e.pt_3,e.gen_match_3)
-			tauV3cor *= testool.getTES(e.decayMode_3)
+			tauV3cor *= testool.getTES(e.pt_3, e.decayMode_3, e.gen_match_3)
 			if e.decayMode_3 == 1 : 
 			    e.m_3 =  0.1396  
 			    tauV3cor.SetE(0.1396)
@@ -1370,7 +1379,7 @@ for group in groups :
 		    if e.gen_match_4 == 5 : 
 			weightTID *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4)
 			weightFM *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4)
-			tauV4cor *= testool.getTES(e.decayMode_4)
+			tauV4cor *= testool.getTES(e.pt_4, e.decayMode_4, e.gen_match_4)
 			if e.decayMode_4 == 1 : 
 			    e.m_4 =  0.1396  
 			    tauV4cor.SetE(0.1396)
@@ -1393,6 +1402,7 @@ for group in groups :
 
             iCut +=1
             WCounter[iCut-1][icat-1][inick] += weightCF
+            hCutFlowN[cat][nickName].SetBinContent(iCut-1, hCutFlowN[cat][nickName].GetBinContent(iCut-1)+weight)
             #####
 
 
@@ -1476,24 +1486,28 @@ for group in groups :
 	    hCutFlowPerGroup[group][cat].GetXaxis().SetBinLabel(i+1, hLabels[i])
 
 	for inick,nickName in enumerate(nickNames[group]) :
-	    for i in range(1,  hCutFlowN[cat][nickName].GetNbinsX()) : 
-		hCutFlowN[cat][nickName].SetBinContent(i, WCounter[i-1][icat-1][inick])
+	    #for i in range(1,  hCutFlowN[cat][nickName].GetNbinsX()) : 
+		#hCutFlowN[cat][nickName].SetBinContent(i, WCounter[i-1][icat-1][inick])
 
-		#print 'content now', i, hCutFlowN[cat][nickName].GetBinContent(i), 'for cat and nickName', cat, nickName
+		#if 'DY' in nickName : print 'content now', i, hCutFlowN[cat][nickName].GetBinContent(i), 'for cat and nickName', cat, nickName, hCutFlowPerGroup[group][cat].GetXaxis().GetBinLabel(i), 'weight is ', weight 
 	        #for i in range(len(hLabels)) :
 	        #print 'content what again ??????????????????????????????', hCutFlowN[cat][nickName].GetName(), nickName, hCutFlowN[cat][nickName].GetXaxis().GetBinLabel(i), cat , hCutFlowN[cat][nickName].GetBinContent(i), i, WCounter[i-1][icat-1][inick]
 
 	    for i in range(len(hLabels)) : 
 		hCutFlowN[cat][nickName].GetXaxis().SetBinLabel(i+1, hLabels[i])
-	    hCutFlowPerGroup[group][cat].Add(hCutFlowN[cat][nickName])
+		hCutFlowPerGroup[group][cat].GetXaxis().SetBinLabel(i+1, hLabels[i])
 
-	    if 'data' not in nickName : hCutFlowN[cat][nickName].Scale(sWeight)
+            #if  'data' not in nickName: 
+                #hCutFlowN[cat][nickName].Scale(weight)
+
+	    hCutFlowPerGroup[group][cat].Add(hCutFlowN[cat][nickName])
 	
 		#fOut.cd()
 
 	    hCutFlowN[cat][nickName].Write()
 	    hCutFlowPerGroup[group][cat].Write()
 
+        #continue
 
         OverFlow(hm_sv_new[group][cat])
         OverFlow(hmt_sv_new[group][cat])
