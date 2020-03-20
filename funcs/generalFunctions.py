@@ -265,11 +265,11 @@ def findDoubleLeptTrigger(goodLeptonList,entry,flavour,era):
         if entry.Electron_pt[goodLeptonList[0]] > entry.Electron_pt[goodLeptonList[1]]: 
             leadL = goodLeptonList[0]
             subleadL = goodLeptonList[1]
-	    if entry.Electron_pt[goodLeptonList[0]] < 25 or entry.Electron_pt[goodLeptonList[1]] < 14 : return LepttrigList, hltList
         else : 
             leadL = goodLeptonList[1]
             subleadL = goodLeptonList[0]
-	    if entry.Electron_pt[goodLeptonList[1]] < 25 or entry.Electron_pt[goodLeptonList[0]] < 14 : return LepttrigList, hltList
+
+	if entry.Electron_pt[leadL] < 25 or entry.Electron_pt[subleadL] < 14 : return LepttrigList, hltList
 
     #if flavour == 'ee' :print 'pT ', entry.Electron_pt[leadL], entry.Electron_pt[subleadL], leadL, subleadL
 
@@ -288,12 +288,12 @@ def findDoubleLeptTrigger(goodLeptonList,entry,flavour,era):
         if entry.Muon_pt[goodLeptonList[0]] > entry.Muon_pt[goodLeptonList[1]]: 
             leadL = goodLeptonList[0]
             subleadL = goodLeptonList[1]
-            if entry.Muon_pt[goodLeptonList[0]] < 19 or entry.Muon_pt[goodLeptonList[1]] < 10 : return LepttrigList, hltList
 
         else : 
             leadL = goodLeptonList[1]
             subleadL = goodLeptonList[0]
-            if entry.Muon_pt[goodLeptonList[1]] < 19 or entry.Muon_pt[goodLeptonList[0]] < 10 : return LepttrigList, hltList
+
+        if entry.Muon_pt[leadL] < 19 or entry.Muon_pt[subleadL] < 10 : return LepttrigList, hltList
 
     #for 2017, 2018 according to nAOD documentation  qualityBitsDoc = cms.string("1 = TrkIsoVVL, 2 = Iso, 4 = OverlapFilter PFTau, 8 = 1mu, 16 = 2mu, 32 = 1mu-1e, 64 = 1mu-1tau, 128 = 3mu, 256 = 2mu-1e, 512 =1mu-2e"),
     ## for 2016 in particular  "1 = TrkIsoVVL, 2 = Iso, 4 = OverlapFilter PFTau, 8 = IsoTkMu"
@@ -342,7 +342,7 @@ def findDoubleLeptTrigger(goodLeptonList,entry,flavour,era):
          LepttrigList.append(leadL)
 	 LepttrigList.append(subleadL)
 	 hltList.append('BothLept')
-
+    
     return LepttrigList, hltList
 
 
@@ -375,8 +375,8 @@ def findSingleLeptTrigger(goodLeptonList,entry,flavour,era):
         if era == '2016' and not HLT_Ele25_eta2p1_WPTight_Gsf and not HLT_Ele27_eta2p1_WPTight_Gsf : return LepttrigList, hltList
         if era != '2016' and not HLT_Ele32_WPTight_Gsf and not HLT_Ele35_WPTight_Gsf :  return LepttrigList, hltList
 	    
-	if era == '2016' and not entry.Electron_pt[goodLeptonList[0]] < 29 and entry.Electron_pt[goodLeptonList[1]] < 29 : return LepttrigList, hltList
-	if era != '2016' and not entry.Electron_pt[goodLeptonList[0]] < 37 and entry.Electron_pt[goodLeptonList[1]] < 37 : return LepttrigList, hltList
+	if era == '2016' and entry.Electron_pt[goodLeptonList[0]] < 29 and entry.Electron_pt[goodLeptonList[1]] < 29 : return LepttrigList, hltList
+	if era != '2016' and entry.Electron_pt[goodLeptonList[0]] < 37 and entry.Electron_pt[goodLeptonList[1]] < 37 : return LepttrigList, hltList
         
         if entry.Electron_pt[goodLeptonList[0]] > entry.Electron_pt[goodLeptonList[1]]: 
             leadL = goodLeptonList[0]
@@ -384,6 +384,7 @@ def findSingleLeptTrigger(goodLeptonList,entry,flavour,era):
         else : 
             leadL = goodLeptonList[1]
             subleadL = goodLeptonList[0]
+
 
     #if flavour == 'ee' :print 'pT ', entry.Electron_pt[leadL], entry.Electron_pt[subleadL], leadL, subleadL
 
@@ -396,7 +397,6 @@ def findSingleLeptTrigger(goodLeptonList,entry,flavour,era):
         
         if not HLT_IsoMu24 and not HLT_IsoMu27 :  return LepttrigList, hltList
 
-        if entry.Muon_pt[goodLeptonList[0]] < 29 and entry.Muon_pt[goodLeptonList[1]] < 29 : return LepttrigList, hltList
 
         if entry.Muon_pt[goodLeptonList[0]] > entry.Muon_pt[goodLeptonList[1]]: 
             leadL = goodLeptonList[0]
@@ -404,6 +404,8 @@ def findSingleLeptTrigger(goodLeptonList,entry,flavour,era):
         else : 
             leadL = goodLeptonList[1]
             subleadL = goodLeptonList[0]
+
+        if entry.Muon_pt[leadL] < 29 and entry.Muon_pt[subleadL] < 29 : return LepttrigList, hltList
 
     #for 2017, 2018 according to nAOD documentation  qualityBitsDoc = cms.string("1 = TrkIsoVVL, 2 = Iso, 4 = OverlapFilter PFTau, 8 = 1mu, 16 = 2mu, 32 = 1mu-1e, 64 = 1mu-1tau, 128 = 3mu, 256 = 2mu-1e, 512 =1mu-2e"),
     ## for 2016 in particular  "1 = TrkIsoVVL, 2 = Iso, 4 = OverlapFilter PFTau, 8 = IsoTkMu"
