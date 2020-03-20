@@ -618,14 +618,15 @@ class outTuple() :
 
 	TrigListLep = list(dict.fromkeys(TrigListLep))
 
+
 	TrigListLepD, hltListLepD  = GF.findDoubleLeptTrigger(lepList, entry, channel_ll, era)
 
 	TrigListLepD = list(dict.fromkeys(TrigListLepD))
 
-	#print TrigListLepD, hltListLepD, TrigListLep, hltListLep,
+	#if len(TrigListLepD) > 0 : print TrigListLepD, hltListLepD, TrigListLep, hltListLep
 	if len(TrigListLepD) == 2 : 
 	    if lepList[0] == TrigListLepD[0] :
-	        is_Dtrig_1 = 1
+	        is_Dtrig_1 = 1 #that means that the leading lepton 
 	    else : 
 	        is_Dtrig_1 = -1
 
@@ -1245,7 +1246,7 @@ class outTuple() :
 
 	TrigListLepD = list(dict.fromkeys(TrigListLepD))
 
-	#print TrigListLepD, hltListLepD, TrigListLep, hltListLep,
+
 	if len(TrigListLepD) == 2 : 
 	    if lepList[0] == TrigListLepD[0] :
 	        is_Dtrig_1 = 1

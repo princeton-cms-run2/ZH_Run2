@@ -294,6 +294,7 @@ def findDoubleLeptTrigger(goodLeptonList,entry,flavour,era):
             subleadL = goodLeptonList[0]
 
         if entry.Muon_pt[leadL] < 19 or entry.Muon_pt[subleadL] < 10 : return LepttrigList, hltList
+    #for electron triggers 1 = CaloIdL_TrackIdL_IsoVL, 2 = 1e (WPTight), 4 = 1e (WPLoose), 8 = OverlapFilter PFTau, 16 = 2e, 32 = 1e-1mu, 64 = 1e-1tau, 128 = 3e, 256 = 2e-1mu, 512 = 1e-2mu, 1024 = 1e (32_L1DoubleEG_AND_L1SingleEGOr), 2048 = 1e (CaloIdVT_GsfTrkIdT), 4096 = 1e (PFJet), 8192 = 1e (Photon175_OR_Photon200) for Electron (PixelMatched e/gamma)
 
     #for 2017, 2018 according to nAOD documentation  qualityBitsDoc = cms.string("1 = TrkIsoVVL, 2 = Iso, 4 = OverlapFilter PFTau, 8 = 1mu, 16 = 2mu, 32 = 1mu-1e, 64 = 1mu-1tau, 128 = 3mu, 256 = 2mu-1e, 512 =1mu-2e"),
     ## for 2016 in particular  "1 = TrkIsoVVL, 2 = Iso, 4 = OverlapFilter PFTau, 8 = IsoTkMu"
@@ -305,16 +306,18 @@ def findDoubleLeptTrigger(goodLeptonList,entry,flavour,era):
     for iobj in range(0,entry.nTrigObj) :
         if 'ee' in flavour and abs(entry.TrigObj_id[iobj]) == 11 : 
 	    dR = DRobj(entry.Electron_eta[leadL],entry.Electron_phi[leadL], entry.TrigObj_eta[iobj], entry.TrigObj_phi[iobj])
-            if dR  < 0.5 and entry.TrigObj_filterBits[iobj] & 16 : 
-	        hltList.append("LeadDEle")
+	    if dR  < 0.5 and entry.TrigObj_filterBits[iobj] & 1 : 
+		hltList.append("LeadDEle")
 		i_lead = iobj
 
 
             for iobjj in range(iobj,entry.nTrigObj) :
 	        dRr = DRobj(entry.Electron_eta[subleadL],entry.Electron_phi[subleadL], entry.TrigObj_eta[iobjj], entry.TrigObj_phi[iobjj])
-                if dRr  < 0.5 and entry.TrigObj_filterBits[iobjj] & 16 : 
+
+		if dRr  < 0.5 and entry.TrigObj_filterBits[iobjj] & 1 : 
 		    hltList.append("TrailDEle")
 		    i_trail = iobjj
+
 
 	    if i_lead != i_trail and i_lead != -1 and i_trail != -1 : break
 	
@@ -323,16 +326,29 @@ def findDoubleLeptTrigger(goodLeptonList,entry,flavour,era):
 	if 'mm' in flavour and abs(entry.TrigObj_id[iobj]) == 13 : 
 
 	    dR = DRobj(entry.Muon_eta[leadL],entry.Muon_phi[leadL], entry.TrigObj_eta[iobj], entry.TrigObj_phi[iobj])
-            if dR  < 0.5 and entry.TrigObj_filterBits[iobj] & 16 : 
-		hltList.append("LeadDMu")
-		i_lead = iobj
+
+            if era == '2016' :
+		if dR  < 0.5 and entry.TrigObj_filterBits[iobj] & 1 : 
+		    hltList.append("LeadDMu")
+		    i_lead = iobj
+            if era != '2016' :
+		if dR  < 0.5 and entry.TrigObj_filterBits[iobj] & 16 : 
+		    hltList.append("LeadDMu")
+		    i_lead = iobj
 
 
             for iobjj in range(iobj,entry.nTrigObj) :
 	        dRr = DRobj(entry.Muon_eta[subleadL],entry.Muon_phi[subleadL], entry.TrigObj_eta[iobjj], entry.TrigObj_phi[iobjj])
-                if dRr  < 0.5 and entry.TrigObj_filterBits[iobjj] & 16 : 
-		    hltList.append("TrailDMu")
-		    i_trail = iobjj
+
+                if era == '2016' : 
+		    if dRr  < 0.5 and entry.TrigObj_filterBits[iobjj] & 1 : 
+			hltList.append("TrailDMu")
+			i_trail = iobjj
+
+                if era != '2016' : 
+		    if dRr  < 0.5 and entry.TrigObj_filterBits[iobjj] & 16 : 
+			hltList.append("TrailDMu")
+			i_trail = iobjj
 
 	    if i_lead != i_trail and i_lead != -1 and i_trail != -1 : break
 
