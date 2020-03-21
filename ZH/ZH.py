@@ -251,7 +251,7 @@ for count, e in enumerate(inTree) :
                 print("Zmass Fail: : Event ID={0:d} cat={1:s} M={2:.2f}".format(e.event,cat,M))
                 #GF.printEvent(e)
                 #if MC : GF.printMC(e)
-            continue ##cut valid for both AZH and ZHa
+            continue ##cut valid for both AZH and ZH
 
         if lepMode == 'ee' :
             for cat in cats[:4]: 
@@ -338,7 +338,7 @@ hLabels.append('inJSON')
 hLabels.append('METfilter')
 hLabels.append('Trigger')
 hLabels.append('LeptonCount')
-#hLabels.append('GoogLeptons')
+#hLabels.append('GoodLeptons')
 hLabels.append('LeptonPair')
 hLabels.append('FoundZ')
 hLabels.append('GoodTauPair')
@@ -358,7 +358,7 @@ for icat,cat in enumerate(cats) :
     print lcount, cat, icat
     for i in range(len(hLabels)) :
         hCutFlow[icat].GetXaxis().SetBinLabel(i+1,hLabels[i])
-        hCutFlowW[icat].GetXaxis().SetBinLabel(i+1,hLabels[i])
+        if MC : hCutFlowW[icat].GetXaxis().SetBinLabel(i+1,hLabels[i])
 
     for i in range(lcount) :
         #hCutFlow[cat].Fill(1, float(cutCounter[cat].getYield()[i]))
