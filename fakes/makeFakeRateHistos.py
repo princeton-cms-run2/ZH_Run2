@@ -180,9 +180,11 @@ if era == '2018' : recoilCorrector  = ROOT.RecoilCorrector("HTT-utilities/Recoil
 
 ########## initializing triggers
 
-tauSFTool = TauIDSFTool(campaign[args.year],'DeepTau2017v2p1VSjet','Medium')
-testool = TauESTool(campaign[args.year])
-festool = TauESTool(campaign[args.year])
+wpp = {'1':'VVVLoose','2':'VVLoose', '4':'VLoose', '8':'Loose', '16':'Medium','32':'Tight','64':'VTight','128':'VVTight'}
+
+#tauSFTool = TauIDSFTool(campaign[args.year],'DeepTau2017v2p1VSjet',wpp[str(args.bruteworkingPoint))
+#testool = TauESTool(campaign[args.year])
+#festool = TauESTool(campaign[args.year])
 sf_MuonTrig = SF.SFs()
 sf_MuonTrig.ScaleFactor("{0:s}{1:s}".format(TriggerSF['dir'],TriggerSF['fileMuon']))
 sf_EleTrig = SF.SFs()
@@ -207,24 +209,29 @@ hList = ['e_et','t_et','m_mt','t_mt','t1_tt','t2_tt', 'e_em', 'm_em']
 hModes = ['0','1','10','11']
 
 hBase, hTight = {}, {}
+hBaseMode, hTightMode = {}, {}
 hBasePrompt, hTightPrompt = {}, {}
 hBasePromptMode, hTightPromptMode = {}, {}
 hBasenoPrompt, hTightnoPrompt = {}, {}
 hBasenoPromptMode, hTightnoPromptMode = {}, {}
 
+
 groups = ['ZZ','WJets','Rare','Top','DY', 'WWIncl', 'WZincl']
+groups = ['Other','Top','DY','WZ','ZZ']
 nickNames, xsec, totalWeight, sampleWeight = {}, {}, {}, {}
 for group in groups :
     nickNames[group] = []
 
 WP=['16','32','64','128']
 
-nBins = 5
-Bins = [0,10,20,30,40,100]
+#nBins = 9
+#Bins = [0,10,15,20,25,30,35,40,50,100]
+
+nBins = 7
+Bins = [0,10,15,20,25,30,40,100]
 
 for h in hList :
     hName = "{0:s}Base".format(h)
-    #hBase[h] = TH1D(hName,hName,10,0.,100.)
     hBase[h] = TH1D(hName,hName,nBins, array('d',Bins))
     
     hTight[h] = {}
@@ -234,6 +241,24 @@ for h in hList :
  
 
 print hList
+
+for group in groups :
+    hBaseMode[group], hTightMode[group] = {}, {}
+
+    for h in hList :
+        hBaseMode[group][h], hTightMode[group][h] = {}, {}
+
+        for m in hModes :
+	    hName = "{0:s}_{1:s}_{2:s}Mode_Base".format(group,h,m)
+	    hBaseMode[group][h][m] = TH1D(hName,hName,nBins,array('d',Bins))
+
+	    hTightMode[group][h][m] = {}
+
+            for wp in WP : 
+	        hName = "{0:s}_{1:s}_{2:s}_{3:s}Mode_Tight".format(group,h,m,wp)
+		hTightMode[group][h][m][wp] = TH1D(hName,hName,nBins,array('d',Bins))
+
+
 
 # loop over the data to fill the histograms
 #for era in ['2017B','2017C','2017D','2017E','2017F'] :
@@ -252,6 +277,7 @@ for era in [str(args.year)] :
 
             # impose any common selection criteria here
             # include only same sign events 
+            if e.isTrig_1 == 0 : continue  
             if e.q_1*e.q_2 > 0. : continue
             if args.region == 'SS' and  e.q_3*e.q_4 < 0. : continue
             if args.region == 'OS' and  e.q_3*e.q_4 > 0. : continue
@@ -262,12 +288,27 @@ for era in [str(args.year)] :
 	    if cat[:2] == 'mm' and  (e.iso_1 > 0.2 or e.iso_2 > 0.2) : continue
 	    if cat[:2] == 'ee' and  (e.iso_1 > 0.15 or e.iso_2 > 0.15) : continue
 
-            if e.isTrig_1 == 0 : continue  
-            #if e.isTrig_1 == 0 and e.isDoubleTrig==0: continue  
+            if e.isTrig_1 != 0: 
 
-	    #if e.isDoubleTrig !=0 : continue
-	    #if e.isTrig_1 == 0 and e.isDoubleTrig !=0 : weight *= 0.9
-            
+		if e.isTrig_1 == -1 and e.isTrig_2 == 0: 
+		#if e.isTrig_1 == -1 : 
+		    if cat[:2] == 'mm' and e.pt_2 < 29 : continue
+		    if cat[:2] == 'ee' and era == '2016' and e.pt_2 < 29 : continue
+		    if cat[:2] == 'ee' and era != '2016' and e.pt_2 < 37 : continue
+
+		# both fired the trigger _isTrig_2 = 1
+		
+		if e.isTrig_2 == 1 : 
+		    if cat[:2] == 'mm' and e.pt_1 < 29 and e.pt_2 < 29: continue
+		    if cat[:2] == 'ee' and era == '2016' and e.pt_1 <  29 and  e.pt_2 < 29 : continue
+		    if cat[:2] == 'ee' and era != '2016' and e.pt_1 < 37 and e.pt_2 < 37 : continue
+	
+	    if e.isDoubleTrig!=0 and e.isTrig_1 == 0 : #the DoubleLepton trigger was fired but not the SingleLepton
+
+		if cat[:2] == 'mm' and (e.pt_1 < 19 or e.pt_2 < 10): continue
+		if cat[:2] == 'ee' and (e.pt_1 < 25 or e.pt_2 < 14): continue
+
+
             # skip duplicate events
             if DD.checkEvent(e) : continue 
 
@@ -284,29 +325,55 @@ for era in [str(args.year)] :
                 # apply transverse mass cut on electron-MET system
                 if preCutOff or preCut : hBase['e_et'].Fill(e.pt_3)
                 hBase['t_et'].Fill(e.pt_4)
+		if e.decayMode_4 != -1 : 
+		    hBaseMode[group]['t_et'][str(e.decayMode_4)].Fill(e.pt_4)
 
 	        for wp in WP : 
-	            if e.Electron_mvaFall17V2noIso_WP90_3 >0  and  e.iso_3 < 0.15 : hTight['e_et'][wp].Fill(e.pt_3)
-		    if int(e.idDeepTau2017v2p1VSjet_4) >= int(wp)-1 : hTight['t_et'][wp].Fill(e.pt_4)
+	            if e.Electron_mvaFall17V2noIso_WP90_3 >0  and  e.iso_3 < 0.15 : 
+                        hTight['e_et'][wp].Fill(e.pt_3)
+		    if int(e.idDeepTau2017v2p1VSjet_4) >= int(wp)-1 : 
+                        hTight['t_et'][wp].Fill(e.pt_4)
+		        if e.decayMode_4 != -1 : 
+                            hTightMode[group]['t_et'][str(e.decayMode_4)][wp].Fill(e.pt_4)
                     
             if cat[2:] == 'mt' :
                 # apply transverse mass cut on muon-MET system
                 if preCutOff or preCutt and  (e.isGlobal_3 > 0 or e.isTracker_3 > 0) :  hBase['m_mt'].Fill(e.pt_3)
                 hBase['t_mt'].Fill(e.pt_4)
+		if e.decayMode_4 != -1 : 
+		    hBaseMode[group]['t_mt'][str(e.decayMode_4)].Fill(e.pt_4)
 
 	        for wp in WP : 
-	            if e.iso_3 < 0.2 and  (e.isGlobal_3 > 0 or e.isTracker_3 > 0) and e.mediumId_3 > 0: hTight['m_mt'][wp].Fill(e.pt_3)
-		    if int(e.idDeepTau2017v2p1VSjet_4) >= int(wp)-1 : hTight['t_mt'][wp].Fill(e.pt_4)
+	            if e.iso_3 < 0.2 and  (e.isGlobal_3 > 0 or e.isTracker_3 > 0) and e.mediumId_3 > 0: 
+                        hTight['m_mt'][wp].Fill(e.pt_3)
+
+		    if int(e.idDeepTau2017v2p1VSjet_4) >= int(wp)-1 : 
+                        hTight['t_mt'][wp].Fill(e.pt_4)
+		        if e.decayMode_4 != -1 : 
+                            hTightMode[group]['t_mt'][str(e.decayMode_4)][wp].Fill(e.pt_4)
 
 
             if cat[2:] == 'tt' :
                 H_LT = e.pt_3 + e.pt_4
                 #if not preCutOff and H_LT < args.LTcut : continue
                 hBase['t1_tt'].Fill(e.pt_3)
+		if e.decayMode_3 != -1 : 
+		    hBaseMode[group]['t1_tt'][str(e.decayMode_3)].Fill(e.pt_3)
                 hBase['t2_tt'].Fill(e.pt_4)
+		if e.decayMode_4 != -1 : 
+		    hBaseMode[group]['t2_tt'][str(e.decayMode_4)].Fill(e.pt_4)
+
 	        for wp in WP : 
-		    if int(e.idDeepTau2017v2p1VSjet_3) >= int(wp)-1 :    hTight['t1_tt'][wp].Fill(e.pt_3)
-		    if int(e.idDeepTau2017v2p1VSjet_4) >= int(wp)-1 :    hTight['t2_tt'][wp].Fill(e.pt_4)
+		    if int(e.idDeepTau2017v2p1VSjet_3) >= int(wp)-1 :    
+                        hTight['t1_tt'][wp].Fill(e.pt_3)
+		        if e.decayMode_3 != -1 : 
+                            hTightMode[group]['t1_tt'][str(e.decayMode_3)][wp].Fill(e.pt_3)
+
+		    if int(e.idDeepTau2017v2p1VSjet_4) >= int(wp)-1 :    
+                        hTight['t2_tt'][wp].Fill(e.pt_4)
+		        if e.decayMode_4 != -1 : 
+                            hTightMode[group]['t2_tt'][str(e.decayMode_4)][wp].Fill(e.pt_4)
+
 
             if cat[2:] == 'em' :
 
@@ -411,6 +478,8 @@ for i in range(1,4) :
 
 print 'NickNames===========================>', nickNames
 # create histograms
+
+
 for group in groups :
     hBasePrompt[group], hTightPrompt[group] = {}, {}
     hBasePromptMode[group], hTightPromptMode[group] = {}, {}
@@ -471,6 +540,8 @@ for group in groups :
 	        hName = "{0:s}_{1:s}_{2:s}_{3:s}Mode_TightnoPrompt".format(group,h,m,wp)
 		hTightnoPromptMode[group][h][m][wp] = TH1D(hName,hName,nBins,array('d',Bins))
 
+
+
 for group in groups :
 
     for nickName in nickNames[group] :
@@ -503,10 +574,11 @@ for group in groups :
 	    weight=1.
 	    lepton_sf = 1.
 
+	    if e.isTrig_1 == 0 : continue 
 	    if e.q_1*e.q_2 > 0. : continue
             if args.region == 'SS' and  e.q_3*e.q_4 < 0. : continue
             if args.region == 'OS' and  e.q_3*e.q_4 > 0. : continue
-	    if e.nbtag > 0 : continue
+	    #if e.nbtag > 0 : continue
 
 	    H_LT = e.pt_3 + e.pt_4
 	    #if H_LT > args.LTcut : continue
@@ -514,8 +586,25 @@ for group in groups :
 	    if cat[:2] == 'mm' and  (e.iso_1 > 0.2 or e.iso_2 > 0.2) : continue
 	    if cat[:2] == 'ee' and  (e.iso_1 > 0.15 or e.iso_2 > 0.15) : continue
 	    #if abs(e.dZ_3) > 0.05 or abs(e.dZ_4) > 0.05 : continue
+            if e.isTrig_1 != 0: 
 
-	    if e.isTrig_1 == 0 : continue 
+		if e.isTrig_1 == -1 and e.isTrig_2 == 0: 
+		#if e.isTrig_1 == -1 : 
+		    if cat[:2] == 'mm' and e.pt_2 < 29 : continue
+		    if cat[:2] == 'ee' and era == '2016' and e.pt_2 < 29 : continue
+		    if cat[:2] == 'ee' and era != '2016' and e.pt_2 < 37 : continue
+
+		# both fired the trigger _isTrig_2 = 1
+		
+		if e.isTrig_2 == 1 : 
+		    if cat[:2] == 'mm' and e.pt_1 < 29 and e.pt_2 < 29: continue
+		    if cat[:2] == 'ee' and era == '2016' and e.pt_1 <  29 and  e.pt_2 < 29 : continue
+		    if cat[:2] == 'ee' and era != '2016' and e.pt_1 < 37 and e.pt_2 < 37 : continue
+	
+	    if e.isDoubleTrig!=0 and e.isTrig_1 == 0 : #the DoubleLepton trigger was fired but not the SingleLepton
+
+		if cat[:2] == 'mm' and (e.pt_1 < 19 or e.pt_2 < 10): continue
+		if cat[:2] == 'ee' and (e.pt_1 < 25 or e.pt_2 < 14): continue
 
 	    tauV3.SetPtEtaPhiM(e.pt_3, e.eta_3, e.phi_3, e.m_3)
 	    tauV4.SetPtEtaPhiM(e.pt_4, e.eta_4, e.phi_4, e.m_4)
@@ -532,29 +621,6 @@ for group in groups :
 
 	    #if e.isTrig_1 == 0 and e.isDoubleTrig==0: continue  
 
-	    #if e.isDoubleTrig !=0 : continue
-	    #if e.isTrig_1 == 0 and e.isDoubleTrig !=0 : weight *= 0.9
-
-
-	    #leading fired the trigger
-	    if e.isTrig_1 == 1 and e.isTrig_2 == 0: 
-		if cat[:2] == 'mm' and e.pt_1 < 28 : continue
-		if cat[:2] == 'ee' and era == '2016' and e.pt_1 < 28 : continue
-		if cat[:2] == 'ee' and era != '2016' and e.pt_1 < 36 : continue
-
-	    #subleading fired the trigger
-	    if e.isTrig_1 == -1 and e.isTrig_2 == 0: 
-		if cat[:2] == 'mm' and e.pt_2 < 29 : continue
-		if cat[:2] == 'ee' and era == '2016' and e.pt_2 < 28 : continue
-		if cat[:2] == 'ee' and era != '2016' and e.pt_2 < 36 : continue
-
-	    # both fired the trigger _isTrig_2 = 1
-	    if e.isTrig_2 == 1 : 
-		if cat[:2] == 'mm' and e.pt_1 < 28 and e.pt_2 < 28: continue
-		if cat[:2] == 'ee' and era == '2016' and e.pt_1 <  28 and  e.pt_2 < 28 : continue
-		if cat[:2] == 'ee' and era != '2016' and e.pt_1 < 36 and e.pt_2 < 36 : continue
-
-	    #else : continue
 
 
 
@@ -697,31 +763,27 @@ for group in groups :
 
 	    if cat[2:] == 'et' :
 		#if e.gen_match_3 == 1 or e.gen_match_3 == 15 :
-		if e.gen_match_3 == 1 or e.gen_match_3 == 15 :
+		if e.gen_match_3 == 15 :
+		#if e.gen_match_3 != 0 and e.gen_match_3 != 3 and e.gen_match_3 != 4 and e.gen_match_3 != 5 :
 		    if preCutOff or preCut : 
 		        hBasePrompt[group]['e_et'].Fill(e.pt_3,weight)
 
 		    if e.Electron_mvaFall17V2noIso_WP90_3 >0  and  e.iso_3 < 0.15 : 
 			for wp in WP : 	    hTightPrompt[group]['e_et'][wp].Fill(e.pt_3,weight)
 
-		if  e.gen_match_3 != 1 and  e.gen_match_3 != 15 :
+		if  e.gen_match_3 != 15 : #meaning all leptons faking tau
+		#if not(e.gen_match_3 != 0 and e.gen_match_3 != 3 and e.gen_match_3 != 4 and e.gen_match_3 != 5):
 		    if preCutOff or preCut : 
 		        hBasenoPrompt[group]['e_et'].Fill(e.pt_3,weight)
 
-		    if e.Electron_mvaFall17V2noIso_WP90_3 == 0  or  e.iso_3 > 0.15 : 
-			for wp in WP : 	    hTightnoPrompt[group]['e_et'][wp].Fill(e.pt_3,weight)
+		    if e.Electron_mvaFall17V2noIso_WP90_3 >0  and  e.iso_3 < 0.15 : 
+			for wp in WP :  hTightnoPrompt[group]['e_et'][wp].Fill(e.pt_3,weight)
 
 
 
-		if e.gen_match_4 == 5 :
-		    '''
-		    weight *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4)
-		    tauV4cor *= testool.getTES(e.decayMode_4)
-		    if e.decayMode_4 == 1 : 
-			e.m_4 =  0.1396  
-			tauV4cor.SetE(0.1396)
-		    MetVcor+=   tauV4- tauV4cor
-		    '''
+		#if e.gen_match_4 == 5 :
+		if e.gen_match_4 != 0 : #we consider only  jets faking taus (lepton faking taus are taken from other studies)
+
 		    hBasePrompt[group]['t_et'].Fill(e.pt_4,weight)
 		    if e.decayMode_4 != -1 : hBasePromptMode[group]['t_et'][str(e.decayMode_4)].Fill(e.pt_4,weight)
 
@@ -732,7 +794,7 @@ for group in groups :
 				hTightPromptMode[group]['t_et'][str(e.decayMode_4)][wp].Fill(e.pt_4,weight)
 
 
-		if e.gen_match_4 != 5 :
+		if e.gen_match_4 == 0 :
 		    hBasenoPrompt[group]['t_et'].Fill(e.pt_4,weight)
 		    if e.decayMode_4 != -1 : hBasenoPromptMode[group]['t_et'][str(e.decayMode_4)].Fill(e.pt_4,weight)
 
@@ -744,30 +806,26 @@ for group in groups :
 
 
 	    if cat[2:] == 'mt' :
-		if e.gen_match_3 == 1 or e.gen_match_3 == 15 :
+		if e.gen_match_3 == 15 :
+		#if e.gen_match_3 != 0 and e.gen_match_3 != 3 and e.gen_match_3 != 4 and e.gen_match_3 != 5  : #subtracting only the tau-matched
 
-		    if preCutOff or preCutt and (e.isGlobal_3 > 0 or e.isTracker_3 > 0) : hBasePrompt[group]['m_mt'].Fill(e.pt_3,weight)
+		    if preCutOff or preCutt and  (e.isGlobal_3 > 0 or e.isTracker_3 > 0) : hBasePrompt[group]['m_mt'].Fill(e.pt_3,weight)
 
 		    if e.iso_3 < 0.2 and  (e.isGlobal_3 > 0 or e.isTracker_3 > 0) and e.mediumId_3 > 0: 
 		        for wp in WP : hTightPrompt[group]['m_mt'][wp].Fill(e.pt_3,weight)
 
 
-		if e.gen_match_3 != 1 and not e.gen_match_3 != 15 :
+		#if e.gen_match_3 != 1 and  e.gen_match_3 != 15 :
+		if e.gen_match_3 != 15 :
+		#if not (e.gen_match_3 != 0 and e.gen_match_3 != 3 and e.gen_match_3 != 4 and e.gen_match_3 != 5)  : #subtracting only the tau-matched
 
-		    if preCutOff or preCutt and not (e.isGlobal_3 > 0 or e.isTracker_3 > 0) : hBasenoPrompt[group]['m_mt'].Fill(e.pt_3,weight)
+		    if preCutOff or preCutt and  (e.isGlobal_3 > 0 or e.isTracker_3 > 0) : hBasenoPrompt[group]['m_mt'].Fill(e.pt_3,weight)
 
 		    if  e.iso_3 < 0.2 and  (e.isGlobal_3 > 0 or e.isTracker_3 > 0) and e.mediumId_3 > 0: 
 		        for wp in WP : hTightnoPrompt[group]['m_mt'][wp].Fill(e.pt_3,weight)
 
-		if e.gen_match_4 == 5 :
-                    '''
-		    weight *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4)
-		    tauV4cor *= testool.getTES(e.decayMode_4)
-		    if e.decayMode_4 == 1 : 
-			e.m_4 =  0.1396  
-			tauV4cor.SetE(0.1396)
-		    MetVcor+=   tauV4 - tauV4cor
-		    '''
+		if e.gen_match_4 != 0 : ## ==5 previously
+
 		    hBasePrompt[group]['t_mt'].Fill(e.pt_4,weight)
 		    if e.decayMode_4 != -1 : hBasePromptMode[group]['t_mt'][str(e.decayMode_4)].Fill(e.pt_4,weight)
 		    for wp in WP : 
@@ -775,15 +833,7 @@ for group in groups :
 			        hTightPrompt[group]['t_mt'][wp].Fill(e.pt_4,weight)
 			        if e.decayMode_4 != -1 : hTightPromptMode[group]['t_mt'][str(e.decayMode_4)][wp].Fill(e.pt_4,weight)
 
-		if e.gen_match_4 != 5 :
-		    '''
-		    weight *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4)
-		    tauV4cor *= testool.getTES(e.decayMode_4)
-		    if e.decayMode_4 == 1 : 
-			e.m_4 =  0.1396  
-			tauV4cor.SetE(0.1396)
-		    MetVcor+=   tauV4 - tauV4cor
-		    '''
+		if e.gen_match_4 == 0 :
 		    hBasenoPrompt[group]['t_mt'].Fill(e.pt_4,weight)
 		    if e.decayMode_4 != -1 : hBasenoPromptMode[group]['t_mt'][str(e.decayMode_4)].Fill(e.pt_4,weight)
 		    for wp in WP : 
@@ -794,72 +844,41 @@ for group in groups :
 
 
 	    if cat[2:] == 'tt':
-		if e.gen_match_3 == 5 :
-		    '''
-		    weight *= tauSFTool.getSFvsPT(e.pt_3,e.gen_match_3)
-		    tauV3cor *= testool.getTES(e.decayMode_3)
-		    if e.decayMode_3 == 1 : 
-			e.m_3 =  0.1396  
-			tauV3cor.SetE(0.1396)
-		    MetVcor +=   tauV3 - tauV3cor
-                    '''
+		if e.gen_match_3 != 0 :
 		    hBasePrompt[group]['t1_tt'].Fill(e.pt_3,weight)
-		    if str(e.decayMode_3) != -1 : hBasePromptMode[group]['t1_tt'][str(e.decayMode_3)].Fill(e.pt_3,weight)
+		    if e.decayMode_3 != -1 : hBasePromptMode[group]['t1_tt'][str(e.decayMode_3)].Fill(e.pt_3,weight)
 		    for wp in WP : 
 		        if int(e.idDeepTau2017v2p1VSjet_3) >= int(wp)-1 : 
 		            hTightPrompt[group]['t1_tt'][wp].Fill(e.pt_3,weight)
-		            if str(e.decayMode_3) != -1 : hTightPromptMode[group]['t1_tt'][str(e.decayMode_3)][wp].Fill(e.pt_3,weight)
+		            if e.decayMode_3 != -1 : hTightPromptMode[group]['t1_tt'][str(e.decayMode_3)][wp].Fill(e.pt_3,weight)
 
-		if e.gen_match_3 != 5 :
-		    '''
-		    weight *= tauSFTool.getSFvsPT(e.pt_3,e.gen_match_3)
-		    tauV3cor *= testool.getTES(e.decayMode_3)
-		    if e.decayMode_3 == 1 : 
-			e.m_3 =  0.1396  
-			tauV3cor.SetE(0.1396)
-		    MetVcor +=   tauV3 - tauV3cor
-                    '''
+		if e.gen_match_3 == 0 :
 		    hBasenoPrompt[group]['t1_tt'].Fill(e.pt_3,weight)
-		    if str(e.decayMode_3) != -1 : hBasenoPromptMode[group]['t1_tt'][str(e.decayMode_3)].Fill(e.pt_3,weight)
+		    if e.decayMode_3 != -1 : hBasenoPromptMode[group]['t1_tt'][str(e.decayMode_3)].Fill(e.pt_3,weight)
 
 		    for wp in WP : 
 		        if int(e.idDeepTau2017v2p1VSjet_3) >= int(wp)-1 : 
 		            hTightnoPrompt[group]['t1_tt'][wp].Fill(e.pt_3,weight)
-		            if str(e.decayMode_4) != -1 : hTightnoPromptMode[group]['t1_tt'][str(e.decayMode_3)][wp].Fill(e.pt_3,weight)
+		            if e.decayMode_4 != -1 : hTightnoPromptMode[group]['t1_tt'][str(e.decayMode_3)][wp].Fill(e.pt_3,weight)
 
 
-		if e.gen_match_4 == 5 :
-		    '''
-		    weight *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4)
-		    tauV4cor *= testool.getTES(e.decayMode_4)
-		    if e.decayMode_4 == 1 : 
-			e.m_4 =  0.1396  
-			tauV4cor.SetE(0.1396)
-		    MetVcor +=   tauV4 - tauV4cor
-                    '''
+		if e.gen_match_4 != 0 :
+
 		    hBasePrompt[group]['t2_tt'].Fill(e.pt_4,weight)
 		    if e.decayMode_4 != -1 : hBasePromptMode[group]['t2_tt'][str(e.decayMode_4)].Fill(e.pt_4,weight)
 		    for wp in WP : 
 		        if int(e.idDeepTau2017v2p1VSjet_4) >= int(wp)-1 : 
 		            hTightPrompt[group]['t2_tt'][wp].Fill(e.pt_4,weight)
-		            if str(e.decayMode_4) != -1 : hTightPromptMode[group]['t2_tt'][str(e.decayMode_4)][wp].Fill(e.pt_4,weight)
+		            if e.decayMode_4 != -1 : hTightPromptMode[group]['t2_tt'][str(e.decayMode_4)][wp].Fill(e.pt_4,weight)
 
-		if e.gen_match_4 != 5 :
-		    '''
-		    weight *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4)
-		    tauV4cor *= testool.getTES(e.decayMode_4)
-		    if e.decayMode_4 == 1 : 
-			e.m_4 =  0.1396  
-			tauV4cor.SetE(0.1396)
-		    MetVcor +=   tauV4 - tauV4cor
-                    '''
+		if e.gen_match_4 == 0  :
 		    hBasenoPrompt[group]['t2_tt'].Fill(e.pt_4,weight)
 		    if e.decayMode_4 != -1 : hBasenoPromptMode[group]['t2_tt'][str(e.decayMode_4)].Fill(e.pt_4,weight)
 
 		    for wp in WP : 
 		        if int(e.idDeepTau2017v2p1VSjet_4) >= int(wp)-1 : 
 		            hTightnoPrompt[group]['t2_tt'][wp].Fill(e.pt_4,weight)
-		            if str(e.decayMode_4) != -1 : hTightnoPromptMode[group]['t2_tt'][str(e.decayMode_4)][wp].Fill(e.pt_4,weight)
+		            if e.decayMode_4 != -1 : hTightnoPromptMode[group]['t2_tt'][str(e.decayMode_4)][wp].Fill(e.pt_4,weight)
 
 
 	    if cat[2:] == 'em' : 
@@ -868,23 +887,26 @@ for group in groups :
 	        muMET = mut + ptMiss
 	        preCutt =  muMET.Mt() < 40.  
 
-		if e.gen_match_3 == 1 or e.gen_match_3 == 15 :
+		#if e.gen_match_3 != 0 and e.gen_match_3 != 3 and e.gen_match_3 != 4 and e.gen_match_3 != 5:
+		if e.gen_match_3 == 15 :
 		    if preCutOff or preCut : hBasePrompt[group]['e_em'].Fill(e.pt_3,weight)
                     for wp in WP : 
 		        if e.iso_3 < 0.15 and  e.Electron_mvaFall17V2noIso_WP90_3 > 0 : hTightPrompt[group]['e_em'][wp].Fill(e.pt_3,weight)
 
 
-		if e.gen_match_4 == 1 or e.gen_match_4 == 15 :
+		if e.gen_match_4 == 15 :
+		#if e.gen_match_4 != 0 and e.gen_match_4 != 3 and e.gen_match_4 != 4 and e.gen_match_4 != 5:
 		    if preCutOff or preCutt and (e.isGlobal_4 > 0 or e.isTracker_4 > 0): hBasePrompt[group]['m_em'].Fill(e.pt_4,weight)
                     for wp in WP : 
 		        if e.iso_4 < 0.20 and  (e.isGlobal_4 > 0 or e.isTracker_4 > 0) and e.mediumId_4 > 0: hTightPrompt[group]['m_em'][wp].Fill(e.pt_4,weight)
 
-		if e.gen_match_3 != 1 and e.gen_match_3 != 15 :
+		if not (e.gen_match_3 != 0 and e.gen_match_3 != 3 and e.gen_match_3 != 4 and e.gen_match_3 != 5):
 		    if preCutOff or preCut   : hBasenoPrompt[group]['e_em'].Fill(e.pt_3,weight)
                     for wp in WP : 
 		        if  (e.iso_3 < 0.15 and  e.Electron_mvaFall17V2noIso_WP90_3 > 0 ): hTightnoPrompt[group]['e_em'][wp].Fill(e.pt_3,weight)
 
-		if e.gen_match_4 != 1 or e.gen_match_4 != 15 :
+		#if e.gen_match_4 != 15 : # or e.gen_match_4 != 15 :
+		if not(e.gen_match_4 != 0 and e.gen_match_4 != 3 and e.gen_match_4 != 4 and e.gen_match_4 != 5):
 		    if preCutOff or preCutt and not (e.isGlobal_4 > 0 or e.isTracker_4 > 0): hBasenoPrompt[group]['m_em'].Fill(e.pt_4,weight)
                     for wp in WP : 
 		        if  (e.iso_4 < 0.20 and  (e.isGlobal_4 > 0 or e.isTracker_4 > 0) and e.mediumId_4 > 0): hTightnoPrompt[group]['m_em'][wp].Fill(e.pt_4,weight)
@@ -924,12 +946,18 @@ for group in groups:
 	except AttributeError : print 'sorry for that', group, h
         for m in hModes :
             try: 
+	        OverFlow(hBaseMode[group][h][m]) 
+	        hBaseMode[group][h][m].Write()
 	        OverFlow(hBasePromptMode[group][h][m]) 
 	        hBasePromptMode[group][h][m].Write()
 	        OverFlow(hBasenoPromptMode[group][h][m]) 
 	        hBasenoPromptMode[group][h][m].Write()
 
                 for wp in WP : 
+		    OverFlow(hTightMode[group][h][m][wp]) 
+		    hTightMode[group][h][m][wp].Write()
+		    OverFlow(hTightPromptMode[group][h][m][wp]) 
+		    hTightPromptMode[group][h][m][wp].Write()
 		    OverFlow(hTightPromptMode[group][h][m][wp]) 
 		    hTightPromptMode[group][h][m][wp].Write()
 		    OverFlow(hTightnoPromptMode[group][h][m][wp]) 
