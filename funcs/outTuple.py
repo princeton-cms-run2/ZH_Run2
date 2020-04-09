@@ -85,6 +85,7 @@ class outTuple() :
         self.Electron_mvaFall17V2noIso_WP90_3 = array('f',[0])
         self.Electron_mvaFall17V2noIso_WP90_4 = array('f',[0])
         self.gen_match_3 = array('l',[0])
+        self.tightId_3       = array('f',[0])
         self.mediumId_3       = array('f',[0])
         self.mediumPromptId_3       = array('f',[0])
         self.looseId_3       = array('f',[0])
@@ -120,6 +121,7 @@ class outTuple() :
         self.puppimt_4   = array('f',[0])
         self.iso_4       = array('f',[0])
         self.gen_match_4 = array('l',[0])
+        self.tightId_4       = array('f',[0])
         self.mediumId_4       = array('f',[0])
         self.mediumPromptId_4       = array('f',[0])
         self.looseId_4       = array('f',[0])
@@ -200,6 +202,7 @@ class outTuple() :
         self.isTracker_1       = array('f',[0])
         self.isTracker_2       = array('f',[0])
         self.isGlobal_2       = array('f',[0])
+        self.tightId_1       = array('f',[0])
         self.mediumId_1       = array('f',[0])
         self.mediumPromptId_1       = array('f',[0])
         self.looseId_1       = array('f',[0])
@@ -243,6 +246,7 @@ class outTuple() :
         self.jcsvfv_2    = array('f',[0])
         self.iso_2       = array('f',[0])
         self.q_2       = array('f',[0])
+        self.tightId_2       = array('f',[0])
         self.mediumId_2       = array('f',[0])
         self.mediumPromptId_2       = array('f',[0])
         self.looseId_2       = array('f',[0])
@@ -312,6 +316,7 @@ class outTuple() :
         self.t.Branch('Electron_mvaFall17V2noIso_WP90_3', self.Electron_mvaFall17V2noIso_WP90_3, 'Electron_mvaFall17V2noIso_WP90_3/F')
         self.t.Branch('Electron_mvaFall17V2noIso_WP90_4', self.Electron_mvaFall17V2noIso_WP90_4, 'Electron_mvaFall17V2noIso_WP90_4/F')
         self.t.Branch('gen_match_3', self.gen_match_3, 'gen_match_3/l')
+        self.t.Branch('tightId_3', self.tightId_3, 'tightId_3/F')
         self.t.Branch('mediumId_3', self.mediumId_3, 'mediumId_3/F')
         self.t.Branch('mediumPromptId_3', self.mediumPromptId_3, 'mediumPromptId_3/F')
         self.t.Branch('looseId_3', self.looseId_3, 'looseId_3/F')
@@ -347,6 +352,7 @@ class outTuple() :
         self.t.Branch('puppimt_4',   self.puppimt_4,   'puppimt_4/F')
         self.t.Branch('iso_4',       self.iso_4,       'iso_4/F')
         self.t.Branch('gen_match_4', self.gen_match_4, 'gen_match_4/l')
+        self.t.Branch('tightId_4', self.tightId_4, 'tightId_4/F')
         self.t.Branch('mediumId_4', self.mediumId_4, 'mediumId_4/F')
         self.t.Branch('mediumPromptId_4', self.mediumPromptId_4, 'mediumPromptId_4/F')
         self.t.Branch('looseId_4', self.looseId_4, 'looseId_4/F')
@@ -432,9 +438,11 @@ class outTuple() :
         self.t.Branch('isGlobal_2',       self.isGlobal_2,       'isGlobal_2/F')
         self.t.Branch('isTracker_1',       self.isTracker_1,       'isTracker_1/F')
         self.t.Branch('isTracker_2',       self.isTracker_2,       'isTracker_2/F')
+        self.t.Branch('tightId_1', self.tightId_1, 'tightId_1/F')
         self.t.Branch('mediumId_1', self.mediumId_1, 'mediumId_1/F')
         self.t.Branch('mediumPromptId_1', self.mediumPromptId_1, 'mediumPromptId_1/F')
         self.t.Branch('looseId_1', self.looseId_1, 'looseId_1/F')
+        self.t.Branch('tightId_2', self.tightId_2, 'tightId_2/F')
         self.t.Branch('mediumId_2', self.mediumId_2, 'mediumId_2/F')
         self.t.Branch('mediumPromptId_2', self.mediumPromptId_2, 'mediumPromptId_2/F')
         self.t.Branch('looseId_2', self.looseId_2, 'looseId_2/F')
@@ -667,6 +675,52 @@ class outTuple() :
         self.isGlobal_1[0]  = -99
         self.isGlobal_2[0]  = -99
 
+
+        self.tightId_1[0]       = -1 
+        self.mediumId_1[0]       = -1 
+        self.mediumPromptId_1[0]   = -1
+        self.looseId_1[0]       = -1
+        self.isGlobal_1[0]      = -1
+        self.isTracker_1[0]     = -1
+
+        self.tightId_2[0]       = -1 
+        self.mediumId_2[0]       = -1 
+        self.mediumPromptId_2[0]   = -1
+        self.looseId_2[0]       = -1
+        self.isGlobal_2[0]      = -1
+        self.isTracker_2[0]     = -1
+
+        self.decayMode_3[0]        = -1
+        self.idDecayModeNewDMs_3[0]= -1
+        self.idDeepTau2017v2p1VSe_3[0] = -1
+        self.idDeepTau2017v2p1VSjet_3[0] = -1
+        self.idDeepTau2017v2p1VSmu_3[0] = -1
+        self.idMVAnewDM2017v2_3[0] = -1
+        self.rawMVAnewDM2017v2_3[0] = -1
+        self.mediumId_3[0]       = -1 
+        self.mediumPromptId_3[0]   = -1
+        self.looseId_3[0]       = -1
+        self.isGlobal_3[0]      = -1
+        self.isTracker_3[0]     = -1
+        self.ip3d_3[0]          = -1
+        self.inTimeMuon_3[0]    = -1
+
+        self.decayMode_4[0]      = -1
+        self.idDecayModeNewDMs_4[0] = -1
+        self.idDeepTau2017v2p1VSe_4[0] = -1
+        self.idDeepTau2017v2p1VSjet_4[0] = -1
+        self.idDeepTau2017v2p1VSmu_4[0] = -1
+        self.idMVAnewDM2017v2_4[0] = -1
+        self.rawMVAnewDM2017v2_4[0] = -1
+        self.mediumId_4[0]       = -1 
+        self.mediumPromptId_4[0]   = -1
+        self.looseId_4[0]       = -1
+        self.isGlobal_4[0]      = -1
+        self.isTracker_4[0]     = -1
+        self.ip3d_4[0]          = -1
+        self.inTimeMuon_4[0]    = -1
+
+
         goodElectronList = tauFun.makeGoodElectronList(entry)
         goodMuonList = tauFun.makeGoodMuonList(entry)
         
@@ -747,35 +801,6 @@ class outTuple() :
         for i, bit in enumerate(bits) :
             if bit : self.muonTriggerWord[0] += 2**i
 
-        self.decayMode_3[0]        = -1
-        self.idDecayModeNewDMs_3[0]= -1
-        self.idDeepTau2017v2p1VSe_3[0] = -1
-        self.idDeepTau2017v2p1VSjet_3[0] = -1
-        self.idDeepTau2017v2p1VSmu_3[0] = -1
-        self.idMVAnewDM2017v2_3[0] = -1
-        self.rawMVAnewDM2017v2_3[0] = -1
-        self.mediumId_3[0]       = -1 
-        self.mediumPromptId_3[0]   = -1
-        self.looseId_3[0]       = -1
-        self.isGlobal_3[0]      = -1
-        self.isTracker_3[0]     = -1
-        self.ip3d_3[0]          = -1
-        self.inTimeMuon_3[0]    = -1
-
-        self.decayMode_4[0]      = -1
-        self.idDecayModeNewDMs_4[0] = -1
-        self.idDeepTau2017v2p1VSe_4[0] = -1
-        self.idDeepTau2017v2p1VSjet_4[0] = -1
-        self.idDeepTau2017v2p1VSmu_4[0] = -1
-        self.idMVAnewDM2017v2_4[0] = -1
-        self.rawMVAnewDM2017v2_4[0] = -1
-        self.mediumId_4[0]       = -1 
-        self.mediumPromptId_4[0]   = -1
-        self.looseId_4[0]       = -1
-        self.isGlobal_4[0]      = -1
-        self.isTracker_4[0]     = -1
-        self.ip3d_4[0]          = -1
-        self.inTimeMuon_4[0]    = -1
 
         if jt1>-1 or jt2 >-1 :
 
@@ -852,6 +877,7 @@ class outTuple() :
 		self.d0_4[0]     = entry.Muon_dxy[jt2]
 		self.dZ_4[0]     = entry.Muon_dz[jt2]
 		self.iso_4[0]    = entry.Muon_pfRelIso04_all[jt2]
+		self.tightId_4[0]      = entry.Muon_tightId[jt2]
 		self.mediumId_4[0]      = entry.Muon_mediumId[jt2]
 		self.mediumPromptId_4[0]   = entry.Muon_mediumPromptId[jt2]
 		self.looseId_4[0]       = entry.Muon_looseId[jt2]
@@ -887,6 +913,7 @@ class outTuple() :
 		self.d0_3[0]     = entry.Muon_dxy[jt1]
 		self.dZ_3[0]     = entry.Muon_dz[jt1]
 		self.iso_3[0]    = entry.Muon_pfRelIso04_all[jt1]
+		self.tightId_3[0]      = entry.Muon_tightId[jt1]
 		self.mediumId_3[0]       = entry.Muon_mediumId[jt1]
 		self.mediumPromptId_3[0]   = entry.Muon_mediumPromptId[jt1]
 		self.looseId_3[0]       = entry.Muon_looseId[jt1]
@@ -1078,6 +1105,8 @@ class outTuple() :
 	    self.dZ_2[0]   = entry.Muon_dz[lep_index_2]
 	    self.looseId_1[0]   = entry.Muon_looseId[lep_index_1] 
 	    self.looseId_2[0]   = entry.Muon_looseId[lep_index_2] 
+            self.tightId_1[0]      = entry.Muon_tightId[lep_index_1]
+            self.tightId_2[0]      = entry.Muon_tightId[lep_index_2]
 	    self.mediumId_1[0]   = entry.Muon_mediumId[lep_index_1] 
 	    self.mediumId_2[0]   = entry.Muon_mediumId[lep_index_2] 
 	    self.mediumPromptId_1[0]   = entry.Muon_mediumPromptId[lep_index_1] 
@@ -1290,6 +1319,59 @@ class outTuple() :
         self.isGlobal_1[0]  = -99
         self.isGlobal_2[0]  = -99
 
+        self.tightId_1[0]       = -1 
+        self.mediumId_1[0]       = -1 
+        self.mediumPromptId_1[0]   = -1
+        self.looseId_1[0]       = -1
+        self.isGlobal_1[0]      = -1
+        self.isTracker_1[0]     = -1
+
+        self.tightId_2[0]       = -1 
+        self.mediumId_2[0]       = -1 
+        self.mediumPromptId_2[0]   = -1
+        self.looseId_2[0]       = -1
+        self.isGlobal_2[0]      = -1
+        self.isTracker_2[0]     = -1
+
+       
+        self.decayMode_3[0]        = -1
+        self.idDecayModeNewDMs_3[0]= -1
+        self.idDeepTau2017v2p1VSe_3[0] = -1
+        self.idDeepTau2017v2p1VSjet_3[0] = -1
+        self.idDeepTau2017v2p1VSmu_3[0] = -1
+        self.idMVAnewDM2017v2_3[0] = -1
+        self.rawMVAnewDM2017v2_3[0] = -1
+        self.mediumId_3[0]       = -1 
+        self.mediumPromptId_3[0]   = -1
+        self.looseId_3[0]       = -1
+        self.isGlobal_3[0]      = -1
+        self.isTracker_3[0]     = -1
+        self.ip3d_3[0]          = -1
+        self.inTimeMuon_3[0]    = -1
+
+        self.decayMode_4[0]      = -1
+        self.idDecayModeNewDMs_4[0] = -1
+        self.idDeepTau2017v2p1VSe_4[0] = -1
+        self.idDeepTau2017v2p1VSjet_4[0] = -1
+        self.idDeepTau2017v2p1VSmu_4[0] = -1
+        self.idMVAnewDM2017v2_4[0] = -1
+        self.rawMVAnewDM2017v2_4[0] = -1
+        self.mediumId_4[0]       = -1 
+        self.mediumPromptId_4[0]   = -1
+        self.looseId_4[0]       = -1
+        self.isGlobal_4[0]      = -1
+        self.isTracker_4[0]     = -1
+        self.ip3d_4[0]          = -1
+        self.inTimeMuon_4[0]    = -1
+
+        self.decayMode_5[0]      = -1
+        self.idDecayModeNewDMs_5[0] = -1
+        self.idDeepTau2017v2p1VSe_5[0] = -1
+        self.idDeepTau2017v2p1VSjet_5[0] = -1
+        self.idDeepTau2017v2p1VSmu_5[0] = -1
+        self.idMVAnewDM2017v2_5[0] = -1
+        self.rawMVAnewDM2017v2_5[0] = -1
+
         goodElectronList = tauFun.makeGoodElectronList(entry)
         goodMuonList = tauFun.makeGoodMuonList(entry)
         
@@ -1415,6 +1497,10 @@ class outTuple() :
 	    self.dZ_2[0]   = entry.Muon_dz[lep_index_2]
 	    self.looseId_1[0]   = entry.Muon_looseId[lep_index_1] 
 	    self.looseId_2[0]   = entry.Muon_looseId[lep_index_2] 
+            self.tightId_1[0]      = entry.Muon_tightId[lep_index_1]
+            self.tightId_2[0]      = entry.Muon_tightId[lep_index_2]
+	    self.tightId_1[0]   = entry.Muon_tightId[lep_index_1] 
+	    self.tightId_2[0]   = entry.Muon_tightId[lep_index_2] 
 	    self.mediumId_1[0]   = entry.Muon_mediumId[lep_index_1] 
 	    self.mediumId_2[0]   = entry.Muon_mediumId[lep_index_2] 
 	    self.mediumPromptId_1[0]   = entry.Muon_mediumPromptId[lep_index_1] 
@@ -1424,44 +1510,6 @@ class outTuple() :
 	    self.isTracker_1[0]   = entry.Muon_isTracker[lep_index_1] 
 	    self.isTracker_2[0]   = entry.Muon_isTracker[lep_index_2] 
 
-       
-        self.decayMode_3[0]        = -1
-        self.idDecayModeNewDMs_3[0]= -1
-        self.idDeepTau2017v2p1VSe_3[0] = -1
-        self.idDeepTau2017v2p1VSjet_3[0] = -1
-        self.idDeepTau2017v2p1VSmu_3[0] = -1
-        self.idMVAnewDM2017v2_3[0] = -1
-        self.rawMVAnewDM2017v2_3[0] = -1
-        self.mediumId_3[0]       = -1 
-        self.mediumPromptId_3[0]   = -1
-        self.looseId_3[0]       = -1
-        self.isGlobal_3[0]      = -1
-        self.isTracker_3[0]     = -1
-        self.ip3d_3[0]          = -1
-        self.inTimeMuon_3[0]    = -1
-
-        self.decayMode_4[0]      = -1
-        self.idDecayModeNewDMs_4[0] = -1
-        self.idDeepTau2017v2p1VSe_4[0] = -1
-        self.idDeepTau2017v2p1VSjet_4[0] = -1
-        self.idDeepTau2017v2p1VSmu_4[0] = -1
-        self.idMVAnewDM2017v2_4[0] = -1
-        self.rawMVAnewDM2017v2_4[0] = -1
-        self.mediumId_4[0]       = -1 
-        self.mediumPromptId_4[0]   = -1
-        self.looseId_4[0]       = -1
-        self.isGlobal_4[0]      = -1
-        self.isTracker_4[0]     = -1
-        self.ip3d_4[0]          = -1
-        self.inTimeMuon_4[0]    = -1
-
-        self.decayMode_5[0]      = -1
-        self.idDecayModeNewDMs_5[0] = -1
-        self.idDeepTau2017v2p1VSe_5[0] = -1
-        self.idDeepTau2017v2p1VSjet_5[0] = -1
-        self.idDeepTau2017v2p1VSmu_5[0] = -1
-        self.idMVAnewDM2017v2_5[0] = -1
-        self.rawMVAnewDM2017v2_5[0] = -1
 
         #print ElList, MuList, TauList
         if nelectrons > 0 :
@@ -1529,6 +1577,7 @@ class outTuple() :
 	    self.d0_3[0]     = entry.Muon_dxy[im]
 	    self.dZ_3[0]     = entry.Muon_dz[im]
 	    self.iso_3[0]    = entry.Muon_pfRelIso04_all[im]
+	    self.tightId_3[0]   = entry.Muon_tightId[im] 
 	    self.mediumId_3[0]      = entry.Muon_mediumId[im]
 	    self.mediumPromptId_3[0]   = entry.Muon_mediumPromptId[im]
 	    self.looseId_3[0]       = entry.Muon_looseId[im]
@@ -1550,6 +1599,7 @@ class outTuple() :
 		self.d0_4[0]     = entry.Muon_dxy[imm]
 		self.dZ_4[0]     = entry.Muon_dz[imm]
 		self.iso_4[0]    = entry.Muon_pfRelIso04_all[imm]
+	        self.tightId_4[0]   = entry.Muon_tightId[imm] 
 		self.mediumId_4[0]      = entry.Muon_mediumId[imm]
 		self.mediumPromptId_4[0]   = entry.Muon_mediumPromptId[imm]
 		self.looseId_4[0]       = entry.Muon_looseId[imm]
