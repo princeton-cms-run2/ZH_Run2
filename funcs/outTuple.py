@@ -174,6 +174,13 @@ class outTuple() :
 
         # di-lepton variables.   1 and 2 refer to plus and minus charge
         # ll_lmass is mass of decay lepton 
+        self.H_LT       = array('f',[0])
+        self.dRl1H       = array('f',[0])
+        self.dRl2H       = array('f',[0])
+        self.dRlH       = array('f',[0])
+        self.dPhil1H       = array('f',[0])
+        self.dPhil2H       = array('f',[0])
+        self.dPhilH       = array('f',[0])
         self.mll       = array('f',[0])
         self.mll2       = array('f',[0])
         self.Z_Pt       = array('f',[0])
@@ -405,6 +412,14 @@ class outTuple() :
         self.t.Branch('AMass', self.AMass, 'AMass/F')
 
         # di-lepton variables. 
+        self.t.Branch('H_LT',         self.H_LT,         'H_LT/F')   
+        self.t.Branch('dRl1H',         self.dRl1H,         'dRl1H/F')   
+        self.t.Branch('dRl2H',         self.dRl2H,         'dRl2H/F')   
+        self.t.Branch('dRlH',         self.dRlH,         'dRlH/F')   
+        self.t.Branch('dPhil1H',         self.dPhil1H,         'dPhil1H/F')   
+        self.t.Branch('dPhil2H',         self.dPhil2H,         'dPhil2H/F')   
+        self.t.Branch('dPhilH',         self.dPhilH,         'dPhilH/F')   
+
         self.t.Branch('mll',         self.mll,         'mll/F')   
         self.t.Branch('mll2',         self.mll2,         'mll2/F')   
         self.t.Branch('Z_Pt',       self.Z_Pt,       'Z_Pt/F')   
@@ -533,6 +548,10 @@ class outTuple() :
         dPhi = min(abs(v2.Phi()-v1.Phi()),2.*pi-abs(v2.Phi()-v1.Phi()))
         DR = sqrt(dPhi**2 + (v2.Eta()-v1.Eta())**2)
 	return DR
+
+    def getdPhi(self, entry, v1,v2) :
+        dPhi = min(abs(v2.Phi()-v1.Phi()),2.*pi-abs(v2.Phi()-v1.Phi()))
+        return dPhi
 
     def getM_vis(self,entry,tau1,tau2) :
         return (tau1+tau2).M()
@@ -1065,6 +1084,15 @@ class outTuple() :
         if jt1>-1 and jt2>-1 : self.AMass[0]       = (Lep1 + Lep2 + tau1 + tau2).M() 
         self.mll[0]       = (Lep1 + Lep2).M()
         self.Z_DR[0]       = self.getDR(entry,Lep1,Lep2)
+       
+        self.H_LT[0]       = Lep1.Pt() + Lep2.Pt()
+        self.dRl1H[0]  = self.getDR(entry,Lep1,tau1+tau2)
+        self.dRl2H[0]  = self.getDR(entry,Lep2,tau1+tau2)
+        self.dRlH[0]  = self.getDR(entry,Lep1+Lep2,tau1+tau2)
+
+        self.dPhil1H[0]  = self.getdPhi(entry,Lep1,tau1+tau2)
+        self.dPhil2H[0]  = self.getdPhi(entry,Lep2,tau1+tau2)
+        self.dPhilH[0]  = self.getdPhi(entry,Lep1+Lep2,tau1+tau2)
            
         self.pt_1[0]   = Lep1.Pt()
         self.phi_1[0]  = Lep1.Phi()
@@ -1464,6 +1492,15 @@ class outTuple() :
         # di-lepton variables.   _p and _m refer to plus and minus charge
         self.mll[0]       = (Lep1 + Lep2).M()
         self.Z_DR[0]       = self.getDR(entry,Lep1,Lep2)
+
+        self.H_LT[0]       = Lep1.Pt() + Lep2.Pt()
+        self.dRl1H[0]  = self.getDR(entry,Lep1,tau1+tau2)
+        self.dRl2H[0]  = self.getDR(entry,Lep2,tau1+tau2)
+        self.dRlH[0]  = self.getDR(entry,Lep1+Lep2,tau1+tau2)
+
+        self.dPhil1H[0]  = self.getdPhi(entry,Lep1,tau1+tau2)
+        self.dPhil2H[0]  = self.getdPhi(entry,Lep2,tau1+tau2)
+        self.dPhilH[0]  = self.getdPhi(entry,Lep1+Lep2,tau1+tau2)
            
         self.pt_1[0]   = Lep1.Pt()
         self.phi_1[0]  = Lep1.Phi()

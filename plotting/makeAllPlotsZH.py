@@ -2,6 +2,7 @@
 # read MC file root files and histogram by group 
 #
 
+import CMS_lumi
 import tdrstyle
 import ROOT
 from ROOT import gSystem, gStyle, gROOT, kTRUE, TMatrixD
@@ -35,26 +36,6 @@ def search(values, searchFor):
             if searchFor in v:
                 return True
     return False
-
-'''
-def getCat(mass):
-    ib = 0
-    if mass < 75 : 
-        if jets == 0 : ib = 1
-        elif jets == 1 : ib = 2
-        else jets == 1 : ib = 3
-
-    if  75 < mass < 150 : 
-        if jets == 0 : ib = 4
-        elif jets == 1 : ib = 5
-        else jets == 1 : ib = 6
-'''
-
-def LeptonID(cat, year):
-
-
-    El_IDFiles = {'2016:2016LegacyReReco_ElectronMVA90noiso_Fall17V2.root', '2017:2017_ElectronMVA90noiso.root', '2018:2018_ElectronMVA90noiso.root'}
-    #MuonID_Files
 
 
 def runSVFit(entry, channel) :
@@ -96,8 +77,6 @@ def runSVFit(entry, channel) :
     return ttP4.M(), ttP4.Mt() 
 
 
-
-
 def getArgs() :
     import argparse
     parser = argparse.ArgumentParser()
@@ -125,9 +104,9 @@ class dupeDetector() :
         self.runEventList = []
         self.DuplicatedEvents = []
 
-    def checkEvent(self,entry) :
+    def checkEvent(self,entry,cat) :
         self.nCalls += 1 
-        runEvent = "{0:d}:{1:d}:{2:d}".format(entry.lumi,entry.run,entry.evt)
+        runEvent = "{0:d}:{1:d}:{2:d}:{3:s}".format(entry.lumi,entry.run,entry.evt,cat)
         if runEvent in self.runEventList :
             #print("Event in list: runEventList={0:s}".format(str(self.runEventList)))
             self.DuplicatedEvents.append(runEvent)
@@ -204,6 +183,51 @@ def deltaEta(Px1, Py1, Pz1, Px2,  Py2,  Pz2):
 
   return dEta
 
+def getFakeWeightsvspT(ic, pt1,pt2, WP, ist1, ist2) :
+    
+    if ic == 'et' : 
+        p1 = 'e_et'
+        p2 = 't_et'
+
+    if ic == 'mt' : 
+        p1 = 'm_mt'
+        p2 = 't_mt'
+
+    if ic == 'em' : 
+        p1 = 'e_em'
+        p2 = 'm_em'
+
+    if ic == 'tt' : 
+        p1 = 't1_tt'
+        p2 = 't2_tt'
+
+    filein = '../fakes/FakesResult_{0:s}_SS_{1:s}WP.root'.format(str(args.year),str(WP))
+    fin = TFile.Open(filein,"READ")         
+    h1 = fin.Get('{0:s}_vspT'.format(p1))
+    h2 = fin.Get('{0:s}_vspT'.format(p2))
+    xB1 = 1
+    xB2 = 1
+    if pt1 < 100 : xB1 = h1.FindBin(pt1)
+    if pt1 > 100 : xB1 = h1.GetNbinsX()
+
+    if pt2 < 100 : xB2 = h2.FindBin(pt2)
+    if pt2 > 100 : xB2 = h2.GetNbinsX()
+
+    f1 = h1.GetBinContent(xB1)
+    f2 = h1.GetBinContent(xB2)
+    #print '===========>', pt1, pt2, f1, f2, xB1, xB2
+    w1, w2, w0 =0. ,0. ,0.
+    '''
+    if not ist1 and ist2 : w1 = float(f1/(1.-f1))
+    if ist1 and not ist2 : w2 = float(f2/(1.-f2))
+    if not ist1 and not ist2 : w0 = w1*w2
+    '''
+    w1 = float(f1/(1.-f1))
+    w2 = float(f2/(1.-f2))
+    w0 = w1*w2
+    #print '================= now reading fake rate for data', pt1, pt2 ,' to be', f1, f2, 'actual fW1 etc', w1, w2, w0, 'is this false??? ', ist1, ist2
+    return w1, w2, w0
+
 
 
 
@@ -216,79 +240,12 @@ def getFakeWeights(p1,p2, WP) :
     f1 = h1.GetSumOfWeights()
     f2 = h2.GetSumOfWeights()
 
-    print '================= now reading fake rate for', p1, p2 ,' to be', f1, f2, 'and for WP', WP
+    #print '================= now reading fake rate for', p1, p2 ,' to be', f1, f2, 'and for WP', WP
 
     w1 = f1/(1.-f1)
     w2 = f2/(1.-f2)
     w0 = w1*w2
     return w1, w2, w0
-
-def trigweight(e,cat) :
-    trigw = 1.
-    '''
-    if cat == 'eeet' or cat == 'mmmt' :
-	if e.trig_Lp_MC != 0. and  e.trig_Lm_MC == 0. : 
-	    if trig_T1_MC == 0. : trigw = float(e.trig_Lp_Data/e.trig_Lp_MC)
-	    if trig_T1_MC != 0. : trigw = float(      (1 - (1-e.trig_Lp_Data)*(1-e.trig_T1_Data)) /  (1 - (1-e.trig_Lp_MC)*(1-e.trig_T1_MC) ))
-
-	if e.trig_Lp_MC == 0. and  e.trig_Lm_MC != 0. : 
-	    if trig_T1_MC == 0. : trigw = float(e.trig_Lm_Data/e.trig_Lm_MC)
-	    if trig_T1_MC != 0. : trigw = float(      (1 - (1-e.trig_Lm_Data)*(1-e.trig_T1_Data)) /  (1 - (1-e.trig_Lm_MC)*(1-e.trig_T1_MC) ))
-
-	if e.trig_Lp_MC != 0. and  e.trig_Lm_MC != 0. : 
-	    trigw = float(      (1 - (1-e.trig_Lp_Data)*(1-e.trig_Lm_Data)*(1-e.trig_T1_Data)) /  (1 - (1-e.trig_Lp_MC)*(1-e.trig_Lm_MC)*(1-e.trig_T1_MC) ))
-
-    if cat == 'eemt' or cat == 'mmet' :
-	if e.trig_Lp_MC != 0. and  e.trig_Lm_MC == 0. : 
-	    if trig_T1_MC == 0. : trigw = float(e.trig_Lp_Data/e.trig_Lp_MC)
-	    if trig_T1_MC != 0. : trigw = float(   (e.trig_Lp_Data/e.trig_Lp_MC) * (e.trig_Lp_Data/e.trig_Lp_MC)   )
-	if e.trig_Lp_MC == 0. and  e.trig_Lm_MC != 0. : 
-	    if trig_T1_MC == 0. : trigw = float(e.trig_Lm_Data/e.trig_Lm_MC)
-	    if trig_T1_MC != 0. : trigw = float(   (e.trig_Lm_Data/e.trig_Lm_MC) * (e.trig_Lm_Data/e.trig_Lm_MC)   )
-	if e.trig_Lp_MC != 0. and  e.trig_Lm_MC != 0. : 
-	    if trig_T1_MC == 0. : trigw = float(      (1 - (1-e.trig_Lp_Data)*(1-e.trig_Lm_Data)) /  (1 - (1-e.trig_Lp_MC)*(1-e.trig_Lm_MC) ) )
-	    if trig_T1_MC != 0. : trigw = float(      (1 - (1-e.trig_Lp_Data)*(1-e.trig_Lm_Data)) /  (1 - (1-e.trig_Lp_MC)*(1-e.trig_Lm_MC) )  * float(e.trig_T1_Data/e.trig_T1_MC) )
-
-    if cat == 'eeem' :
-	if e.trig_Lp_MC != 0. and  e.trig_Lm_MC == 0. : 
-	    if trig_T1_MC == 0. and trig_T2_MC == 0. : trigw = float(e.trig_Lp_Data/e.trig_Lp_MC)
-	    if trig_T1_MC == 0. and trig_T2_MC != 0. : trigw = float(e.trig_Lp_Data/e.trig_Lp_MC) * float(e.trig_T2_Data/e.trig_T2_MC)
-	    if trig_T1_MC != 0. and trig_T2_MC == 0. : trigw = float(      (1 - (1-e.trig_Lp_Data)*(1-e.trig_T1_Data)) /  (1 - (1-e.trig_Lp_MC)*(1-e.trig_T1_MC) ))
-	    if trig_T1_MC != 0. and trig_T2_MC != 0. : trigw = float(      (1 - (1-e.trig_Lp_Data)*(1-e.trig_T1_Data)) /  (1 - (1-e.trig_Lp_MC)*(1-e.trig_T1_MC) ) * float(e.trig_T2_Data/e.trig_T2_MC))
-
-	if e.trig_Lp_MC == 0. and  e.trig_Lm_MC != 0. : 
-	    if trig_T1_MC == 0. and trig_T2_MC == 0. : trigw = float(e.trig_Lm_Data/e.trig_Lm_MC)
-	    if trig_T1_MC == 0. and trig_T2_MC != 0. : trigw = float(e.trig_Lm_Data/e.trig_Lm_MC) * float(e.trig_T2_Data/e.trig_T2_MC)
-	    if trig_T1_MC != 0. and trig_T2_MC == 0. : trigw = float(      (1 - (1-e.trig_Lm_Data)*(1-e.trig_T1_Data)) /  (1 - (1-e.trig_Lm_MC)*(1-e.trig_T1_MC) ))
-	    if trig_T1_MC != 0. and trig_T2_MC != 0. : trigw = float(      (1 - (1-e.trig_Lm_Data)*(1-e.trig_T1_Data)) /  (1 - (1-e.trig_Lm_MC)*(1-e.trig_T1_MC) ) * float(e.trig_T2_Data/e.trig_T2_MC))
-
-	if e.trig_Lp_MC != 0. and  e.trig_Lm_MC != 0. : 
-	    if trig_T1_MC == 0. and trig_T2_MC == 0. : trigw = float(  (1 - (1-e.trig_Lp_Data)*(1-e.trig_Lm_Data)) /  (1 - (1-e.trig_Lp_MC)*(1-e.trig_Lm_MC) ))
-	    if trig_T1_MC == 0. and trig_T2_MC != 0. : trigw = float(  (1 - (1-e.trig_Lp_Data)*(1-e.trig_Lm_Data)) /  (1 - (1-e.trig_Lp_MC)*(1-e.trig_Lm_MC) ) * float(e.trig_T2_Data/e.trig_T2_MC))
-	    if trig_T1_MC != 0. and trig_T2_MC == 0. : trigw = float(  (1 - (1-e.trig_Lp_Data)*(1-e.trig_Lm_Data)*(1-e.trig_T1_Data)) /  (1 - (1-e.trig_Lp_MC)*(1-e.trig_Lm_MC)*(1-e.trig_T1_MC) ) 
-	    if trig_T1_MC != 0. and trig_T2_MC != 0. : trigw = float(  (1 - (1-e.trig_Lp_Data)*(1-e.trig_Lm_Data)*(1-e.trig_T1_Data)) /  (1 - (1-e.trig_Lp_MC)*(1-e.trig_Lm_MC)*(1-e.trig_T1_MC) ) * float(e.trig_T2_Data/e.trig_T2_MC))
-
-    if cat == 'mmem' :
-	if e.trig_Lp_MC != 0. and  e.trig_Lm_MC == 0. : 
-	    if trig_T1_MC == 0. and trig_T2_MC == 0.: trigw = float(e.trig_Lp_Data/e.trig_Lp_MC)
-	    if trig_T1_MC != 0. and trig_T2_MC == 0.: trigw = float(e.trig_Lp_Data/e.trig_Lp_MC) * float(e.trig_T2_Data/e.trig_T2_MC)
-	    if trig_T1_MC == 0. and trig_T2_MC != 0. : trigw = float(      (1 - (1-e.trig_Lp_Data)*(1-e.trig_T2_Data)) /  (1 - (1-e.trig_Lp_MC)*(1-e.trig_T2_MC) ))
-	    if trig_T1_MC != 0. and trig_T2_MC != 0. : trigw = float(      (1 - (1-e.trig_Lp_Data)*(1-e.trig_T2_Data)) /  (1 - (1-e.trig_Lp_MC)*(1-e.trig_T2_MC) ) * float(e.trig_T1_Data/e.trig_T1_MC))
-
-	if e.trig_Lp_MC == 0. and  e.trig_Lm_MC != 0. : 
-	    if trig_T1_MC == 0. and trig_T2_MC == 0.: trigw = float(e.trig_Lm_Data/e.trig_Lm_MC)
-	    if trig_T1_MC != 0. and trig_T2_MC == 0.: trigw = float(e.trig_Lm_Data/e.trig_Lm_MC) * float(e.trig_T2_Data/e.trig_T2_MC)
-	    if trig_T1_MC == 0. and trig_T2_MC != 0. : trigw = float(      (1 - (1-e.trig_Lm_Data)*(1-e.trig_T2_Data)) /  (1 - (1-e.trig_Lm_MC)*(1-e.trig_T2_MC) ))
-	    if trig_T1_MC != 0. and trig_T2_MC != 0. : trigw = float(      (1 - (1-e.trig_Lm_Data)*(1-e.trig_T2_Data)) /  (1 - (1-e.trig_Lm_MC)*(1-e.trig_T2_MC) ) * float(e.trig_T1_Data/e.trig_T1_MC))
-
-	if e.trig_Lp_MC != 0. and  e.trig_Lm_MC != 0. : 
-	    if trig_T1_MC == 0. and trig_T2_MC == 0.: trigw = float(  (1 - (1-e.trig_Lp_Data)*(1-e.trig_Lm_Data)) /  (1 - (1-e.trig_Lp_MC)*(1-e.trig_Lm_MC) ))
-	    if trig_T1_MC != 0. and trig_T2_MC == 0.: trigw = float(  (1 - (1-e.trig_Lp_Data)*(1-e.trig_Lm_Data)) /  (1 - (1-e.trig_Lp_MC)*(1-e.trig_Lm_MC) ) * float(e.trig_T1_Data/e.trig_T1_MC))
-	    if trig_T1_MC == 0. and trig_T2_MC != 0.: trigw = float(  (1 - (1-e.trig_Lp_Data)*(1-e.trig_Lm_Data)*(1-e.trig_T2_Data)) /  (1 - (1-e.trig_Lp_MC)*(1-e.trig_Lm_MC)*(1-e.trig_T2_MC) ) 
-	    if trig_T1_MC != 0. and trig_T2_MC != 0.: trigw = float(  (1 - (1-e.trig_Lp_Data)*(1-e.trig_Lm_Data)*(1-e.trig_T2_Data)) /  (1 - (1-e.trig_Lp_MC)*(1-e.trig_Lm_MC)*(1-e.trig_T2_MC) ) * float(e.trig_T1_Data/e.trig_T1_MC))
-    '''
-    return trigw
-
 
 
 args = getArgs()
@@ -399,31 +356,21 @@ hMCFM = {}
 
 hm_sv_cat = {}
 hm_sv_new = {}
-hdPhi_l1H = {}
-hdPhi_l2H = {}
-hdPhi_lH = {}
-hdEta_l1H = {}
-hdEta_l2H = {}
-hdEta_lH = {}
-hdR_l1H = {}
-hdR_l2H = {}
-hdR_lH = {}
+hm_sv_new_FM = {}
+hw_fm_new = {}
 hmt_sv_new = {}
+hmt_sv_new_FM = {}
 hH_LT= {}
 hH_LT_FM= {}
 hCutFlow = {}
 hCutFlowN = {}
+hCutFlowFM = {}
 hW = {}
 hTriggerW= {}
 hLeptonW= {}
 hCutFlowPerGroup = {}
+hCutFlowPerGroupFM = {}
 WCounter = {}
-hidDeepTau2017v2p1VSjet_3 = {}
-hidDeepTau2017v2p1VSjet_4 = {}
-hidDeepTau2017v2p1VSmu_3 = {}
-hidDeepTau2017v2p1VSmu_4 = {}
-hidDeepTau2017v2p1VSe_3 = {}
-hidDeepTau2017v2p1VSe_4 = {}
 
 
 isW = False
@@ -436,13 +383,16 @@ MetVcor = TLorentzVector()
 tauV3 = TLorentzVector()
 tauV4 = TLorentzVector()
 tauV = TLorentzVector()
-LeptV = TLorentzVector()
 tauV3cor = TLorentzVector()
 tauV4cor = TLorentzVector()
 L1 = TLorentzVector()
 L2 = TLorentzVector()
 L1.SetXYZM(0,0,0,0)
 L2.SetXYZM(0,0,0,0)
+L1g = TLorentzVector()
+L2g = TLorentzVector()
+L1g.SetXYZM(0,0,0,0)
+L2g.SetXYZM(0,0,0,0)
 MetV.SetXYZM(0,0,0,0)
 MetVcor.SetXYZM(0,0,0,0)
 tauV3.SetXYZM(0,0,0,0)
@@ -450,12 +400,27 @@ tauV4.SetXYZM(0,0,0,0)
 tauV3cor.SetXYZM(0,0,0,0)
 tauV4cor.SetXYZM(0,0,0,0)
 tauV.SetXYZM(0,0,0,0)
-LeptV.SetXYZM(0,0,0,0)
 
 # dictionary where the nickName is the key
 nickNames, xsec, totalWeight, sampleWeight = {}, {}, {}, {}
 
-groups = ['Signal','Other','Top','DY','WZ','ZZ','data']
+#groups = ['fakes','Signal','Other','Top','DY','WZ','ZZ','data']
+#groups = ['Signal','Other','Top','DY','WZ','ZZ','data','fakes','f1','f2']
+groups = ['fakes','f1', 'f2','bfl1', 'ljfl1', 'cfl1','jfl1','bfl2', 'ljfl2', 'cfl2','jfl2','jft1', 'jft2','Signal','Other','Top','DY','WZ','ZZ','data']
+ngroups = ['fakes','f1', 'f2','bfl1', 'ljfl1', 'cfl1','jfl1','bfl2', 'ljfl2', 'cfl2','jfl2','jft1', 'jft2','Signal','Other','Top','DY','WZ','ZZ','data']
+fgroups = ['bfl', 'ljfl',  'cfl','jfl', 'jft1', 'jft2']
+
+groupss = ['Other','Top','DY','WZ','ZZ', 'Signal']
+
+'''
+groups = ['fakes','f1', 'f2', 'Signal','Other','Top','DY','WZ','ZZ','data']
+ngroups = ['fakes','f1', 'f2','Signal','Other','Top','DY','WZ','ZZ','data']
+
+for f in fgroups : 
+    for g in groupss :
+        groups.insert(0,g+'_'+f)
+        ngroups.insert(0,g+'_'+f)
+'''
 
 for group in groups :
     nickNames[group] = []
@@ -576,19 +541,15 @@ if era == '2017' : fe_et, ft_et, fm_mt, ft_mt, f1_tt, f2_tt, fe_em, fm_em  = 0.0
 if era == '2018' : fe_et, ft_et, fm_mt, ft_mt, f1_tt, f2_tt, fe_em, fm_em  = 0.0083,0.1199, 0.0598, 0.1105, 0.1178, 0.1121, 0.01009, 0.0440
 
 
-#    weightsFakes = {'fe_et': 0.0083, 'ft_et':0.1199, 'fm_mt':0.0598, 'ft_tt':0.1105, 'ft1_tt':0.1178, 'ft2_tt':0.1121, 'fe_em':0.01009, 'fm_em':0.0440 } 
-
-#    weightsFakes = {'fe_et': 0.0083, 'ft_et':0.1199, 'fm_mt':0.0598, 'ft_tt':0.1105, 'ft1_tt':0.1178, 'ft2_tt':0.1121, 'fe_em':0.01009, 'fm_em':0.0440 } 
-#    weightsFakes = {'fe_et': 0.0083, 'ft_et':0.1199, 'fm_mt':0.0598, 'ft_tt':0.1105, 'ft1_tt':0.1178, 'ft2_tt':0.1121, 'fe_em':0.01009, 'fm_em':0.0440 } 
-
 #define the tightiD WP
 
-
+'''
 fW1, fW2, fW0 = {}, {}, {}
 fW1['et'], fW2['et'], fW0['et'] = getFakeWeights('e_et','t_et', WP)
 fW1['mt'], fW2['mt'], fW0['mt'] = getFakeWeights('m_mt','t_mt', WP)
 fW1['tt'], fW2['tt'], fW0['tt'] = getFakeWeights('t1_tt','t2_tt', WP)
 fW1['em'], fW2['em'], fW0['em'] = getFakeWeights('e_em','m_em', WP)
+'''
 
 global getsf,sf
 
@@ -603,35 +564,35 @@ plotSettings = { # [nBins,xMin,xMax,units]
         "nPUtrue":[130,-0.5,129.5,"","nPUtrue"],
         "Generator_weight":[20,-10,10,"","genWeight"],
 
-        "pt_1":[10,0,200,"[Gev]","P_{T}(#tau_{1})"],
+        "pt_1":[8,0,160,"[Gev]","P_{T}(#tau_{1})"],
         "eta_1":[30,-3,3,"","#eta(l_{1})"],
         "phi_1":[30,-3,3,"","#phi(l_{1})"],
         "iso_1":[20,0,1,"","relIso(l_{1})"],
-        "dZ_1":[20,-0.2,0.2,"[cm]","d_{z}(l_{1})"],
-        "d0_1":[20,-0.2,0.2,"[cm]","d_{xy}(l_{1})"],
+        "dZ_1":[10,-0.1,0.1,"[cm]","d_{z}(l_{1})"],
+        "d0_1":[10,-0.1,0.1,"[cm]","d_{xy}(l_{1})"],
         "q_1":[3,-1.5,1.5,"","charge(l_{1})"],
 
-        "pt_2":[10,0,200,"[Gev]","P_{T}(l_{2})"],
+        "pt_2":[8,0,160,"[Gev]","P_{T}(l_{2})"],
         "eta_2":[30,-3,3,"","#eta(l_{2})"],
         "phi_2":[30,-3,3,"","#phi(l_{2})"],
         "iso_2":[20,0,1,"","relIso(l_{2})"],
-        "dZ_2":[20,-0.2,0.2,"[cm]","d_{z}(l_{2})"],
-        "d0_2":[20,-0.2,0.2,"[cm]","d_{xy}(l_{2})"],
+        "dZ_2":[10,-0.1,0.1,"[cm]","d_{z}(l_{2})"],
+        "d0_2":[10,-0.1,0.1,"[cm]","d_{xy}(l_{2})"],
         "q_2":[3,-1.5,1.5,"","charge(l_{2})"],
 
 	"iso_3":[20,0,1,"","relIso(l_{3})"],
-        "pt_3":[10,0,200,"[Gev]","P_{T}(l_{3})"],
+        "pt_3":[8,0,160,"[Gev]","P_{T}(l_{3})"],
         "eta_3":[30,-3,3,"","#eta(l_{3})"],
         "phi_3":[30,-3,3,"","#phi(l_{3})"],
-        "dZ_3":[20,-0.2,0.2,"[cm]","d_{z}(l_{3})"],
-        "d0_3":[20,-0.2,0.2,"[cm]","d_{xy}(l_{3})"],
+        "dZ_3":[10,-0.1,0.1,"[cm]","d_{z}(l_{3})"],
+        "d0_3":[10,-0.1,0.1,"[cm]","d_{xy}(l_{3})"],
 
         "iso_4":[20,0,1,"","relIso(l_{4})"],
-        "pt_4":[10,0,200,"[Gev]","P_{T}(l_{4})"],
+        "pt_4":[8,0,160,"[Gev]","P_{T}(l_{4})"],
         "eta_4":[30,-3,3,"","#eta(l_{4})"],
         "phi_4":[30,-3,3,"","#phi(l_{4})"],
-        "dZ_4":[20,-0.2,0.2,"[cm]","d_{z}(l_{4})"],
-        "d0_4":[20,-0.2,0.2,"[cm]","d_{xy}(l_{4})"],
+        "dZ_4":[10,-0.1,0.1,"[cm]","d_{z}(l_{4})"],
+        "d0_4":[10,-0.1,0.1,"[cm]","d_{xy}(l_{4})"],
 
         "njets":[10,-0.5,9.5,"","nJets"],
         #"Jet_pt":[100,0,500,"[GeV]","Jet P_{T}"], 
@@ -715,6 +676,12 @@ plotSettings = { # [nBins,xMin,xMax,units]
         "Electron_mvaFall17V2noIso_WP90_4":[3,-1.5,1.5,"","Electron_mvaFall17V2noIso_WP90_4"],
         "gen_match_4":[30,-0.5,29.5,"","gen_match_4"],
 
+        "idDeepTau2017v2p1VSjet_3":[256,-0.5,255.5,"","#tau_deepiD_3"],
+        "idDeepTau2017v2p1VSjet_4":[256,-0.5,255.5,"","#tau_deepiD_4"],
+        "idDeepTau2017v2p1VSmu_3":[256,-0.5,255.5,"","#mu_deepiD_3"],
+        "idDeepTau2017v2p1VSe_3":[256,-0.5,255.5,"","e_deepiD_3"],
+        "idDeepTau2017v2p1VSmu_4":[256,-0.5,255.5,"","#mu_deepiD_4"],
+        "idDeepTau2017v2p1VSe_4":[256,-0.5,255.5,"","e_deepiD_4"],
 
         }
 
@@ -760,8 +727,10 @@ for icat,cat in cats.items()[0:8] :
         title = "cutflow ("+cat+")"
 
 ########## initializing triggers
+wpp = 'Medium'
+if str(args.bruteworkingPoint=='64') : wpp = 'VTight'
 
-tauSFTool = TauIDSFTool(campaign[args.year],'DeepTau2017v2p1VSjet','Medium')
+tauSFTool = TauIDSFTool(campaign[args.year],'DeepTau2017v2p1VSjet',wpp)
 testool = TauESTool(campaign[args.year])
 festool = TauESTool(campaign[args.year])
 sf_MuonTrig = SF.SFs()
@@ -780,6 +749,7 @@ sf_ElectronId.ScaleFactor("{0:s}{1:s}".format(LeptonSF['dir'],LeptonSF['fileElec
 for icat, cat in cats.items()[0:8] :
     hCutFlow[cat] = {}
     hCutFlowN[cat] = {}
+    hCutFlowFM[cat] = {}
     hW[cat] = {}
 
 for group in groups :
@@ -790,9 +760,11 @@ for group in groups :
 	    #setting up the CutFlow histogram
 	    hCutFlow[cat][nickName] = {}
 	    hCutFlowN[cat][nickName] = {}
+	    hCutFlowFM[cat][nickName] = {}
 	    hW[cat][nickName] = {}
 	    hW[cat][nickName] = TH1D("hW_"+nickName+"_"+cat,"weights",3,-0.5,2.5)
 	    hCutFlowN[cat][nickName] = TH1D("hCutFlow_"+nickName+"_"+cat,"CutFlow",20,-0.5,19.5)
+	    hCutFlowFM[cat][nickName] = TH1D("hCutFlowFM_"+nickName+"_"+cat,"CutFlow",20,-0.5,19.5)
 
 	    if group != 'data' :
 	        inFileName = '../MC/condor/{0:s}/{1:s}_{2:s}/{1:s}_{2:s}.root'.format(args.analysis,nickName,era)
@@ -806,43 +778,29 @@ for group in groups :
 	    else :
 		hCutFlow[cat][nickName] = inFile.Get("hCutFlow_{0:s}".format(cat))
 
-            #hCutFlowN[cat][nickName] = hCutFlow[cat][nickName].Clone("hCutFlow_"+nickName+"_"+cat)
-	    #for i in range(1,hCutFlow[cat][nickName].GetNbinsX()+1) :
 	    for i in range(1,10) :
 		WCounter[i-1][icat-1][inick] = float(hCutFlow[cat][nickName].GetBinContent(i))
-                #hCutFlowN[cat][nickName].SetBinContent(i,WCounter[i-1][icat-1][inick])
+                hCutFlowN[cat][nickName].SetBinContent(i,WCounter[i-1][icat-1][inick])
 		print i, hCutFlow[cat][nickName].GetBinContent(i), hCutFlow[cat][nickName].GetXaxis().GetBinLabel(i), cat, ' <===>', WCounter[i-1][icat-1][inick], nickName
 
 	    inFile.Close()
-
 
 for group in groups :
     hMC[group] = {}
     hMCFM[group] = {}
     hm_sv_cat[group] = {}
     hm_sv_new[group] = {}
-    hdPhi_l1H[group] = {}
-    hdPhi_l2H[group] = {}
-    hdPhi_lH[group] = {}
-    hdR_l1H[group] = {}
-    hdR_l2H[group] = {}
-    hdR_lH[group] = {}
-    hdEta_l1H[group] = {}
-    hdEta_l2H[group] = {}
-    hdEta_lH[group] = {}
+    hm_sv_new_FM[group] = {}
+    hw_fm_new[group] = {}
 
     hTriggerW[group] = {}
     hLeptonW[group] = {}
     hmt_sv_new[group] = {}
+    hmt_sv_new_FM[group] = {}
     hH_LT[group] = {}
     hH_LT_FM[group] = {}
-    hidDeepTau2017v2p1VSjet_3[group] = {}
-    hidDeepTau2017v2p1VSjet_4[group] = {}
-    hidDeepTau2017v2p1VSmu_3[group] = {}
-    hidDeepTau2017v2p1VSmu_4[group] = {}
-    hidDeepTau2017v2p1VSe_3[group] = {}
-    hidDeepTau2017v2p1VSe_4[group] = {}
     hCutFlowPerGroup[group] = {}
+    hCutFlowPerGroupFM[group] = {}
     for icat, cat in cats.items()[0:8] :
         hMC[group][cat] = {}
         hMCFM[group][cat] = {}
@@ -851,27 +809,10 @@ for group in groups :
         hm_sv_cat[group][cat].SetDefaultSumw2()
         hm_sv_new[group][cat] = TH1D(hName+'_m_sv_new',hName+'_m_sv_new',10,0,200)
         hm_sv_new[group][cat].SetDefaultSumw2()
-
-        hdPhi_l1H[group][cat] = TH1D(hName+'_dPhi_l1H',hName+'_l1H',10,0,4)
-        hdPhi_l2H[group][cat] = TH1D(hName+'_dPhi_l2H',hName+'_l2H',10,0,4)
-        hdPhi_lH[group][cat] = TH1D(hName+'_dPhi_lH',hName+'_lH',10,0,4)
-	hdPhi_l1H[group][cat].SetDefaultSumw2()
-	hdPhi_l2H[group][cat].SetDefaultSumw2()
-	hdPhi_lH[group][cat].SetDefaultSumw2()
-
-        hdEta_l1H[group][cat] = TH1D(hName+'_dEta_l1H',hName+'_l1H',10,0,5)
-        hdEta_l2H[group][cat] = TH1D(hName+'_dEta_l2H',hName+'_l2H',10,0,5)
-        hdEta_lH[group][cat] = TH1D(hName+'_dEta_lH',hName+'_lH',10,0,5)
-	hdEta_l1H[group][cat].SetDefaultSumw2()
-	hdEta_l2H[group][cat].SetDefaultSumw2()
-	hdEta_lH[group][cat].SetDefaultSumw2()
-
-        hdR_l1H[group][cat] = TH1D(hName+'_dR_l1H',hName+'_l1H',10,0,5)
-        hdR_l2H[group][cat] = TH1D(hName+'_dR_l2H',hName+'_l2H',10,0,5)
-        hdR_lH[group][cat] = TH1D(hName+'_dR_lH',hName+'_lH',10,0,5)
-	hdR_l1H[group][cat].SetDefaultSumw2()
-	hdR_l2H[group][cat].SetDefaultSumw2()
-	hdR_lH[group][cat].SetDefaultSumw2()
+        hm_sv_new_FM[group][cat] = TH1D(hName+'_m_sv_new_FM',hName+'_m_sv_new_FM',10,0,200)
+        hm_sv_new_FM[group][cat].SetDefaultSumw2()
+        hw_fm_new[group][cat] = TH1D(hName+'_w_fm_new',hName+'_w_fm_new',3,0.5,3.5)
+        hw_fm_new[group][cat].SetDefaultSumw2()
 
         hH_LT[group][cat] = TH1D(hName+'_H_LT',hName+'_H_LT',10,0,200)
         hH_LT[group][cat].SetDefaultSumw2()
@@ -879,20 +820,17 @@ for group in groups :
         hH_LT_FM[group][cat].SetDefaultSumw2()
         hmt_sv_new[group][cat] = TH1D(hName+'_mt_sv_new',hName+'_mt_sv_new',10,0,200)
         hmt_sv_new[group][cat].SetDefaultSumw2()
+        hmt_sv_new_FM[group][cat] = TH1D(hName+'_mt_sv_new_FM',hName+'_mt_sv_new_FM',10,0,200)
+        hmt_sv_new_FM[group][cat].SetDefaultSumw2()
         hTriggerW[group][cat] = TH1D (hName+'_TriggerW',hName+'_TriggerW',75,0.75,1.50)
         hLeptonW[group][cat] = TH1D (hName+'_LeptonW',hName+'_LeptonW',40,0.8,1.2)
         hTriggerW[group][cat].SetDefaultSumw2()
         hLeptonW[group][cat].SetDefaultSumw2()
-        hName = 'h{0:s}_{1:s}'.format(group,cat)
-        hidDeepTau2017v2p1VSjet_3[group][cat] =  TH1D(hName+'_DeepTauiD_VSjet_3',hName+'_VSjet_3',256,-0.5,255.5)
-        hidDeepTau2017v2p1VSjet_4[group][cat] =  TH1D(hName+'_DeepTauiD_VSjet_4',hName+'_VSjet_4',256,-0.5,255.5)
-        hidDeepTau2017v2p1VSmu_3[group][cat] =  TH1D(hName+'_DeepTauiD_VSmu_3',hName+'_VSmu_3',256,-0.5,255.5)
-        hidDeepTau2017v2p1VSmu_4[group][cat] =  TH1D(hName+'_DeepTauiD_VSmu_4',hName+'_VSmu_4',256,-0.5,255.5)
-        hidDeepTau2017v2p1VSe_3[group][cat] =  TH1D(hName+'_DeepTauiD_VSe_3',hName+'_VSe_3',256,-0.5,255.5)
-        hidDeepTau2017v2p1VSe_4[group][cat] =  TH1D(hName+'_DeepTauiD_VSe_4',hName+'_VSe_4',256,-0.5,255.5)
 
         hCutFlowPerGroup[group][cat] = {}
+        hCutFlowPerGroupFM[group][cat] = {}
         hCutFlowPerGroup[group][cat] = TH1D("hCutFlowPerGroup_"+group+"_"+cat,"PerGroupCutFlow",20,-0.5,19.5)
+        hCutFlowPerGroupFM[group][cat] = TH1D("hCutFlowPerGroupFM_"+group+"_"+cat,"PerGroupCutFlowFM",20,-0.5,19.5)
 
         for plotVar in plotSettings:
             hMC[group][cat][plotVar] = {}
@@ -964,20 +902,24 @@ for group in groups :
             weightCF = 1.
 	    weightFM=1.
             weightTID = 1.
+	    ww = 1.
             lepton_sf = 1.
             cat = cats[e.cat]
             icat = catToNumber(cat)
-	    #if group != 'data' and  i > 5000 : continue
-	    #if i > 2000 : continue
+            tight1 = True
+            tight2 = True
+            isfakemc1 = False
+            isfakemc2 = False
+	    #if ('ZZTo4' in inFileName or 'ZH' in inFileName) and  i > 2000 : continue
+	    #if hGroup != 'data' and i > 200:continue
 
             #sampleWeight = lumi/(WIncl_totgenwt/WIncl_xsec + WxGenweightsArr[i]/(WNJetsXsecs[i]*WJets_kfactor))
-            if e.isTrig_1 == 0 : continue  
+            if e.isTrig_1 == 0 and e.isDoubleTrig==0 : continue  
 	    if e.q_1*e.q_2 > 0 : continue
             if args.sign == 'SS':
                if e.q_3*e.q_4 < 0. : continue
             else :
                 if e.q_3*e.q_4 > 0. : continue
-
 
             if WJets and not WIncl_only: 
                 if e.LHE_Njets > 0 : sWeight = sampleWeight['W{0:d}JetsToLNu'.format(e.LHE_Njets)]
@@ -988,55 +930,63 @@ for group in groups :
                 elif e.LHE_Njets  : sWeight = sampleWeight['DYJetsToLL']
                 #print 'will now be using ',sWeight, e.LHE_Njets, nickName
 
-            if  not isData :
+            if group != 'data' :
 		# the pu weight is the e.weight in the ntuples
 		#print 'weights', group, nickName, e.Generator_weight, e.weight, i
-		weight = e.weightPUtrue * e.Generator_weight *sWeight * trigw * lepton_sf * weightTID
-		#weightCF = e.Generator_weight
-		weightFM = e.weightPUtrue * e.Generator_weight *sWeight * trigw * lepton_sf
+		weight = e.weightPUtrue * e.Generator_weight *sWeight 
+		#ww = e.weightPUtrue * e.Generator_weight *sWeight 
+		weightFM = e.weightPUtrue * e.Generator_weight *sWeight
             weightCF = weight
 
-	    ww = 1.
+            #weight=1.
 
             #####sign
             iCut +=1
-            #if i<100 : print 'for i', i , WCounter[iCut-1][icat-1][inick], nickName, cat, weightCF
             WCounter[iCut-1][icat-1][inick] += weightCF
             hCutFlowN[cat][nickName].SetBinContent(iCut-1, hCutFlowN[cat][nickName].GetBinContent(iCut-1)+weight)
+            hCutFlowFM[cat][nickName].SetBinContent(iCut-1, hCutFlowFM[cat][nickName].GetBinContent(iCut-1)+weightFM)
+
 
             ##############good ISO
 	    if cat[:2] == 'mm' and  (e.iso_1 > 0.2 or e.iso_2 > 0.2) : continue
 	    if cat[:2] == 'ee' and  (e.iso_1 > 0.15 or e.iso_2 > 0.15) : continue
-	    #if cat[:2] == 'ee' : print goodIso,   e.iso_1, e.iso_2 
 
-	    if cat[2:] == 'em' and (e.iso_3 > 0.15 or e.iso_4 > 0.20) : continue
-	    if cat[2:] == 'et' and e.iso_3 > 0.15: continue
-	    if cat[2:] == 'mt' and e.iso_3 > 0.15 : continue
+	    if cat[2:] == 'em'  :
+                if  (e.isGlobal_4 < 1 and e.isTracker_4 < 1) : continue
+	    if cat[2:] == 'mt':
+                if  (e.isGlobal_3 < 1 and e.isTracker_3 < 1) : continue
 
+	    if cat[2:] == 'em' :
+                if e.iso_4 > 0.20 or e.tightId_4 < 1 : tight2 = False
 
-	    if cat[2:] == 'mt' and  (e.isGlobal_3 < 1 and e.isTracker_3 < 1) : continue
-	    if cat[2:] == 'em' and  (e.isGlobal_4 < 1 and e.isTracker_4 < 1) : continue
-	    
-	    if cat[2:] == 'mt' and   e.mediumId_3 < 1 : continue
-	    if cat[2:] == 'em' and   e.mediumId_4 < 1 : continue
+	    if cat[2:] == 'mt' :
+                if e.iso_3 > 0.20 or e.tightId_3 < 1 : tight1 = False
 
+	    if (cat[2:] == 'et' or cat[2:] == 'em') and e.Electron_mvaFall17V2noIso_WP90_3 < 1 or e.iso_3 > 0.15 : tight1 = False
 
-	    if abs(e.dZ_3) > 0.02 or abs(e.dZ_4) > 0.02 : continue
-	    if abs(e.d0_3) > 0.02 or abs(e.d0_4) > 0.02 : continue
+	    #if abs(e.dZ_3) > 0.02 or abs(e.dZ_4) > 0.02 : continue
+	    #if abs(e.d0_3) > 0.02 or abs(e.d0_4) > 0.02 : continue
 
-
-	    if cat[2:] == 'et' and e.Electron_mvaFall17V2noIso_WP90_3 < 1 : continue
             
-	    if cat[2:] == 'tt' and  (e.idDeepTau2017v2p1VSjet_3 < WPSR-1 or e.idDeepTau2017v2p1VSjet_4 < WPSR-1.) : continue
-	    if cat[2:] == 'mt' and e.idDeepTau2017v2p1VSjet_4 < WPSR -1. : continue
-	    if cat[2:] == 'et' and e.idDeepTau2017v2p1VSjet_4 < WPSR -1. : continue
+	    if cat[2:] == 'tt' and e.idDeepTau2017v2p1VSjet_3 < WPSR-1  : tight1 = False
+	    if cat[2:] == 'tt' and e.idDeepTau2017v2p1VSjet_4 < WPSR-1 : tight2 = False
 
-            if group == 'data' :
-                if DD[cat].checkEvent(e) : continue 
+	    if cat[2:] == 'mt' and e.idDeepTau2017v2p1VSjet_4 < WPSR-1 : tight2 = False
+	    if cat[2:] == 'et' and e.idDeepTau2017v2p1VSjet_4 < WPSR-1 : tight2 = False
+
+	    if cat[2:] == 'et' and e.Electron_mvaFall17V2noIso_WP90_3 < 1 : tight1 = False
+            
+            if group != 'data' :
+                if not tight1 or not tight2 : continue
+
+            #if group == 'data' :
+            #    if DD[cat].checkEvent(e,cat) : continue 
 
             iCut +=1
             WCounter[iCut-1][icat-1][inick] += weightCF
             hCutFlowN[cat][nickName].SetBinContent(iCut-1, hCutFlowN[cat][nickName].GetBinContent(iCut-1)+weight)
+            hCutFlowFM[cat][nickName].SetBinContent(iCut-1, hCutFlowFM[cat][nickName].GetBinContent(iCut-1)+weightFM)
+
 
             ########H_LT
             H_LT = e.pt_3 + e.pt_4
@@ -1046,46 +996,54 @@ for group in groups :
             iCut +=1
             WCounter[iCut-1][icat-1][inick] += weightCF
             hCutFlowN[cat][nickName].SetBinContent(iCut-1, hCutFlowN[cat][nickName].GetBinContent(iCut-1)+weight)
+            hCutFlowFM[cat][nickName].SetBinContent(iCut-1, hCutFlowFM[cat][nickName].GetBinContent(iCut-1)+weightFM)
 
             ######### nbtag
 	    if e.nbtag > 0 : continue
+	    #if e.mll > 100 or e.mll<80: continue
+
 
 
             iCut +=1
             WCounter[iCut-1][icat-1][inick] += weightCF
             hCutFlowN[cat][nickName].SetBinContent(iCut-1, hCutFlowN[cat][nickName].GetBinContent(iCut-1)+weight)
+            hCutFlowFM[cat][nickName].SetBinContent(iCut-1, hCutFlowFM[cat][nickName].GetBinContent(iCut-1)+weightFM)
 
             ########### Trigger
             ################### Trigger SF
             #if e.isTrig_1 == 0 and e.isDoubleTrig==0: continue  
 
-	    #if e.isDoubleTrig !=0 : continue
-	    #if e.isTrig_1 == 0 and e.isDoubleTrig !=0 : weight *= 0.9
 
+            #SingleLepton is fired but no DoubleLepton
+            if e.isTrig_1 != 0: 
 
-            #leading fired the trigger
-	    if e.isTrig_1 == 1 and e.isTrig_2 == 0: 
-	    #if e.isTrig_1 == 1 : 
-		if cat[:2] == 'mm' and e.pt_1 < 28 : continue
-		if cat[:2] == 'ee' and era == '2016' and e.pt_1 < 28 : continue
-		if cat[:2] == 'ee' and era != '2016' and e.pt_1 < 36 : continue
+                #leading fired the trigger
+		if e.isTrig_1 == 1 and e.isTrig_2 == 0: 
+		    if cat[:2] == 'mm' and e.pt_1 < 29 : continue
+		    if cat[:2] == 'ee' and era == '2016' and e.pt_1 < 29 : continue
+		    if cat[:2] == 'ee' and era != '2016' and e.pt_1 < 37 : continue
 
-            #subleading fired the trigger
-	    if e.isTrig_1 == -1 and e.isTrig_2 == 0: 
-	    #if e.isTrig_1 == -1 : 
-		if cat[:2] == 'mm' and e.pt_2 < 29 : continue
-		if cat[:2] == 'ee' and era == '2016' and e.pt_2 < 28 : continue
-		if cat[:2] == 'ee' and era != '2016' and e.pt_2 < 36 : continue
+		#subleading fired the trigger
+		if e.isTrig_1 == -1 and e.isTrig_2 == 0: 
+		#if e.isTrig_1 == -1 : 
+		    if cat[:2] == 'mm' and e.pt_2 < 29 : continue
+		    if cat[:2] == 'ee' and era == '2016' and e.pt_2 < 29 : continue
+		    if cat[:2] == 'ee' and era != '2016' and e.pt_2 < 37 : continue
 
-            # both fired the trigger _isTrig_2 = 1
+		# both fired the trigger _isTrig_2 = 1
+		
+		if e.isTrig_2 == 1 : 
+		    if cat[:2] == 'mm' and e.pt_1 < 29 and e.pt_2 < 29: continue
+		    if cat[:2] == 'ee' and era == '2016' and e.pt_1 <  29 and  e.pt_2 < 29 : continue
+		    if cat[:2] == 'ee' and era != '2016' and e.pt_1 < 37 and e.pt_2 < 37 : continue
             
-	    if e.isTrig_2 == 1 : 
-		if cat[:2] == 'mm' and e.pt_1 < 28 and e.pt_2 < 28: continue
-		if cat[:2] == 'ee' and era == '2016' and e.pt_1 <  28 and  e.pt_2 < 28 : continue
-		if cat[:2] == 'ee' and era != '2016' and e.pt_1 < 36 and e.pt_2 < 36 : continue
-            
-	    #else : continue
+            if e.isDoubleTrig!=0 and e.isTrig_1 == 0 : #the DoubleLepton trigger was fired but not the SingleLepton
 
+		if cat[:2] == 'mm' and (e.pt_1 < 19 or e.pt_2 < 10): continue
+		if cat[:2] == 'ee' and (e.pt_1 < 25 or e.pt_2 < 14): continue
+
+            if group == 'data' :
+                if DD[cat].checkEvent(e,cat) : continue 
 
 	    eff_trig_d_1, eff_trig_d_2 = 1.,1.
 	    eff_trig_mc_1, eff_trig_mc_2 = 1.,1.
@@ -1093,164 +1051,178 @@ for group in groups :
 	    eff_id_d_1, eff_id_d_2, eff_id_d_3, eff_id_d_4 = 1.,1.,1.,1.
 	    eff_id_mc_1, eff_id_mc_2, eff_id_mc_3, eff_id_mc_4 = 1.,1.,1.,1.
 
-            #leading firing the trigger
-	    if e.isTrig_1 == 1 and e.isTrig_2 == 0 : 
+            if group != 'data' :
+		#leading firing the trigger
+		if e.isTrig_1 == 1 and e.isTrig_2 == 0 : 
 
 
-		if cat[:2] == 'mm' :                
-		    eff_trig_d_1 =  sf_MuonTrig.get_EfficiencyData(e.pt_1,e.eta_1)
-		    eff_trig_mc_1 =  sf_MuonTrig.get_EfficiencyMC(e.pt_1,e.eta_1)
+		    if cat[:2] == 'mm' :                
+			eff_trig_d_1 =  sf_MuonTrig.get_EfficiencyData(e.pt_1,e.eta_1)
+			eff_trig_mc_1 =  sf_MuonTrig.get_EfficiencyMC(e.pt_1,e.eta_1)
 
-		if cat[:2] == 'ee' :                 
-		    eff_trig_d_1 =  sf_EleTrig.get_EfficiencyData(e.pt_1,e.eta_1)
-		    eff_trig_mc_1 =  sf_EleTrig.get_EfficiencyMC(e.pt_1,e.eta_1)
-                if eff_trig_mc_1 !=0 :		trigw = float(eff_trig_d_1/eff_trig_mc_1)
-                else : continue
+		    if cat[:2] == 'ee' :                 
+			eff_trig_d_1 =  sf_EleTrig.get_EfficiencyData(e.pt_1,e.eta_1)
+			eff_trig_mc_1 =  sf_EleTrig.get_EfficiencyMC(e.pt_1,e.eta_1)
+		    if eff_trig_mc_1 !=0 :		trigw = float(eff_trig_d_1/eff_trig_mc_1)
+		    else : continue
 
-            #subleading firing the trigger
-	    if e.isTrig_1 == -1 and e.isTrig_2 == 0: 
-		if cat[:2] == 'mm' :                 
-		    eff_trig_d_2 =  sf_MuonTrig.get_EfficiencyData(e.pt_2,e.eta_2)
-		    eff_trig_mc_2 =  sf_MuonTrig.get_EfficiencyMC(e.pt_2,e.eta_2)
+		#subleading firing the trigger
+		if e.isTrig_1 == -1 and e.isTrig_2 == 0: 
+		    if cat[:2] == 'mm' :                 
+			eff_trig_d_2 =  sf_MuonTrig.get_EfficiencyData(e.pt_2,e.eta_2)
+			eff_trig_mc_2 =  sf_MuonTrig.get_EfficiencyMC(e.pt_2,e.eta_2)
 
-		if cat[:2] == 'ee' :                 
-		    eff_trig_d_2 =  sf_EleTrig.get_EfficiencyData(e.pt_2,e.eta_2)
-		    eff_trig_mc_2 =  sf_EleTrig.get_EfficiencyMC(e.pt_2,e.eta_2)
+		    if cat[:2] == 'ee' :                 
+			eff_trig_d_2 =  sf_EleTrig.get_EfficiencyData(e.pt_2,e.eta_2)
+			eff_trig_mc_2 =  sf_EleTrig.get_EfficiencyMC(e.pt_2,e.eta_2)
 
-                if eff_trig_mc_2 !=0 :		trigw = float(eff_trig_d_2/eff_trig_mc_2)
-                else : continue
+		    if eff_trig_mc_2 !=0 :		trigw = float(eff_trig_d_2/eff_trig_mc_2)
+		    else : continue
 
 
-	    #both firing the trigger
-	    if e.isTrig_1 == 1 and e.isTrig_2 == 1 : 
-		if cat[:2] == 'mm' :                 
-		    eff_trig_d_1 =  sf_MuonTrig.get_EfficiencyData(e.pt_1,e.eta_1)
-		    eff_trig_mc_1 = sf_MuonTrig.get_EfficiencyMC(e.pt_1,e.eta_1)
-		    eff_trig_d_2 =  sf_MuonTrig.get_EfficiencyData(e.pt_2,e.eta_2)
-		    eff_trig_mc_2 = sf_MuonTrig.get_EfficiencyMC(e.pt_2,e.eta_2)
+		#both firing the trigger
+		if e.isTrig_1 == 1 and e.isTrig_2 == 1 : 
+		    if cat[:2] == 'mm' :                 
+			eff_trig_d_1 =  sf_MuonTrig.get_EfficiencyData(e.pt_1,e.eta_1)
+			eff_trig_mc_1 = sf_MuonTrig.get_EfficiencyMC(e.pt_1,e.eta_1)
+			eff_trig_d_2 =  sf_MuonTrig.get_EfficiencyData(e.pt_2,e.eta_2)
+			eff_trig_mc_2 = sf_MuonTrig.get_EfficiencyMC(e.pt_2,e.eta_2)
 
-		if cat[:2] == 'ee' :                 
-		    eff_trig_d_1 =  sf_EleTrig.get_EfficiencyData(e.pt_1,e.eta_1)
-		    eff_trig_mc_1 =  sf_EleTrig.get_EfficiencyMC(e.pt_1,e.eta_1)
-		    eff_trig_d_2 =  sf_EleTrig.get_EfficiencyData(e.pt_2,e.eta_2)
-		    eff_trig_mc_2 =  sf_EleTrig.get_EfficiencyMC(e.pt_2,e.eta_2)
+		    if cat[:2] == 'ee' :                 
+			eff_trig_d_1 =  sf_EleTrig.get_EfficiencyData(e.pt_1,e.eta_1)
+			eff_trig_mc_1 =  sf_EleTrig.get_EfficiencyMC(e.pt_1,e.eta_1)
+			eff_trig_d_2 =  sf_EleTrig.get_EfficiencyData(e.pt_2,e.eta_2)
+			eff_trig_mc_2 =  sf_EleTrig.get_EfficiencyMC(e.pt_2,e.eta_2)
 
-	        #print '===================>>>>>>>>>>>>>', eff_trig_d_1, eff_trig_mc_1, eff_trig_d_2, eff_trig_mc_2, e.pt_2, e.eta_2, 'Trigerrred ????', e.isTrig_1, e.isTrig_2
-		if eff_trig_mc_1 != 0 and eff_trig_mc_2 == 0  : 	trigw = float(eff_trig_d_1/eff_trig_mc_1)
-		elif eff_trig_mc_1 == 0 and eff_trig_mc_2 != 0  : trigw = float(eff_trig_d_2/eff_trig_mc_2)
-		elif eff_trig_mc_1 == 0 and eff_trig_mc_2 == 0  : continue 
-		else : 	trigw = float(1- (1-eff_trig_d_1/eff_trig_mc_1) * (1-eff_trig_d_2/eff_trig_mc_2))
+		    if eff_trig_mc_1 != 0 and eff_trig_mc_2 == 0  : 	trigw = float(eff_trig_d_1/eff_trig_mc_1)
+		    elif eff_trig_mc_1 == 0 and eff_trig_mc_2 != 0  : trigw = float(eff_trig_d_2/eff_trig_mc_2)
+		    elif eff_trig_mc_1 == 0 and eff_trig_mc_2 == 0  : continue 
+		    else : 	trigw = float(1- (1-eff_trig_d_1/eff_trig_mc_1) * (1-eff_trig_d_2/eff_trig_mc_2))
+
+		if e.isDoubleTrig!=0 and e.isTrig_1 == 0 : trigw = 1
+		weight *= trigw 
+		weightFM *= trigw 
 
             iCut +=1
             WCounter[iCut-1][icat-1][inick] += weightCF
             hCutFlowN[cat][nickName].SetBinContent(iCut-1, hCutFlowN[cat][nickName].GetBinContent(iCut-1)+weight)
+            hCutFlowFM[cat][nickName].SetBinContent(iCut-1, hCutFlowFM[cat][nickName].GetBinContent(iCut-1)+weightFM)
 
-            #############3lepton SFs
-	    if cat[:2] == 'mm' :                 
-		    eff_id_d_1 =  sf_MuonId.get_EfficiencyData(e.pt_1,e.eta_1)
-		    eff_id_mc_1 = sf_MuonId.get_EfficiencyMC(e.pt_1,e.eta_1)
+            if group != 'data' :
+		#############3lepton SFs
+		if cat[:2] == 'mm' :                 
+			eff_id_d_1 =  sf_MuonId.get_EfficiencyData(e.pt_1,e.eta_1)
+			eff_id_mc_1 = sf_MuonId.get_EfficiencyMC(e.pt_1,e.eta_1)
 
-		    eff_id_d_2 =  sf_MuonId.get_EfficiencyData(e.pt_2,e.eta_2)
-		    eff_id_mc_2 = sf_MuonId.get_EfficiencyMC(e.pt_2,e.eta_2)
+			eff_id_d_2 =  sf_MuonId.get_EfficiencyData(e.pt_2,e.eta_2)
+			eff_id_mc_2 = sf_MuonId.get_EfficiencyMC(e.pt_2,e.eta_2)
 
-	    if cat[:2] == 'ee' :                 
-		    eff_id_d_1 =  sf_ElectronId.get_EfficiencyData(e.pt_1,e.eta_1)
-		    eff_id_mc_1 = sf_ElectronId.get_EfficiencyMC(e.pt_1,e.eta_1)
+		if cat[:2] == 'ee' :                 
+			eff_id_d_1 =  sf_ElectronId.get_EfficiencyData(e.pt_1,e.eta_1)
+			eff_id_mc_1 = sf_ElectronId.get_EfficiencyMC(e.pt_1,e.eta_1)
 
-		    eff_id_d_2 =  sf_ElectronId.get_EfficiencyData(e.pt_2,e.eta_2)
-		    eff_id_mc_2 = sf_ElectronId.get_EfficiencyMC(e.pt_2,e.eta_2)
+			eff_id_d_2 =  sf_ElectronId.get_EfficiencyData(e.pt_2,e.eta_2)
+			eff_id_mc_2 = sf_ElectronId.get_EfficiencyMC(e.pt_2,e.eta_2)
 
-	    if cat[2:] == 'mt' :
-		    eff_id_d_3 =  sf_MuonId.get_EfficiencyData(e.pt_3,e.eta_3)
-		    eff_id_mc_3 = sf_MuonId.get_EfficiencyMC(e.pt_3,e.eta_3)
+		if cat[2:] == 'mt' :
+			eff_id_d_3 =  sf_MuonId.get_EfficiencyData(e.pt_3,e.eta_3)
+			eff_id_mc_3 = sf_MuonId.get_EfficiencyMC(e.pt_3,e.eta_3)
 
-	    if cat[2:] == 'et' :
-		    eff_id_d_3 =  sf_ElectronId.get_EfficiencyData(e.pt_3,e.eta_3)
-		    eff_id_mc_3 = sf_ElectronId.get_EfficiencyMC(e.pt_3,e.eta_3)
+		if cat[2:] == 'et' :
+			eff_id_d_3 =  sf_ElectronId.get_EfficiencyData(e.pt_3,e.eta_3)
+			eff_id_mc_3 = sf_ElectronId.get_EfficiencyMC(e.pt_3,e.eta_3)
 
-	    if cat[2:] == 'em' :               
-		    eff_id_d_3 =  sf_ElectronId.get_EfficiencyData(e.pt_3,e.eta_3)
-		    eff_id_mc_3 = sf_ElectronId.get_EfficiencyMC(e.pt_3,e.eta_3)
-		    eff_id_d_4 =  sf_MuonId.get_EfficiencyData(e.pt_4,e.eta_4)
-		    eff_id_mc_4 = sf_MuonId.get_EfficiencyMC(e.pt_4,e.eta_4)
+		if cat[2:] == 'em' :               
+			eff_id_d_3 =  sf_ElectronId.get_EfficiencyData(e.pt_3,e.eta_3)
+			eff_id_mc_3 = sf_ElectronId.get_EfficiencyMC(e.pt_3,e.eta_3)
+			eff_id_d_4 =  sf_MuonId.get_EfficiencyData(e.pt_4,e.eta_4)
+			eff_id_mc_4 = sf_MuonId.get_EfficiencyMC(e.pt_4,e.eta_4)
 
+		lepton_sf = float (eff_id_d_1/eff_id_mc_1 * eff_id_d_2/eff_id_mc_2 * eff_id_d_3/eff_id_mc_3 * eff_id_d_4/eff_id_mc_4)
 
-	    lepton_sf = float (eff_id_d_1/eff_id_mc_1 * eff_id_d_2/eff_id_mc_2 * eff_id_d_3/eff_id_mc_3 * eff_id_d_4/eff_id_mc_4)
+		weight *= lepton_sf
+		weightFM *= lepton_sf
+
             iCut +=1
             WCounter[iCut-1][icat-1][inick] += weightCF
             hCutFlowN[cat][nickName].SetBinContent(iCut-1, hCutFlowN[cat][nickName].GetBinContent(iCut-1)+weight)
+            hCutFlowFM[cat][nickName].SetBinContent(iCut-1, hCutFlowFM[cat][nickName].GetBinContent(iCut-1)+weightFM)
 
             ##########
             pfmet_tree = e.met
             puppimet_tree = e.puppimet
-            tight1 = True
-            tight2 = True
-	    ww = 1
-	    if group != 'Signal' and group != 'data' :
-		if not e.gen_match_3 == 1 and not e.gen_match_3 == 15 :
-		    if cat[2:] == 'et' or cat[2:] == 'em' :
-			tight1= e.Electron_mvaFall17V2noIso_WP90_3 >0  and  e.iso_3 < 0.1 
+            fW1, fW2, fW0 = 0,0,0
 
-		    if cat[2:] == 'mt' :
-			tight1 = e.iso_3< 0.15 and (e.isGlobal_3 > 0 or e.isTracker_3 > 0) and e.mediumId_3 > 0
-
-		if not e.gen_match_4 == 1 and not e.gen_match_4 == 15 :
-		    if cat[2:] == 'em' :
-			tight2 = e.iso_4< 0.15 and (e.isGlobal_4 > 0 or e.isTracker_4 > 0) and e.mediumId_4 > 0
-
-		if cat[2:] == 'tt' :
-		    if e.gen_match_3 !=5 :  tight1 =  e.idDeepTau2017v2p1VSjet_3 >= WPSR-1.
-		    if e.gen_match_4 !=5 :  tight2 =  e.idDeepTau2017v2p1VSjet_4 >= WPSR-1.
-
-		if not tight1 and tight2 : ww = fW1[cat[2:]]
-		if tight1 and not tight2 : ww = fW2[cat[2:]]
-		if not (tight1 or tight2) : ww = -fW0[cat[2:]]
-
+	    #if group != 'data' :
+            #    if  not tight1 or not tight2 : continue
 	    
-                weightFM *= ww
+            #if hGroup == 'data' and not unblind and e.m_sv > 80. and e.m_sv < 140. : continue                 
+            dataDriven = True
+	    if group == 'data' :
+		if dataDriven :
+		    fW1, fW2, fW0 = getFakeWeightsvspT(cat[2:], e.pt_3, e.pt_4, WP, tight1, tight2)
+		    if not tight1 and tight2 : 
+                        ww = fW1          
+                        hGroup = 'f1'
+		    elif tight1 and not tight2 : 
+                        ww = fW2
+                        hGroup = 'f2'
+		    elif not (tight1 or tight2) : 
+                        ww = -fW0
+                        hGroup = 'fakes'
+		    else :
+			hGroup = 'data'
+		else :
+		    hGroup = 'data'
+		    #print("group = data  cat={0:s} tight1={1} tight2={2} ww={3:f}".format(cat,tight1,tight2,ww))
+		    if not (tight1 and tight2) : continue 
+	
 
-            '''
-            if tightCuts :
-                    
-                if group == 'data' :
-                    if dataDriven :
-                        hGroup = 'WJets'
-                        if not tight1 and tight2 : ww = fW1[cat[2:]]
-                        elif tight1 and not tight2 : ww = fW2[cat[2:]]
-                        elif not (tight1 or tight2) : ww = -fW0[cat[2:]]
-                        else :
-                            ww = 1.
-                            hGroup = 'data'
-                    else :
-                        hGroup = 'data'
-                        #print("group = data  cat={0:s} tight1={1} tight2={2} ww={3:f}".format(cat,tight1,tight2,ww))
-                        if not (tight1 and tight2) : continue 
-                        
-                else : 
-                    if not (tight1 and tight2) : continue
-                    #print("Good MC event: group={0:s} nickName={1:s} cat={2:s} gen_match_1={3:d} gen_match_4={4:d}".format(
-                    #    group,nickName,cat,e.gen_match_1,e.gen_match_4))
-                    if dataDriven :   # include only events with MC matching
-                        if cat[2] == 'e' or cat[2] == 'm':
-                            if not (e.gen_match_1 == 1 or e.gen_match_1 == 15) : continue
-                        else :
-                            if not e.gen_match_1 == 5 : continue
-                        if cat[3] == 'e' or cat[3] == 'm' :
-                            if not (e.gen_match_4 == 1 or e.gen_match_4 == 15) : continue
-                        else : 
-                            if not e.gen_match_4 == 5 : continue
-                                        
-                #elif group == 'Other' or group == 'ZZ' or group == 'Signal' :
-                #    if not (tight1 and tight2) : continue         
-            
-            #print iCut, icat, cat, icat-1
-            '''
+	    else : 
+		#print("Good MC event: group={0:s} nickName={1:s} cat={2:s} gen_match_1={3:d} gen_match_2={4:d}".format(
+		#    group,nickName,cat,e.gen_match_1,e.gen_match_2))
+		if dataDriven :   # include only events with MC matching
+		    if cat[2:] == 'em'  :
+			if e.gen_match_3 == 0 or e.gen_match_3 == 3 or e.gen_match_3 == 4 or e.gen_match_3 == 5 :
+                            isfakemc1 = True
+                            if  e.gen_match_3 == 0 : hGroup = 'jfl1'
+                            if  e.gen_match_3 == 3 : hGroup = 'ljfl1'
+                            if  e.gen_match_3 == 4 : hGroup = 'cfl1'
+                            if  e.gen_match_3 == 5 : hGroup = 'bfl1'
 
+			if e.gen_match_4 == 0 or e.gen_match_4 == 3 or e.gen_match_4 == 4 or e.gen_match_4 == 5 :
+                            isfakemc2 = True
+                            if  e.gen_match_4 == 0 : hGroup = 'jfl2'
+                            if  e.gen_match_4 == 3 : hGroup = 'ljfl2'
+                            if  e.gen_match_4 == 4 : hGroup = 'cfl2'
+                            if  e.gen_match_4 == 5 : hGroup = 'bfl2'
+			
+		    if cat[2:] == 'et' or cat[2:] == 'mt' :
+	                if  e.gen_match_3 == 0 or e.gen_match_3 == 3 or e.gen_match_3 == 4 or e.gen_match_3 == 5 :
+                            isfakemc1 = True
+                            if  e.gen_match_3 == 0 : hGroup = 'jfl1'
+                            if  e.gen_match_3 == 3 : hGroup = 'ljfl1'
+                            if  e.gen_match_3 == 4 : hGroup = 'cfl1'
+                            if  e.gen_match_3 == 5 : hGroup = 'bfl1'
 
+			if e.gen_match_4 == 0  :
+                            isfakemc2 = True
+                            hGroup = 'jft2'
+			
+		    if cat[2:] == 'tt' :
+			if e.gen_match_3 == 0  :
+                            isfakemc1 = True
+                            hGroup = 'jft1'
+			if e.gen_match_4 == 0  :
+                            isfakemc2 = True
+                            hGroup = 'jft2'
+		    
+            #if group != 'data' and cat[2:] != 'tt' : print 'some info', cat, e.iso_3, e.iso_4, group, hGroup, isfakemc1, isfakemc2
 
-                #if hGroup == 'data' and not unblind and e.m_vis > 80. and e.m_vis < 140. : continue                 
-                #if hGroup == 'data' and not unblind and e.m_sv > 80. and e.m_sv < 140. : continue                 
-
+            weightFM=ww
+           
+            #if group != 'data' and group!='Signal' :
+            #    if not isfakemc1 or not isfakemc2  : continue
 
             ########### tauID
             tauV3.SetPtEtaPhiM(e.pt_3, e.eta_3, e.phi_3, e.m_3)
@@ -1267,11 +1239,17 @@ for group in groups :
 	    
 
 	    if cat[:2] == 'mm' :  
-		L1.SetPtEtaPhiM(e.pt_1_tr, e.eta_1_tr,e.phi_1_tr,muonMass)
-		L2.SetPtEtaPhiM(e.pt_2_tr, e.eta_2_tr,e.phi_2_tr,muonMass)
+		L1g.SetPtEtaPhiM(e.pt_1_tr, e.eta_1_tr,e.phi_1_tr,muonMass)
+		L2g.SetPtEtaPhiM(e.pt_2_tr, e.eta_2_tr,e.phi_2_tr,muonMass)
+
+		L1.SetPtEtaPhiM(e.pt_1, e.eta_1,e.phi_1,muonMass)
+		L2.SetPtEtaPhiM(e.pt_2, e.eta_2,e.phi_2,muonMass)
 	    if cat[:2] == 'ee' :  
-		L1.SetPtEtaPhiM(e.pt_1_tr, e.eta_1_tr,e.phi_1_tr,electronMass)
-		L2.SetPtEtaPhiM(e.pt_2_tr, e.eta_2_tr,e.phi_2_tr,electronMass)
+		L1g.SetPtEtaPhiM(e.pt_1_tr, e.eta_1_tr,e.phi_1_tr,electronMass)
+		L2g.SetPtEtaPhiM(e.pt_2_tr, e.eta_2_tr,e.phi_2_tr,electronMass)
+
+		L1.SetPtEtaPhiM(e.pt_1, e.eta_1,e.phi_1,electronMass)
+		L2.SetPtEtaPhiM(e.pt_2, e.eta_2,e.phi_2,electronMass)
 
             if group != 'data' :
 
@@ -1282,22 +1260,22 @@ for group in groups :
                 if isW or isDY :
 		    boson = TLorentzVector()
 		    if cat[:2] == 'mm' :  
-			boson += L1
-			boson += L2
+			boson += L1g
+			boson += L2g
 
 		    if cat[:2] == 'ee' :  
-			boson += L1
-			boson += L2
+			boson += L1g
+			boson += L2g
                     mett = recoilCorrector.CorrectByMeanResolution( met_x, met_y, boson.Px(), boson.Py(), boson.Px(), boson.Py(), int(njetsforrecoil))
 		    metcor = sqrt(mett[0]* mett[0] + mett[1]*mett[1])
 		    met_x = mett[0]
 		    met_y = mett[1]
 		    MetVcor.SetPx(mett[0])
 		    MetVcor.SetPy(mett[1])
-                    
+
             if group != 'data' and (cat[2:] == 'et' or cat[2:]  == 'mt' or  cat[2:] == 'tt') :
-                #print weight, tauSFTool.getSFvsPT(e.pt_3,e.gen_match_3), 'pt', float(e.pt_3), float(e.pt_3_tr), i, 'g_match', e.gen_match_3, nickName
-                #tau energy scale
+
+                # leptons faking taus // muon->tau
 		if e.gen_match_4 == 2 or e.gen_match_4 == 4 :
 		    if e.decayMode_4 == 1 :  
 		        weight *= weights_muToTauFR['DM1']
@@ -1315,9 +1293,9 @@ for group in groups :
 
 
 
+                # leptons faking taus // electron->tau
 		if e.gen_match_4 == 1 or e.gen_match_4 == 3 :
 
-		    #weightTID *= festool.getFES(e.eta_3,e.decayMode_3,e.gen_match_3)
 		    if e.decayMode_4 == 0 :  
 			if abs(e.eta_4) < 1.479     : weightTID *= weights_elToTauFR['lt1p479_DM0'] * weights_eljToTauFR['lt1p479_DM0']
 			if abs(e.eta_4) > 1.479     : weightTID *= weights_elToTauFR['gt1p479_DM0'] * weights_eljToTauFR['gt1p479_DM0']
@@ -1368,7 +1346,6 @@ for group in groups :
 			    MetVcor +=   tauV3*(1 +  weights_elTotauES['DM1']*0.01)
 		if cat[2:] == 'tt' and e.gen_match_3 == 5 : 
 			weightTID *= tauSFTool.getSFvsPT(e.pt_3,e.gen_match_3)
-			weightFM *= tauSFTool.getSFvsPT(e.pt_3,e.gen_match_3)
 			tauV3cor *= testool.getTES(e.pt_3, e.decayMode_3, e.gen_match_3)
 			if e.decayMode_3 == 1 : 
 			    e.m_3 =  0.1396  
@@ -1378,7 +1355,6 @@ for group in groups :
                 if  cat[2:] == 'tt' or cat[2:] == 'mt' or cat[2:] == 'et' :
 		    if e.gen_match_4 == 5 : 
 			weightTID *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4)
-			weightFM *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4)
 			tauV4cor *= testool.getTES(e.pt_4, e.decayMode_4, e.gen_match_4)
 			if e.decayMode_4 == 1 : 
 			    e.m_4 =  0.1396  
@@ -1399,73 +1375,65 @@ for group in groups :
 		e.m3_4 = tauV4cor.M()
                 '''
 
+                weight *= weightTID
+                #weightFM *= weightTID * ww
 
             iCut +=1
             WCounter[iCut-1][icat-1][inick] += weightCF
             hCutFlowN[cat][nickName].SetBinContent(iCut-1, hCutFlowN[cat][nickName].GetBinContent(iCut-1)+weight)
+            hCutFlowFM[cat][nickName].SetBinContent(iCut-1, hCutFlowFM[cat][nickName].GetBinContent(iCut-1)+weightFM)
             #####
+            #if not tight1 or not tight2 : hGroup = 'fakes'
 
-
+	    if not tight1 and tight2: hw_fm_new[hGroup][cat].Fill(1,fW1 )
+	    if tight1 and not tight2 : hw_fm_new[hGroup][cat].Fill(2,fW2 )
+	    if not tight1 and not tight2: hw_fm_new[hGroup][cat].Fill(3,fW0)
+            #if group!='data' and group!='fakes' and group !='f1' and group !='f2' and (not tight1 or not tight2) : print weightFM , hGroup, cat, tight1, tight2, i, e.evt, nickName, fW1, fW2, fW0, e.gen_match_3, e.gen_match_4
+           
             #print 'made thus far', leptons_sf
 	    fastMTTmass, fastMTTtransverseMass = -1, -1
 	    if args.redoFit.lower() == 'yes' or args.redoFit.lower() == 'true' : fastMTTmass, fastMTTtransverseMass = runSVFit(e, cat[2:]) 
 	    #print 'new', fastMTTmass, 'old', e.m_sv, fastMTTtransverseMass, e.mt_sv, cat[2:]
-	    #if isW or isDY : print 'before', e.met, MetV.Pt() , MetVcor.Pt()
+
+
 	    for plotVar in plotSettings:
 		#print plotVar
 		val = getattr(e, plotVar, None)
 		if val is not None: 
-		    if group != ' data' : 
-		        hMC[hGroup][cat][plotVar].Fill(val,weight )
-		        hMCFM[hGroup][cat][plotVar].Fill(val,weightFM )
+		    if hGroup != 'data' : 
+		        if hGroup !='fakes' and hGroup !='f1' and hGroup != 'f2' : 
+                            hMC[hGroup][cat][plotVar].Fill(val,weight)
+		            if not isfakemc1 and not isfakemc2 and tight1 and tight2: hMCFM[hGroup][cat][plotVar].Fill(val,weight)
+
+		        if hGroup =='fakes' or hGroup =='f1' or hGroup == 'f2' :  hMCFM[hGroup][cat][plotVar].Fill(val,ww)
+
 		    else : 
-		        hMC[hGroup][cat][plotVar].Fill(val,1)
-		        hMCFM[hGroup][cat][plotVar].Fill(val,1)
+		        if tight1 and tight2 : 
+		            hMC[hGroup][cat][plotVar].Fill(val,1)
+		            hMCFM[hGroup][cat][plotVar].Fill(val,1)
+
 		    #print hGroup, cat, plotVar, val
-		    #if val < hGroup][cat][plotVar].GetNbinsX() * hGroup][cat][plotVar].GetBinWidth(1) : hMC[hGroup][cat][plotVar].Fill(val,ww*trigw_)
-		    #else : hMC[hGroup][cat][plotVar].Fill(val,ww*trigw_)
-            
+            #custom made variables
+
             tauV = tauV3cor + tauV4cor
-            LeptV = L1+ L2
 
-            dRl1H = DRobj (L1.Eta(), L1.Phi(), tauV.Eta(), tauV.Phi())
-            dRl2H = DRobj (L2.Eta(), L2.Phi(), tauV.Eta(), tauV.Phi())
-            dRlH = DRobj (LeptV.Eta(), LeptV.Phi(), tauV.Eta(), tauV.Phi())
-	    hdR_l1H[hGroup][cat].Fill(dRl1H, weight )
-	    hdR_l2H[hGroup][cat].Fill(dRl2H, weight )
-	    hdR_lH[hGroup][cat].Fill(dRlH, weight )
+            
 
-            dPhil1H = DPhiobj (L1.Phi(), tauV.Phi())
-            dPhil2H = DPhiobj (L2.Phi(), tauV.Phi())
-            dPhilH = DPhiobj ( LeptV.Phi(), tauV.Phi())
-
-	    hdPhi_l1H[hGroup][cat].Fill(dPhil1H, weight )
-	    hdPhi_l2H[hGroup][cat].Fill(dPhil2H, weight )
-	    hdPhi_lH[hGroup][cat].Fill(dPhilH, weight )
-
-            dEtal1H = deltaEta(L1.Px(), L1.Py(), L1.Pz(), tauV.Px(), tauV.Py(), tauV.Pz())
-            dEtal2H = deltaEta(L2.Px(), L2.Py(), L2.Pz(), tauV.Px(), tauV.Py(), tauV.Pz())
-            dEtalH = deltaEta(LeptV.Px(), LeptV.Py(), LeptV.Pz(), tauV.Px(), tauV.Py(), tauV.Pz())
-	    hdEta_l1H[hGroup][cat].Fill(dEtal1H, weight )
-	    hdEta_l2H[hGroup][cat].Fill(dEtal2H, weight )
-	    hdEta_lH[hGroup][cat].Fill(dEtalH, weight )
-
-	    hm_sv_new[hGroup][cat].Fill(fastMTTmass,weight )
-
-	    #ib = getCat(m_sv)
-	    #hm_sv_cat[hGroup][cat].Fill(fastMTTmass,weight )
+	    if hGroup != 'data' : 
+		if hGroup !='fakes' and hGroup !='f1' and hGroup != 'f2' : 
+	            hm_sv_new[hGroup][cat].Fill(fastMTTmass,weight )
+	            hmt_sv_new[hGroup][cat].Fill(fastMTTtransverseMass,weight )
+	            hH_LT[hGroup][cat].Fill(H_LT,weight )
 
 
-	    hH_LT[hGroup][cat].Fill(H_LT,weight )
-	    hH_LT_FM[hGroup][cat].Fill(H_LT,weightFM )
+		    if not isfakemc1 and not isfakemc2 and tight1 and tight2: 
+	                hm_sv_new_FM[hGroup][cat].Fill(fastMTTmass,weight )
+	                hH_LT_FM[hGroup][cat].Fill(H_LT,weight )
 
-	    hmt_sv_new[hGroup][cat].Fill(fastMTTtransverseMass,weight )
-            hidDeepTau2017v2p1VSjet_3[hGroup][cat].Fill((e.idDeepTau2017v2p1VSjet_3), weight )
-            hidDeepTau2017v2p1VSjet_4[hGroup][cat].Fill((e.idDeepTau2017v2p1VSjet_4), weight )
-            hidDeepTau2017v2p1VSmu_3[hGroup][cat].Fill((e.idDeepTau2017v2p1VSmu_3), weight )
-            hidDeepTau2017v2p1VSmu_4[hGroup][cat].Fill((e.idDeepTau2017v2p1VSmu_4), weight )
-            hidDeepTau2017v2p1VSe_3[hGroup][cat].Fill((e.idDeepTau2017v2p1VSe_3), weight )
-            hidDeepTau2017v2p1VSe_4[hGroup][cat].Fill((e.idDeepTau2017v2p1VSe_4), weight )
+		if hGroup =='fakes' or hGroup =='f1' or hGroup == 'f2' :  
+                    hMCFM[hGroup][cat][plotVar].Fill(val,ww)
+		    hm_sv_new_FM[hGroup][cat].Fill(fastMTTmass,ww )
+		    hH_LT_FM[hGroup][cat].Fill(H_LT,ww )
 
             if group != 'data' : 
 	        hLeptonW[group][cat].Fill(lepton_sf)
@@ -1479,11 +1447,15 @@ for group in groups :
         
         inFile.Close()
 
-    fOut.cd()
-    for icat, cat in cats.items()[0:8] :
+htest={}
 
+fOut.cd()
+for group in ngroups:
+    for icat, cat in cats.items()[0:8] :
+        
 	for i in range(len(hLabels)) : 
 	    hCutFlowPerGroup[group][cat].GetXaxis().SetBinLabel(i+1, hLabels[i])
+	    hCutFlowPerGroupFM[group][cat].GetXaxis().SetBinLabel(i+1, hLabels[i])
 
 	for inick,nickName in enumerate(nickNames[group]) :
 	    #for i in range(1,  hCutFlowN[cat][nickName].GetNbinsX()) : 
@@ -1491,26 +1463,33 @@ for group in groups :
 
 		#if 'DY' in nickName : print 'content now', i, hCutFlowN[cat][nickName].GetBinContent(i), 'for cat and nickName', cat, nickName, hCutFlowPerGroup[group][cat].GetXaxis().GetBinLabel(i), 'weight is ', weight 
 	        #for i in range(len(hLabels)) :
-	        #print 'content what again ??????????????????????????????', hCutFlowN[cat][nickName].GetName(), nickName, hCutFlowN[cat][nickName].GetXaxis().GetBinLabel(i), cat , hCutFlowN[cat][nickName].GetBinContent(i), i, WCounter[i-1][icat-1][inick]
 
 	    for i in range(len(hLabels)) : 
 		hCutFlowN[cat][nickName].GetXaxis().SetBinLabel(i+1, hLabels[i])
+		hCutFlowFM[cat][nickName].GetXaxis().SetBinLabel(i+1, hLabels[i])
 		hCutFlowPerGroup[group][cat].GetXaxis().SetBinLabel(i+1, hLabels[i])
+		hCutFlowPerGroupFM[group][cat].GetXaxis().SetBinLabel(i+1, hLabels[i])
 
             #if  'data' not in nickName: 
                 #hCutFlowN[cat][nickName].Scale(weight)
 
 	    hCutFlowPerGroup[group][cat].Add(hCutFlowN[cat][nickName])
-	
-		#fOut.cd()
+	    hCutFlowPerGroupFM[group][cat].Add(hCutFlowFM[cat][nickName])
 
 	    hCutFlowN[cat][nickName].Write()
-	    hCutFlowPerGroup[group][cat].Write()
+	    hCutFlowFM[cat][nickName].Write()
+	
+	hCutFlowPerGroup[group][cat].Write()
+	hCutFlowPerGroupFM[group][cat].Write()
 
-        #continue
+
+        htest = TH1D("hCutFlowAllGroup_"+cat,"AllGroupCutFlow",20,-0.5,19.5)
+        if 'data' not in group and 'Signal' not in group : htest.Add(hCutFlowPerGroup[group][cat])
 
         OverFlow(hm_sv_new[group][cat])
         OverFlow(hmt_sv_new[group][cat])
+        OverFlow(hm_sv_new_FM[group][cat])
+        OverFlow(hmt_sv_new_FM[group][cat])
         OverFlow(hH_LT[group][cat])
         OverFlow(hH_LT_FM[group][cat])
         OverFlow(hdPhi_l1H[group][cat])
@@ -1523,36 +1502,25 @@ for group in groups :
         OverFlow(hdEta_l2H[group][cat])
         OverFlow(hdEta_lH[group][cat])
 
-        hm_sv_new[group][cat].GetXaxis().SetTitle('m_sv(new)  [GeV]')
-        hmt_sv_new[group][cat].GetXaxis().SetTitle('mt_sv(new)  [GeV]')
         hm_sv_new[group][cat].Write()
-        hdPhi_l1H[group][cat].Write()
-        hdPhi_l2H[group][cat].Write()
-        hdPhi_lH[group][cat].Write()
-        hdR_l1H[group][cat].Write()
-        hdR_l2H[group][cat].Write()
-        hdR_lH[group][cat].Write()
-
-        hdEta_l1H[group][cat].Write()
-        hdEta_l2H[group][cat].Write()
-        hdEta_lH[group][cat].Write()
-
+        hmt_sv_new[group][cat].Write()
+        hm_sv_new_FM[group][cat].Write()
+        hmt_sv_new_FM[group][cat].Write()
+	hw_fm_new[hGroup][cat].Write()
         hH_LT[group][cat].Write()
         hH_LT_FM[group][cat].Write()
-        hmt_sv_new[group][cat].Write()
-        hidDeepTau2017v2p1VSjet_3[group][cat].Write()
-        hidDeepTau2017v2p1VSjet_4[group][cat].Write()
-        hidDeepTau2017v2p1VSmu_3[group][cat].Write()
-        hidDeepTau2017v2p1VSmu_4[group][cat].Write()
-        hidDeepTau2017v2p1VSe_3[group][cat].Write()
-        hidDeepTau2017v2p1VSe_4[group][cat].Write()
         hLeptonW[group][cat].Write()
         hTriggerW[group][cat].Write()
+
         for plotVar in plotSettings:
             OverFlow(hMC[group][cat][plotVar])
+	    #if 'gen_match' not in plotVar and 'CutFlow' not in plotVar and 'iso' not in plotVar: 
+            #    hMC[group][cat][plotVar].Rebin(2)
+            #    hMCFM[group][cat][plotVar].Rebin(2)
             hMC[group][cat][plotVar].Write()
             OverFlow(hMCFM[group][cat][plotVar])
             hMCFM[group][cat][plotVar].Write()
+    htest.Write()
 
 for cat in cats.values():
     print("Duplicate summary for {0:s}".format(cat))
