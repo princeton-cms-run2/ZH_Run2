@@ -68,6 +68,8 @@ class outTuple() :
         
         self.pt_3        = array('f',[0])
         self.pt_3_tr     = array('f',[0])
+        self.GenPart_statusFlags_3     = array('l',[0])
+        self.GenPart_status_3     = array('l',[0])
         self.phi_3       = array('f',[0])
         self.phi_3_tr    = array('f',[0])
         self.eta_3       = array('f',[0])
@@ -108,6 +110,8 @@ class outTuple() :
 
         self.pt_4        = array('f',[0])
         self.pt_4_tr     = array('f',[0])
+        self.GenPart_statusFlags_4     = array('l',[0])
+        self.GenPart_status_4     = array('l',[0])
         self.phi_4       = array('f',[0])
         self.phi_4_tr    = array('f',[0])
         self.eta_4       = array('f',[0])
@@ -189,11 +193,15 @@ class outTuple() :
         self.pt_1      = array('f',[0])
         self.m_1_tr   = array('f',[0])
         self.pt_1_tr   = array('f',[0])
+        self.GenPart_statusFlags_1   = array('l',[0])
+        self.GenPart_status_1     = array('l',[0])
         self.phi_1     = array('f',[0])
         self.phi_1_tr  = array('f',[0])
         self.eta_1     = array('f',[0])
         self.eta_1_tr  = array('f',[0])
         self.pt_2      = array('f',[0])
+        self.GenPart_statusFlags_2   = array('l',[0])
+        self.GenPart_status_2     = array('l',[0])
         self.m_2_tr   = array('f',[0])
         self.pt_2_tr   = array('f',[0])
         self.phi_2     = array('f',[0])
@@ -274,6 +282,101 @@ class outTuple() :
         self.bphi_2_tr = array('f',[0])
         self.bcsv_2    = array('f',[0])
         self.bcsvfv_2    = array('f',[0])
+
+        #systematics
+
+        self.jpt_1_raw     = array('f',[0])
+        self.jpt_1_nom     = array('f',[0])
+        self.jpt_1_corr_JEC     = array('f',[0])
+        self.jpt_1_corr_JER     = array('f',[0])
+        self.jpt_1_corr_JESUp     = array('f',[0])
+        self.jpt_1_corr_JESDown     = array('f',[0])
+        self.jpt_1_corr_JERUp     = array('f',[0])
+        self.jpt_1_corr_JERDown     = array('f',[0])
+
+        self.jpt_2_raw     = array('f',[0])
+        self.jpt_2_nom     = array('f',[0])
+        self.jpt_2_corr_JEC     = array('f',[0])
+        self.jpt_2_corr_JER     = array('f',[0])
+        self.jpt_2_corr_JESUp     = array('f',[0])
+        self.jpt_2_corr_JESDown     = array('f',[0])
+        self.jpt_2_corr_JERUp     = array('f',[0])
+        self.jpt_2_corr_JERDown     = array('f',[0])
+
+        self.metpt_nom = array('f',[0])
+        self.metphi_nom = array('f',[0])
+        self.metpt_JER = array('f',[0])
+        self.metphi_JER = array('f',[0])
+        self.metpt_JERUp = array('f',[0])
+        self.metphi_JERUp = array('f',[0])
+        self.metpt_JERDown = array('f',[0])
+        self.metphi_JERDown = array('f',[0])
+        self.metpt_JESUp = array('f',[0])
+        self.metphi_JESUp = array('f',[0])
+        self.metpt_JESDown = array('f',[0])
+        self.metphi_JESDown = array('f',[0])
+        self.metpt_UnclUp = array('f',[0])
+        self.metphi_UnclUp = array('f',[0])
+        self.metpt_UnclDown = array('f',[0])
+        self.metphi_UnclDown = array('f',[0])
+        self.met_UnclX = array('f',[0])
+        self.met_UnclY = array('f',[0])
+
+        # trigger info
+        self.isTrig_2   = array('f',[0])
+        self.isTrig_1   = array('f',[0])
+        self.isDoubleTrig   = array('f',[0])
+
+
+        # jet variables
+        self.njetspt20 = array('f',[0])
+        self.njets     = array('f',[0])
+        self.nbtag     = array('f',[0])
+
+        self.jpt_1     = array('f',[0])
+        self.jpt_1_tr  = array('f',[0])
+        self.jeta_1    = array('f',[0])
+        self.jeta_1_tr = array('f',[0])
+        self.jphi_1    = array('f',[0])
+        self.jphi_1_tr = array('f',[0])
+        self.jcsv_1    = array('f',[0])
+        self.jcsvfv_1    = array('f',[0])
+        self.jpt_2     = array('f',[0])
+        self.jpt_2_tr  = array('f',[0])
+        self.jeta_2    = array('f',[0])
+        self.jeta_2_tr = array('f',[0])
+        self.jphi_2    = array('f',[0])
+        self.jphi_2_tr = array('f',[0])
+        self.jcsv_2    = array('f',[0])
+        self.jcsvfv_2    = array('f',[0])
+        self.iso_2       = array('f',[0])
+        self.q_2       = array('f',[0])
+        self.tightId_2       = array('f',[0])
+        self.mediumId_2       = array('f',[0])
+        self.mediumPromptId_2       = array('f',[0])
+        self.looseId_2       = array('f',[0])
+
+        self.bpt_1     = array('f',[0])
+        self.bpt_1_tr  = array('f',[0])
+        self.beta_1    = array('f',[0])
+        self.beta_1_tr = array('f',[0])
+        self.bphi_1    = array('f',[0])
+        self.bphi_1_tr = array('f',[0])
+        self.bcsv_1    = array('f',[0])
+        self.bcsvfv_1    = array('f',[0])
+        self.bpt_2     = array('f',[0])
+        self.bpt_2_tr  = array('f',[0])
+        self.beta_2    = array('f',[0])
+        self.beta_2_tr = array('f',[0])
+        self.bphi_2    = array('f',[0])
+        self.bphi_2_tr = array('f',[0])
+        self.bcsv_2    = array('f',[0])
+        self.bcsvfv_2    = array('f',[0])
+
+        #systematics
+
+
+
       
         self.t.Branch('run',              self.run,               'run/l' )
         self.t.Branch('nElectron',              self.nElectron,               'nElectron/l' )
@@ -304,6 +407,14 @@ class outTuple() :
         self.t.Branch('nGoodElectron',    self.nGoodElectron,     'nGoodElectron/I' )
         self.t.Branch('nGoodMuon',        self.nGoodMuon,         'nGoodMuon/I' )
         
+        self.t.Branch('GenPart_statusFlags_1',     self.GenPart_statusFlags_1,     'GenPart_statusFlags_1/I')
+        self.t.Branch('GenPart_statusFlags_2',     self.GenPart_statusFlags_2,     'GenPart_statusFlags_2/I')
+        self.t.Branch('GenPart_statusFlags_3',     self.GenPart_statusFlags_3,     'GenPart_statusFlags_3/I')
+        self.t.Branch('GenPart_statusFlags_4',     self.GenPart_statusFlags_4,     'GenPart_statusFlags_4/I')
+        self.t.Branch('GenPart_status_1',     self.GenPart_status_1,     'GenPart_status_1/I')
+        self.t.Branch('GenPart_status_2',     self.GenPart_status_2,     'GenPart_status_2/I')
+        self.t.Branch('GenPart_status_3',     self.GenPart_status_3,     'GenPart_status_3/I')
+        self.t.Branch('GenPart_status_4',     self.GenPart_status_4,     'GenPart_status_4/I')
         self.t.Branch('pt_3',        self.pt_3,        'pt_3/F')
         self.t.Branch('pt_3_tr',     self.pt_3_tr,     'pt_3_tr/F')
         self.t.Branch('phi_3',       self.phi_3,       'phi_3/F')
@@ -461,7 +572,26 @@ class outTuple() :
         self.t.Branch('mediumId_2', self.mediumId_2, 'mediumId_2/F')
         self.t.Branch('mediumPromptId_2', self.mediumPromptId_2, 'mediumPromptId_2/F')
         self.t.Branch('looseId_2', self.looseId_2, 'looseId_2/F')
-        
+
+        #systematics
+        self.t.Branch('metpt_nom', self.metpt_nom, 'metpt_nom/F')
+        self.t.Branch('metphi_nom', self.metphi_nom, 'metphi_nom/F')
+        self.t.Branch('metpt_JER', self.metpt_JER, 'metpt_JER/F')
+        self.t.Branch('metphi_JER', self.metphi_JER, 'metphi_JER/F')
+        self.t.Branch('metpt_JERUp', self.metpt_JERUp, 'metpt_JERUp/F')
+        self.t.Branch('metphi_JERUp', self.metphi_JERUp, 'metphi_JERUp/F')
+        self.t.Branch('metpt_JERDown', self.metpt_JERDown, 'metpt_JERDown/F')
+        self.t.Branch('metphi_JERDown', self.metphi_JERDown, 'metphi_JERDown/F')
+        self.t.Branch('metpt_JESUp', self.metpt_JESUp, 'metpt_JESUp/F')
+        self.t.Branch('metphi_JESUp', self.metphi_JESUp, 'metphi_JESUp/F')
+        self.t.Branch('metpt_JESDown', self.metpt_JESDown, 'metpt_JESDown/F')
+        self.t.Branch('metphi_JESDown', self.metphi_JESDown, 'metphi_JESDown/F')
+        self.t.Branch('metpt_UnclUp', self.metpt_UnclUp, 'metpt_UnclUp/F')
+        self.t.Branch('metphi_UnclUp', self.metphi_UnclUp, 'metphi_UnclUp/F')
+        self.t.Branch('metpt_UnclDown', self.metpt_UnclDown, 'metpt_UnclDown/F')
+        self.t.Branch('metphi_UnclDown', self.metphi_UnclDown, 'metphi_UnclDown/F')
+        self.t.Branch('met_UnclX', self.met_UnclX, 'met_UnclX/F')
+        self.t.Branch('met_UnclY', self.met_UnclY, 'met_UnclY/F')
         
         # MET variables
         self.t.Branch('met', self.met, 'met/F')
@@ -483,6 +613,25 @@ class outTuple() :
         self.t.Branch('njetspt20', self.njetspt20, 'njetspt20/F') 
         self.t.Branch('njets', self.njets, 'njets/F')
         self.t.Branch('nbtag', self.nbtag, 'nbtag/F')
+
+
+        self.t.Branch('jpt_1_raw',     self.jpt_1_raw,     'jpt_1_raw/F' )
+        self.t.Branch('jpt_1_nom',     self.jpt_1_nom,     'jpt_1_nom/F' )
+        self.t.Branch('jpt_1_corr_JEC',     self.jpt_1_corr_JEC,     'jpt_1_corr_JEC/F' ) 
+        self.t.Branch('jpt_1_corr_JER',     self.jpt_1_corr_JER,     'jpt_1_corr_JER/F' ) 
+        self.t.Branch('jpt_1_corr_JESUp',     self.jpt_1_corr_JESUp,     'jpt_1_corr_JESUp/F' ) 
+        self.t.Branch('jpt_1_corr_JERUp',     self.jpt_1_corr_JERUp,     'jpt_1_corr_JERUp/F' ) 
+        self.t.Branch('jpt_1_corr_JESDown',     self.jpt_1_corr_JESDown,     'jpt_1_corr_JESDown/F' ) 
+        self.t.Branch('jpt_1_corr_JERDown',     self.jpt_1_corr_JERDown,     'jpt_1_corr_JERDown/F' ) 
+
+        self.t.Branch('jpt_2_raw',     self.jpt_2_raw,     'jpt_2_raw/F' )
+        self.t.Branch('jpt_2_nom',     self.jpt_2_nom,     'jpt_2_nom/F' )
+        self.t.Branch('jpt_2_corr_JEC',     self.jpt_2_corr_JEC,     'jpt_2_corr_JEC/F' ) 
+        self.t.Branch('jpt_2_corr_JER',     self.jpt_2_corr_JER,     'jpt_2_corr_JER/F' ) 
+        self.t.Branch('jpt_2_corr_JESUp',     self.jpt_2_corr_JESUp,     'jpt_2_corr_JESUp/F' ) 
+        self.t.Branch('jpt_2_corr_JERUp',     self.jpt_2_corr_JERUp,     'jpt_2_corr_JERUp/F' ) 
+        self.t.Branch('jpt_2_corr_JESDown',     self.jpt_2_corr_JESDown,     'jpt_2_corr_JESDown/F' ) 
+        self.t.Branch('jpt_2_corr_JERDown',     self.jpt_2_corr_JERDown,     'jpt_2_corr_JERDown/F' ) 
 
         self.t.Branch('jpt_1',     self.jpt_1,     'jpt_1/F' )
         self.t.Branch('jpt_1_tr',  self.jpt_1_tr,  'jpt_1_tr/F' )
@@ -627,7 +776,7 @@ class outTuple() :
         ttP4 = FMTT.getBestP4()
         return ttP4.M(), ttP4.Mt() 
     
-    def Fill(self, entry, SVFit, cat, jt1, jt2, LepP, LepM, lepList, isMC, era ) :
+    def Fill(self, entry, SVFit, cat, jt1, jt2, LepP, LepM, lepList, isMC, era, doUncertainties=False ) :
         ''' - jt1 and jt2 point to the selected tau candidates according to the table below.
             - if e.g., channel = 'et', the jt1 points to the electron list and jt2 points to the tau list.
             - LepP and LepM are TLorentz vectors for the positive and negative members of the dilepton pair
@@ -738,6 +887,14 @@ class outTuple() :
         self.isTracker_4[0]     = -1
         self.ip3d_4[0]          = -1
         self.inTimeMuon_4[0]    = -1
+	self.GenPart_statusFlags_1[0]    = -1
+	self.GenPart_status_1[0]    = -1
+	self.GenPart_statusFlags_2[0]    = -1
+	self.GenPart_status_2[0]    = -1
+	self.GenPart_statusFlags_3[0]    = -1
+	self.GenPart_status_3[0]    = -1
+	self.GenPart_statusFlags_4[0]    = -1
+	self.GenPart_status_4[0]    = -1
 
 
         goodElectronList = tauFun.makeGoodElectronList(entry)
@@ -849,6 +1006,8 @@ class outTuple() :
 			self.pt_3_tr[0]     = entry.GenPart_pt[idx_genEle]
 			self.phi_3_tr[0]    = entry.GenPart_phi[idx_genEle]
 			self.eta_3_tr[0]    = entry.GenPart_eta[idx_genEle]
+			self.GenPart_statusFlags_3[0]    = entry.GenPart_statusFlags[idx_genEle]
+			self.GenPart_status_3[0]    = entry.GenPart_status[idx_genEle]
 
 		    try: self.gen_match_3[0] = ord(entry.Electron_genPartFlav[jt1])
 		    except AttributeError: self.gen_match_3[0] = -1
@@ -887,6 +1046,8 @@ class outTuple() :
 			self.pt_3_tr[0]     = entry.GenPart_pt[idx_genEle]
 			self.phi_3_tr[0]    = entry.GenPart_phi[idx_genEle]
 			self.eta_3_tr[0]    = entry.GenPart_eta[idx_genEle]
+			self.GenPart_statusFlags_3[0]    = entry.GenPart_statusFlags[idx_genEle]
+			self.GenPart_status_3[0]    = entry.GenPart_status[idx_genEle]
 
 		self.pt_4[0]     = entry.Muon_pt[jt2]
 		self.phi_4[0]    = entry.Muon_phi[jt2]
@@ -920,6 +1081,8 @@ class outTuple() :
 			self.pt_4_tr[0]     = entry.GenPart_pt[idx_genMu]
 			self.phi_4_tr[0]    = entry.GenPart_phi[idx_genMu]
 			self.eta_4_tr[0]    = entry.GenPart_eta[idx_genMu]
+			self.GenPart_statusFlags_4[0]    = entry.GenPart_statusFlags[idx_genMu]
+			self.GenPart_status_4[0]    = entry.GenPart_status[idx_genMu]
 
 
 	    # Fill variables for Leg3, where 3->tau(mu) and 4->tau(had)
@@ -958,6 +1121,8 @@ class outTuple() :
 			self.pt_3_tr[0]     = entry.GenPart_pt[idx_genMu]
 			self.phi_3_tr[0]    = entry.GenPart_phi[idx_genMu]
 			self.eta_3_tr[0]    = entry.GenPart_eta[idx_genMu]
+			self.GenPart_statusFlags_3[0]    = entry.GenPart_statusFlags[idx_genMu]
+			self.GenPart_status_3[0]    = entry.GenPart_status[idx_genMu]
 	    
 	    # Fill variables for Leg3 and Leg4, where 3->tau(had) and 4->tau(had)
 	    elif channel == 'tt' :
@@ -985,6 +1150,8 @@ class outTuple() :
 			self.pt_3_tr[0]  = entry.GenVisTau_pt[idx_t1_gen]
 			self.phi_3_tr[0] = entry.GenVisTau_phi[idx_t1_gen]
 			self.eta_3_tr[0] = entry.GenVisTau_eta[idx_t1_gen]
+			self.GenPart_statusFlags_3[0]    = entry.GenPart_statusFlags[idx_t1_gen]
+			self.GenPart_status_3[0]    = entry.GenPart_status[idx_t1_gen]
 		    else:
 			self.pt_3_tr[0]  = 1.2*entry.Tau_pt[jt1]
 			self.phi_3_tr[0] = 1.2*entry.Tau_phi[jt1]
@@ -1041,6 +1208,8 @@ class outTuple() :
 			self.pt_4_tr[0]  = entry.GenVisTau_pt[idx_t2_gen]
 			self.phi_4_tr[0] = entry.GenVisTau_phi[idx_t2_gen]
 			self.eta_4_tr[0] = entry.GenVisTau_eta[idx_t2_gen]
+			self.GenPart_statusFlags_4[0]    = entry.GenPart_statusFlags[idx_t2_gen]
+			self.GenPart_status_4[0]    = entry.GenPart_status[idx_t2_gen]
 		    else:
 			self.pt_4_tr[0]  = 1.2*entry.Tau_pt[jt2]
 			self.phi_4_tr[0] = 1.2*entry.Tau_phi[jt2]
@@ -1174,6 +1343,10 @@ class outTuple() :
 		self.eta_2_tr[0] = entry.GenPart_eta[idx_Lep2_tr]
 		self.phi_1_tr[0] = entry.GenPart_phi[idx_Lep1_tr]
 		self.phi_2_tr[0] = entry.GenPart_phi[idx_Lep2_tr]
+		self.GenPart_statusFlags_1[0]    = entry.GenPart_statusFlags[idx_Lep1_tr]
+		self.GenPart_status_1[0]    = entry.GenPart_status[idx_Lep1_tr]
+		self.GenPart_statusFlags_2[0]    = entry.GenPart_statusFlags[idx_Lep2_tr]
+		self.GenPart_status_2[0]    = entry.GenPart_status[idx_Lep2_tr]
         
         # MET variables
         self.met[0]         = entry.MET_pt    
@@ -1185,7 +1358,28 @@ class outTuple() :
         self.metcov01[0] = entry.MET_covXY
         self.metcov10[0] = entry.MET_covXY	
         self.metcov11[0] = entry.MET_covYY
-
+	self.met_UnclX = entry.MET_MetUnclustEnUpDeltaX
+	self.met_UnclY = entry.MET_MetUnclustEnUpDeltaY
+        
+        self.metpt_nom = entry.MET_pt
+        self.metphi_nom =  entry.MET_phi
+        if doUncertainties : 
+            self.metpt_nom = entry.MET_pt_nom
+            self.metphi_nom =  entry.MET_phi_nom
+	    self.metpt_JER = entry.MET_pt_jer
+	    self.metphi_JER = entry.MET_phi_jer
+	    self.metpt_JERUp = entry.MET_pt_jerUp
+	    self.metphi_JERUp = entry.MET_phi_jerUp
+	    self.metpt_JERDown = entry.MET_pt_jerDown
+	    self.metphi_JERDown = entry.MET_phi_jerDown
+	    self.metpt_JESUp = entry.MET_pt_jesTotalUp
+	    self.metphi_JESUp = entry.MET_phi_jesTotalUp
+	    self.metpt_JESDown = entry.MET_pt_jesTotalDown
+	    self.metphi_JESDown = entry.MET_phi_jesTotalDown
+	    self.metpt_UnclUp = entry.MET_pt_unclustEnUp
+	    self.metphi_UnclUp = entry.MET_phi_unclustEnUp
+	    self.metpt_UnclDown = entry.MET_pt_unclustEnDown
+	    self.metphi_UnclDown = entry.MET_phi_unclustEnDown
 
         # trig
 	self.isTrig_1[0]   = is_trig_1
@@ -1211,6 +1405,17 @@ class outTuple() :
             self.jphi_1[0] = entry.Jet_phi[jj1]
             self.jcsv_1[0] = entry.Jet_btagDeepB[jj1]
             self.jcsvfv_1[0] = entry.Jet_btagDeepFlavB[jj1]
+            if doUncertainties : 
+
+		self.jpt_1_raw     = entry.Jet_pt_raw[jj1]
+		self.jpt_1_nom     = entry.Jet_pt_nom[jj1]
+		self.jpt_1_corr_JEC     = entry.Jet_corr_JEC[jj1]
+		self.jpt_1_corr_JER     = entry.Jet_corr_JER[jj1]
+		self.jpt_1_corr_JESUp     = entry.Jet_pt_jesTotalUp[jj1]
+		self.jpt_1_corr_JESDown     = entry.Jet_pt_jesTotalDown[jj1]
+		self.jpt_1_corr_JERUp     = entry.Jet_pt_jerUp[jj1]
+		self.jpt_1_corr_JERDown     = entry.Jet_pt_jerDown[jj1]
+
             
             # genMatch jet1
             if isMC:
@@ -1230,6 +1435,16 @@ class outTuple() :
             self.jphi_2[0] = entry.Jet_phi[jj2]
             self.jcsv_2[0] = entry.Jet_btagDeepB[jj2]
             self.jcsvfv_2[0] = entry.Jet_btagDeepFlavB[jj2]
+            if doUncertainties : 
+
+		self.jpt_2_raw     = entry.Jet_pt_raw[jj2]
+		self.jpt_2_nom     = entry.Jet_pt_nom[jj2]
+		self.jpt_2_corr_JEC     = entry.Jet_corr_JEC[jj2]
+		self.jpt_2_corr_JER     = entry.Jet_corr_JER[jj2]
+		self.jpt_2_corr_JESUp     = entry.Jet_pt_jesTotalUp[jj2]
+		self.jpt_2_corr_JESDown     = entry.Jet_pt_jesTotalDown[jj2]
+		self.jpt_2_corr_JERUp     = entry.Jet_pt_jerUp[jj2]
+		self.jpt_2_corr_JERDown     = entry.Jet_pt_jerDown[jj2]
             
             # genMatch jet2
             if isMC:
