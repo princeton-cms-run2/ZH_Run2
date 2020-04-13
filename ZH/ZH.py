@@ -34,6 +34,7 @@ def getArgs() :
     parser.add_argument("-s","--selection",default='ZH',help="is this for the ZH or the AZH analysis?")
     parser.add_argument("-u","--unique",default='none',help="CSV file containing list of unique events for sync studies.") 
     parser.add_argument("-w","--weights",default=False,type=int,help="to re-estimate Sum of Weights")
+    parser.add_argument("-j","--doSystematics",type=str, default=False,help="do JME systematics")
     
     return parser.parse_args()
 
@@ -43,6 +44,8 @@ maxPrint = args.maxPrint
 
 cutCounter = {}
 cutCounterGenWeight = {}
+
+doJME  = args.doSystematics.lower() == 'true' or args.doSystematics.lower() == 'yes' or args.doSystematics == '1'
 
 cats = ['eeet','eemt','eett','eeem','mmet','mmmt','mmtt','mmem']
 
@@ -317,7 +320,7 @@ for count, e in enumerate(inTree) :
             SVFit = True
 	    
             if not MC : isMC = False
-            outTuple.Fill(e,SVFit,cat,jt1,jt2,LepP,LepM,lepList,isMC,era) 
+            outTuple.Fill(e,SVFit,cat,jt1,jt2,LepP,LepM,lepList,isMC,era,doJME) 
 
             if maxPrint > 0 :
                 maxPrint -= 1
@@ -338,7 +341,7 @@ hLabels.append('inJSON')
 hLabels.append('METfilter')
 hLabels.append('Trigger')
 hLabels.append('LeptonCount')
-#hLabels.append('GoodLeptons')
+hLabels.append('GoodLeptons')
 hLabels.append('LeptonPair')
 hLabels.append('FoundZ')
 hLabels.append('GoodTauPair')

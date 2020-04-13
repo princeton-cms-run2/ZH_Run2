@@ -1361,25 +1361,26 @@ class outTuple() :
 	self.met_UnclX = entry.MET_MetUnclustEnUpDeltaX
 	self.met_UnclY = entry.MET_MetUnclustEnUpDeltaY
         
-        self.metpt_nom = entry.MET_pt
-        self.metphi_nom =  entry.MET_phi
+        self.metpt_nom[0] = entry.MET_pt
+        self.metphi_nom[0] =  entry.MET_phi
         if doUncertainties : 
-            self.metpt_nom = entry.MET_pt_nom
-            self.metphi_nom =  entry.MET_phi_nom
-	    self.metpt_JER = entry.MET_pt_jer
-	    self.metphi_JER = entry.MET_phi_jer
-	    self.metpt_JERUp = entry.MET_pt_jerUp
-	    self.metphi_JERUp = entry.MET_phi_jerUp
-	    self.metpt_JERDown = entry.MET_pt_jerDown
-	    self.metphi_JERDown = entry.MET_phi_jerDown
-	    self.metpt_JESUp = entry.MET_pt_jesTotalUp
-	    self.metphi_JESUp = entry.MET_phi_jesTotalUp
-	    self.metpt_JESDown = entry.MET_pt_jesTotalDown
-	    self.metphi_JESDown = entry.MET_phi_jesTotalDown
-	    self.metpt_UnclUp = entry.MET_pt_unclustEnUp
-	    self.metphi_UnclUp = entry.MET_phi_unclustEnUp
-	    self.metpt_UnclDown = entry.MET_pt_unclustEnDown
-	    self.metphi_UnclDown = entry.MET_phi_unclustEnDown
+            self.metpt_nom[0] = entry.MET_pt_nom
+            self.metphi_nom[0] =  entry.MET_phi_nom
+            if isMC : 
+		self.metpt_JER[0] = entry.MET_pt_jer
+		self.metphi_JER[0] = entry.MET_phi_jer
+		self.metpt_JERUp[0] = entry.MET_pt_jerUp
+		self.metphi_JERUp[0] = entry.MET_phi_jerUp
+		self.metpt_JERDown[0] = entry.MET_pt_jerDown
+		self.metphi_JERDown[0] = entry.MET_phi_jerDown
+		self.metpt_JESUp[0] = entry.MET_pt_jesTotalUp
+		self.metphi_JESUp[0] = entry.MET_phi_jesTotalUp
+		self.metpt_JESDown[0] = entry.MET_pt_jesTotalDown
+		self.metphi_JESDown[0] = entry.MET_phi_jesTotalDown
+		self.metpt_UnclUp[0] = entry.MET_pt_unclustEnUp
+		self.metphi_UnclUp[0] = entry.MET_phi_unclustEnUp
+		self.metpt_UnclDown[0] = entry.MET_pt_unclustEnDown
+		self.metphi_UnclDown[0] = entry.MET_phi_unclustEnDown
 
         # trig
 	self.isTrig_1[0]   = is_trig_1
@@ -1407,14 +1408,15 @@ class outTuple() :
             self.jcsvfv_1[0] = entry.Jet_btagDeepFlavB[jj1]
             if doUncertainties : 
 
-		self.jpt_1_raw     = entry.Jet_pt_raw[jj1]
-		self.jpt_1_nom     = entry.Jet_pt_nom[jj1]
-		self.jpt_1_corr_JEC     = entry.Jet_corr_JEC[jj1]
-		self.jpt_1_corr_JER     = entry.Jet_corr_JER[jj1]
-		self.jpt_1_corr_JESUp     = entry.Jet_pt_jesTotalUp[jj1]
-		self.jpt_1_corr_JESDown     = entry.Jet_pt_jesTotalDown[jj1]
-		self.jpt_1_corr_JERUp     = entry.Jet_pt_jerUp[jj1]
-		self.jpt_1_corr_JERDown     = entry.Jet_pt_jerDown[jj1]
+		self.jpt_1_raw[0]     = entry.Jet_pt_raw[jj1]
+		self.jpt_1_nom[0]     = entry.Jet_pt_nom[jj1]
+		self.jpt_1_corr_JEC[0]     = entry.Jet_corr_JEC[jj1]
+		self.jpt_1_corr_JER[0]     = entry.Jet_corr_JER[jj1]
+                if isMC : 
+		    self.jpt_1_corr_JESUp[0]     = entry.Jet_pt_jesTotalUp[jj1]
+		    self.jpt_1_corr_JESDown[0]     = entry.Jet_pt_jesTotalDown[jj1]
+		    self.jpt_1_corr_JERUp[0]     = entry.Jet_pt_jerUp[jj1]
+		    self.jpt_1_corr_JERDown[0]     = entry.Jet_pt_jerDown[jj1]
 
             
             # genMatch jet1
@@ -1437,14 +1439,15 @@ class outTuple() :
             self.jcsvfv_2[0] = entry.Jet_btagDeepFlavB[jj2]
             if doUncertainties : 
 
-		self.jpt_2_raw     = entry.Jet_pt_raw[jj2]
-		self.jpt_2_nom     = entry.Jet_pt_nom[jj2]
-		self.jpt_2_corr_JEC     = entry.Jet_corr_JEC[jj2]
-		self.jpt_2_corr_JER     = entry.Jet_corr_JER[jj2]
-		self.jpt_2_corr_JESUp     = entry.Jet_pt_jesTotalUp[jj2]
-		self.jpt_2_corr_JESDown     = entry.Jet_pt_jesTotalDown[jj2]
-		self.jpt_2_corr_JERUp     = entry.Jet_pt_jerUp[jj2]
-		self.jpt_2_corr_JERDown     = entry.Jet_pt_jerDown[jj2]
+		self.jpt_2_raw[0]     = entry.Jet_pt_raw[jj2]
+		self.jpt_2_nom[0]     = entry.Jet_pt_nom[jj2]
+		self.jpt_2_corr_JEC[0]     = entry.Jet_corr_JEC[jj2]
+		self.jpt_2_corr_JER[0]     = entry.Jet_corr_JER[jj2]
+                if isMC : 
+		    self.jpt_2_corr_JESUp[0]     = entry.Jet_pt_jesTotalUp[jj2]
+		    self.jpt_2_corr_JESDown[0]     = entry.Jet_pt_jesTotalDown[jj2]
+		    self.jpt_2_corr_JERUp[0]     = entry.Jet_pt_jerUp[jj2]
+		    self.jpt_2_corr_JERDown[0]     = entry.Jet_pt_jerDown[jj2]
             
             # genMatch jet2
             if isMC:
