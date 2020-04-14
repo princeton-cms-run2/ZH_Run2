@@ -10,17 +10,23 @@ def getArgs() :
     parser.add_argument("--nickName",default='MCpileup',help="Data set nick name.") 
     parser.add_argument("-m","--mode",default='anaXRD',help="Mode (script to run).")
     parser.add_argument("-y","--year",default=2017,type=str,help="Data taking period, 2016, 2017 or 2018")
-    parser.add_argument("-c","--concatenate",default=30,type=int,help="On how many files to run on each job")
+    parser.add_argument("-c","--concatenate",default=15,type=int,help="On how many files to run on each job")
     parser.add_argument("-s","--selection",default='ZH',type=str,help="Select ZH or AZH")
+    parser.add_argument("-j","--doSystematics",default='yes',type=str,help="do JME systematics")
     return parser.parse_args()
 
-def beginBatchScript(baseFileName) :
+def beginBatchScript(baseFileName, Systematics) :
     outLines = ['#!/bin/tcsh\n']
     outLines.append("source /cvmfs/cms.cern.ch/cmsset_default.csh\n")
     outLines.append("setenv SCRAM_ARCH slc6_amd64_gcc700\n")
     outLines.append("eval `scramv1 project CMSSW CMSSW_10_2_16_patch1`\n")
     outLines.append("cd CMSSW_10_2_16_patch1/src\n")
     outLines.append("eval `scramv1 runtime -csh`\n")
+    if Systematics :
+        outLines.append("git clone https://github.com/cms-nanoAOD/nanoAOD-tools.git PhysicsTools/NanoAODTools\n")
+        outLines.append("cd PhysicsTools/NanoAODTools\n")
+        outLines.append("scram b -j 2\n")
+        outLines.append("cd -\n")
     outLines.append("echo ${_CONDOR_SCRATCH_DIR}\n")
     outLines.append("cd ${_CONDOR_SCRATCH_DIR}\n")
     return outLines
@@ -33,6 +39,15 @@ def getFileName(line) :
 
 args = getArgs()
 era = str(args.year)
+doJME  = args.doSystematics.lower() == 'true' or args.doSystematics.lower() == 'yes' or args.doSystematics == '1'
+
+period="B"
+if 'Run2016' in args.dataSet or 'Run2017' in args.dataSet or 'Run2018' in args.dataSet: 
+    poss = args.dataSet.find("Run")
+    period = args.dataSet[int(poss)+7:int(poss)+8]
+    print 'will set up', poss, period
+
+  
 
 # sample query 
 # dasgoclient --query="file dataset=/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8*/*/NANOAOD*" --limit=0   
@@ -69,7 +84,7 @@ for nFile in range(0, len(dataset),mjobs) :
 
     scriptName = "{0:s}_{1:03d}.csh".format(args.nickName,nFile+1)
     print("scriptName={0:s}".format(scriptName))
-    outLines = beginBatchScript(scriptName)
+    outLines = beginBatchScript(scriptName, doJME)
 
     #outLines.append("tar -zxvf SFs.tar.gz\n")
     outLines.append("cp MCsamples_*csv MCsamples.csv\n")
@@ -88,9 +103,26 @@ for nFile in range(0, len(dataset),mjobs) :
         else : outLines.append("xrdcp root://cmsxrootd.fnal.gov/{0:s} inFile.root\n".format(fileloop)) 
 
         outFileName = "{0:s}_{1:03d}.root".format(args.nickName,nFile+j)
-        if 'ZPeak'  in args.selection : outLines.append("python ZPeak.py -f inFile.root -o {0:s} --nickName {1:s} -y {2:s} -s {3:s}  -w 0 -d Data\n".format(outFileName,args.nickName, args.year, args.selection))
-	else :   outLines.append("python ZH.py -f inFile.root -o {0:s} --nickName {1:s} -y {2:s} -s {3:s}  -w 0 -d Data\n".format(outFileName,args.nickName, args.year, args.selection))
-        outLines.append("rm inFile.root\n")
+        infile = "inFile.root"
+
+
+        #if 'ZPeak' not in args.selection :  outLines.append("python ZH.py -f {4:s} -o {0:s} --nickName {1:s} -y {2:s} -s {3:s} -w 2 -j {5:s} -d Data\n".format(outFileName,args.nickName, args.year, args.selection,infile, args.doSystematics))
+        #else : outLines.append("python ZPeak.py -f {4:s} -o {0:s} --nickName {1:s} -y {2:s} -s {3:s} -w 2 -j {5:s} -d Data\n".format(outFileName,args.nickName, args.year, args.selection, infile, args.doSystematics))
+
+        if doJME : 
+            if 'Run2016' in fileloop or 'Run2017' in fileloop or 'Run2018' in fileloop : 
+                outLines.append("python make_jme.py False {0:s} {1:s}\n".format(str(args.year), str(period)))
+            else : 
+                outLines.append("python make_jme.py True {0:s} {1:s}\n".format(str(args.year), str(period)))
+
+        if doJME : infile = "inFile_Skim.root"
+
+
+        if 'ZPeak' not in args.selection :  outLines.append("python ZH.py -f {4:s} -o {0:s} --nickName {1:s} -y {2:s} -s {3:s} -w 0 -j {5:s} -d Data\n".format(outFileName,args.nickName, args.year, args.selection,infile, args.doSystematics))
+        else : outLines.append("python ZPeak.py -f {4:s} -o {0:s} --nickName {1:s} -y {2:s} -s {3:s} -w 0 -j {5:s} -d Data\n".format(outFileName,args.nickName, args.year, args.selection, infile, args.doSystematics))
+
+        outLines.append("rm inFile*.root\n")
+
 
     outLines.append("hadd -f -k all_{0:s}_{1:03d}.root *ntup\n".format(args.nickName,nFile+1))
     #outLines.append("mv  all_{0:s}_{1:03d}.root all_{0:s}_{1:03d}_root\n".format(args.nickName,nFile+1))
@@ -115,6 +147,7 @@ dir = os.getcwd()+"/../../../../MC/"
 dirData = os.getcwd()+"/../../../../data/"
 funcsDir = os.getcwd()+"/../../../../funcs/"
 SVFitDir = os.getcwd()+"/../../../../SVFit/"
+toolsDir = os.getcwd()+"/../../../../tools/"
 
 jsons={'Cert_271036-284044_13TeV_ReReco_07Aug2017_Collisions16_JSON.txt', 'Cert_294927-306462_13TeV_EOY2017ReReco_Collisions17_JSON.txt','Cert_314472-325175_13TeV_17SeptEarlyReReco2018ABC_PromptEraD_Collisions18_JSON.txt'}
 
@@ -139,6 +172,7 @@ for file in scriptList :
     outLines.append('{0:s}tauFun.py, {0:s}generalFunctions.py, {0:s}outTuple.py,'.format(funcsDir))
     outLines.append('{0:s}FastMTT.h, {0:s}MeasuredTauLepton.h, {0:s}svFitAuxFunctions.h,'.format(SVFitDir)) 
     outLines.append('{0:s}FastMTT.cc, {0:s}MeasuredTauLepton.cc, {0:s}svFitAuxFunctions.cc,'.format(SVFitDir))
+    outLines.append('{0:s}make_jme.py,'.format(toolsDir))
     outLines.append('{0:s}{1:s} \n'.format(dirData,fjson))
     outLines.append('should_transfer_files = YES\n')
     outLines.append('when_to_transfer_output = ON_EXIT\n')
