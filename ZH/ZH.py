@@ -130,6 +130,9 @@ if args.weights > 0 :
             hDYxGenweightsArr[i].Write()
 
     hWeight.Write()
+    if args.weights == 2 : 
+        fW.Close()
+        sys.exit()
 
 #############end weights
 

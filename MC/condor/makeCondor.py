@@ -100,19 +100,23 @@ for nFile in range(0, len(dataset),mjobs) :
         fileloop=dataset[nFile:nFile+maxx][j]
         if 'lpcsusyhiggs' not in fileName : outLines.append("xrdcp root://cms-xrd-global.cern.ch/{0:s} inFile.root\n".format(fileloop)) 
         else : outLines.append("xrdcp root://cmsxrootd.fnal.gov/{0:s} inFile.root\n".format(fileloop)) 
+
+        outFileName = "{0:s}_{1:03d}.root".format(args.nickName,nFile+j)
+        infile = "inFile.root"
+
+        if 'ZPeak' not in args.selection :  outLines.append("python ZH.py -f {4:s} -o {0:s} --nickName {1:s} -y {2:s} -s {3:s} -w 2 -j {5:s}\n".format(outFileName,args.nickName, args.year, args.selection,infile, args.doSystematics))
+        else : outLines.append("python ZPeak.py -f {4:s} -o {0:s} --nickName {1:s} -y {2:s} -s {3:s} -w 2 -j {5:s}\n".format(outFileName,args.nickName, args.year, args.selection, infile, args.doSystematics))
+
         if doJME : 
             if 'Run2016' in fileloop or 'Run2017' in fileloop or 'Run2018' in fileloop : 
                 outLines.append("python make_jme.py False {0:s} {1:s}\n".format(str(args.year), str(period)))
             else : 
                 outLines.append("python make_jme.py True {0:s} {1:s}\n".format(str(args.year), str(period)))
 
-        outFileName = "{0:s}_{1:03d}.root".format(args.nickName,nFile+j)
-        infile = "inFile.root"
-
         if doJME : infile = "inFile_Skim.root"
 
-        if 'ZPeak' not in args.selection :  outLines.append("python ZH.py -f {4:s} -o {0:s} --nickName {1:s} -y {2:s} -s {3:s} -w 1 -j {5:s}\n".format(outFileName,args.nickName, args.year, args.selection,infile, args.doSystematics))
-        else : outLines.append("python ZPeak.py -f {4:s} -o {0:s} --nickName {1:s} -y {2:s} -s {3:s} -w 1\n".format(outFileName,args.nickName, args.year, args.selection, infile))
+        if 'ZPeak' not in args.selection :  outLines.append("python ZH.py -f {4:s} -o {0:s} --nickName {1:s} -y {2:s} -s {3:s} -w 0 -j {5:s}\n".format(outFileName,args.nickName, args.year, args.selection,infile, args.doSystematics))
+        else : outLines.append("python ZPeak.py -f {4:s} -o {0:s} --nickName {1:s} -y {2:s} -s {3:s} -w 0 -j {5:s}\n".format(outFileName,args.nickName, args.year, args.selection, infile, args.doSystematics))
         outLines.append("rm inFile*.root\n")
 
 

@@ -698,6 +698,12 @@ class outTuple() :
         DR = sqrt(dPhi**2 + (v2.Eta()-v1.Eta())**2)
 	return DR
 
+    def getDRnV(self,entry, eta1,phi1, eta2,phi2) :
+
+        dPhi = min(abs(phi2-phi1),2.*pi-abs(phi2-phi1))
+        DR = sqrt(dPhi**2 + (eta2-eta1)**2)
+	return DR
+
     def getdPhi(self, entry, v1,v2) :
         dPhi = min(abs(v2.Phi()-v1.Phi()),2.*pi-abs(v2.Phi()-v1.Phi()))
         return dPhi
@@ -705,26 +711,27 @@ class outTuple() :
     def getM_vis(self,entry,tau1,tau2) :
         return (tau1+tau2).M()
 
-    def getJets(self,entry,tau1,tau2,era) :
+
+
+    def getJets(self,entry,Lep1, Lep2, tau1,tau2,era) :
 	nJet30, jetList, bJetList, bJetListFlav = 0, [], [], []
-        phi2_1, eta2_1 = tau1.Phi(), tau1.Eta() 
-        phi2_2, eta2_2 = tau2.Phi(), tau2.Eta() 
+
+
         for j in range(entry.nJet) :
             if entry.Jet_jetId[j]  < 2  : continue  #require tigh jets
             if entry.Jet_pt[j] < 50 and entry.Jet_puId[j]  < 4  : continue #loose jetPU_iD
-            if str(era) == 2017  and entry.Jet_pt[j] > 20 and entry.Jet_pt[j] < 50 and abs(entry.Jet_eta[j]) > 2.65 and abs(entry.Jet_eta[j]) < 3.139 : continue  #remove noisy jets
-            if entry.Jet_pt[j] < 20. : continue
+            if str(era) == '2017'  and entry.Jet_pt[j] > 30 and entry.Jet_pt[j] < 50 and abs(entry.Jet_eta[j]) > 2.65 and abs(entry.Jet_eta[j]) < 3.139 : continue  #remove noisy jets
+            if entry.Jet_pt[j] < 30. : continue
             if abs(entry.Jet_eta[j]) > 4.7 : continue
-            phi1, eta1 = entry.Jet_phi[j], entry.Jet_eta[j]
-            dPhi = min(abs(phi2_1-phi1),2.*pi-abs(phi2_1-phi1))
-            DR = sqrt(dPhi**2 + (eta2_1-eta1)**2)
-            dPhi = min(abs(phi2_2-phi1),2.*pi-abs(phi2_2-phi1))
-            DR = min(DR,sqrt(dPhi**2 + (eta2_2-eta1)**2))
-            if DR < 0.5 : continue
+
+
+            dr1, dr2, dr3, dr4 = self.getDRnV(entry, Jet_eta[j], Jet_phi[j], Lep1.Eta(), Lep1.Phi()), self.getDRnV(entry, Jet_eta[j], Jet_phi[j], Lep2.Eta(), Lep2.Phi()), self.getDRnV(entry, Jet_eta[j], Jet_phi[j], tau1.Eta(), tau1.Phi()), self.getDRnV(entry, Jet_eta[j], Jet_phi[j], tau2.Eta(), tau2.Phi())
+
+            if dr1 < 0.5 or dr2 < 0.5 or dr3 < 0.5 or dr4 < 0.5 : continue
             bjet_discr = 0.6321
 	    bjet_discrFlav = 0.0614
-            if str(era) == 2017 : bjet_discr = 0.4941
-            if str(era) == 2018 : bjet_discr = 0.4184
+            if str(era) == '2017' : bjet_discr = 0.4941
+            if str(era) == '2018' : bjet_discr = 0.4184
             if True  and abs(entry.Jet_eta[j]) < 2.5 and entry.Jet_btagDeepB[j] > bjet_discr : bJetList.append(j)
 	    if True  and abs(entry.Jet_eta[j]) < 2.5 and entry.Jet_btagDeepFlavB[j] > bjet_discrFlav : bJetListFlav.append(j)
             #if True and abs(entry.Jet_eta[j]) < 2.4 and entry.Jet_btagCSVV2[j] > 0.800 and entry.Jet_pt[j] > 30. : bJetList.append(j)
@@ -733,6 +740,133 @@ class outTuple() :
             if entry.Jet_pt[j] > 30 : nJet30 += 1
 
         return nJet30, jetList, bJetList,bJetListFlav
+
+
+    def getJetsJME(self,entry,Lep1, Lep2, tau1,tau2,era) :
+	nJet30, jetList, bJetList, bJetListFlav = 0, [], [], []
+
+
+        for j in range(entry.nJet) :
+            if entry.Jet_jetId[j]  < 2  : continue  #require tigh jets
+            if entry.Jet_pt_nom[j] < 50 and entry.Jet_puId[j]  < 4  : continue #loose jetPU_iD
+            if str(era) == '2017'  and entry.Jet_pt_nom[j] > 30 and entry.Jet_pt_nom[j] < 50 and abs(entry.Jet_eta[j]) > 2.65 and abs(entry.Jet_eta[j]) < 3.139 : continue  #remove noisy jets
+            if entry.Jet_pt_nom[j] < 30. : continue
+            if abs(entry.Jet_eta[j]) > 4.7 : continue
+
+
+            dr1, dr2, dr3, dr4 = self.getDRnV(entry, Jet_eta[j], Jet_phi[j], Lep1.Eta(), Lep1.Phi()), self.getDRnV(entry, Jet_eta[j], Jet_phi[j], Lep2.Eta(), Lep2.Phi()), self.getDRnV(entry, Jet_eta[j], Jet_phi[j], tau1.Eta(), tau1.Phi()), self.getDRnV(entry, Jet_eta[j], Jet_phi[j], tau2.Eta(), tau2.Phi())
+
+            if dr1 < 0.5 or dr2 < 0.5 or dr3 < 0.5 or dr4 < 0.5 : continue
+            bjet_discr = 0.6321
+	    bjet_discrFlav = 0.0614
+            if str(era) == '2017' : bjet_discr = 0.4941
+            if str(era) == '2018' : bjet_discr = 0.4184
+            if True  and abs(entry.Jet_eta[j]) < 2.5 and entry.Jet_btagDeepB[j] > bjet_discr : bJetList.append(j)
+	    if True  and abs(entry.Jet_eta[j]) < 2.5 and entry.Jet_btagDeepFlavB[j] > bjet_discrFlav : bJetListFlav.append(j)
+            #if True and abs(entry.Jet_eta[j]) < 2.4 and entry.Jet_btagCSVV2[j] > 0.800 and entry.Jet_pt_nom[j] > 30. : bJetList.append(j)
+	    #print '==================',entry.Jet_jetId[j], entry.Jet_pt_nom[j],  entry.Jet_puId[j], isjj, entry.Jet_jetId[j]
+            jetList.append(j) 
+            if entry.Jet_pt_nom[j] > 30 : nJet30 += 1
+
+        return nJet30, jetList, bJetList,bJetListFlav
+
+    def getJetsJMEMV(self,entry,LepList,era) :
+	nJet30, jetList, bJetList, bJetListFlav = 0, [], [], []
+
+
+        for j in range(entry.nJet) :
+            if entry.Jet_jetId[j]  < 2  : continue  #require tigh jets
+            if entry.Jet_pt_nom[j] < 50 and entry.Jet_puId[j]  < 4  : continue #loose jetPU_iD
+            if str(era) == '2017'  and entry.Jet_pt_nom[j] > 30 and entry.Jet_pt_nom[j] < 50 and abs(entry.Jet_eta[j]) > 2.65 and abs(entry.Jet_eta[j]) < 3.139 : continue  #remove noisy jets
+            if entry.Jet_pt_nom[j] < 30. : continue
+            if abs(entry.Jet_eta[j]) > 4.7 : continue
+
+            print 'will try', len(LepList)
+
+            for iv in len(LepList) : 
+		dr = self.getDRnV(entry, Jet_eta[j], Jet_phi[j], LepList[iv].Eta(), LepList[v].Phi())
+                print 'for iv', dR
+		if dr < 0.5 : continue
+
+            bjet_discr = 0.6321
+	    bjet_discrFlav = 0.0614
+            if str(era) == '2017' : bjet_discr = 0.4941
+            if str(era) == '2018' : bjet_discr = 0.4184
+            if True  and abs(entry.Jet_eta[j]) < 2.5 and entry.Jet_btagDeepB[j] > bjet_discr : bJetList.append(j)
+	    if True  and abs(entry.Jet_eta[j]) < 2.5 and entry.Jet_btagDeepFlavB[j] > bjet_discrFlav : bJetListFlav.append(j)
+            #if True and abs(entry.Jet_eta[j]) < 2.4 and entry.Jet_btagCSVV2[j] > 0.800 and entry.Jet_pt_nom[j] > 30. : bJetList.append(j)
+	    #print '==================',entry.Jet_jetId[j], entry.Jet_pt_nom[j],  entry.Jet_puId[j], isjj, entry.Jet_jetId[j]
+            jetList.append(j) 
+            if entry.Jet_pt_nom[j] > 30 : nJet30 += 1
+
+        return nJet30, jetList, bJetList,bJetListFlav
+
+    def getJetsMV(self,entry,LepList,era) :
+	nJet30, jetList, bJetList, bJetListFlav = 0, [], [], []
+
+
+        for j in range(entry.nJet) :
+            if entry.Jet_jetId[j]  < 2  : continue  #require tight jets
+            if entry.Jet_pt[j] < 50 and entry.Jet_puId[j]  < 4  : continue #loose jetPU_iD
+            if str(era) == '2017'  and entry.Jet_pt[j] > 30 and entry.Jet_pt[j] < 50 and abs(entry.Jet_eta[j]) > 2.65 and abs(entry.Jet_eta[j]) < 3.139 : continue  #remove noisy jets
+            if entry.Jet_pt[j] < 30. : continue
+            if abs(entry.Jet_eta[j]) > 4.7 : continue
+
+            #print 'will try', len(LepList)
+
+            #for iv, lepv in enumerate(LepList) : 
+            for iv, lv  in  enumerate(LepList) : 
+		dr = self.getDRnV(entry, entry.Jet_eta[j], entry.Jet_phi[j], LepList[iv].Eta(), LepList[iv].Phi())
+                #print 'for iv--->', iv, 'jet', j, entry.nJet, 'dr--', dr , LepList[iv].Eta(), LepList[iv].Phi(), LepList[iv].Pt()
+		if dr < 0.5 : continue
+
+            bjet_discr = 0.6321
+	    bjet_discrFlav = 0.0614
+            if str(era) == '2017' : bjet_discr = 0.4941
+            if str(era) == '2018' : bjet_discr = 0.4184
+            if True  and abs(entry.Jet_eta[j]) < 2.5 and entry.Jet_btagDeepB[j] > bjet_discr : bJetList.append(j)
+	    if True  and abs(entry.Jet_eta[j]) < 2.5 and entry.Jet_btagDeepFlavB[j] > bjet_discrFlav : bJetListFlav.append(j)
+            #if True and abs(entry.Jet_eta[j]) < 2.4 and entry.Jet_btagCSVV2[j] > 0.800 and entry.Jet_pt[j] > 30. : bJetList.append(j)
+	    #print '==================',entry.Jet_jetId[j], entry.Jet_pt[j],  entry.Jet_puId[j], isjj, entry.Jet_jetId[j]
+            jetList.append(j) 
+            if entry.Jet_pt[j] > 30 : nJet30 += 1
+
+        return nJet30, jetList, bJetList,bJetListFlav
+
+
+    def getJetsJMEMV(self,entry,LepList,era) :
+	nJet30, jetList, bJetList, bJetListFlav = 0, [], [], []
+
+
+        for j in range(entry.nJet) :
+            if entry.Jet_jetId[j]  < 2  : continue  #require tight jets
+            if entry.Jet_pt_nom[j] < 50 and entry.Jet_puId[j]  < 4  : continue #loose jetPU_iD
+            if str(era) == '2017'  and entry.Jet_pt_nom[j] > 30 and entry.Jet_pt[j] < 50 and abs(entry.Jet_eta[j]) > 2.65 and abs(entry.Jet_eta[j]) < 3.139 : continue  #remove noisy jets
+            if entry.Jet_pt_nom[j] < 30. : continue
+            if abs(entry.Jet_eta[j]) > 4.7 : continue
+
+            #print 'will try', len(LepList)
+
+            #for iv, lepv in enumerate(LepList) : 
+            for iv, lv  in  enumerate(LepList) : 
+		dr = self.getDRnV(entry, entry.Jet_eta[j], entry.Jet_phi[j], LepList[iv].Eta(), LepList[iv].Phi())
+                #print 'for iv--->', iv, 'jet', j, entry.nJet, 'dr--', dr , LepList[iv].Eta(), LepList[iv].Phi(), LepList[iv].Pt()
+		if dr < 0.5 : continue
+
+            bjet_discr = 0.6321
+	    bjet_discrFlav = 0.0614
+            if str(era) == '2017' : bjet_discr = 0.4941
+            if str(era) == '2018' : bjet_discr = 0.4184
+            if True  and abs(entry.Jet_eta[j]) < 2.5 and entry.Jet_btagDeepB[j] > bjet_discr : bJetList.append(j)
+	    if True  and abs(entry.Jet_eta[j]) < 2.5 and entry.Jet_btagDeepFlavB[j] > bjet_discrFlav : bJetListFlav.append(j)
+            #if True and abs(entry.Jet_eta[j]) < 2.4 and entry.Jet_btagCSVV2[j] > 0.800 and entry.Jet_pt_nom[j] > 30. : bJetList.append(j)
+	    #print '==================',entry.Jet_jetId[j], entry.Jet_pt_nom[j],  entry.Jet_puId[j], isjj, entry.Jet_jetId[j]
+            jetList.append(j) 
+            if entry.Jet_pt_nom[j] > 30 : nJet30 += 1
+
+        return nJet30, jetList, bJetList,bJetListFlav
+
+
 
     def runSVFit(self, entry, channel, jt1, jt2, tau1, tau2 ) :
                       
@@ -1386,10 +1520,21 @@ class outTuple() :
 	self.isTrig_1[0]   = is_trig_1
         self.isTrig_2[0]   = is_trig_2
 	self.isDoubleTrig[0]   = is_Dtrig_1
+        leplist=[]
+        leplist.append(LepP)
+        leplist.append(LepM)
+	if jt1>-1 and jt2>-1 :  
+	    leplist.append(tau1)
+	    leplist.append(tau2)
 
         # jet variables
-	if jt1>-1 and jt2>-1 :  nJet30, jetList, bJetList, bJetListFlav = self.getJets(entry,tau1,tau2,era) 
-	else :  nJet30, jetList, bJetList, bJetListFlav = self.getJets(entry,LepP,LepM,era) 
+	#if doUncertainties: nJet30, jetList, bJetList, bJetListFlav = self.getJetsJME(entry,LepP, LepM,tau1,tau2,era) 
+	#else: nJet30, jetList, bJetList, bJetListFlav = self.getJets(entry,LepP, LepM,tau1,tau2,era) 
+
+	if doUncertainties: nJet30, jetList, bJetList, bJetListFlav = self.getJetsJMEMV(entry,leplist,era) 
+	else: nJet30, jetList, bJetList, bJetListFlav = self.getJetsMV(entry,leplist,era) 
+
+
         self.njetspt20[0] = len(jetList)
         self.njets[0] = nJet30
         self.nbtag[0] = len(bJetList)
@@ -1968,7 +2113,7 @@ class outTuple() :
 	self.isDoubleTrig[0]   = is_Dtrig_1
 
         # jet variables
-	nJet30, jetList, bJetList, bJetListFlav = self.getJets(entry,LepP,LepM,era) 
+	nJet30, jetList, bJetList, bJetListFlav = self.getJetsMV(entry,LepP,LepM,era) 
         self.njetspt20[0] = len(jetList)
         self.njets[0] = nJet30
         self.nbtag[0] = len(bJetList)
