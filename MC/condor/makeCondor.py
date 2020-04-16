@@ -29,6 +29,7 @@ def beginBatchScript(baseFileName, Systematics) :
         outLines.append("cd -\n")
     outLines.append("echo ${_CONDOR_SCRATCH_DIR}\n")
     outLines.append("cd ${_CONDOR_SCRATCH_DIR}\n")
+    outLines.append("echo 'this is the working dir' ${_CONDOR_SCRATCH_DIR}\n")
     return outLines
 
 def getFileName(line) :
@@ -104,19 +105,26 @@ for nFile in range(0, len(dataset),mjobs) :
         outFileName = "{0:s}_{1:03d}.root".format(args.nickName,nFile+j)
         infile = "inFile.root"
 
-        if 'ZPeak' not in args.selection :  outLines.append("python ZH.py -f {4:s} -o {0:s} --nickName {1:s} -y {2:s} -s {3:s} -w 2 -j {5:s}\n".format(outFileName,args.nickName, args.year, args.selection,infile, args.doSystematics))
-        else : outLines.append("python ZPeak.py -f {4:s} -o {0:s} --nickName {1:s} -y {2:s} -s {3:s} -w 2 -j {5:s}\n".format(outFileName,args.nickName, args.year, args.selection, infile, args.doSystematics))
-
         if doJME : 
+
+	    if 'ZPeak' not in args.selection :  outLines.append("python ZH.py -f {4:s} -o {0:s} --nickName {1:s} -y {2:s} -s {3:s} -w 2 -j {5:s}\n".format(outFileName,args.nickName, args.year, args.selection,infile, args.doSystematics))
+	    else : outLines.append("python ZPeak.py -f {4:s} -o {0:s} --nickName {1:s} -y {2:s} -s {3:s} -w 2 -j {5:s}\n".format(outFileName,args.nickName, args.year, args.selection, infile, args.doSystematics))
+
             if 'Run2016' in fileloop or 'Run2017' in fileloop or 'Run2018' in fileloop : 
                 outLines.append("python make_jme.py False {0:s} {1:s}\n".format(str(args.year), str(period)))
             else : 
                 outLines.append("python make_jme.py True {0:s} {1:s}\n".format(str(args.year), str(period)))
 
-        if doJME : infile = "inFile_Skim.root"
+            infile = "inFile_Skim.root"
 
-        if 'ZPeak' not in args.selection :  outLines.append("python ZH.py -f {4:s} -o {0:s} --nickName {1:s} -y {2:s} -s {3:s} -w 0 -j {5:s}\n".format(outFileName,args.nickName, args.year, args.selection,infile, args.doSystematics))
-        else : outLines.append("python ZPeak.py -f {4:s} -o {0:s} --nickName {1:s} -y {2:s} -s {3:s} -w 0 -j {5:s}\n".format(outFileName,args.nickName, args.year, args.selection, infile, args.doSystematics))
+	    if 'ZPeak' not in args.selection :  outLines.append("python ZH.py -f {4:s} -o {0:s} --nickName {1:s} -y {2:s} -s {3:s} -w 0 -j {5:s}\n".format(outFileName,args.nickName, args.year, args.selection,infile, args.doSystematics))
+	    else : outLines.append("python ZPeak.py -f {4:s} -o {0:s} --nickName {1:s} -y {2:s} -s {3:s} -w 0 -j {5:s}\n".format(outFileName,args.nickName, args.year, args.selection, infile, args.doSystematics))
+
+        else :
+
+	    if 'ZPeak' not in args.selection :  outLines.append("python ZH.py -f {4:s} -o {0:s} --nickName {1:s} -y {2:s} -s {3:s} -w 1 -j {5:s}\n".format(outFileName,args.nickName, args.year, args.selection,infile, args.doSystematics))
+	    else : outLines.append("python ZPeak.py -f {4:s} -o {0:s} --nickName {1:s} -y {2:s} -s {3:s} -w 1 -j {5:s}\n".format(outFileName,args.nickName, args.year, args.selection, infile, args.doSystematics))
+
         outLines.append("rm inFile*.root\n")
 
 
