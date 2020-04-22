@@ -34,7 +34,7 @@ def getArgs() :
     parser.add_argument("-s","--selection",default='ZH',help="is this for the ZH or the AZH analysis?")
     parser.add_argument("-u","--unique",default='none',help="CSV file containing list of unique events for sync studies.") 
     parser.add_argument("-w","--weights",default=False,type=int,help="to re-estimate Sum of Weights")
-    parser.add_argument("-j","--doSystematics",type=str, default=False,help="do JME systematics")
+    parser.add_argument("-j","--doSystematics",type=str, default='false',help="do JME systematics")
     
     return parser.parse_args()
 
@@ -212,43 +212,29 @@ for count, e in enumerate(inTree) :
 
         
         if lepMode == 'ee' :
-            if len(goodElectronList) < 2 :
-                if unique :
-                    print("GoodLeptons Fail: : Event ID={0:d} cat={1:s}".format(e.event,cat))
-                    GF.printEvent(e)
-                    if MC : GF.printMC(e)
-                continue
-            cutCounter[cat].count('GoodLeptons')
-	    if  MC :   cutCounterGenWeight[cat].countGenWeight('GoodLeptons', e.genWeight)
+            if len(goodElectronList) < 2 : continue
+            for cat in cats[:4] :
+                cutCounter[cat].count('GoodLeptons')
+	        if  MC :   cutCounterGenWeight[cat].countGenWeight('GoodLeptons', e.genWeight)
 
             pairList, lepList = tauFun.findZ(goodElectronList,[], e)
-            if len(lepList) != 2 :
-                if unique :
-                    print("LepList Fail: : Event ID={0:d} cat={1:s}".format(e.event,cat))
-                    GF.printEvent(e)
-                    if MC : GF.printMC(e)
-                continue
-            
-        
-        if lepMode == 'mm' :
-            if len(goodMuonList) < 2 : continue
-            cutCounter[cat].count('GoodLeptons')
-	    if  MC :   cutCounterGenWeight[cat].countGenWeight('GoodLeptons', e.genWeight)
-
-            pairList, lepList = tauFun.findZ([],goodMuonList, e)
             if len(lepList) != 2 : continue
-
-        if len(pairList) < 1 : continue
-
-        if lepMode == 'ee' :
             for cat in cats[:4] : 
 	        cutCounter[cat].count('LeptonPair')
 	        if  MC :   cutCounterGenWeight[cat].countGenWeight('LeptonPair', e.genWeight)
+        
         if lepMode == 'mm' :
+            if len(goodMuonList) < 2 : continue
+            for cat in cats[4:] :
+                cutCounter[cat].count('GoodLeptons')
+	        if  MC :   cutCounterGenWeight[cat].countGenWeight('GoodLeptons', e.genWeight)
+
+            pairList, lepList = tauFun.findZ([],goodMuonList, e)
+            if len(lepList) != 2 : continue
             for cat in cats[4:] : 
 	        cutCounter[cat].count('LeptonPair')
 	        if  MC :   cutCounterGenWeight[cat].countGenWeight('LeptonPair', e.genWeight)
-                
+
         LepP, LepM = pairList[0], pairList[1]
         M = (LepM + LepP).M()
 	
