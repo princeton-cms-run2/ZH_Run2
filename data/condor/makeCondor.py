@@ -28,6 +28,7 @@ def beginBatchScript(baseFileName, Systematics) :
         outLines.append("scram b -j 2\n")
         outLines.append("cd -\n")
     outLines.append("echo ${_CONDOR_SCRATCH_DIR}\n")
+    outLines.append("echo 'this is the working dir' ${_CONDOR_SCRATCH_DIR}\n")
     outLines.append("cd ${_CONDOR_SCRATCH_DIR}\n")
     return outLines
 

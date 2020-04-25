@@ -201,6 +201,7 @@ sf_ElectronId.ScaleFactor("{0:s}{1:s}".format(LeptonSF['dir'],LeptonSF['fileElec
 DD = dupeDetector()
 
 # open an output file
+#fin = 'FakeRates_{0:s}_{1:s}_nbtag_precut.root'.format(str(args.year),str(args.region))
 fin = 'FakeRates_{0:s}_{1:s}.root'.format(str(args.year),str(args.region))
 fOut = TFile(fin, 'recreate' )
 
@@ -259,6 +260,7 @@ for group in groups :
 		hTightMode[group][h][m][wp] = TH1D(hName,hName,nBins,array('d',Bins))
 
 
+doJME = True
 
 # loop over the data to fill the histograms
 #for era in ['2017B','2017C','2017D','2017E','2017F'] :
@@ -274,6 +276,10 @@ for era in [str(args.year)] :
  
             #if i > 1000 : continue
             cat = cats[e.cat]
+            if e.pt_1<10 : continue
+            if e.pt_2<10 : continue
+            if e.pt_3<10 : continue
+            if e.pt_4<10 : continue
 
             # impose any common selection criteria here
             # include only same sign events 
@@ -282,7 +288,7 @@ for era in [str(args.year)] :
             if args.region == 'SS' and  e.q_3*e.q_4 < 0. : continue
             if args.region == 'OS' and  e.q_3*e.q_4 > 0. : continue
             #if e.q_3*e.q_4 > 0. : continue
-            if e.nbtag > 0 : continue
+            #if e.nbtag[1] > 0 : continue
 
 	    #if abs(e.dZ_3) > 0.05 or abs(e.dZ_4) > 0.05 : continue
 	    if cat[:2] == 'mm' and  (e.iso_1 > 0.2 or e.iso_2 > 0.2) : continue
@@ -313,7 +319,8 @@ for era in [str(args.year)] :
             if DD.checkEvent(e) : continue 
 
 	    et.SetPtEtaPhiM(e.pt_3,e.eta_3,e.phi_3,0.000511)
-	    ptMiss.SetPtEtaPhiM(e.met,0.,e.metphi,0.)
+	    ptMiss.SetPtEtaPhiM(e.metpt_nom,0.,e.metphi_nom,0.)
+	    #ptMiss.SetPtEtaPhiM(e.met,0.,e.metphi,0.)
 	    eMET = et + ptMiss
 
 	    preCut =  eMET.Mt() < 40. 
@@ -344,7 +351,7 @@ for era in [str(args.year)] :
 		    hBaseMode[group]['t_mt'][str(e.decayMode_4)].Fill(e.pt_4)
 
 	        for wp in WP : 
-	            if e.iso_3 < 0.2 and  (e.isGlobal_3 > 0 or e.isTracker_3 > 0) and e.mediumId_3 > 0: 
+	            if e.iso_3 < 0.2 and  (e.isGlobal_3 > 0 or e.isTracker_3 > 0) and e.tightId_3 > 0: 
                         hTight['m_mt'][wp].Fill(e.pt_3)
 
 		    if int(e.idDeepTau2017v2p1VSjet_4) >= int(wp)-1 : 
@@ -387,7 +394,7 @@ for era in [str(args.year)] :
 
 	        for wp in WP : 
 		    if e.iso_3 < 0.15 and  e.Electron_mvaFall17V2noIso_WP90_3 > 0 : hTight['e_em'][wp].Fill(e.pt_3)
-	            if e.iso_4 < 0.20 and  (e.isGlobal_4 > 0 or e.isTracker_4 > 0) and e.mediumId_4 > 0: hTight['m_em'][wp].Fill(e.pt_4)
+	            if e.iso_4 < 0.20 and  (e.isGlobal_4 > 0 or e.isTracker_4 > 0) and e.tightId_4 > 0: hTight['m_em'][wp].Fill(e.pt_4)
 
             
         inFile.Close()
@@ -574,11 +581,14 @@ for group in groups :
 	    weight=1.
 	    lepton_sf = 1.
 
+            if e.pt_1<10 : continue
+            if e.pt_2<10 : continue
+
 	    if e.isTrig_1 == 0 : continue 
 	    if e.q_1*e.q_2 > 0. : continue
             if args.region == 'SS' and  e.q_3*e.q_4 < 0. : continue
             if args.region == 'OS' and  e.q_3*e.q_4 > 0. : continue
-	    #if e.nbtag > 0 : continue
+	    #if e.nbtag[1] > 0 : continue
 
 	    H_LT = e.pt_3 + e.pt_4
 	    #if H_LT > args.LTcut : continue
@@ -610,6 +620,14 @@ for group in groups :
 	    tauV4.SetPtEtaPhiM(e.pt_4, e.eta_4, e.phi_4, e.m_4)
 	    tauV3cor.SetPtEtaPhiM(e.pt_3, e.eta_3, e.phi_3, e.m_3)
 	    tauV4cor.SetPtEtaPhiM(e.pt_4, e.eta_4, e.phi_4, e.m_4)
+	    MetV.SetPx(e.metpt_nom * cos (e.metphi_nom))
+	    MetV.SetPy(e.metpt_nom * sin (e.metphi_nom))
+	    MetVcor.SetPx(e.metpt_nom * cos (e.metphi_nom))
+	    MetVcor.SetPy(e.metpt_nom * sin (e.metphi_nom))
+	    met_x = e.metpt_nom * cos(e.metphi_nom)
+	    met_y = e.metpt_nom * sin(e.metphi_nom)
+	    metcor = e.metpt_nom
+            '''
 	    MetV.SetPx(e.met * cos (e.metphi))
 	    MetV.SetPy(e.met * sin (e.metphi))
 	    MetVcor.SetPx(e.met * cos (e.metphi))
@@ -617,6 +635,7 @@ for group in groups :
 	    met_x = e.met * cos(e.metphi)
 	    met_y = e.met * sin(e.metphi)
 	    metcor = e.met
+            '''
 
 
 	    #if e.isTrig_1 == 0 and e.isDoubleTrig==0: continue  
@@ -634,7 +653,7 @@ for group in groups :
 		#print 'will now be using ',sWeight, e.LHE_Njets, nickName
 	   #recoils 
 
-
+            '''
 	    njetsforrecoil = e.njets
 	    if (isW)  : njetsforrecoil = e.njets + 1
 	    if isW or isDY :
@@ -656,7 +675,7 @@ for group in groups :
 		met_y = mett[1]
 		MetVcor.SetPx(mett[0])
 		MetVcor.SetPy(mett[1])
-
+              '''
 	    #weight = e.weight * e.Generator_weight *sWeight
 	    weight = e.Generator_weight *sWeight
 
@@ -752,7 +771,8 @@ for group in groups :
 	    weight *= trigw
 
 	    et.SetPtEtaPhiM(e.pt_3,e.eta_3,e.phi_3,0.000511)
-	    ptMiss.SetPtEtaPhiM(e.met,0.,e.metphi,0.)
+	    ptMiss.SetPtEtaPhiM(e.metpt_nom,0.,e.metphi_nom,0.)
+	    #ptMiss.SetPtEtaPhiM(e.met,0.,e.metphi,0.)
 	    eMET = et + ptMiss
 	    preCut =  eMET.Mt() < 40.  
 
@@ -771,7 +791,7 @@ for group in groups :
 		    if e.Electron_mvaFall17V2noIso_WP90_3 >0  and  e.iso_3 < 0.15 : 
 			for wp in WP : 	    hTightPrompt[group]['e_et'][wp].Fill(e.pt_3,weight)
 
-		if  e.gen_match_3 != 15 : #meaning all leptons faking tau
+		if  e.gen_match_3 != 15 and  e.gen_match_3 != -1: #meaning all leptons faking tau
 		#if not(e.gen_match_3 != 0 and e.gen_match_3 != 3 and e.gen_match_3 != 4 and e.gen_match_3 != 5):
 		    if preCutOff or preCut : 
 		        hBasenoPrompt[group]['e_et'].Fill(e.pt_3,weight)
@@ -782,7 +802,7 @@ for group in groups :
 
 
 		#if e.gen_match_4 == 5 :
-		if e.gen_match_4 != 0 : #we consider only  jets faking taus (lepton faking taus are taken from other studies)
+		if e.gen_match_4 != 0 and e.gen_match_4 != -1: #we consider only  jets faking taus (lepton faking taus are taken from other studies)
 
 		    hBasePrompt[group]['t_et'].Fill(e.pt_4,weight)
 		    if e.decayMode_4 != -1 : hBasePromptMode[group]['t_et'][str(e.decayMode_4)].Fill(e.pt_4,weight)
@@ -794,7 +814,7 @@ for group in groups :
 				hTightPromptMode[group]['t_et'][str(e.decayMode_4)][wp].Fill(e.pt_4,weight)
 
 
-		if e.gen_match_4 == 0 :
+		if e.gen_match_4 == 0 and e.gen_match_4 != -1:
 		    hBasenoPrompt[group]['t_et'].Fill(e.pt_4,weight)
 		    if e.decayMode_4 != -1 : hBasenoPromptMode[group]['t_et'][str(e.decayMode_4)].Fill(e.pt_4,weight)
 
@@ -811,20 +831,20 @@ for group in groups :
 
 		    if preCutOff or preCutt and  (e.isGlobal_3 > 0 or e.isTracker_3 > 0) : hBasePrompt[group]['m_mt'].Fill(e.pt_3,weight)
 
-		    if e.iso_3 < 0.2 and  (e.isGlobal_3 > 0 or e.isTracker_3 > 0) and e.mediumId_3 > 0: 
+		    if e.iso_3 < 0.2 and  (e.isGlobal_3 > 0 or e.isTracker_3 > 0) and e.tightId_3 > 0: 
 		        for wp in WP : hTightPrompt[group]['m_mt'][wp].Fill(e.pt_3,weight)
 
 
 		#if e.gen_match_3 != 1 and  e.gen_match_3 != 15 :
-		if e.gen_match_3 != 15 :
+		if e.gen_match_3 != 15 and e.gen_match_3 != -1 :
 		#if not (e.gen_match_3 != 0 and e.gen_match_3 != 3 and e.gen_match_3 != 4 and e.gen_match_3 != 5)  : #subtracting only the tau-matched
 
 		    if preCutOff or preCutt and  (e.isGlobal_3 > 0 or e.isTracker_3 > 0) : hBasenoPrompt[group]['m_mt'].Fill(e.pt_3,weight)
 
-		    if  e.iso_3 < 0.2 and  (e.isGlobal_3 > 0 or e.isTracker_3 > 0) and e.mediumId_3 > 0: 
+		    if  e.iso_3 < 0.2 and  (e.isGlobal_3 > 0 or e.isTracker_3 > 0) and e.tightId_3 > 0: 
 		        for wp in WP : hTightnoPrompt[group]['m_mt'][wp].Fill(e.pt_3,weight)
 
-		if e.gen_match_4 != 0 : ## ==5 previously
+		if e.gen_match_4 != 0 and e.gen_match_3 != -1 : ## ==5 previously
 
 		    hBasePrompt[group]['t_mt'].Fill(e.pt_4,weight)
 		    if e.decayMode_4 != -1 : hBasePromptMode[group]['t_mt'][str(e.decayMode_4)].Fill(e.pt_4,weight)
@@ -844,7 +864,7 @@ for group in groups :
 
 
 	    if cat[2:] == 'tt':
-		if e.gen_match_3 != 0 :
+		if e.gen_match_3 != 0 and e.gen_match_3 != -1:
 		    hBasePrompt[group]['t1_tt'].Fill(e.pt_3,weight)
 		    if e.decayMode_3 != -1 : hBasePromptMode[group]['t1_tt'][str(e.decayMode_3)].Fill(e.pt_3,weight)
 		    for wp in WP : 
@@ -862,7 +882,7 @@ for group in groups :
 		            if e.decayMode_4 != -1 : hTightnoPromptMode[group]['t1_tt'][str(e.decayMode_3)][wp].Fill(e.pt_3,weight)
 
 
-		if e.gen_match_4 != 0 :
+		if e.gen_match_4 != 0 and e.gen_match_4 != -1:
 
 		    hBasePrompt[group]['t2_tt'].Fill(e.pt_4,weight)
 		    if e.decayMode_4 != -1 : hBasePromptMode[group]['t2_tt'][str(e.decayMode_4)].Fill(e.pt_4,weight)
@@ -898,18 +918,18 @@ for group in groups :
 		#if e.gen_match_4 != 0 and e.gen_match_4 != 3 and e.gen_match_4 != 4 and e.gen_match_4 != 5:
 		    if preCutOff or preCutt and (e.isGlobal_4 > 0 or e.isTracker_4 > 0): hBasePrompt[group]['m_em'].Fill(e.pt_4,weight)
                     for wp in WP : 
-		        if e.iso_4 < 0.20 and  (e.isGlobal_4 > 0 or e.isTracker_4 > 0) and e.mediumId_4 > 0: hTightPrompt[group]['m_em'][wp].Fill(e.pt_4,weight)
+		        if e.iso_4 < 0.20 and  (e.isGlobal_4 > 0 or e.isTracker_4 > 0) and e.tightId_4 > 0: hTightPrompt[group]['m_em'][wp].Fill(e.pt_4,weight)
 
-		if not (e.gen_match_3 != 0 and e.gen_match_3 != 3 and e.gen_match_3 != 4 and e.gen_match_3 != 5):
+		if not (e.gen_match_3 != 0 and e.gen_match_3 != 3 and e.gen_match_3 != 4 and e.gen_match_3 != 5) and e.gen_match_3 != -1:
 		    if preCutOff or preCut   : hBasenoPrompt[group]['e_em'].Fill(e.pt_3,weight)
                     for wp in WP : 
 		        if  (e.iso_3 < 0.15 and  e.Electron_mvaFall17V2noIso_WP90_3 > 0 ): hTightnoPrompt[group]['e_em'][wp].Fill(e.pt_3,weight)
 
 		#if e.gen_match_4 != 15 : # or e.gen_match_4 != 15 :
-		if not(e.gen_match_4 != 0 and e.gen_match_4 != 3 and e.gen_match_4 != 4 and e.gen_match_4 != 5):
+		if not(e.gen_match_4 != 0 and e.gen_match_4 != 3 and e.gen_match_4 != 4 and e.gen_match_4 != 5) and e.gen_match_4 != -1:
 		    if preCutOff or preCutt and not (e.isGlobal_4 > 0 or e.isTracker_4 > 0): hBasenoPrompt[group]['m_em'].Fill(e.pt_4,weight)
                     for wp in WP : 
-		        if  (e.iso_4 < 0.20 and  (e.isGlobal_4 > 0 or e.isTracker_4 > 0) and e.mediumId_4 > 0): hTightnoPrompt[group]['m_em'][wp].Fill(e.pt_4,weight)
+		        if  (e.iso_4 < 0.20 and  (e.isGlobal_4 > 0 or e.isTracker_4 > 0) and e.tightId_4 > 0): hTightnoPrompt[group]['m_em'][wp].Fill(e.pt_4,weight)
 
 
 

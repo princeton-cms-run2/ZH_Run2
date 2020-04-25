@@ -1237,13 +1237,15 @@ def numberToCat(number) :
     
 
 def catToNumber3L(cat) :
-    number = { 'eee':1, 'eem':2, 'eet':3, 'mme':4, 'mmm':5, 'mmt':6}
-    number = { 'ee':1, 'mm':2}
+    #number = { 'eee':1, 'eem':2, 'eet':3, 'mme':4, 'mmm':5, 'mmt':6}
+    #number = { 'ee':1, 'mm':2}
+    number = { 'eeee':1, 'eemm':2 , 'mmee':3, 'mmmm':4, 'eee':5, 'eem':6, 'mme':7, 'mmm':8,'ee':9, 'mm':10 }
     return number[cat]
 
 def numberToCat3L(number) :
-    cat = { 1:'eee', 2:'eem', 3:'eet', 4:'mme', 5:'mmm', 6:'mmt' }
-    cat = { 1:'ee', 2:'mm' }
+    #cat = { 1:'eee', 2:'eem', 3:'eet', 4:'mme', 5:'mmm', 6:'mmt' }
+    #cat = { 1:'ee', 2:'mm' }
+    cat= { 1:'eeee', 2:'eemm' , 3:'mmee', 4:'mmmm', 5:'eee', 6:'eem', 7:'mme', 8:'mmm', 9:'ee', 10:'mm'}
     return cat[number]
 
 
