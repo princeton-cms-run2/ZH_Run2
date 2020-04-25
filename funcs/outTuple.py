@@ -1492,8 +1492,9 @@ class outTuple() :
 
 	    self.bpt_1[ic], self.beta_1[ic], self.bphi_1[ic], self.bcsv_1[ic], self.bcsvfv_1[ic] = -9.99, -9.99, -9.99, -9.99, -9.99
 	    if len(bJetList) > 0 :
+		jpt1 = getattr(entry, "Jet_pt{0:s}".format(str(isys)), None)
 		jbj1 = bJetList[0]
-		self.bpt_1[ic] = jpt2[jbj1]
+		self.bpt_1[ic] = jpt1[jbj1]
 		self.beta_1[ic] = entry.Jet_eta[jbj1]
 		self.bphi_1[ic] = entry.Jet_phi[jbj1]
 		self.bcsv_1[ic] = entry.Jet_btagDeepB[jbj1] 
@@ -1501,6 +1502,7 @@ class outTuple() :
 		
 	    self.bpt_2[ic], self.beta_2[ic], self.bphi_2[ic], self.bcsv_2[ic], self.bcsvfv_2[ic] = -9.99, -9.99, -9.99, -9.99, -9.99
 	    if len(bJetList) > 1 :
+		jpt2 = getattr(entry, "Jet_pt{0:s}".format(str(isys)), None)
 		jbj2 = bJetList[1] 
 		self.bpt_2[ic] = jpt2[jbj2]
 		self.beta_2[ic] = entry.Jet_eta[jbj2]
@@ -2122,8 +2124,9 @@ class outTuple() :
 
 	    self.bpt_1[ic], self.beta_1[ic], self.bphi_1[ic], self.bcsv_1[ic], self.bcsvfv_1[ic] = -9.99, -9.99, -9.99, -9.99, -9.99
 	    if len(bJetList) > 0 :
+		jpt1 = getattr(entry, "Jet_pt{0:s}".format(str(isys)), None)
 		jbj1 = bJetList[0]
-		self.bpt_1[ic] = jpt2[jbj1]
+		self.bpt_1[ic] = jpt1[jbj1]
 		self.beta_1[ic] = entry.Jet_eta[jbj1]
 		self.bphi_1[ic] = entry.Jet_phi[jbj1]
 		self.bcsv_1[ic] = entry.Jet_btagDeepB[jbj1] 
@@ -2131,6 +2134,7 @@ class outTuple() :
 		
 	    self.bpt_2[ic], self.beta_2[ic], self.bphi_2[ic], self.bcsv_2[ic], self.bcsvfv_2[ic] = -9.99, -9.99, -9.99, -9.99, -9.99
 	    if len(bJetList) > 1 :
+		jpt2 = getattr(entry, "Jet_pt{0:s}".format(str(isys)), None)
 		jbj2 = bJetList[1] 
 		self.bpt_2[ic] = jpt2[jbj2]
 		self.beta_2[ic] = entry.Jet_eta[jbj2]
