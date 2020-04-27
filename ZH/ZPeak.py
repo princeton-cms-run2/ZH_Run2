@@ -205,15 +205,15 @@ for count, e in enumerate(inTree) :
 
         if lepMode == 'ee' :
             if e.nElectron < 2 : continue
-            for cat in cats : 
-	        cutCounter[cat].count('LeptonCount')
-	        if  MC :   cutCounterGenWeight[cat].countGenWeight('LeptonCount', e.genWeight)
+	    if cat[:2] == 'ee' : 
+		cutCounter[cat].count('LeptonCount')
+		if  MC :   cutCounterGenWeight[cat].countGenWeight('LeptonCount', e.genWeight)
+
         if lepMode == 'mm' :
             if e.nMuon < 2 : continue 
-
-            for cat in cats : 
-	        cutCounter[cat].count('LeptonCount')
-	        if  MC :   cutCounterGenWeight[cat].countGenWeight('LeptonCount', e.genWeight)
+	    if cat[:2] == 'mm' :
+		cutCounter[cat].count('LeptonCount')
+		if  MC :   cutCounterGenWeight[cat].countGenWeight('LeptonCount', e.genWeight)
 
 	lepList=[]
 	pairList=[]
@@ -225,20 +225,11 @@ for count, e in enumerate(inTree) :
         goodMuonList = tauFun.makeGoodMuonList(e)
         goodElectronList, goodMuonList = tauFun.eliminateCloseLeptons(e, goodElectronList, goodMuonList)
 
-        # selects a third lepton that is not part of the Z peak already
-        goodElectronListExtraLepton = tauFun.makeGoodElectronListExtraLepton(e,goodElectronList)
-        goodMuonListExtraLepton = tauFun.makeGoodMuonListExtraLepton(e,goodMuonList)
-
-	tauList = tauFun.getGoodTauList(cat, e)
-        #goodElectronListExtraLepton, goodMuonListExtraLepton,tauList = tauFun.eliminateCloseTauAndLepton(e, goodElectronListExtraLepton, goodMuonListExtraLepton, tauList)
-        goodElectronListExtraLepton, goodMuonListExtraLepton = tauFun.eliminateCloseLeptons(e, goodElectronListExtraLepton, goodMuonListExtraLepton)
-
-
 
         if lepMode == 'ee' :
 
             if len(goodElectronList) < 2 :continue
-            cutCounter[cat].count('GoodLeptons')
+	    if cat[:2] == 'ee' :    cutCounter[cat].count('GoodLeptons')
 
             pairList, lepList = tauFun.findZ(goodElectronList,[], e)
             
@@ -246,136 +237,192 @@ for count, e in enumerate(inTree) :
         if lepMode == 'mm' :
 
             if len(goodMuonList) < 2 : continue
-            cutCounter[cat].count('GoodLeptons')
+	    if cat[:2] == 'mm' :    cutCounter[cat].count('GoodLeptons')
 
             pairList, lepList = tauFun.findZ([],goodMuonList, e)
             
-        #if len(lepList) != 2 : continue
+        if len(lepList) <2 : continue
 
-        #if len(pairList) < 1 : continue
+        goodElectronListExtraLepton=[]
+        goodMuonListExtraLepton=[]
+        # selects a third lepton that is not part of the Z peak already
+        if lepMode == 'ee' :         
+            goodElectronListExtraLepton = tauFun.makeGoodElectronListExtraLepton(e,lepList)
+            goodMuonListExtraLepton = goodMuonList
+            for i in lepList : 
+                if i in goodMuonListExtraLepton : goodMuonListExtraLepton.remove(i)
+            for cat in cats : 
+	        if cat[:2] == 'ee' : 
+                    cutCounter[cat].count('LeptonPair')
+	            if  MC :   cutCounterGenWeight[cat].countGenWeight('LeptonPair', e.genWeight)
 
+        if lepMode == 'mm' :         
+            goodMuonListExtraLepton = tauFun.makeGoodMuonListExtraLepton(e,lepList)
+            goodElectronListExtraLepton = goodElectronList
+            for i in lepList : 
+                if i in goodElectronListExtraLepton : goodElectronListExtraLepton.remove(i)
+            for cat in cats : 
+	        if cat[:2] == 'mm' : 
+                    cutCounter[cat].count('LeptonPair')
+	            if  MC :   cutCounterGenWeight[cat].countGenWeight('LeptonPair', e.genWeight)
 
+	tauList = tauFun.getGoodTauList(cat, e)
+        #print lepMode, lepList, 'eE', goodElectronListExtraLepton, 'eM', goodMuonListExtraLepton
+        #goodElectronListExtraLepton, goodMuonListExtraLepton,tauList = tauFun.eliminateCloseTauAndLepton(e, goodElectronListExtraLepton, goodMuonListExtraLepton, tauList)
+        goodElectronListExtraLepton, goodMuonListExtraLepton = tauFun.eliminateCloseLeptons(e, goodElectronListExtraLepton, goodMuonListExtraLepton)
+
+        
         newList=[]
-        #print lepList, '<<<<<<<<<<<<<<<-------------', cat, lepMode
         LepP, LepM = TLorentzVector(), TLorentzVector()
-        M=0
         if len(pairList)>1 : 
             LepP, LepM = pairList[0], pairList[1]
-	    M = (LepM + LepP).M()
 
-        #print e.event, 'goodEl', goodElectronList, 'goodM', goodMuonList, 'ExtraEl', goodElectronListExtraLepton, 'ExtraM', goodMuonListExtraLepton, 'taus', tauList,lepMode, cat, M, 'pair ?', lepList
-        
-        if lepMode == 'ee' :
-            for cat in cats : 
-	        cutCounter[cat].count('LeptonPair')
-	        if  MC :   cutCounterGenWeight[cat].countGenWeight('LeptonPair', e.genWeight)
-
-        if lepMode == 'mm' :
-            for cat in cats : 
-	        cutCounter[cat].count('LeptonPair')
-	        if  MC :   cutCounterGenWeight[cat].countGenWeight('LeptonPair', e.genWeight)
-
-        # in case we have more than two good El/Muon, move the extra lepton to the ExtraLepton list and check if satisfies extra set of requirements
-        if len(goodMuonList)>2 and lepMode == 'mm':
-            for i in goodMuonList :
-                del newList[:]
-                if i not in lepList and i not in goodMuonListExtraLepton: 
-                    newList.append(i)
-                    iL= tauFun.makeGoodMuonListExtraLepton(e,newList)
-                    if len(iL)>0 : 
-                        goodMuonListExtraLepton.append(i)
-                        goodMuonList.remove(i)
-                        #print e.event, '-----------again------------- goodEl', goodElectronList, 'goodM', goodMuonList, 'ExtraEl', goodElectronListExtraLepton, 'ExtraM', goodMuonListExtraLepton, 'taus', tauList,lepMode, cat, M, 'pair ?', lepList, 'hadd to remove', i
-
-        if len(goodElectronList)>2 and lepMode == 'ee':
-            for j in goodElectronList :
-                del newList[:]
-                if j not in lepList and j not in goodElectronListExtraLepton:
-                    newList.append(j)
-                    iLj= tauFun.makeGoodElectronListExtraLepton(e,newList)
-                    if len(iLj)>0 : 
-                        goodElectronListExtraLepton.append(j)
-                        #print e.event, '-----------again  EE------------- goodEl', goodElectronList, 'goodM', goodMuonList, 'ExtraEl', goodElectronListExtraLepton, 'ExtraM', goodMuonListExtraLepton, 'taus', tauList,lepMode, 'Mass-------', M, 'pair ?', lepList, 'hadd to remove', j, newList
-                        goodElectronList.remove(j)
-
-       
-	#just use the highest pT object for mu/el
+        if len(pairList)<1 : continue
                 
+        #if len(goodMuonListExtraLepton) > 0 or len(goodElectronListExtraLepton) > 0  : print 'again----', e.event, 'goodEl', goodElectronList, 'goodM', goodMuonList, 'ExtraEl', goodElectronListExtraLepton, 'ExtraM', goodMuonListExtraLepton, 'taus', tauList,lepMode, cat, (LepP+LepM).M(), 'pair ?', lepList
 
-	#if len(goodMuonListExtraLepton) == 0 and len(goodElectronListExtraLepton) == 0 and len(tauList) == 0 : continue
 
         catev = lepMode
 
         LepP_2, LepM_2 = TLorentzVector(), TLorentzVector()
-        M_2el, M_2mu = 0., 0.
+        LepP_2el, LepM_2el = TLorentzVector(), TLorentzVector()
+        LepP_2mu, LepM_2mu = TLorentzVector(), TLorentzVector()
+        M_2l, M_2el, M_2mu = 0., 0.,0
         pairList_2el, lepList_2el = [], []
         pairList_2mu, lepList_2mu = [], []
 
-        if len(goodElectronListExtraLepton)>0 :  lepList_2el = goodElectronListExtraLepton
-        if len(goodMuonListExtraLepton)>0 :  lepList_2mu = goodMuonListExtraLepton
 
-        if len(goodElectronListExtraLepton)==1 and len(goodMuonListExtraLepton)==1 : continue #we dont want that as it will overlap with the ZH categories (em)
+        #more leptons present - check if that coincides with nominal H->em channel
+        if len(goodElectronListExtraLepton)>0 and len(goodMuonListExtraLepton)>0 : 
+            bestTauPair = tauFun.getBestEMuTauPair(e,cat=cat,pairList=pairList)
+            if len(bestTauPair)>1 :  #if you find a good H->e-mu tau, remove it from the ExtraLeptonList
+                goodElectronListExtraLepton.remove(bestTauPair[0])
+                goodMuonListExtraLepton.remove(bestTauPair[1])
+                if len(goodElectronListExtraLepton) == 0 and len(goodMuonListExtraLepton) == 0 : catev =lepMode
 
-        # 1 additional lepton
+                if len(goodElectronListExtraLepton) != 0 and len(goodMuonListExtraLepton) == 0 : 
+                    if len(goodElectronListExtraLepton) == 1 : 
+                        catev = lepMode + 'e'
+                        lepList_2el = goodElectronListExtraLepton
+
+                    if len(goodElectronListExtraLepton) > 1 : 
+                        pairList_2el, lepList_2el = tauFun.findZ(goodElectronListExtraLepton,[],e)
+	                LepP_2el, LepM_2el = pairList_2el[0], pairList_2el[1]
+                        if len(lepList_2el) == 0 : catev = lepMode 
+                        if len(lepList_2el) == 1  : catev= lepMode + 'e' 
+                        if len(lepList_2el) == 2  : catev= lepMode + 'ee' 
+
+
+                if len(goodElectronListExtraLepton) == 0 and len(goodMuonListExtraLepton) != 0 : 
+                    if len(goodMuonListExtraLepton) == 1 : 
+                        catev =lepMode + 'm'
+                        lepList_2mu = goodMuonListExtraLepton
+
+                    if len(goodMuonListExtraLepton) > 1 : 
+                        pairList_2mu, lepList_2mu = tauFun.findZ([],goodMuonListExtraLepton,[],e)
+	                LepP_2mu, LepM_2mu = pairList_2mu[0], pairList_2mu[1]
+                        if len(lepList_2mu) == 0 : catev = lepMode 
+                        if len(lepList_2mu) == 1  : catev= lepMode + 'm' 
+                        if len(lepList_2mu) == 2  : catev= lepMode + 'mm' 
+
+            # if there is not bestTau Pair, just take the leading lepton to form a new cat
+            if len(bestTauPair)<2 or ( len(bestTauPair)>1 and len(goodElectronListExtraLepton) != 0 and len(goodMuonListExtraLepton) != 0 ): 
+                if tauFun.ComparepT (goodElectronListExtraLepton[0],goodMuonListExtraLepton[0],e) : 
+                    catev = lepMode +'e'
+                    lepList_2el = goodElectronListExtraLepton
+                else : 
+                    catev = lepMode+ 'm'
+                    lepList_2mu = goodMuonListExtraLepton
+                '''
+		if len(goodElectronListExtraLepton)>1 and len(goodMuonListExtraLepton)>1: 
+		    pairList_2el, lepList_2el = tauFun.findZ(goodElectronListExtraLepton,[],e)
+		    pairList_2mu, lepList_2mu = tauFun.findZ([], goodMuonListExtraLepton,e)
+		    if len(lepList_2mu) == 0 and len(lepList_2el) == 0 : continue
+
+		    if len(lepList_2mu) == 0 and len(lepList_2el) > 1 :
+			catenv = lepMode + 'ee'
+		    if len(lepList_2mu) > 1 and len(lepList_2el) == 0 :
+			catenv = lepMode + 'mm'
+
+		    if len(pairList_2el) > 1 and len(pairList_2mu) > 1 : 
+			M_2el = (LepM_2el + LepP_2el)
+			M_2mu = (LepM_2mu + LepP_2mu)
+			if M_2el.Pt() > M_2mu.Pt() : 
+			    pairList_2el, lepList_2el = pairList_2el, lepList_2el
+			    lepList_2mu = []
+			    catev = lepMode+'ee'
+
+			else  : 
+			    pairList_2mu, lepList_2mu = pairList_2mu, lepList_2mu
+			    lepList_2el = []
+			    catev = lepMode+'mm'
+
+                '''
+        #print 'and now lepList', lepList, 'cat=====', catev, 'lepList_2', lepList_2el, lepList_2mu, '+', lepList_2,  'lepList', lepList, 'extraEl==========>', len(goodElectronListExtraLepton), goodElectronListExtraLepton, 'extraMu=========>', len(goodMuonListExtraLepton), goodMuonListExtraLepton, 'extraTau=============>', len(tauList)
+        # 1 additional lepton mu/el and no el/mu
         if len(goodElectronListExtraLepton)==1 and len(goodMuonListExtraLepton)==0 : 
-            lepList_2el = goodElectronListExtraLepton
             catev = lepMode+'e' 
+            lepList_2el = goodElectronListExtraLepton
         if len(goodMuonListExtraLepton)==1 and len(goodElectronListExtraLepton)==0 : 
             catev = lepMode+'m' 
             lepList_2mu = goodMuonListExtraLepton
           
-        #if lepMode =='ee' and len(goodMuonListExtraLepton) > 0 : print 'found a ===============================>', lepMode, len(goodMuonListExtraLepton), len(goodElectronListExtraLepton), e.event
-        #if lepMode =='mm' and len(goodElectronListExtraLepton) > 0 : print 'found a ===============================>', lepMode, '+El', len(goodElectronListExtraLepton), '+Mu', len(goodMuonListExtraLepton), e.event
 
-        if len(goodElectronListExtraLepton)>1 : 
-            pairList_2el, lepList_2el = tauFun.findZ(goodElectronListExtraLepton,[],e)
-            if len(lepList_2el) == 0 : continue
-	    LepP_2el, LepM_2el = pairList_2el[0], pairList_2el[1]
-	    M_2el = (LepM_2el + LepP_2el).M()
-            catev = lepMode+'ee'
+        # when we have more leptons around from one flavour and zero from the other
+        if len(goodElectronListExtraLepton)>1 and len(goodMuonListExtraLepton)==0: 
+	    if len(lepList_2el) == 0 : catev = lepMode 
+	    if len(lepList_2el) == 1  : catev= lepMode + 'e' 
+	    if len(lepList_2el) == 2  : 
+                catev= lepMode + 'ee' 
+	        pairList_2el, lepList_2el = tauFun.findZ(goodElectronListExtraLepton,[],e)
 
-        if len(goodMuonListExtraLepton)>1 : 
-            pairList_2mu, lepList_2mu = tauFun.findZ([], goodMuonListExtraLepton,e)
-            if len(lepList_2mu) == 0 : continue
-	    LepP_2mu, LepM_2mu = pairList_2mu[0], pairList_2mu[1]
-	    M_2mu = (LepM_2mu + LepP_2mu).M()
-            catev = lepMode+'mm'
+       
+        if len(goodMuonListExtraLepton)>1 and len(goodElectronListExtraLepton)==0 : 
+	    pairList_2mu, lepList_2mu = tauFun.findZ([],goodMuonListExtraLepton,e)
+	    if len(lepList_2mu) == 0 : catev = lepMode 
+	    if len(lepList_2mu) == 1  : catev= lepMode + 'm' 
+	    if len(lepList_2mu) == 2  : 
+                catev= lepMode + 'mm' 
+	        LepP_2mu, LepM_2mu = pairList_2mu[0], pairList_2mu[1]
 
 
-        if len(pairList_2el) > 1 and len(pairList_2mu) > 1 : 
-            if M_2el.M() > M_2mu.M() : 
-                pairList_2el, lepList_2el = pairList_2el, lepList_2el
-                catev = lepMode+'ee'
-            else  : 
-                pairList_2mu, lepList_2mu = pairList_2mu, lepList_2mu
-                catev = lepMode+'mm'
 
+
+        lepList_2el = goodElectronListExtraLepton
+        lepList_2mu = goodMuonListExtraLepton
 
         lepList_2 = lepList_2el + lepList_2mu
-        if len(pairList)<1 : continue
-        #if len(catev)>2 and len(goodElectronListExtraLepton) ==0 and len(goodMuonListExtraLepton)==0 : 
-        #    print '========!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!this is odd....', lepList, 'cat=====', catev, 'lepList_2', lepList_2, 'mass', M, 'mass_2', M_2el, M_2mu , 'extraEl==========>', len(goodElectronListExtraLepton), 'extraMu=========>', len(goodMuonListExtraLepton)
-        #    continue
-        #if len(pairList_2el)<1 and len(pairList_2mu)<1 : continue
-        #if len(goodElectronListExtraLepton) ==0 and len(goodMuonListExtraLepton)== 0 : continue
-        #if len(catev) < 4 : continue
+        #print '========!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!this is odd....', lepList, 'cat=====', catev, 'lepList_2', lepList_2, 'mass',  'mass_2', M_2el, M_2mu , 'extraEl==========>', len(goodElectronListExtraLepton), 'extraMu=========>', len(goodMuonListExtraLepton)
 
-        #if not tauFun.mllCut(M) and not tauFun.mllCut(M_2): continue
-        #if len(goodElectronListExtraLepton) >1 and len(goodMuonListExtraLepton) > 1 : 	print 'and now lepList', lepList, 'cat=====', lepMode, 'lepList_2', lepList_2, 'mass', M, 'mass_2', M_2 , 'extraEl==========>', len(goodElectronListExtraLepton), 'extraMu=========>', len(goodMuonListExtraLepton), 'extraTau=============>', len(tauList)
-        #print 'and now lepList', lepList, 'cat=====', catev, 'lepList_2', lepList_2el, lepList_2mu, '+', lepList_2, 'mass', M, 'mass_2', M_2el, M_2mu , 'extraEl==========>', len(goodElectronListExtraLepton), 'extraMu=========>', len(goodMuonListExtraLepton), 'extraTau=============>', len(tauList)
+        if len(catev) <3  : continue
 
-	if len(goodMuonListExtraLepton) == 0 and len(goodElectronListExtraLepton) == 0 and len(tauList) > 1 : continue
-	if (len(goodMuonListExtraLepton) == 1 or len(goodElectronListExtraLepton) == 1) and len(tauList) == 1 : continue
+	if catev == lepMode+'ee' : M_2el = (LepM_2el + LepP_2el)
+	if catev == lepMode+'mm' : M_2mu = (LepM_2mu + LepP_2mu)
+
+        #at least one pair has to be matched to Z
+        if catev == lepMode+'mm' :
+            if not tauFun.mllCut( (LepP+LepM).M() ) and not tauFun.mllCut(M_2mu.M()): continue
+        if catev == lepMode+'ee':
+            if not tauFun.mllCut( (LepP+LepM).M() ) and not tauFun.mllCut(M_2el.M()): continue
+
+        if catev == lepMode+'e' or catev== lepMode+'m' or catev== lepMode:
+            if not tauFun.mllCut( (LepP+LepM).M() ) : continue
+        
+	if len(goodMuonListExtraLepton) == 0 and len(goodElectronListExtraLepton) == 0 and len(tauList) > 1 : continue #we dont want to have taus with no leptons present - overlap with ZH
+	if (len(goodMuonListExtraLepton) == 1 or len(goodElectronListExtraLepton) == 1) and len(tauList) == 1 : continue  #we dont want to the l+tau_h categories
 
         if lepMode == 'ee' :
-            for cat in cats: 
-	        cutCounter[cat].count('FoundZ')
-	        if  MC :   cutCounterGenWeight[cat].countGenWeight('FoundZ', e.genWeight)
+	    if cat[:2] =='ee' :
+		cutCounter[cat].count('FoundZ')
+		if  MC :   cutCounterGenWeight[cat].countGenWeight('FoundZ', e.genWeight)
         if lepMode == 'mm' :
-            for cat in cats: 
-	        cutCounter[cat].count('FoundZ')
-	        if  MC :   cutCounterGenWeight[cat].countGenWeight('FoundZ', e.genWeight)
+	    if cat[:2] =='mm' : 
+		cutCounter[cat].count('FoundZ')
+		if  MC :   cutCounterGenWeight[cat].countGenWeight('FoundZ', e.genWeight)
         
+        #print 'and now lepList', lepList, 'cat=====', catev, 'lepList_2', lepList_2el, lepList_2mu, '+', lepList_2,  'lepList', lepList, 'extraEl==========>', len(goodElectronListExtraLepton), goodElectronListExtraLepton, 'extraMu=========>', len(goodMuonListExtraLepton), goodMuonListExtraLepton, 'extraTau=============>', len(tauList)
+
+
         
 	if MC :
 	    outTuple.setWeight(PU.getWeight(e.PV_npvs)) 
@@ -427,7 +474,7 @@ for cat in cats :
 	    yieldsW = cutCounterGenWeight[cat].getYieldWeighted()[i]
             hCutFlowW[countt].Fill(i+1, float(yieldsW))
             hCutFlowW[countt].GetXaxis().SetBinLabel(i+1,str(cutCounterGenWeight[cat].getLabels()[i]))
-        #print cutCounter[cat].getYield()[i], i, cutCounter[cat].getLabels()[i]
+            #print cat, cutCounter[cat].getYield()[i], i, cutCounter[cat].getLabels()[i]
 
     
     hCutFlow[countt].Sumw2()
