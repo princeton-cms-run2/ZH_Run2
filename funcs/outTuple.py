@@ -2151,8 +2151,8 @@ class outTuple() :
 			    self.beta_2_tr[ic] = entry.GenJet_eta[idx_genJet]
 			    self.bphi_2_tr[ic] = entry.GenJet_phi[idx_genJet]
 			except IndexError : pass
-
-        self.t.Fill()
+       
+        if self.nbtag[0] < 1 : self.t.Fill()
         #self.weight[0] = 1.
         return
 

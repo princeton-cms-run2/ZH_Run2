@@ -930,11 +930,11 @@ def goodMuonExtraLepton(entry, j):
     return True 
 
 def makeGoodMuonListExtraLepton(entry, listMu) :
-    goodMuonList = []
+    goodExtraMuonList = []
     for i in range(entry.nMuon) :
-        if i not in listMu and goodMuonExtraLepton(entry, i) : goodMuonList.append(i)
+        if i not in listMu and goodMuonExtraLepton(entry, i) : goodExtraMuonList.append(i)
     #print("In tauFun.makeGoodMuonList = {0:s}".format(str(goodMuonList)))
-    return goodMuonList
+    return goodExtraMuonList
 
 # select an electron for the Z candidate
 def goodElectronExtraLepton(entry, j) :
@@ -955,10 +955,10 @@ def goodElectronExtraLepton(entry, j) :
     return True 
 
 def makeGoodElectronListExtraLepton(entry, listEl) :
-    goodElectronList = []
+    goodExtraElectronList = []
     for i in range(entry.nElectron) :
-        if i not in listEl and goodElectronExtraLepton(entry, i) : goodElectronList.append(i)
-    return goodElectronList
+        if i not in listEl and goodElectronExtraLepton(entry, i) : goodExtraElectronList.append(i)
+    return goodExtraElectronList
 
 def eliminateCloseTauAndLepton(entry, goodElectronList, goodMuonList, goodTauList) :
 
@@ -1042,36 +1042,37 @@ def eliminateCloseTauAndLepton(entry, goodElectronList, goodMuonList, goodTauLis
 
 def eliminateCloseLeptons(entry, goodElectronList, goodMuonList) :
     badMuon, badElectron = [], []
-    for mu1 in goodMuonList :
-        for mu2 in goodMuonList :
-            if mu1 == mu2 : continue
-            dEta = abs(entry.Muon_eta[mu1] - entry.Muon_eta[mu2])
-            if dEta > 0.3 : continue
-            dPhi = abs(entry.Muon_phi[mu1] - entry.Muon_phi[mu2])
-            if dPhi > 0.3 : continue
-            if sqrt(dEta*dEta + dPhi*dPhi) > 0.3 : continue
-            if not (mu1 in badMuon) and entry.Muon_pt[mu1] < entry.Muon_pt[mu2] : badMuon.append(mu1)
-            if not (mu2 in badMuon) and entry.Muon_pt[mu1] > entry.Muon_pt[mu2] : badMuon.append(mu2)
+    if len(goodMuonList)> 1 :
+	for mu1 in goodMuonList :
+	    for mu2 in goodMuonList :
+		if mu1 == mu2 : continue
+		dEta = abs(entry.Muon_eta[mu1] - entry.Muon_eta[mu2])
+		if dEta > 0.3 : continue
+		dPhi = abs(entry.Muon_phi[mu1] - entry.Muon_phi[mu2])
+		if dPhi > 0.3 : continue
+		if sqrt(dEta*dEta + dPhi*dPhi) > 0.3 : continue
+		if not (mu1 in badMuon) and entry.Muon_pt[mu1] < entry.Muon_pt[mu2] : badMuon.append(mu1)
+		if not (mu2 in badMuon) and entry.Muon_pt[mu1] > entry.Muon_pt[mu2] : badMuon.append(mu2)
 
-        for e2 in goodElectronList :
-            dEta = abs(entry.Muon_eta[mu1] - entry.Electron_eta[e2])
-            if dEta > 0.3 : continue
-            dPhi = abs(entry.Muon_phi[mu1] - entry.Electron_phi[e2])
-            if dPhi > 0.3 : continue
-            if sqrt(dEta*dEta + dPhi*dPhi) > 0.3 : continue
-            if not (mu1 in badMuon) and entry.Muon_pt[mu1] < entry.Electron_pt[e2] : badMuon.append(mu1)
-            if not (e2 in badElectron) and entry.Muon_pt[mu1] > entry.Electron_pt[e2] : badElectron.append(e2)
-            
-    for e1 in goodElectronList :
-        for e2 in goodElectronList :
-            if e1 == e2 : continue 
-            dEta = abs(entry.Electron_eta[e1] - entry.Electron_eta[e2])
-            if dEta > 0.3 : continue
-            dPhi = abs(entry.Electron_phi[e1] - entry.Electron_phi[e2])
-            if dPhi > 0.3 : continue
-            if sqrt(dEta*dEta + dPhi*dPhi) > 0.3 : continue
-            if not (e1 in badElectron) and entry.Electron_pt[e1] < entry.Electron_pt[e2] : badElectron.append(e1)
-            if not (e2 in badElectron) and entry.Electron_pt[e1] > entry.Electron_pt[e2] : badElectron.append(e2)
+	    for e2 in goodElectronList :
+		dEta = abs(entry.Muon_eta[mu1] - entry.Electron_eta[e2])
+		if dEta > 0.3 : continue
+		dPhi = abs(entry.Muon_phi[mu1] - entry.Electron_phi[e2])
+		if dPhi > 0.3 : continue
+		if sqrt(dEta*dEta + dPhi*dPhi) > 0.3 : continue
+		if not (mu1 in badMuon) and entry.Muon_pt[mu1] < entry.Electron_pt[e2] : badMuon.append(mu1)
+		if not (e2 in badElectron) and entry.Muon_pt[mu1] > entry.Electron_pt[e2] : badElectron.append(e2)
+    if len(goodElectronList)> 1 :        
+	for e1 in goodElectronList :
+	    for e2 in goodElectronList :
+		if e1 == e2 : continue 
+		dEta = abs(entry.Electron_eta[e1] - entry.Electron_eta[e2])
+		if dEta > 0.3 : continue
+		dPhi = abs(entry.Electron_phi[e1] - entry.Electron_phi[e2])
+		if dPhi > 0.3 : continue
+		if sqrt(dEta*dEta + dPhi*dPhi) > 0.3 : continue
+		if not (e1 in badElectron) and entry.Electron_pt[e1] < entry.Electron_pt[e2] : badElectron.append(e1)
+		if not (e2 in badElectron) and entry.Electron_pt[e1] > entry.Electron_pt[e2] : badElectron.append(e2)
 
     for bade in badElectron : goodElectronList.remove(bade)
     for badmu in badMuon : goodMuonList.remove(badmu)
@@ -1128,6 +1129,11 @@ def findMuTrigger(goodMuonList,entry,era):
                 #print "======================= and === iobj", iobj, entry.TrigObj_id[iobj], "Bits", entry.TrigObj_filterBits[iobj]," dR", dR, "electron",i
 
     return MutrigList
+
+def ComparepT(El, Mu, entry) :
+    if entry.Electron_pt[El] > entry.Muon_pt[Mu] : return True
+    else : return False
+
 
 def findZ(goodElectronList, goodMuonList, entry) :
     mm = selections['mm'] # H->tau(mu)+tau(h) selections
