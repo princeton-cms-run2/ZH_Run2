@@ -48,6 +48,7 @@ cutCounterGenWeight = {}
 doJME  = args.doSystematics.lower() == 'true' or args.doSystematics.lower() == 'yes' or args.doSystematics == '1'
 #cats = ['eee','eem','eet', 'mmm', 'mme', 'mmt']
 cats=[ 'eeee', 'eemm', 'mmee', 'mmmm', 'eee', 'eem', 'mme', 'mmm', 'ee', 'mm']
+catss=[ 'ee', 'mm']
 
 
 for cat in cats : 
@@ -196,42 +197,50 @@ for count, e in enumerate(inTree) :
     if not tauFun.goodTrigger(e, args.year) : continue
     
     for cat in cats: 
+        lepMode = cat[:2]
 	cutCounter[cat].count('Trigger')
 	if  MC :   cutCounterGenWeight[cat].countGenWeight('Trigger', e.genWeight)
             
-    for cat in cats:
-        lepMode = cat[:2]
         if args.category != 'none' and not lepMode in args.category : continue
 
         if lepMode == 'ee' :
             if e.nElectron < 2 : continue
-	    if cat[:2] == 'ee' : 
-		cutCounter[cat].count('LeptonCount')
-		if  MC :   cutCounterGenWeight[cat].countGenWeight('LeptonCount', e.genWeight)
+	    cutCounter[cat].count('LeptonCount')
+	    if  MC :   cutCounterGenWeight[cat].countGenWeight('LeptonCount', e.genWeight)
 
         if lepMode == 'mm' :
             if e.nMuon < 2 : continue 
-	    if cat[:2] == 'mm' :
-		cutCounter[cat].count('LeptonCount')
-		if  MC :   cutCounterGenWeight[cat].countGenWeight('LeptonCount', e.genWeight)
+	    cutCounter[cat].count('LeptonCount')
+	    if  MC :   cutCounterGenWeight[cat].countGenWeight('LeptonCount', e.genWeight)
 
-	lepList=[]
-	pairList=[]
+    lepList=[]
+    pairList=[]
 
-	lepList_2=[]
-	pairList_2=[]
+    lepList_2=[]
+    pairList_2=[]
 
-        goodElectronList = tauFun.makeGoodElectronList(e)
-        goodMuonList = tauFun.makeGoodMuonList(e)
-        goodElectronList, goodMuonList = tauFun.eliminateCloseLeptons(e, goodElectronList, goodMuonList)
+    goodElectronList = tauFun.makeGoodElectronList(e)
+    goodMuonList = tauFun.makeGoodMuonList(e)
+    goodElectronList, goodMuonList = tauFun.eliminateCloseLeptons(e, goodElectronList, goodMuonList)
+    goodElectronListExtraLepton=[]
+    goodMuonListExtraLepton=[]
+    tauList = tauFun.getGoodTauList(cat, e)
 
 
+    for cat in catss: 
+        lepMode = cat[:2]
         if lepMode == 'ee' :
 
             if len(goodElectronList) < 2 :continue
 	    if cat[:2] == 'ee' :    cutCounter[cat].count('GoodLeptons')
 
             pairList, lepList = tauFun.findZ(goodElectronList,[], e)
+            goodElectronListExtraLepton = tauFun.makeGoodElectronListExtraLepton(e,lepList)
+            goodMuonListExtraLepton = goodMuonList
+            for i in lepList : 
+                if i in goodMuonListExtraLepton : goodMuonListExtraLepton.remove(i)
+	    cutCounter[cat].count('LeptonPair')
+	    if  MC :   cutCounterGenWeight[cat].countGenWeight('LeptonPair', e.genWeight)
             
         
         if lepMode == 'mm' :
@@ -240,35 +249,18 @@ for count, e in enumerate(inTree) :
 	    if cat[:2] == 'mm' :    cutCounter[cat].count('GoodLeptons')
 
             pairList, lepList = tauFun.findZ([],goodMuonList, e)
-            
-        if len(lepList) <2 : continue
-
-        goodElectronListExtraLepton=[]
-        goodMuonListExtraLepton=[]
-        # selects a third lepton that is not part of the Z peak already
-        if lepMode == 'ee' :         
-            goodElectronListExtraLepton = tauFun.makeGoodElectronListExtraLepton(e,lepList)
-            goodMuonListExtraLepton = goodMuonList
-            for i in lepList : 
-                if i in goodMuonListExtraLepton : goodMuonListExtraLepton.remove(i)
-            for cat in cats : 
-	        if cat[:2] == 'ee' : 
-                    cutCounter[cat].count('LeptonPair')
-	            if  MC :   cutCounterGenWeight[cat].countGenWeight('LeptonPair', e.genWeight)
-
-        if lepMode == 'mm' :         
             goodMuonListExtraLepton = tauFun.makeGoodMuonListExtraLepton(e,lepList)
             goodElectronListExtraLepton = goodElectronList
             for i in lepList : 
                 if i in goodElectronListExtraLepton : goodElectronListExtraLepton.remove(i)
-            for cat in cats : 
-	        if cat[:2] == 'mm' : 
-                    cutCounter[cat].count('LeptonPair')
-	            if  MC :   cutCounterGenWeight[cat].countGenWeight('LeptonPair', e.genWeight)
+	    cutCounter[cat].count('LeptonPair')
+	    if  MC :   cutCounterGenWeight[cat].countGenWeight('LeptonPair', e.genWeight)
+            
+        if len(lepList) <2 : continue
 
-	tauList = tauFun.getGoodTauList(cat, e)
-        #print lepMode, lepList, 'eE', goodElectronListExtraLepton, 'eM', goodMuonListExtraLepton
-        #goodElectronListExtraLepton, goodMuonListExtraLepton,tauList = tauFun.eliminateCloseTauAndLepton(e, goodElectronListExtraLepton, goodMuonListExtraLepton, tauList)
+        # selects a third lepton that is not part of the Z peak already
+
+
         goodElectronListExtraLepton, goodMuonListExtraLepton = tauFun.eliminateCloseLeptons(e, goodElectronListExtraLepton, goodMuonListExtraLepton)
 
         
@@ -296,8 +288,9 @@ for count, e in enumerate(inTree) :
         if len(goodElectronListExtraLepton)>0 and len(goodMuonListExtraLepton)>0 : 
             bestTauPair = tauFun.getBestEMuTauPair(e,cat=cat,pairList=pairList)
             if len(bestTauPair)>1 :  #if you find a good H->e-mu tau, remove it from the ExtraLeptonList
-                goodElectronListExtraLepton.remove(bestTauPair[0])
-                goodMuonListExtraLepton.remove(bestTauPair[1])
+                #print 'we have a situation here...', bestTauPair, goodElectronListExtraLepton, goodMuonListExtraLepton, cat, catev, lepList, e.Electron_pt[bestTauPair[0]], e.Muon_pt[bestTauPair[1]], e.Electron_pt[goodElectronListExtraLepton[0]], e.Muon_pt[goodMuonListExtraLepton [0]]
+                if bestTauPair[0] in goodElectronListExtraLepton : goodElectronListExtraLepton.remove(bestTauPair[0])
+                if bestTauPair[1] in goodMuonListExtraLepton : goodMuonListExtraLepton.remove(bestTauPair[1])
                 if len(goodElectronListExtraLepton) == 0 and len(goodMuonListExtraLepton) == 0 : catev =lepMode
 
                 if len(goodElectronListExtraLepton) != 0 and len(goodMuonListExtraLepton) == 0 : 
@@ -324,6 +317,7 @@ for count, e in enumerate(inTree) :
                         if len(lepList_2mu) == 0 : catev = lepMode 
                         if len(lepList_2mu) == 1  : catev= lepMode + 'm' 
                         if len(lepList_2mu) == 2  : catev= lepMode + 'mm' 
+                #print 'did I fix it ? ...', bestTauPair, goodElectronListExtraLepton, goodMuonListExtraLepton, cat, catev, lepList
 
             # if there is not bestTau Pair, just take the leading lepton to form a new cat
             if len(bestTauPair)<2 or ( len(bestTauPair)>1 and len(goodElectronListExtraLepton) != 0 and len(goodMuonListExtraLepton) != 0 ): 
