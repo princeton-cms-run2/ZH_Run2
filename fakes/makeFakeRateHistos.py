@@ -243,7 +243,8 @@ for h in hList :
 
 print hList
 
-for group in groups :
+groupss = ['data','Other','Top','DY','WZ','ZZ']
+for group in groupss :
     hBaseMode[group], hTightMode[group] = {}, {}
 
     for h in hList :
@@ -264,9 +265,11 @@ doJME = True
 
 # loop over the data to fill the histograms
 #for era in ['2017B','2017C','2017D','2017E','2017F'] :
-for era in [str(args.year)] :
+#for era in [str(args.year)] :
+for period in ['SingleMuon', 'EGamma', 'MuonEG'] :
     for dataset in ['data'] :
-        inFileRoot = './data/{0:s}/{1:s}_{2:s}/{1:s}_{2:s}.root'.format(args.selection,dataset,era)
+        #inFileRoot = './data/{0:s}/{1:s}_{2:s}/{1:s}_{2:s}.root'.format(args.selection,dataset,era, period)
+        inFileRoot = './data/{0:s}/{1:s}_{2:s}/{1:s}_{2:s}_{3:s}.root'.format(args.selection,dataset,era, period)
         print("Opening {0:s}".format(inFileRoot)) 
         inFile = TFile.Open(inFileRoot)
         inFile.cd()
@@ -288,7 +291,7 @@ for era in [str(args.year)] :
             if args.region == 'SS' and  e.q_3*e.q_4 < 0. : continue
             if args.region == 'OS' and  e.q_3*e.q_4 > 0. : continue
             #if e.q_3*e.q_4 > 0. : continue
-            #if e.nbtag[1] > 0 : continue
+            if args.region == 'OS'and e.nbtag[1] > 0 : continue
 
 	    #if abs(e.dZ_3) > 0.05 or abs(e.dZ_4) > 0.05 : continue
 	    if cat[:2] == 'mm' and  (e.iso_1 > 0.2 or e.iso_2 > 0.2) : continue
@@ -333,7 +336,7 @@ for era in [str(args.year)] :
                 if preCutOff or preCut : hBase['e_et'].Fill(e.pt_3)
                 hBase['t_et'].Fill(e.pt_4)
 		if e.decayMode_4 != -1 : 
-		    hBaseMode[group]['t_et'][str(e.decayMode_4)].Fill(e.pt_4)
+		    hBaseMode['data']['t_et'][str(e.decayMode_4)].Fill(e.pt_4)
 
 	        for wp in WP : 
 	            if e.Electron_mvaFall17V2noIso_WP90_3 >0  and  e.iso_3 < 0.15 : 
@@ -341,14 +344,14 @@ for era in [str(args.year)] :
 		    if int(e.idDeepTau2017v2p1VSjet_4) >= int(wp)-1 : 
                         hTight['t_et'][wp].Fill(e.pt_4)
 		        if e.decayMode_4 != -1 : 
-                            hTightMode[group]['t_et'][str(e.decayMode_4)][wp].Fill(e.pt_4)
+                            hTightMode['data']['t_et'][str(e.decayMode_4)][wp].Fill(e.pt_4)
                     
             if cat[2:] == 'mt' :
                 # apply transverse mass cut on muon-MET system
                 if preCutOff or preCutt and  (e.isGlobal_3 > 0 or e.isTracker_3 > 0) :  hBase['m_mt'].Fill(e.pt_3)
                 hBase['t_mt'].Fill(e.pt_4)
 		if e.decayMode_4 != -1 : 
-		    hBaseMode[group]['t_mt'][str(e.decayMode_4)].Fill(e.pt_4)
+		    hBaseMode['data']['t_mt'][str(e.decayMode_4)].Fill(e.pt_4)
 
 	        for wp in WP : 
 	            if e.iso_3 < 0.2 and  (e.isGlobal_3 > 0 or e.isTracker_3 > 0) and e.tightId_3 > 0: 
@@ -357,7 +360,7 @@ for era in [str(args.year)] :
 		    if int(e.idDeepTau2017v2p1VSjet_4) >= int(wp)-1 : 
                         hTight['t_mt'][wp].Fill(e.pt_4)
 		        if e.decayMode_4 != -1 : 
-                            hTightMode[group]['t_mt'][str(e.decayMode_4)][wp].Fill(e.pt_4)
+                            hTightMode['data']['t_mt'][str(e.decayMode_4)][wp].Fill(e.pt_4)
 
 
             if cat[2:] == 'tt' :
@@ -365,21 +368,21 @@ for era in [str(args.year)] :
                 #if not preCutOff and H_LT < args.LTcut : continue
                 hBase['t1_tt'].Fill(e.pt_3)
 		if e.decayMode_3 != -1 : 
-		    hBaseMode[group]['t1_tt'][str(e.decayMode_3)].Fill(e.pt_3)
+		    hBaseMode['data']['t1_tt'][str(e.decayMode_3)].Fill(e.pt_3)
                 hBase['t2_tt'].Fill(e.pt_4)
 		if e.decayMode_4 != -1 : 
-		    hBaseMode[group]['t2_tt'][str(e.decayMode_4)].Fill(e.pt_4)
+		    hBaseMode['data']['t2_tt'][str(e.decayMode_4)].Fill(e.pt_4)
 
 	        for wp in WP : 
 		    if int(e.idDeepTau2017v2p1VSjet_3) >= int(wp)-1 :    
                         hTight['t1_tt'][wp].Fill(e.pt_3)
 		        if e.decayMode_3 != -1 : 
-                            hTightMode[group]['t1_tt'][str(e.decayMode_3)][wp].Fill(e.pt_3)
+                            hTightMode['data']['t1_tt'][str(e.decayMode_3)][wp].Fill(e.pt_3)
 
 		    if int(e.idDeepTau2017v2p1VSjet_4) >= int(wp)-1 :    
                         hTight['t2_tt'][wp].Fill(e.pt_4)
 		        if e.decayMode_4 != -1 : 
-                            hTightMode[group]['t2_tt'][str(e.decayMode_4)][wp].Fill(e.pt_4)
+                            hTightMode['data']['t2_tt'][str(e.decayMode_4)][wp].Fill(e.pt_4)
 
 
             if cat[2:] == 'em' :
@@ -583,12 +586,14 @@ for group in groups :
 
             if e.pt_1<10 : continue
             if e.pt_2<10 : continue
+            if e.pt_3<10 : continue
+            if e.pt_4<10 : continue
 
 	    if e.isTrig_1 == 0 : continue 
 	    if e.q_1*e.q_2 > 0. : continue
             if args.region == 'SS' and  e.q_3*e.q_4 < 0. : continue
             if args.region == 'OS' and  e.q_3*e.q_4 > 0. : continue
-	    #if e.nbtag[1] > 0 : continue
+	    if args.region == 'OS' and e.nbtag[1] > 0 : continue
 
 	    H_LT = e.pt_3 + e.pt_4
 	    #if H_LT > args.LTcut : continue
@@ -949,39 +954,42 @@ for h in hList :
 
 
 
-for group in groups:
+for group in groupss:
     for h in hList :
         
 	try :
-            OverFlow(hBasePrompt[group][h]) 
-	    hBasePrompt[group][h].Write()
-            OverFlow(hBasenoPrompt[group][h]) 
-	    hBasenoPrompt[group][h].Write()
-            for wp in WP : 
-		OverFlow(hTightPrompt[group][h][wp]) 
-		hTightPrompt[group][h][wp].Write()
-		OverFlow(hTightnoPrompt[group][h][wp]) 
-		hTightnoPrompt[group][h][wp].Write()
+	    if group !='data' : 
+		OverFlow(hBasePrompt[group][h]) 
+		hBasePrompt[group][h].Write()
+		OverFlow(hBasenoPrompt[group][h]) 
+		hBasenoPrompt[group][h].Write()
+		for wp in WP : 
+		    OverFlow(hTightPrompt[group][h][wp]) 
+		    hTightPrompt[group][h][wp].Write()
+		    OverFlow(hTightnoPrompt[group][h][wp]) 
+		    hTightnoPrompt[group][h][wp].Write()
 
 	except AttributeError : print 'sorry for that', group, h
         for m in hModes :
             try: 
-	        OverFlow(hBaseMode[group][h][m]) 
-	        hBaseMode[group][h][m].Write()
-	        OverFlow(hBasePromptMode[group][h][m]) 
-	        hBasePromptMode[group][h][m].Write()
-	        OverFlow(hBasenoPromptMode[group][h][m]) 
-	        hBasenoPromptMode[group][h][m].Write()
+		OverFlow(hBaseMode[group][h][m]) 
+		hBaseMode[group][h][m].Write()
+		if group !='data' : 
+		    OverFlow(hBasePromptMode[group][h][m]) 
+		    hBasePromptMode[group][h][m].Write()
+		    OverFlow(hBasenoPromptMode[group][h][m]) 
+		    hBasenoPromptMode[group][h][m].Write()
 
                 for wp in WP : 
 		    OverFlow(hTightMode[group][h][m][wp]) 
 		    hTightMode[group][h][m][wp].Write()
-		    OverFlow(hTightPromptMode[group][h][m][wp]) 
-		    hTightPromptMode[group][h][m][wp].Write()
-		    OverFlow(hTightPromptMode[group][h][m][wp]) 
-		    hTightPromptMode[group][h][m][wp].Write()
-		    OverFlow(hTightnoPromptMode[group][h][m][wp]) 
-		    hTightnoPromptMode[group][h][m][wp].Write()
+		    if group !='data' : 
+			OverFlow(hTightPromptMode[group][h][m][wp]) 
+			hTightPromptMode[group][h][m][wp].Write()
+			OverFlow(hTightPromptMode[group][h][m][wp]) 
+			hTightPromptMode[group][h][m][wp].Write()
+			OverFlow(hTightnoPromptMode[group][h][m][wp]) 
+			hTightnoPromptMode[group][h][m][wp].Write()
 	    except AttributeError : print 'sorry for that', group, h, m
     
 fOut.Close()

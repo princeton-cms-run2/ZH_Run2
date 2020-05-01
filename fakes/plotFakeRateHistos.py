@@ -81,8 +81,13 @@ extratag=''
 fin='FakeRates_{0:s}_{1:s}{2:s}.root'.format(str(args.year),args.region,str(extratag))
 #fin='FakeRates_2018_SS_nbtag_precut.root'.format(str(args.year),args.region)
 f = TFile(fin)
-hBase, hTight, hBasePrompt, hTightPrompt, hBasePromptMode, hTightPromptMode, hBasenoPrompt, hTightnoPrompt, hBasenoPromptMode, hTightnoPromptMode= {}, {}, {}, {}, {}, {}, {} ,{}, {}, {}
+hBase, hTight, hBasePrompt, hTightPrompt, hBaseMode, hTightMode, hBasePromptMode, hTightPromptMode, hBasenoPrompt, hTightnoPrompt, hBasenoPromptMode, hTightnoPromptMode= {}, {}, {}, {}, {}, {}, {} ,{}, {}, {}, {}, {}
 groups = ['Other','Top','DY','WZ','ZZ']
+
+outFileName = 'FakesResult_{0:s}_{1:s}_{2:s}WP.root'.format( str(args.year), str(args.region), wp)
+fOut = TFile( outFileName, 'recreate' )
+
+#WP=['16','32','64','128']
 
 for h in hList :
     hName = "{0:s}Base".format(h)
@@ -90,6 +95,16 @@ for h in hList :
     hBase[h].Sumw2()
     hTight[h]= f.Get("{0:s}_{1:s}Tight".format(h,wp))
     hTight[h].Sumw2()
+    hBaseMode[h]={}
+    hTightMode[h]={}
+    
+    for m in hModes :
+        hName = "data_{0:s}_{1:s}Mode_Base".format(h,m)
+        hBaseMode[h][m] = f.Get(hName) 
+        hBaseMode[h][m].Sumw2()
+	hName = "data_{0:s}_{1:s}_{2:s}Mode_Tight".format(h,m,wp)
+	hTightMode[h][m] = f.Get(hName) 
+	hTightMode[h][m].Sumw2()
 
 for group in groups :
     hBasePrompt[group], hTightPrompt[group] = {}, {}
@@ -225,8 +240,8 @@ if True :
 ######################## Per decay Mode
 
 if True :
-    #c12 = TCanvas('c12','Tight/Base (MC)',50,50,1200,600)
-    c12 = TCanvas('c12','Tight/Base (Data)',50,50,1600,900)
+    c12 = TCanvas('c12','Tight/Base (MC)',50,50,1200,600)
+    #c12 = TCanvas('c12','Tight/Base (Data)',50,50,1600,900)
     c12.SetFillColor(0)
     c12.SetBorderMode(0)
     c12.SetFrameFillStyle(0)
@@ -238,14 +253,35 @@ if True :
     c12.SetBottomMargin(B/H)
 
     c12.Divide(4,4)
+
+    c4 = TCanvas('c4','(Tight - Prompt Tight)/(Base - Prompt Base)',50,50,W,H)
+    c4.SetFillColor(0)
+    c4.SetBorderMode(0)
+    c4.SetFrameFillStyle(0)
+    c4.SetFrameBorderMode(0)
+
+    c4.SetLeftMargin(L/W)
+    c4.SetRightMargin(R/W)
+    c4.SetTopMargin(T/H)
+    c4.SetBottomMargin(B/H)
+    c4.Divide(4,4)
+
+
+
+
     leg = {}
+    legDM = {}
     hsBasePrompt, hsTightPrompt = {}, {}
     hsBasePromptMode, hsTightPromptMode = {}, {}
     ratioPad, plotPad= {}, {}
     hsum, hsumm= {}, {}
     htest= {}
+    hNum, hDenom = {}, {}
+    histo={}
     print hListMode
 
+    #lTeX, lTex1, lTex2, fit0 = {}, {}, {}, {}
+    xMin, xMax, yMin, yMax = 0., 100., 0., 0.25
     for i, h in enumerate(hListMode) : #this is a reduced hList to account only for taus
         ratioPad[h], plotPad[h]= {}, {}
 
@@ -254,10 +290,16 @@ if True :
         hsBasePromptMode[h], hsTightPromptMode[h] = {}, {}
         hsum[h], hsumm[h] = {}, {}
 	leg[h]= {}
+	legDM[h]= {}
         htest[h]= {}
+        hNum[h]= {}
+        hDenom[h]= {}
+        histo[h] = {}
 
         for j, m in enumerate(hModes) :
-	    c12.cd(i+ 1 + j*4)
+	    hName = '{0:s}_DM{1:s}'.format(h,m)
+            histo[h][m] =  TH1D(hName,hName+'_DM_Fakes',1, -0.5,  0.5)
+
 	    ratioPad[h][m] = TPad("pad2","",0.0,0.0,1.0,0.29)
 	    plotPad[h][m] = TPad("pad1","",0.0016,0.291,1.0,1.0)
 	    plotPad[h][m].SetTicks(0,0)
@@ -275,11 +317,13 @@ if True :
 	    ratioPad[h][m].SetBottomMargin(B_ratio_label/H)
 	    ratioPad[h][m].SetGridy(1)
 	    ratioPad[h][m].SetFillColor(4000)
+            '''
 	    plotPad[h][m].Draw()
 	    ratioPad[h][m].Draw()
 	    plotPad[h][m].SetLogy()
 	    plotPad[h][m].cd()
-	    print 'inside canvas-----------------------', i+1 +4*j, 'for mode', m, 'and channel', h
+            '''
+	    #print 'inside canvas-----------------------', i+1 +4*j, 'for mode', m, 'and channel', h
             hsBasePromptMode[h][m] = THStack("hsBasePromptMode","")
             hsTightPromptMode[h][m] = THStack("hsTightPromptMode","")
 	    leg[h][m] = TLegend(0.43,0.63,0.96,0.96,h)
@@ -288,6 +332,13 @@ if True :
 	    leg[h][m].AddEntry(hBasePromptMode['ZZ'][h][m],title,"l")
 	    title="Tight Base DM{0:s}(MC)".format(m)
 	    leg[h][m].AddEntry(hTightPromptMode['ZZ'][h][m],title,"L")
+
+	    legDM[h][m] = TLegend(0.60,0.63,0.96,0.9,h+" DM"+m)
+	    legDM[h][m].SetTextSize(0.085)
+	    legDM[h][m].SetFillColor(0)
+
+            hNum[h][m]=hTightMode[h][m].Clone() 
+            hDenom[h][m]=hBaseMode[h][m].Clone() 
             
 	    for group in groups :
             
@@ -311,14 +362,63 @@ if True :
 		hTightPromptMode[group][h][m].SetMinimum(0.1)
 
 		hsTightPromptMode[h][m].Add(hTightPromptMode[group][h][m])
+		hNum[h][m].Add(hTightPromptMode[group][h][m],-1)    
+		hDenom[h][m].Add(hBasePromptMode[group][h][m],-1)    
 
 
 	    hsum[h][m]=hsBasePromptMode[h][m].GetStack().Last()
 	    hsum[h][m].SetMinimum(0.1)
 	    hsum[h][m].SetMaximum(hsum[h][m].GetMaximum()*50)
-	    hsum[h][m].Draw('hist')
 	    hsumm[h][m]=hsTightPromptMode[h][m].GetStack().Last()
+
+	    c4.cd(i+ 1 + j*4)
+	    #plotPad[h][m].Draw()
+	    #plotPad[h][m].cd()
+
+	    hNum[h][m].Divide(hDenom[h][m])
+	    hNum[h][m].GetXaxis().SetRangeUser(xMin,xMax)
+	    hNum[h][m].SetMinimum(yMin)
+	    hNum[h][m].SetMaximum(yMax)
+	    hNum[h][m].SetLineWidth(1)
+	    hNum[h][m].SetMarkerStyle(20)
+	    hNum[h][m].SetMarkerSize(1.0)
+	    hNum[h][m].SetMarkerColor(kRed)
+	    hNum[h][m].GetXaxis().SetTitle('p_{T} [GeV]')
+	    hNum[h][m].GetXaxis().SetLabelSize(0.05)
+	    hNum[h][m].GetXaxis().SetTitleSize(0.05)
+	    hNum[h][m].GetYaxis().SetTitle('(Tight - Prompt Tight)/(Base - Prompt Base)')
+	    hNum[h][m].GetYaxis().SetLabelSize(0.05)
+	    hNum[h][m].GetYaxis().SetTitleSize(0.05)
+	    htest[h][m] = hNum[h][m].Clone()
+	    hNum[h][m].Draw()
+	    legDM[h][m].Draw('same')
+	    #lTeX[h] = TLatex(0.8*xMax,0.8*yMax,h)
+	    #lTeX[h].SetTextSize(0.06) 
+	    #lTeX[h].Draw()
+	    #fitName = "f{0:s}_{1:s}".format(h,m)
+	    #fit0[h] = TF1(fitName,"pol0",15.,100.)
+	    #hNum[h].Fit(fitName,"R")
+	    #lTex1[h]= TLatex(0.1*xMax,0.9*yMax,"Avg={0:.4f} +/- {1:.4f}".format(fit0[h].GetParameter(0),fit0[h].GetParError(0)))
+	    #lTex1[h].Draw()
+	    #lTex2[h]= TLatex(0.1*xMax,0.8*yMax,"chi2/DOF = {0:.2f} / {1:d}".format(fit0[h].GetChisquare(),fit0[h].GetNDF()))
+	    #lTex2[h].Draw()
+	    #histo[h][m].Fill(0,fit0[h].GetParameter(0))
+	    c4.Update()
+            fOut.cd()
+	    htest[h][m]=hNum[h][m].Clone()
+	    htest[h][m].SetName(histo[h][m].GetName()+"_vspT")
+            print 'made it so far =============================================', htest[h][m].GetName(), htest[h][m].GetEntries(), h, m
+	    htest[h][m].Write()
+
+
+	    c12.cd(i+ 1 + j*4)
+	    plotPad[h][m].Draw()
+	    ratioPad[h][m].Draw()
+	    plotPad[h][m].SetLogy()
+	    plotPad[h][m].cd()
+	    hsum[h][m].Draw('hist')
 	    hsumm[h][m].Draw('hist SAME')
+
 	    leg[h][m].Draw('same')
 	    ratioPad[h][m].cd()
 	    htest[h][m] = hsumm[h][m].Clone()
@@ -332,14 +432,18 @@ if True :
 	    htest[h][m].GetXaxis().SetTitle('p_{T} [GeV]')
 	    htest[h][m].GetYaxis().SetRangeUser(0.005,htest[h][m].GetMaximum()*1.25)
 	    htest[h][m].GetYaxis().SetNdivisions(305)
-	    htest[h][m].GetYaxis().SetTitle("Tight/Base   ")
+	    htest[h][m].GetYaxis().SetTitle("Tight/Base")
 	    htest[h][m].Draw()
 
 
+        #CMS_lumi.CMS_lumi(c4, iPeriod, 11)
+	c4.Update()
         CMS_lumi.CMS_lumi(c12, iPeriod, 11)
 	c12.Update()
     c12.SaveAs("Tight_Base_MC_Hist_DM_"+era+"_"+args.region+"_"+str(wp)+".pdf")
     c12.SaveAs("Tight_Base_MC_Hist_DM_"+era+"_"+args.region+"_"+str(wp)+".png")
+    c4.SaveAs("Corrected_Fake_DM_"+era+"_"+args.region+"_"+str(wp)+".pdf")
+    c4.SaveAs("Corrected_Fake_DM_"+era+"_"+args.region+"_"+str(wp)+".png")
 #################### no Prompt
 ######################## Per decay Mode
 
@@ -1107,10 +1211,8 @@ if True :
     lTeX, lTex1, lTex2, fit0 = {}, {}, {}, {}
     hNum, hDen = {}, {}
     xMin, xMax, yMin, yMax = 0., 100., 0, 0.3
-    outFileName = 'FakesResult_{0:s}_{1:s}_{2:s}WP.root'.format( str(args.year), str(args.region), wp)
     histo={}
     htest={}
-    fOut = TFile( outFileName, 'recreate' )
     if True : 
 	for i, h in enumerate(hList) :
 	    gStyle.SetOptFit(0)
