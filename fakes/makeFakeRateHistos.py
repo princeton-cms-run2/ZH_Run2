@@ -819,7 +819,7 @@ for group in groups :
 				hTightPromptMode[group]['t_et'][str(e.decayMode_4)][wp].Fill(e.pt_4,weight)
 
 
-		if e.gen_match_4 == 0 and e.gen_match_4 != -1:
+		if e.gen_match_4 == 0 :
 		    hBasenoPrompt[group]['t_et'].Fill(e.pt_4,weight)
 		    if e.decayMode_4 != -1 : hBasenoPromptMode[group]['t_et'][str(e.decayMode_4)].Fill(e.pt_4,weight)
 
@@ -849,7 +849,7 @@ for group in groups :
 		    if  e.iso_3 < 0.2 and  (e.isGlobal_3 > 0 or e.isTracker_3 > 0) and e.tightId_3 > 0: 
 		        for wp in WP : hTightnoPrompt[group]['m_mt'][wp].Fill(e.pt_3,weight)
 
-		if e.gen_match_4 != 0 and e.gen_match_3 != -1 : ## ==5 previously
+		if e.gen_match_4 != 0 and e.gen_match_4 != -1 : ## ==5 previously
 
 		    hBasePrompt[group]['t_mt'].Fill(e.pt_4,weight)
 		    if e.decayMode_4 != -1 : hBasePromptMode[group]['t_mt'][str(e.decayMode_4)].Fill(e.pt_4,weight)
@@ -884,7 +884,7 @@ for group in groups :
 		    for wp in WP : 
 		        if int(e.idDeepTau2017v2p1VSjet_3) >= int(wp)-1 : 
 		            hTightnoPrompt[group]['t1_tt'][wp].Fill(e.pt_3,weight)
-		            if e.decayMode_4 != -1 : hTightnoPromptMode[group]['t1_tt'][str(e.decayMode_3)][wp].Fill(e.pt_3,weight)
+		            if e.decayMode_3 != -1 : hTightnoPromptMode[group]['t1_tt'][str(e.decayMode_3)][wp].Fill(e.pt_3,weight)
 
 
 		if e.gen_match_4 != 0 and e.gen_match_4 != -1:
