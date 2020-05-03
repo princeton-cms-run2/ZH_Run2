@@ -1,5 +1,9 @@
 __author__ = "Alexis Kalogeropoulos"
-__description__ = "Simple script to make LaTex table from a given .root file - it needs arguments as described below. It will produce several txt a) per channel b) per process c) per group (ZZ4L, Reducible, etc). "
+__description__ = "Simple script to make LaTex table from a given .root file - it needs arguments as described below. It will produce several txt a) per channel b) per process c) per group (ZZ, DY, etc). "
+
+'''
+example  : python Yields_new.py -f MCsamples_2018_ZH.csv -y 2018 -u yes -i ../plotting/allGroups_2018_OS_LT00_16noSV_16brute_nom.root -n no -s ZH
+'''
 
 import os
 import sys
@@ -78,7 +82,7 @@ def getArgs() :
     parser.add_argument("-y","--year",default='2016',type=str,help="Data taking period, 2016, 2017 or 2018")
     parser.add_argument("-s","--selection",default='ZH',type=str,help="Select ZH or AZH")
     parser.add_argument("-c","--category",default='all',type=str,help="Categories")
-    parser.add_argument("-n","--normalize",default='yes',type=str,help="scale to lumi, if no/0 then unsclaed yields, otherwise scale to 35.9/41.5/59.7 for 2016/2017/2018")
+    parser.add_argument("-n","--normalize",default='yes',type=str,help="scale to lumi, if no/0 then pure yields, otherwise scale to 35.9/41.5/59.7 for 2016/2017/2018")
     parser.add_argument("-u","--usefromplots",default='no',type=str,help="what .root files to use. if is it yes, then it will look in the plotting dir for the file defined as with the -i argument")
     parser.add_argument("-i","--inplotsfile",default='allGroups_2016_OS_LT00.root',type=str,help="define the .root files to use for making the tables. Must be used with -u switch")
     return parser.parse_args()
@@ -111,8 +115,10 @@ usePlotFile= args.usefromplots
 lumi = {'2016':35920, '2017':41530, '2018':59740}
 
 nickNames, xsec, totalWeight, sampleWeight = {}, {}, {}, {}
-#groups = ['Signal','Reducible','Rare','ZZ4L','data']
-groups = ['Signal','ZZ4L','Reducible','Rare','Top','data']
+#groups = ['Signal','DY','Other','ZZ','data']
+groups = ['Signal','ZZ','DY','Other','Top','data']
+groups = ['Top','ZZ','WZ','DY','Other','Signal','data']
+
 
 fIn=str(args.inFile)
 
@@ -126,6 +132,7 @@ for group in groups :
 #for line in open('./MCsamples_'+era+'_one.csv','r').readlines() :
 for line in open(fIn,'r').readlines() :
     vals = line.split(',')
+    if '#' in vals[0] : continue
     nickName = vals[0]
     group = vals[1]
     nickNames[group].append(nickName)
@@ -169,167 +176,110 @@ fIn_mc = ''
 
 b_usePlotFile = False
 
-ccols=20 ##this must be equal to the nBins from the CutFlow histo
-rrows=8
+ccols=19 ##this must be equal to the nBins from the CutFlow histo
+rrows=9
 
 
 if usePlotFile.lower() == 'yes' : b_usePlotFile = True
 
 for group in groups :
     rows, cols = (rrows, ccols) 
-    yieldpergroup = [[0 for i in range(cols)] for j in range(rows)] 
-    totalyield = [[0 for i in range(cols)] for j in range(rows)]
      
-
-    for nickName in nickNames[group]:
-        if b_usePlotFile:
-            fIn_data = '../../plotting/'+fInplot
-            fIn_mc = '../../plotting/'+fInplot
-	else : 
-	    fIn_data = '../../data/condor/{0:s}/{1:s}/{1:s}.root'.format(args.selection, nickName)
-	    fIn_mc = '{0:s}/{1:s}_{2:s}/{1:s}_{2:s}.root'.format(args.selection, nickName, era)
-
-        if group != 'data' : fIn = fIn_mc  #'{0:s}/{1:s}_{2:s}/{1:s}_{2:s}.root'.format(args.selection, nickName, era)
-        else: fIn = fIn_data # '../../data/condor/{0:s}/{1:s}/{1:s}.root'.format(args.selection, nickName)
-        inFile = TFile.Open(fIn)
-        inFile.cd()
-        #hW=''
-        #if group != 'data' : hW = inFile.Get("hWeights")
-        #inTree = inFile.Get("Events")
     
-        header=nickName
-        print ' opening ', fIn, nickName, group
+    for nickName in nickNames[group]:
+	if b_usePlotFile:
+	    fIn_data = '../plotting/'+fInplot
+	    fIn_mc = '../plotting/'+fInplot
+	else : 
+	    fIn_data = '../data/condor/{0:s}/{1:s}_{2:s}/{1:s}_{2:s}.root'.format(args.selection, nickName, str(era))
+	    fIn_mc = '../MC/condor/{0:s}/{1:s}_{2:s}/{1:s}_{2:s}.root'.format(args.selection, nickName, era)
 
-        scale=str(args.normalize)
-        ScaleToLumi= False
+	if group != 'data' : fIn = fIn_mc  #'{0:s}/{1:s}_{2:s}/{1:s}_{2:s}.root'.format(args.selection, nickName, era)
+	else: fIn = fIn_data # '../../data/condor/{0:s}/{1:s}/{1:s}.root'.format(args.selection, nickName)
+	inFile = TFile.Open(fIn)
+	inFile.cd()
+	#hW=''
+	#if group != 'data' : hW = inFile.Get("hWeights")
+	#inTree = inFile.Get("Events")
+	
+    header=nickName
+    print ' opening ', fIn, nickName, group
 
-        if scale=="1" or scale.lower()=="true" or scale.lower() =="yes":  
-            ScaleToLumi = True
-            header=header+'_'+'{0:.3f}'.format(float(lumi[era]/1000))+'invfb'
+    scale=str(args.normalize)
+    ScaleToLumi= False
 
-        if ScaleToLumi : print "Events scaled to {0:.1f}/pb for xsec = {1:.3f} pb".format(float(lumi[era]),float(xsec[nickName]))
-        if not ScaleToLumi : print "Events WILL NOT BE scaled to {0:.1f}/pb for xsec = {1:.3f} pb".format(float(lumi[era]),float(xsec[nickName]))
+    if scale=="1" or scale.lower()=="true" or scale.lower() =="yes":  
+	ScaleToLumi = True
+	header=header+'_'+'{0:.3f}'.format(float(lumi[era]/1000))+'invfb'
 
-
-
-        arr = [[0 for i in range(cols)] for j in range(rows)] 
-        cuts=[]
-        cuts=['All', 'LeptonCount', 'Trigger', 'LeptonPair', 'FoundZ', 'GoodTauPair', 'VVtightTauPair']
-	if  b_usePlotFile : cuts=[]
-
-        result=[]
-        product=1.
-        if ScaleToLumi : product = float(sampleWeight[nickName])
-			
-
-        '''if 'all' not in channel :
-	    if 'data' not in group and not b_usePlotFile : hist="hCutFlowWeighted_"+incat+'_'+nickName
-	    else : hist="hCutFlow_"+incat
-	    h1 = inFile.Get(hist)
-	    
-	    #for i in range(1,h1.GetNbinsX()) :
-	    #    print h1.GetXaxis().GetBinLabel(i), h1.GetBinContent(i)*product
-        else:
-        '''
-        count=0
-	for cat in cats[1:]:
-	    hist=''
-	    if not b_usePlotFile :
-	        if 'data' not in group : hist = "hCutFlowWeighted_"+cat
-	        else : hist = "hCutFlow_"+cat
-
-            else : 
-	        hist = "hCutFlow_"+cat+'_'+nickName
-
-
-	            #else : hist="hCutFlow_"+cat
-
-	    htest = inFile.Get(hist)
-	    print 'will work on ',htest, hist
-	    for i in range(1,htest.GetNbinsX()) : 
-	        #print ' test---------------', htest.GetXaxis().GetBinLabel(i), htest.GetBinContent(i), cat, nickName
-	        arr[count][i-1] = '{:.2f}'.format(htest.GetBinContent(i)*product)
-	        #print '===================',arr[count][i-1]
-	        yieldpergroup[count][i-1] +=  float('{0:.2f}'.format(htest.GetBinContent(i)*product))
-	        #arr[count][i-1] = 1
-	        if len(cuts) == 0 :
-	            for i in range(1,htest.GetNbinsX()) : 
-		        if htest.GetXaxis().GetBinLabel(i) != '' : cuts.append(htest.GetXaxis().GetBinLabel(i))
-		        else : cuts.append('Cut')
-	    count+=1
-       
-
-        #### this part write a csv - commented out for the moment
-        '''
-        np.vstack([arr,cats])
-        t_matrix = zip(*arr) 
-        with open(nickName+'_'+group+'_'+era+"new_file.csv","w+") as my_csv:
-            fieldnames = cats[1:]
-            csvWriter = csv.DictWriter(my_csv, fieldnames=fieldnames)
-            csvWriter.writeheader()
-
-            csvWriter = csv.writer(my_csv,delimiter=',')
-            csvWriter.writerows(t_matrix)
-
-        with open(nickName+'_'+group+'_'+era+'_yields.txt', 'w') as f:
-	    hh = nickName.replace('_','\\_')
-	    print >> f,'\\documentclass[10pt]{report}'
-	    print >> f,'\\usepackage{adjustbox}'
-	    print >> f,'\\begin{document}'
-	    print >> f,'\\begin{table}[htp]'
-	    print >> f,'\\caption{' + '{0:s} {1:s}'.format(hh, era) + '}'  
-	    print >> f,'\\begin{center}'
-	    print >> f,'\\begin{adjustbox}{width=1\\textwidth}'
-	    print >> f,'\\begin{tabular}{l r r r r r r r r }  \hline'
-	    for i in cats : print >> f, '{} &'.format(i),
-	    print >> f, '\hline'
-        
-	    lines = [' & \t'.join([str(x[i]) if len(x) > i else ' ' for x in arr]) for i in range(len(max(arr)))]
-	    #lines = [' & \t'.join([str(x[i]) for x in arr]) for i in range(len(max(arr)))]
-	    for i in range(len(cuts)):
-	        if cuts[i] != '' : 
-	            print >> f,'{} & {} \\\\ \\hline'.format(cuts[i], lines[i])
+    if ScaleToLumi : print "Events scaled to {0:.1f}/pb for xsec = {1:.3f} pb".format(float(lumi[era]),float(xsec[nickName]))
+    if not ScaleToLumi : print "Events WILL NOT BE scaled to {0:.1f}/pb for xsec = {1:.3f} pb".format(float(lumi[era]),float(xsec[nickName]))
 
 
 
-	    print >> f,'\\end{tabular}'
-	    print >> f,'\\end{adjustbox}'
-            print >> f,'\\end{center}'
-            print >> f,'\\end{table}'
-            print >> f,'\\end{document}'
-         '''
+    arr = [[0 for i in range(cols)] for j in range(rows)] 
+    cuts=[]
+    cuts=['All', 'inJSON', 'METFilter',  'Trigger', 'LeptonCount', 'GoodLeptons', 'LeptonPair', 'FoundZ', 'GoodTauPair']
+    if  b_usePlotFile : cuts=[]
+
+    result=[]
+    product=1.
+    if ScaleToLumi : product = float(sampleWeight[nickName])
+		    
+
+    count=0
+    yieldsdata=[]
+    yieldpergroup = [[0 for i in range(cols)] for j in range(rows)] 
+    for icat,cat in enumerate(cats[1:]):
+	hist=''
+	#yieldpergroup = [[0 for i in range(cols)] for j in range(rows)] 
+	totalyield = [[0 for i in range(cols)] for j in range(rows)]
+	if not b_usePlotFile :
+	    if 'data' not in group : hist = "hCutFlowWeighted_"+cat
+	    else : hist = "hCutFlow_"+cat
+
+	else : 
+	    hist = "hCutFlowPerGroup_"+group+'_'+cat
 
 
-    ### this is to create a .txt per group
-    '''
-    labels = ['Cookies', 'Jellybean', 'Milkshake', 'Cheesecake']
-    sizes = [38.4, 40.6, 20.7, 10.3]
-    colors = ['yellowgreen', 'gold', 'lightskyblue', 'lightcoral']
-    patches, texts = plt.pie(sizes, colors=colors, shadow=True, startangle=90)
-    plt.legend(patches, labels, loc="best")
-    plt.axis('equal')
-    plt.tight_layout()
-    plt.show()
-    '''
-    #print yieldpergroup, group
-    #print len(yieldpergroup), group
+		#else : hist="hCutFlow_"+cat
+
+	htest = inFile.Get(hist)
+	#print 'will work on ',htest, hist
+	for i in range(1,htest.GetNbinsX()) : 
+	    #print ' test---------------', htest.GetXaxis().GetBinLabel(i), htest.GetBinContent(i), cat, nickName, htest.GetName()
+	    arr[icat][i-1] = '{:.2f}'.format(htest.GetBinContent(i)*product)
+	    #print '===================',arr[icat][i-1]
+	    yieldpergroup[icat][i-1] +=  float('{0:.2f}'.format(htest.GetBinContent(i)*product))
+	    #arr[icat][i-1] = 1
+	    if len(cuts) == 0 :
+		for i in range(1,htest.GetNbinsX()) : 
+		    if '>' in htest.GetXaxis().GetBinLabel(i) : cuts.append('H_LT_gt_0')
+		    elif htest.GetXaxis().GetBinLabel(i) != '' : cuts.append(htest.GetXaxis().GetBinLabel(i))
+		    else : cuts.append('Cut')
+	count+=1
+
+	### this is to create a .txt per group
+	'''
+	labels = ['Cookies', 'Jellybean', 'Milkshake', 'Cheesecake']
+	sizes = [38.4, 40.6, 20.7, 10.3]
+	colors = ['yellowgreen', 'gold', 'lightskyblue', 'lightcoral']
+	patches, texts = plt.pie(sizes, colors=colors, shadow=True, startangle=90)
+	plt.legend(patches, labels, loc="best")
+	plt.axis('equal')
+	plt.tight_layout()
+	plt.show()
+	'''
+
     with open('txt/All_'+group+'_'+args.selection+'_'+era+'_yields.txt', 'w') as f:
-        '''
-	print >> f,'\\documentclass[10pt]{report}'
-	print >> f,'\\usepackage{adjustbox}'
-	print >> f,'\\begin{document}'
-	print >> f,'\\begin{table}[htp]'
-	print >> f,'\\caption{' + '{0:s} {1:s}'.format(group, era) + '}'  
-	print >> f,'\\begin{center}'
-	print >> f,'\\begin{adjustbox}{width=1\\textwidth}'
-	print >> f,'\\begin{tabular}{l r r r r r r r r }  \hline'
-	for i in cats : print >> f, '{} &'.format(i),
-	print >> f, '\hline'
-        '''
 	#lines = [' & \t'.join([str(x[i]) if len(x) > i else ' ' for x in yieldpergroup]) for i in range(len(max(yieldpergroup)))]
 	#lines = ['  \t'.join([str(x[i]) if len(x) > i else ' ' for x in yieldpergroup]) for i in range(len(max(yieldpergroup)))]
-	lines = ['  \t'.join([str(x[i]) for x in yieldpergroup]) for i in range(len(max(yieldpergroup)))]
-	#for i in range(len(cuts)):
+	lines = ['  \t'.join([str(x[i]) for x in yieldpergroup]) for i in range(0,len(max(yieldpergroup)))]
+	#f.write("\n".join(["\t".join([str(groupp[index]) for groupp in yieldpergroup]) for index, entry in enumerate(range(0,len(max(yieldpergroup))))])) 
+	#lines=["\n".join(["\t".join([str(groupp[index]) for groupp in yieldpergroup]) for index, entry in enumerate(range(0,len(max(yieldpergroup))))])]
+	#lines = ["\n".join(["\t".join([str(groupp[index]) for groupp in yieldpergroup]) for index, entry in enumerate(range(0,len(max(yieldpergroup))))])]
+
+
 	for i in range(len(cuts)):
 	    #if cuts[i] != '' : 
 	    #    print >> f,'{} & {} \\\\ \\hline'.format(cuts[i], lines[i])
@@ -337,77 +287,67 @@ for group in groups :
 	    #print cuts[i], lines[i]
 	    #if cuts[i] == '' and group == 'data' : cuts[i] = 'NextCut'
 	    print >> f, '{0:s}  {1:s} '.format(cuts[i], lines[i])
-        	
-
-        '''
-	print >> f,'\\end{tabular}'
-	print >> f,'\\end{adjustbox}'
-        print >> f,'\\end{center}'
-        print >> f,'\\end{table}'
-        print >> f,'\\end{document}'
-	'''
 
     #for i in range(rows):
     #    for j in range(columns):
 top=[]
-zz4l=[]
-reducible=[]
-rare=[]
+zz=[]
+other=[]
 signal=[]
 Data=[]
 cutlist=[]
 allbkg=[]
 e_allbkg=[]
-  
-cutlist.append( np.genfromtxt('txt/All_Signal_{0:s}_{1:s}_yields.txt'.format(args.selection, args.year), dtype=str,usecols=(0)))
+wz=[] 
+dy =[]
+
+ 
+cutlist.append( np.genfromtxt('txt/All_Signal_{0:s}_{1:s}_yields.txt'.format(args.selection, args.year), dtype=None,usecols=(0)))
 
 
 for counter in range( len(cats[1:])) :
 #for counter in range(1,len(cats)) :
     #print counter, cats[counter]
     top.append( np.genfromtxt('txt/All_Top_{0:s}_{1:s}_yields.txt'.format(args.selection, args.year), dtype=None,usecols=(counter+1)))
-    zz4l.append( np.genfromtxt('txt/All_ZZ4L_{0:s}_{1:s}_yields.txt'.format(args.selection, args.year), dtype=None,usecols=(counter+1)))
-    reducible.append( np.genfromtxt('txt/All_Reducible_{0:s}_{1:s}_yields.txt'.format(args.selection, args.year), dtype=None,usecols=(counter+1)))
-    rare.append( np.genfromtxt('txt/All_Rare_{0:s}_{1:s}_yields.txt'.format(args.selection, args.year), dtype=None,usecols=(counter+1)))
+    dy.append( np.genfromtxt('txt/All_DY_{0:s}_{1:s}_yields.txt'.format(args.selection, args.year), dtype=None,usecols=(counter+1)))
+    wz.append( np.genfromtxt('txt/All_WZ_{0:s}_{1:s}_yields.txt'.format(args.selection, args.year), dtype=None,usecols=(counter+1)))
+    zz.append( np.genfromtxt('txt/All_ZZ_{0:s}_{1:s}_yields.txt'.format(args.selection, args.year), dtype=None,usecols=(counter+1)))
+    other.append( np.genfromtxt('txt/All_Other_{0:s}_{1:s}_yields.txt'.format(args.selection, args.year), dtype=None,usecols=(counter+1)))
     Data.append( np.genfromtxt('txt/All_data_{0:s}_{1:s}_yields.txt'.format(args.selection, args.year), dtype=None,usecols=(counter+1)))
     signal.append( np.genfromtxt('txt/All_Signal_{0:s}_{1:s}_yields.txt'.format(args.selection, args.year), dtype=None,usecols=(counter+1)))
-    allbkg.append(zz4l[counter] + reducible[counter] + rare[counter] + top[counter])
-    #cutlist.append( np.genfromtxt('All_ZZ4L_{0:s}_yields.txt'.format(args.year), dtype=str,usecols=(0)))
-    #allbkg = np.sum([counter-1] + zz4l[counter-1] + rare[counter-1] + reducible[counter-1], axis)
+    allbkg.append( top[counter] + dy[counter] +  wz[counter] +   zz[counter] + other[counter]) 
     #counter+=1
 
-
-#data = {'names': cutlist, 'values': zz4l}
+#data = {'names': cutlist, 'values': zz}
 
 dftop = pn.DataFrame(data=top)
 df2top_t = dftop.T
 df2top_t.index=[i for i in cutlist]
 df2top_t.columns=[i for i in cats[1:]]
 
-dfzz4l = pn.DataFrame(data=zz4l)
-df2zz4l_t = dfzz4l.T
-df2zz4l_t.index=[i for i in cutlist]
-df2zz4l_t.columns=[i for i in cats[1:]]
 
-dfrare = pn.DataFrame(data=rare)
-df2rare_t = dfrare.T
-df2rare_t.index=[i for i in cutlist]
-df2rare_t.columns=[i for i in cats[1:]]
-#df2rare_t.head()
+dfdy = pn.DataFrame(data=dy)
+df2dy_t = dfdy.T
+df2dy_t.index=[i for i in cutlist]
+df2dy_t.columns=[i for i in cats[1:]]
+
+dfzz = pn.DataFrame(data=zz)
+df2zz_t = dfzz.T
+df2zz_t.index=[i for i in cutlist]
+df2zz_t.columns=[i for i in cats[1:]]
 
 
-dfreducible = pn.DataFrame(data=reducible)
-df2reducible_t = dfreducible.T
-df2reducible_t.index=[i for i in cutlist]
-df2reducible_t.columns=[i for i in cats[1:]]
-#df2reducible_t.head()
+dfwz = pn.DataFrame(data=wz)
+df2wz_t = dfwz.T
+df2wz_t.index=[i for i in cutlist]
+df2wz_t.columns=[i for i in cats[1:]]
 
-e_allbkg = pn.DataFrame(data=allbkg).pow(1./2)
 
-e_dfallbkg = pn.DataFrame(data=e_allbkg)
-e_df2allbkg_t = e_dfallbkg.T
-e_df2allbkg_t.index=[i for i in cutlist]
-e_df2allbkg_t.columns=[i for i in cats[1:]]
+dfother = pn.DataFrame(data=other)
+df2other_t = dfother.T
+df2other_t.index=[i for i in cutlist]
+df2other_t.columns=[i for i in cats[1:]]
+#df2other_t.head()
 
 
 dfallbkg = pn.DataFrame(data=allbkg)
@@ -427,23 +367,34 @@ df2signal_t = dfsignal.T
 df2signal_t.index=[i for i in cutlist]
 df2signal_t.columns=[i for i in cats[1:]]
 
-df2zz4l_t.index=[i for i in cutlist]
-df2zz4l_t.columns=[i for i in cats[1:]]
-#df2zz4l_t.head()
+df2zz_t.index=[i for i in cutlist]
+df2zz_t.columns=[i for i in cats[1:]]
+
+df2wz_t.index=[i for i in cutlist]
+df2wz_t.columns=[i for i in cats[1:]]
+df2dy_t.index=[i for i in cutlist]
+df2dy_t.columns=[i for i in cats[1:]]
+#df2zz_t.head()
+
+
+e_allbkg = pn.DataFrame(data=allbkg).pow(1./2)
+
+e_dfallbkg = pn.DataFrame(data=e_allbkg)
+e_df2allbkg_t = e_dfallbkg.T
+e_df2allbkg_t.index=[i for i in cutlist]
+e_df2allbkg_t.columns=[i for i in cats[1:]]
 
 
 
-#cpie=pn.concat([df2zz4l_t, df2reducible_t, df2rare_t], axis=0)
-
-
-c=pn.concat([df2zz4l_t, df2reducible_t, df2rare_t, df2allbkg_t, df2top_t, e_df2allbkg_t, df2data_t], axis=1)
+c=pn.concat([df2top_t, df2zz_t, df2wz_t, df2dy_t, df2other_t, df2allbkg_t, e_df2allbkg_t, df2data_t], axis=1)
 
 '''
 explode = (0, 0.0, 0)  # only "explode" the 2nd slice (i.e. 'Hogs')
 sizes=[]
 
-labels='ZZ4L','Reducible','Rare'
+labels='ZZ','DY','Other'
 colors = {kAzure-9, kMagenta-10,kBlue-8}
+plt.ioff()
 
 fig1, ax1 = plt.subplots()
 for cat in cats[7:] :
@@ -452,9 +403,9 @@ for cat in cats[7:] :
         
         c_ = 1
         cpie=[]
-        cpie.append(zz4l[c_][i])
+        cpie.append(zz[c_][i])
         cpie.append(reducible[c_][i])
-        cpie.append(rare[c_][i])
+        cpie.append(other[c_][i])
 	print cpie, i, 'Cut ', cuts[i], c_, cat
         ax1.pie(cpie, explode=explode, labels=labels, autopct='%1.1f%%', shadow=True, startangle=90, colors=colors)
         ax1.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
@@ -463,15 +414,15 @@ for cat in cats[7:] :
         plt.savefig("pie_{0:s}_{1:s}.png".format(cat,cuts[i]))
 '''
 
-
-ngroup = groups
-ngroup.insert(4,'All bkg')
-ngroup.insert(5,'uncert bkg')
-
-for cat in cats[1:] :
-    cc=c[cat] 
+groupss = ['Top','ZZ','WZ','DY','Other','Allbkg','data']
+ngroup = groupss
+#ngroup.insert(5,'All bkg')
+ngroup.insert(6,'uncert bkg')
+for cat in cats[1:]:
+    cc=c[cat]
+    #print cc, cat
     cc.to_latex()
-    cc.columns=[i for i in groups[1:]]
+    cc.columns=[i for i in ngroup]
     cc.index=[i for i in cutlist]
 
     fIn = 'txt/All_'+cat+'_'+args.selection+'_'+era+'yields.txt'
@@ -517,9 +468,10 @@ for cat in cats[1:] :
     f.close()
 
 WriteLatexGroup('txt/All_Top_'+args.selection+'_'+era+'_yields.txt',df2top_t)
-WriteLatexGroup('txt/All_ZZ4L_'+args.selection+'_'+era+'_yields.txt',df2zz4l_t)
-WriteLatexGroup('txt/All_Reducible_'+args.selection+'_'+era+'_yields.txt',df2reducible_t)
-WriteLatexGroup('txt/All_Rare_'+args.selection+'_'+era+'_yields.txt',df2rare_t)
+WriteLatexGroup('txt/All_ZZ_'+args.selection+'_'+era+'_yields.txt',df2zz_t)
+WriteLatexGroup('txt/All_WZ_'+args.selection+'_'+era+'_yields.txt',df2wz_t)
+WriteLatexGroup('txt/All_DY_'+args.selection+'_'+era+'_yields.txt',df2dy_t)
+WriteLatexGroup('txt/All_Other_'+args.selection+'_'+era+'_yields.txt',df2other_t)
 WriteLatexGroup('txt/All_data_'+args.selection+'_'+era+'_yields.txt',df2data_t)
 WriteLatexGroup('txt/All_Allbkg_'+args.selection+'_'+era+'_yields.txt',df2allbkg_t)
 WriteLatexGroup('txt/All_Signal_'+args.selection+'_'+era+'_yields.txt',df2signal_t)
@@ -532,9 +484,11 @@ WriteLatexGroup('txt/All_Signal_'+args.selection+'_'+era+'_yields.txt',df2signal
 command="sed -i '/0.0 &  /d' txt/*txt"
 command1="sed -i 's/0.00 \\\\/0 \\\\/g' txt/*txt"
 command2="sed -i '/Cut & /d' txt/*txt"
+command3="sed -i '11,20d' txt/*txt"
 if  b_usePlotFile : 
     os.system(command)
 os.system(command1)
 os.system(command2)
+os.system(command3)
 
 print 'All txt files can be found in the ./txt dir....exiting'
