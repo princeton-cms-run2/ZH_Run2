@@ -18,7 +18,10 @@ import pandas as pn
 import glob
 import string
 
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+import plotting
 from ROOT import kBlack, kBlue, kMagenta, kOrange, kAzure, kRed
 
 pn.set_option('display.float_format', lambda x: '%.2f' % x)
@@ -260,16 +263,6 @@ for group in groups :
 	count+=1
 
 	### this is to create a .txt per group
-	'''
-	labels = ['Cookies', 'Jellybean', 'Milkshake', 'Cheesecake']
-	sizes = [38.4, 40.6, 20.7, 10.3]
-	colors = ['yellowgreen', 'gold', 'lightskyblue', 'lightcoral']
-	patches, texts = plt.pie(sizes, colors=colors, shadow=True, startangle=90)
-	plt.legend(patches, labels, loc="best")
-	plt.axis('equal')
-	plt.tight_layout()
-	plt.show()
-	'''
 
     with open('txt/All_'+group+'_'+args.selection+'_'+era+'_yields.txt', 'w') as f:
 	#lines = [' & \t'.join([str(x[i]) if len(x) > i else ' ' for x in yieldpergroup]) for i in range(len(max(yieldpergroup)))]
@@ -388,31 +381,34 @@ e_df2allbkg_t.columns=[i for i in cats[1:]]
 
 c=pn.concat([df2top_t, df2zz_t, df2wz_t, df2dy_t, df2other_t, df2allbkg_t, e_df2allbkg_t, df2data_t], axis=1)
 
-'''
-explode = (0, 0.0, 0)  # only "explode" the 2nd slice (i.e. 'Hogs')
 sizes=[]
 
-labels='ZZ','DY','Other'
-colors = {kAzure-9, kMagenta-10,kBlue-8}
-plt.ioff()
 
-fig1, ax1 = plt.subplots()
-for cat in cats[7:] :
+def func(pct, allvals):
+    absolute = float(pct/100.*np.sum(allvals))
+    return "{:.1f}%\n{:.1f} ev.".format(pct, absolute)
+
+#colors = {kAzure-9, kMagenta-10,kBlue-8, 'lightcoral'}
+plt.ioff()
+for icat, cat in enumerate(cats[1:]) :
     #for i in range(len(cuts)-5) :
-    for i in range(1,2) :
-        
-        c_ = 1
-        cpie=[]
-        cpie.append(zz[c_][i])
-        cpie.append(reducible[c_][i])
-        cpie.append(other[c_][i])
-	print cpie, i, 'Cut ', cuts[i], c_, cat
-        ax1.pie(cpie, explode=explode, labels=labels, autopct='%1.1f%%', shadow=True, startangle=90, colors=colors)
-        ax1.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
-        c_=+1
-        #cpie.plot.pie(subplots=False, autopct='%1.1f%%', shadow=True, startangle=90, colors=colors)
-        plt.savefig("pie_{0:s}_{1:s}.png".format(cat,cuts[i]))
-'''
+        #fig1, ax1 = plt.subplots()
+        fig1, ax1 = plt.subplots(figsize=(5, 5), subplot_kw=dict(aspect="equal"))
+        labels=['Other','DY','WZ','ZZ']
+	sizes = [other[icat][12]+top[icat][12] , dy[icat][12],wz[icat][12] ,zz[icat][12] ]
+        print '-->', sizes, cat
+	#colors = ['gold','Orange', 'ForestGreen', 'LightCoral','Cyan']
+	colors = ['gold','limegreen', 'LightCoral','Cyan']
+        lab=["","","",""]
+        patches, texts, autotexts  = ax1.pie(sizes, colors = colors, labels=labels, autopct=lambda pct: func(pct, sizes),textprops=dict(color="black"), startangle=90, radius=1)
+	#plt.legend(patches, labels=[], loc="best", title=cat)
+        plt.setp(autotexts, size=10, weight="bold")
+	#plt.legend(patches,  loc="best", title=cat)
+        ax1.set_title(cat)
+	plt.tight_layout()
+        plt.savefig("pie_{0:s}.png".format(cat))
+
+
 
 groupss = ['Top','ZZ','WZ','DY','Other','Allbkg','data']
 ngroup = groupss
