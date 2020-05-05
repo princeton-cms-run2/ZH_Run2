@@ -860,7 +860,7 @@ def getBestMuMuPair(entry, cat='mm', pairList=[], printOn=False):
 
 
 # select a muon for the Z candidate
-def goodMuon(entry, j, AZH=False ):
+def goodMuon(entry, j ):
     """ tauFun.goodMuon(): select good muons
                            for Z -> mu + mu
     """
@@ -869,9 +869,9 @@ def goodMuon(entry, j, AZH=False ):
     if entry.Muon_pt[j] < mm['mu_pt']: return False
     if abs(entry.Muon_eta[j]) > mm['mu_eta']: return False
     if mm['mu_iso_f'] and entry.Muon_pfRelIso04_all[j] >  mm['mu_iso']: return False
-    if mm['mu_ID'] and not AZH :
+    if mm['mu_ID'] :
         if not (entry.Muon_mediumId[j] or entry.Muon_tightId[j]): return False
-    if mm['mu_ID'] and AZH and not entry.Muon_looseId[j] : return False
+    if mm['mu_ID'] and not entry.Muon_looseId[j] : return False
     if abs(entry.Muon_dxy[j]) > mm['mu_dxy']: return False 
     if abs(entry.Muon_dz[j]) > mm['mu_dz']: return False
     if mm['mu_type'] :
@@ -879,15 +879,15 @@ def goodMuon(entry, j, AZH=False ):
              
     return True 
 
-def makeGoodMuonList(entry, AZH=False) :
+def makeGoodMuonList(entry) :
     goodMuonList = []
     for i in range(entry.nMuon) :
-        if goodMuon(entry, i, AZH) : goodMuonList.append(i)
+        if goodMuon(entry, i) : goodMuonList.append(i)
     #print("In tauFun.makeGoodMuonList = {0:s}".format(str(goodMuonList)))
     return goodMuonList
 
 # select an electron for the Z candidate
-def goodElectron(entry, j, AZH=False) :
+def goodElectron(entry, j) :
     """ tauFun.goodElectron(): select good electrons 
                                for Z -> ele + ele
     """
@@ -904,10 +904,10 @@ def goodElectron(entry, j, AZH=False) :
 
     return True 
 
-def makeGoodElectronList(entry, AZH=False) :
+def makeGoodElectronList(entry) :
     goodElectronList = []
     for i in range(entry.nElectron) :
-        if goodElectron(entry, i, AZH=AZH) : goodElectronList.append(i)
+        if goodElectron(entry, i) : goodElectronList.append(i)
     return goodElectronList
 
 
