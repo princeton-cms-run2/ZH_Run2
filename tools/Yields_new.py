@@ -386,7 +386,7 @@ sizes=[]
 
 def func(pct, allvals):
     absolute = float(pct/100.*np.sum(allvals))
-    return "{:.1f}%\n{:.1f} ev.".format(pct, absolute)
+    return "{:.1f}\n({:.1f}%)".format(pct, absolute)
 
 #colors = {kAzure-9, kMagenta-10,kBlue-8, 'lightcoral'}
 plt.ioff()
@@ -394,19 +394,31 @@ for icat, cat in enumerate(cats[1:]) :
     #for i in range(len(cuts)-5) :
         #fig1, ax1 = plt.subplots()
         fig1, ax1 = plt.subplots(figsize=(5, 5), subplot_kw=dict(aspect="equal"))
+        
         labels=['Other','DY','WZ','ZZ']
+        #labels=['Obs %.1f'%Data[icat][12],   'allbkg %2.f'%allbkg[icat][12]]
+                
+        #    'DY','WZ','ZZ']
 	sizes = [other[icat][12]+top[icat][12] , dy[icat][12],wz[icat][12] ,zz[icat][12] ]
         print '-->', sizes, cat
 	#colors = ['gold','Orange', 'ForestGreen', 'LightCoral','Cyan']
 	colors = ['gold','limegreen', 'LightCoral','Cyan']
         lab=["","","",""]
+        #patches, texts, autotexts  = ax1.pie(sizes, colors = colors, labels=labels, autopct=lambda pct: func(pct, sizes),textprops=dict(color="black"), startangle=90, radius=1)
         patches, texts, autotexts  = ax1.pie(sizes, colors = colors, labels=labels, autopct=lambda pct: func(pct, sizes),textprops=dict(color="black"), startangle=90, radius=1)
-	#plt.legend(patches, labels=[], loc="best", title=cat)
+        #patches, texts, autotexts  = ax1.pie(sizes, colors = colors,  autopct=lambda pct: func(pct, sizes),textprops=dict(color="black"), startangle=90, radius=1)
+        
         plt.setp(autotexts, size=10, weight="bold")
-	#plt.legend(patches,  loc="best", title=cat)
+        plt.text(0.6,1, 'Obs %1.f'%Data[icat][12]+'\nallbkg %.1f'%allbkg[icat][12], bbox=dict(facecolor='lightblue', alpha=0.5), fontsize=15)  
+	plt.legend(patches, labels, loc="best")
         ax1.set_title(cat)
+        ax1.get_legend().remove()
 	plt.tight_layout()
-        plt.savefig("pie_{0:s}.png".format(cat))
+        plt.savefig("pie_{0:s}_{1:s}.png".format(cat,era))
+
+command="montage -auto-orient -title ZH_{0:s} -tile 2x4 -geometry +5+5 -page A4 pie_*_{0:s}.png Multi_pie_{0:s}.pdf;".format(str(era))
+
+os.system(command)
 
 
 
