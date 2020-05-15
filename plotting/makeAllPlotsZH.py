@@ -31,20 +31,20 @@ def numberToCat(number) :
 
 
 def systToNumber(syst) :
-    varSyst= { '':0, 'nom':1, 'jesTotalUp':2, 'jesTotalDown':3, 'jerUp':4, 'jerDown':5, 'UnclUp':6, 'UnclDown':7}
+    varSyst= { 'none':0, 'nom':1, 'jesTotalUp':2, 'jesTotalDown':3, 'jerUp':4, 'jerDown':5, 'UnclUp':6, 'UnclDown':7}
     return varSyst[str(syst)]
 
 def NumberToSyst(num) :
-    varSyst= { 0:'', 1:'nom', 2:'jesTotalUp', 3:'jesTotalDown', 4:'jerUp', 5:'jerDown', 6:'UnclUp', 7:'UnclDown'}
+    varSyst= { 0:'none', 1:'nom', 2:'jesTotalUp', 3:'jesTotalDown', 4:'jerUp', 5:'jerDown', 6:'UnclUp', 7:'UnclDown'}
     return varSyst[num]
 
 def systForMET(syst) :
-    varSyst= {'':'',  'nom':'nom', 'jesTotalUp':'JESUp', 'jesTotalDown':'JESDown', 'jerUp':'JESUp', 'jerDown':'JESDown', 'UnclUp':'UnclUp', 'UnclDown':'UnclDown'}
+    varSyst= {'none':'',  'nom':'nom', 'jesTotalUp':'JESUp', 'jesTotalDown':'JESDown', 'jerUp':'JESUp', 'jerDown':'JESDown', 'UnclUp':'UnclUp', 'UnclDown':'UnclDown'}
 
     return varSyst[str(syst)]
 
 
-varSystematics=['', 'nom', 'jesTotalUp', 'jesTotalDown', 'jerUp', 'jerDown', 'UnclUp', 'UnclDown']
+varSystematics=['none', 'nom', 'jesTotalUp', 'jesTotalDown', 'jerUp', 'jerDown', 'UnclUp', 'UnclDown']
 
 
 
@@ -295,6 +295,56 @@ def getFakeWeightsvspT(ic, pt1,pt2, WP, ist1, ist2) :
     return w1, w2, w0
 
 
+def getFakeWeightsvspTvsDM(ic, pt1,pt2, WP, DM1, DM2) :
+    if ic == 'et' : 
+        p1 = 'e_et'
+        p2 = 't_et'
+
+    if ic == 'mt' : 
+        p1 = 'm_mt'
+        p2 = 't_mt'
+
+    if ic == 'em' : 
+        p1 = 'e_em'
+        p2 = 'm_em'
+
+    if ic == 'tt' : 
+        p1 = 't1_tt'
+        p2 = 't2_tt'
+
+    #print 'the name will be', '{0:s}_{1:s}DM_vspT'.format(p1,str(DM1)), '{0:s}_{1:s}DM_vspT'.format(p2,str(DM2))
+    filein = '../fakes/FakesResult_{0:s}_SS_{1:s}WP.root'.format(str(args.year),str(WP))
+    fin = TFile.Open(filein,"READ")         
+    h1 = fin.Get('{0:s}_vspT'.format(p1))
+    h2 = fin.Get('{0:s}_vspT'.format(p2))
+
+    if ic == 'et'or ic =='mt' : 
+	h1 = fin.Get('{0:s}_vspT'.format(p1))
+	h2 = fin.Get('{0:s}_DM{1:s}_vspT'.format(p2,str(DM2)))
+
+    if ic == 'tt': 
+	h1 = fin.Get('{0:s}_DM{1:s}_vspT'.format(p1,str(DM1)))
+	h2 = fin.Get('{0:s}_DM{1:s}_vspT'.format(p2,str(DM2)))
+
+
+    xB1 = 1
+    xB2 = 1
+    if pt1 < 100 : xB1 = h1.FindBin(pt1)
+    if pt1 > 100 : xB1 = h1.GetNbinsX()
+
+    if pt2 < 100 : xB2 = h2.FindBin(pt2)
+    if pt2 > 100 : xB2 = h2.GetNbinsX()
+
+    f1 = h1.GetBinContent(xB1)
+    f2 = h1.GetBinContent(xB2)
+    #print '===========>', pt1, pt2, f1, f2, xB1, xB2
+    w1, w2, w0 =0. ,0. ,0.
+    w1 = float(f1/(1.-f1))
+    w2 = float(f2/(1.-f2))
+    w0 = w1*w2
+    #print '================= now reading fake rate for data', pt1, pt2 ,' to be', f1, f2, 'actual fW1 etc', w1, w2, w0, 'is this false??? ', ist1, ist2
+    return w1, w2, w0
+
 
 
 def getFakeWeights(p1,p2, WP) :
@@ -321,6 +371,7 @@ cats = { 1:'eeet', 2:'eemt', 3:'eett', 4:'eeem', 5:'mmet', 6:'mmmt', 7:'mmtt', 8
 tightCuts = not args.looseCuts 
 dataDriven = not args.MConly
 
+dataDriven = True
 unblind=False
 if args.unBlind.lower() == 'true' or args.unBlind.lower == 'yes' : unblind = True
 
@@ -425,6 +476,7 @@ for cat in cats.values() :
 
 # dictionary where the group is the key
 hMC = {}
+hMCnof = {}
 hMCFM = {}
 
 hm_sv_new = {}
@@ -483,12 +535,9 @@ groups = ['fakes','f1', 'f2','bfl1', 'ljfl1', 'cfl1','jfl1','bfl2', 'ljfl2', 'cf
 ngroups = ['fakes','f1', 'f2','bfl1', 'ljfl1', 'cfl1','jfl1','bfl2', 'ljfl2', 'cfl2','jfl2','jft1', 'jft2','Signal','Other','Top','DY','WZ','ZZ','data']
 fgroups = ['bfl', 'ljfl',  'cfl','jfl', 'jft1', 'jft2']
 
-groupss = ['Other','Top','DY','WZ','ZZ', 'Signal']
-
-
-
-
 '''
+groupss = ['Other','Top','DY','WZ','ZZ', 'ZZ4L','Signal']
+
 groups = ['fakes','f1', 'f2', 'Signal','Other','Top','DY','WZ','ZZ','data']
 ngroups = ['fakes','f1', 'f2','Signal','Other','Top','DY','WZ','ZZ','data']
 
@@ -577,18 +626,20 @@ for i in range(1,4) :
 
 # now add the data
 #for eras in ['2017B','2017C','2017D','2017E','2017F'] :
-for period in ['SingleMuon', 'EGamma', 'MuonEG'] :
-#for eras in [era] :
+#for period in ['SingleMuon', 'EGamma', 'MuonEG'] :
+for eras in [era] :
     #for dataset in ['SingleElectron','SingleMuon','DoubleEG','DoubleMuon'] :
     for dataset in ['data'] :
         #nickName = '{0:s}_Run{1:s}'.format(dataset,eras)
-        #nickName = '{0:s}_{1:s}'.format(dataset,eras)
-        nickName = '{0:s}_{1:s}_{2:s}'.format(dataset,era,period)
+        nickName = '{0:s}_{1:s}'.format(dataset,eras)
+        #nickName = '{0:s}_{1:s}_{2:s}'.format(dataset,era,period)
         totalWeight[nickName] = 1.
         sampleWeight[nickName] = 1.
         nickNames['data'].append(nickName)
 #####################################3
 
+
+print nickNames
 
 print("tightCuts={0}".format(tightCuts))
 if tightCuts :
@@ -632,8 +683,83 @@ fW1['em'], fW2['em'], fW0['em'] = getFakeWeights('e_em','m_em', WP)
 
 global getsf,sf
 
-
 plotSettings = { # [nBins,xMin,xMax,units]
+
+        "weight":[20,-10,10,"","PUWeight"],
+        "weightPUtrue":[20,-10,10,"","PUtrue"],
+        "weightPUtrue":[20,-10,10,"","PU"],
+        "nPV":[120,-0.5,119.5,"","nPV"],
+        "nPU":[130,-0.5,129.5,"","nPU"],
+        "nPUtrue":[130,-0.5,129.5,"","nPUtrue"],
+        "Generator_weight":[20,-10,10,"","genWeight"],
+
+        "pt_1":[8,0,160,"[Gev]","P_{T}(#tau_{1})"],
+        "eta_1":[30,-3,3,"","#eta(l_{1})"],
+        "phi_1":[30,-3,3,"","#phi(l_{1})"],
+        "iso_1":[20,0,1,"","relIso(l_{1})"],
+        "dZ_1":[10,-0.1,0.1,"[cm]","d_{z}(l_{1})"],
+        "d0_1":[10,-0.1,0.1,"[cm]","d_{xy}(l_{1})"],
+        "q_1":[3,-1.5,1.5,"","charge(l_{1})"],
+
+        "pt_2":[8,0,160,"[Gev]","P_{T}(l_{2})"],
+        "eta_2":[30,-3,3,"","#eta(l_{2})"],
+        "phi_2":[30,-3,3,"","#phi(l_{2})"],
+        "iso_2":[20,0,1,"","relIso(l_{2})"],
+        "dZ_2":[10,-0.1,0.1,"[cm]","d_{z}(l_{2})"],
+        "d0_2":[10,-0.1,0.1,"[cm]","d_{xy}(l_{2})"],
+        "q_2":[3,-1.5,1.5,"","charge(l_{2})"],
+
+	"iso_3":[20,0,1,"","relIso(l_{3})"],
+        "pt_3":[8,0,160,"[Gev]","P_{T}(l_{3})"],
+        "eta_3":[30,-3,3,"","#eta(l_{3})"],
+        "phi_3":[30,-3,3,"","#phi(l_{3})"],
+        "dZ_3":[10,-0.1,0.1,"[cm]","d_{z}(l_{3})"],
+        "d0_3":[10,-0.1,0.1,"[cm]","d_{xy}(l_{3})"],
+
+        "iso_4":[20,0,1,"","relIso(l_{4})"],
+        "pt_4":[8,0,160,"[Gev]","P_{T}(l_{4})"],
+        "eta_4":[30,-3,3,"","#eta(l_{4})"],
+        "phi_4":[30,-3,3,"","#phi(l_{4})"],
+        "dZ_4":[10,-0.1,0.1,"[cm]","d_{z}(l_{4})"],
+        "d0_4":[10,-0.1,0.1,"[cm]","d_{xy}(l_{4})"],
+
+        "njets":[10,-0.5,9.5,"","nJets"],
+
+        "jpt_1":[10,0,200,"[GeV]","Jet^{1} P_{T}"], 
+        "jeta_1":[30,-3,3,"","Jet^{1} #eta"],
+        "jpt_2":[10,0,200,"[GeV]","Jet^{2} P_{T}"], 
+        "jeta_2":[6,-3,3,"","Jet^{2} #eta"],
+
+        "bpt_1":[10,0,200,"[GeV]","BJet^{1} P_{T}"], 
+
+        "nbtag":[5,-0.5,4.5,"","nBTag"],
+
+        #"metvs":[20,-2,2,"[GeV]","#it{p}_{T}^{miss}*"], 
+        #"metpt_nom":[10,0,200,"[GeV]","#it{p}_{T}^{miss}*"], 
+        #"metphi_nom":[30,-3,3,"","#it{p}_{T}^{miss} #phi*"], 
+        "met":[10,0,200,"[GeV]","#it{p}_{T}^{miss}"], 
+        "metphi":[30,-3,3,"","#it{p}_{T}^{miss} #phi"], 
+
+        "mll":[40,50,130,"[Gev]","m(l^{+}l^{-})"],
+
+        "m_vis":[15,50,200,"[Gev]","m(#tau#tau)"],
+        "pt_tt":[10,0,200,"[GeV]","P_{T}(#tau#tau)"],
+        "H_DR":[60,0,6,"","#Delta R(#tau#tau)"],
+        "H_tot":[30,0,200,"[GeV]","m_{T}tot(#tau#tau)"],
+
+        "mt_sv":[10,0,200,"[Gev]","m_{T}(#tau#tau)"],
+        "m_sv":[10,0,200,"[Gev]","m(#tau#tau)(SV)"],
+        "AMass":[50,50,550,"[Gev]","m_{Z+H}(SV)"],
+        #"CutFlowWeighted":[15,0.5,15.5,"","cutflow"],
+        #"CutFlow":[15,0.5,15.5,"","cutflow"]
+
+        "Z_Pt":[10,0,200,"[Gev]","P_T(l_{1}l_{2})"],
+        "Z_DR":[30,0,6,"[Gev]","#Delta R(l_{1}l_{2})"],
+
+
+        }
+
+plotSettingss = { # [nBins,xMin,xMax,units]
 
         "weight":[20,-10,10,"","PUWeight"],
         "weightPUtrue":[20,-10,10,"","PUtrue"],
@@ -811,7 +937,10 @@ for icat,cat in cats.items()[0:8] :
 
 ########## initializing triggers
 wpp = 'Medium'
+if str(args.bruteworkingPoint=='16') : wpp = 'Medium'
+if str(args.bruteworkingPoint=='32') : wpp = 'Tight'
 if str(args.bruteworkingPoint=='64') : wpp = 'VTight'
+if str(args.bruteworkingPoint=='128') : wpp = 'VVTight'
 
 tauSFTool = TauIDSFTool(campaign[args.year],'DeepTau2017v2p1VSjet',wpp)
 testool = TauESTool(campaign[args.year])
@@ -870,6 +999,7 @@ for group in groups :
 
 for group in groups :
     hMC[group] = {}
+    hMCnof[group] = {}
     hMCFM[group] = {}
     hm_sv_new[group] = {}
     hm_sv_new_FM[group] = {}
@@ -890,6 +1020,7 @@ for group in groups :
 
     for icat, cat in cats.items()[0:8] :
         hMC[group][cat] = {}
+        hMCnof[group][cat] = {}
         hMCFM[group][cat] = {}
 
         hName = 'h{0:s}_{1:s}'.format(group,cat)
@@ -936,6 +1067,7 @@ for group in groups :
 
         for plotVar in plotSettings:
             hMC[group][cat][plotVar] = {}
+            hMCnof[group][cat][plotVar] = {}
             hMCFM[group][cat][plotVar] = {}
             nBins = plotSettings[plotVar][0]
             xMin = plotSettings[plotVar][1]
@@ -950,6 +1082,15 @@ for group in groups :
             hMC[group][cat][plotVar].GetXaxis().SetTitle(lTitle + ' ' + units)
             if 'GeV' in units : hMC[group][cat][plotVar].GetYaxis().SetTitle("Events / "+str(binwidth)+" {0:s}".format(units))
             if 'GeV' not in units : hMC[group][cat][plotVar].GetYaxis().SetTitle("Events / "+str(binwidth))
+
+            hName = 'h{0:s}_{1:s}_{2:s}_nof'.format(group,cat,plotVar)
+            hMCnof[group][cat][plotVar] = TH1D(hName,hName,nBins,xMin,xMax)
+            hMCnof[group][cat][plotVar].SetDefaultSumw2()
+            hMCnof[group][cat][plotVar].GetXaxis().SetTitle(lTitle + ' ' + units)
+            if 'GeV' in units : hMC[group][cat][plotVar].GetYaxis().SetTitle("Events / "+str(binwidth)+" {0:s}".format(units))
+            if 'GeV' not in units : hMC[group][cat][plotVar].GetYaxis().SetTitle("Events / "+str(binwidth))
+
+
 
             hName = 'h{0:s}_{1:s}_{2:s}_FM'.format(group,cat,plotVar)
             hMCFM[group][cat][plotVar] = TH1D(hName,hName,nBins,xMin,xMax)
@@ -996,7 +1137,7 @@ for group in groups :
         DYJets = ('DYJetsToLL' in nickName and 'M10' not in nickName)
         WJets  = ('WJetsToLNu' in nickName)
         sWeight = sampleWeight[nickName]
-	print '========================================> start looping on events now',inFileName, inick, nickName
+	print '========================================> start looping on events now',inFileName, inick, nickName, sWeight
 
         systmet = ''
 	if doJME:
@@ -1024,28 +1165,14 @@ for group in groups :
             isfakemc1 = False
             isfakemc2 = False
 	    #if ('ZZTo4' in inFileName or 'ZH' in inFileName) and  i > 2000 : continue
-	    #if hGroup == 'data' and i > 200:continue
+	    #if hGroup != 'data' and i > 200:continue
             #if i > 10000 : continue
             #sampleWeight = lumi/(WIncl_totgenwt/WIncl_xsec + WxGenweightsArr[i]/(WNJetsXsecs[i]*WJets_kfactor))
-            '''
-	    njets = e.njets[isys]
-	    nbtag = e.nbtag[isys]
-	    nbtagT = e.nbtagT[isys]
-	    jpt_1 = e.jpt_1[isys]
-	    jpt_2 = e.jpt_2[isys]
-	    jphi_1 = e.jphi_1[isys]
-	    jphi_2 = e.jphi_2[isys]
-	    jeta_1 = e.jeta_1[isys]
-	    jeta_2 = e.jeta_2[isys]
-	    bpt_1 = e.bpt_1[isys]
-	    bpt_2 = e.bpt_2[isys]
-	    beta_1 = e.beta_1[isys]
-	    beta_2 = e.beta_2[isys]
-            '''
+
             met = e.met
             metphi = e.metphi
             
-	    if str(args.inSystematics) != '': 
+	    if str(args.inSystematics) != 'none': 
 		met = getattr(e, 'metpt_'+sysmet, None)
 		metphi = getattr(e, 'metphi_'+sysmet, None)
             #print 'ok now', doJME, isys, args.inSystematics, 'njets-->', njets, e.njets[0], e.njets[1], e.njets[2], 'btag-->', nbtag, e.nbtag[0], e.nbtag[1], e.nbtag[2], 'met-->', met, metphi, 'and met_nom', e.metpt_nom, e.metphi_nom, 'for syst', args.inSystematics, 'jetpT--->', jpt_1, e.jpt_1[0], e.jpt_1[1], e.jpt_1[2], group, i, nickName
@@ -1073,6 +1200,7 @@ for group in groups :
 		#ww = e.weightPUtrue * e.Generator_weight *sWeight 
 		weightFM = e.weightPUtrue * e.Generator_weight *sWeight
             weightCF = weight
+            if i == 1 : print 'sample info ', e.weightPUtrue, e.Generator_weight, sWeight, 'for ', group, nickName
 
             #weight=1.
 
@@ -1084,39 +1212,36 @@ for group in groups :
 
 
             ##############good ISO
-	    if cat[:2] == 'mm' and  (e.iso_1 > 0.2 or e.iso_2 > 0.2) : continue
+	    if cat[:2] == 'mm' :  
+                if  e.iso_1 > 0.2 or (e.isGlobal_1 < 1 and e.isTracker_1 < 1) or e.tightId_1 < 1: continue
+                if  e.iso_2 > 0.2 or (e.isGlobal_2 < 1 and e.isTracker_2 < 1) or e.tightId_2 < 1: continue
+
 	    if cat[:2] == 'ee' and  (e.iso_1 > 0.15 or e.iso_2 > 0.15) : continue
+	    if cat[:2] == 'ee' and  (e.Electron_mvaFall17V2noIso_WP90_1 < 1 or e.Electron_mvaFall17V2noIso_WP90_2 < 1) : continue
 
 	    if cat[2:] == 'em'  :
-                if  (e.isGlobal_4 < 1 and e.isTracker_4 < 1) : continue
+	        if  e.iso_3 > 0.15 or e.Electron_mvaFall17V2noIso_WP90_3 < 1  : tight1 = False
+                if  e.iso_4 > 0.20 or (e.isGlobal_4 < 1 and e.isTracker_4 < 1) or e.tightId_4 < 1 : tight2 = False
+
 	    if cat[2:] == 'mt':
-                if  (e.isGlobal_3 < 1 and e.isTracker_3 < 1) : continue
+                if  e.iso_3 > 0.20 or (e.isGlobal_3 < 1 and e.isTracker_3 < 1) or e.tightId_3 < 1 : tight1 = False
 
-	    if cat[2:] == 'em' :
-                if e.iso_4 > 0.20 or e.tightId_4 < 1 : tight2 = False
+	    if cat[2:] == 'et' :
+                if  e.iso_3 > 0.15 or e.Electron_mvaFall17V2noIso_WP90_3 < 1 : tight1 = False
 
-	    if cat[2:] == 'mt' :
-                if e.iso_3 > 0.20 or e.tightId_3 < 1 : tight1 = False
+	    if cat[2:] == 'tt' :
+                if e.idDeepTau2017v2p1VSjet_3 < WPSR-1  : tight1 = False
+                if e.idDeepTau2017v2p1VSjet_4 < WPSR-1  : tight2 = False
 
-	    if (cat[2:] == 'et' or cat[2:] == 'em') and e.Electron_mvaFall17V2noIso_WP90_3 < 1 or e.iso_3 > 0.15 : tight1 = False
+	    if (cat[2:] == 'et' or cat[2:] =='mt') and e.idDeepTau2017v2p1VSjet_4 < WPSR-1 : tight2 = False
 
 	    #if abs(e.dZ_3) > 0.02 or abs(e.dZ_4) > 0.02 : continue
 	    #if abs(e.d0_3) > 0.02 or abs(e.d0_4) > 0.02 : continue
-
-            
-	    if cat[2:] == 'tt' and e.idDeepTau2017v2p1VSjet_3 < WPSR-1  : tight1 = False
-	    if cat[2:] == 'tt' and e.idDeepTau2017v2p1VSjet_4 < WPSR-1 : tight2 = False
-
-	    if cat[2:] == 'mt' and e.idDeepTau2017v2p1VSjet_4 < WPSR-1 : tight2 = False
-	    if cat[2:] == 'et' and e.idDeepTau2017v2p1VSjet_4 < WPSR-1 : tight2 = False
-
-	    if cat[2:] == 'et' and e.Electron_mvaFall17V2noIso_WP90_3 < 1 : tight1 = False
             
             if group != 'data' :
                 if not tight1 or not tight2 : continue
 
-            #if group == 'data' :
-            #    if DD[cat].checkEvent(e,cat) : continue 
+            if not dataDriven and (not tight1 or not tight2) : continue
 
             iCut +=1
             WCounter[iCut-1][icat-1][inick] += weightCF
@@ -1126,7 +1251,7 @@ for group in groups :
 
             ########H_LT
             H_LT = e.pt_3 + e.pt_4
-            if H_LT < args.LTcut : continue
+            #if H_LT < args.LTcut : continue
 
 
             iCut +=1
@@ -1293,11 +1418,14 @@ for group in groups :
 	    #if group != 'data' :
             #    if  not tight1 or not tight2 : continue
 	    
-            #if hGroup == 'data' and not unblind and e.m_sv > 80. and e.m_sv < 140. : continue                 
-            dataDriven = True
+            #if hGroup == 'data' and not unblind and e.m_sv > 80. and e.m_sv < 140. : continue                
+                
 	    if group == 'data' :
 		if dataDriven :
-		    fW1, fW2, fW0 = getFakeWeightsvspT(cat[2:], e.pt_3, e.pt_4, WP, tight1, tight2)
+		    dm1=e.decayMode_3
+		    dm2=e.decayMode_4
+		    #fW1, fW2, fW0 = getFakeWeightsvspT(cat[2:], e.pt_3, e.pt_4, WP, tight1, tight2)
+		    fW1, fW2, fW0 = getFakeWeightsvspTvsDM(cat[2:], e.pt_3, e.pt_4, WP, dm1, dm2)
 		    if not tight1 and tight2 : 
                         ww = fW1          
                         hGroup = 'f1'
@@ -1320,27 +1448,24 @@ for group in groups :
 		#    group,nickName,cat,e.gen_match_1,e.gen_match_2))
 		if dataDriven :   # include only events with MC matching
 		    if cat[2:] == 'em'  :
-			if e.gen_match_3 == 0 or e.gen_match_3 == 3 or e.gen_match_3 == 4 or e.gen_match_3 == 5 :
-                            isfakemc1 = True
-                            if  e.gen_match_3 == 0 : hGroup = 'jfl1'
-                            if  e.gen_match_3 == 3 : hGroup = 'ljfl1'
-                            if  e.gen_match_3 == 4 : hGroup = 'cfl1'
-                            if  e.gen_match_3 == 5 : hGroup = 'bfl1'
+			if e.gen_match_3 != 15 : isfakemc1 = True
+			if  e.gen_match_3 == 0 : hGroup = 'jfl1'
+			if  e.gen_match_3 == 3 : hGroup = 'ljfl1'
+			if  e.gen_match_3 == 4 : hGroup = 'cfl1'
+			if  e.gen_match_3 == 5 : hGroup = 'bfl1'
 
-			if e.gen_match_4 == 0 or e.gen_match_4 == 3 or e.gen_match_4 == 4 or e.gen_match_4 == 5 :
-                            isfakemc2 = True
-                            if  e.gen_match_4 == 0 : hGroup = 'jfl2'
-                            if  e.gen_match_4 == 3 : hGroup = 'ljfl2'
-                            if  e.gen_match_4 == 4 : hGroup = 'cfl2'
-                            if  e.gen_match_4 == 5 : hGroup = 'bfl2'
+			if e.gen_match_4 != 15 : isfakemc2 = True
+			if  e.gen_match_4 == 0 : hGroup = 'jfl2'
+			if  e.gen_match_4 == 3 : hGroup = 'ljfl2'
+			if  e.gen_match_4 == 4 : hGroup = 'cfl2'
+			if  e.gen_match_4 == 5 : hGroup = 'bfl2'
 			
 		    if cat[2:] == 'et' or cat[2:] == 'mt' :
-	                if  e.gen_match_3 == 0 or e.gen_match_3 == 3 or e.gen_match_3 == 4 or e.gen_match_3 == 5 :
-                            isfakemc1 = True
-                            if  e.gen_match_3 == 0 : hGroup = 'jfl1'
-                            if  e.gen_match_3 == 3 : hGroup = 'ljfl1'
-                            if  e.gen_match_3 == 4 : hGroup = 'cfl1'
-                            if  e.gen_match_3 == 5 : hGroup = 'bfl1'
+			if e.gen_match_3 != 15 : isfakemc1 = True
+			if  e.gen_match_3 == 0 : hGroup = 'jfl1'
+			if  e.gen_match_3 == 3 : hGroup = 'ljfl1'
+			if  e.gen_match_3 == 4 : hGroup = 'cfl1'
+			if  e.gen_match_3 == 5 : hGroup = 'bfl1'
 
 			if e.gen_match_4 == 0  :
                             isfakemc2 = True
@@ -1354,8 +1479,6 @@ for group in groups :
                             isfakemc2 = True
                             hGroup = 'jft2'
 		    
-            #if group != 'data' and cat[2:] != 'tt' : print 'some info', cat, e.iso_3, e.iso_4, group, hGroup, isfakemc1, isfakemc2
-
             weightFM=ww
            
             #if group != 'data' and group!='Signal' :
@@ -1537,8 +1660,6 @@ for group in groups :
                 #if plotVar =='metvs' and group=='data': val = 0.
 
                 if plotVar=='njets' or 'nbtag' in plotVar or 'jpt_' in plotVar or 'jeta_' in plotVar or 'bpt_' in plotVar or 'beta_' in plotVar or 'jphi' in plotVar or 'beta_' in plotVar or 'jphi_' in plotVar:  
-                #if plotVar =='njets' or plotVar == 'nbtag' or plotVar =='nbtagT' or plotVar =='jpt_1' or plotVar =='jpt_2' or plotVar =='jeta_1' or plotVar=='jeta_2' or plotVar =='jphi_1' or plotVar =='jphi_2' or plotVar=='beta_1' or plotVar=='beta_2' or plotVar=='bpt_1' or plotVar=='bpt_2':
-                    #print plotVar, val, isys, val[0], val[1], val[2], val[3], '---isys', val[isys]
                     val=val[isys]
 
 		if val is not None: 
@@ -1546,7 +1667,9 @@ for group in groups :
 			if hGroup != 'data' : 
 			    if hGroup !='fakes' and hGroup !='f1' and hGroup != 'f2' : 
 				hMC[hGroup][cat][plotVar].Fill(val,weight)
-				if not isfakemc1 and not isfakemc2 and tight1 and tight2: hMCFM[hGroup][cat][plotVar].Fill(val,weight)
+				if not isfakemc1 and not isfakemc2 and tight1 and tight2: 
+                                    hMCFM[hGroup][cat][plotVar].Fill(val,weight)
+                                    hMCnof[hGroup][cat][plotVar].Fill(val,weight)
 
 			    if hGroup =='fakes' or hGroup =='f1' or hGroup == 'f2' :  hMCFM[hGroup][cat][plotVar].Fill(val,ww)
 
@@ -1554,6 +1677,7 @@ for group in groups :
 			    if tight1 and tight2 : 
 				hMC[hGroup][cat][plotVar].Fill(val,1)
 				hMCFM[hGroup][cat][plotVar].Fill(val,1)
+				hMCnof[hGroup][cat][plotVar].Fill(val,1)
                     except KeyError : continue
 
 		    #print hGroup, cat, plotVar, val
@@ -1665,10 +1789,12 @@ for group in ngroups:
 
         for plotVar in plotSettings:
             OverFlow(hMC[group][cat][plotVar])
+            OverFlow(hMCnof[group][cat][plotVar])
 	    #if 'gen_match' not in plotVar and 'CutFlow' not in plotVar and 'iso' not in plotVar: 
             #    hMC[group][cat][plotVar].Rebin(2)
             #    hMCFM[group][cat][plotVar].Rebin(2)
             hMC[group][cat][plotVar].Write()
+            hMCnof[group][cat][plotVar].Write()
             OverFlow(hMCFM[group][cat][plotVar])
             hMCFM[group][cat][plotVar].Write()
     htest.Write()
