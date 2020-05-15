@@ -262,10 +262,11 @@ class outTuple() :
 
 
         # jet variables
-        self.njetspt20 = array('f',[-1]*8)
-        self.njets     = array('f',[-1]*8)
-        self.nbtag     = array('f',[-1]*8)
-        self.nbtagT     = array('f',[-1]*8)
+        #self.njetsold = array('f',[-1]*8)
+        self.njets     = array('f',[0]*8)
+        self.nbtag     = array('f',[0]*8)
+        #self.nbtagold     = array('f',[-1]*8)
+        self.nbtagT     = array('f',[0]*8)
 
         self.jpt_1     = array('f',[0]*8)
         self.jpt_1_tr  = array('f',[0]*8)
@@ -542,7 +543,8 @@ class outTuple() :
 
 
         # jet variables
-        self.t.Branch('njetspt20', self.njetspt20, 'njetspt20[8]/F') 
+        #self.t.Branch('njetsold', self.njetsold, 'njetsold[8]/F') 
+        #self.t.Branch('nbtagold', self.nbtagold, 'nbtagold[8]/F')
         self.t.Branch('njets', self.njets, 'njets[8]/F')
         self.t.Branch('nbtag', self.nbtag, 'nbtag[8]/F')
         self.t.Branch('nbtagT', self.nbtagT, 'nbtagT[8]/F')
@@ -628,102 +630,54 @@ class outTuple() :
     def getM_vis(self,entry,tau1,tau2) :
         return (tau1+tau2).M()
 
-
-
-    def getJets(self,entry,Lep1, Lep2, tau1,tau2,era) :
+    def getJets(self,entry,tau1,tau2,era) :
 	nJet30, jetList, bJetList, bJetListFlav = 0, [], [], []
-
+        phi2_1, eta2_1 = tau1.Phi(), tau1.Eta() 
+        phi2_2, eta2_2 = tau2.Phi(), tau2.Eta() 
+	bjet_discr = 0.6321
+	bjet_discrFlav = 0.0614
+	if str(era) == 2017 : bjet_discr = 0.4941
+	if str(era) == 2018 : bjet_discr = 0.4184
 
         for j in range(entry.nJet) :
             if entry.Jet_jetId[j]  < 2  : continue  #require tigh jets
-            if entry.Jet_pt[j] < 50 and entry.Jet_puId[j]  < 4  : continue #loose jetPU_iD
-            if str(era) == '2017'  and entry.Jet_pt[j] > 30 and entry.Jet_pt[j] < 50 and abs(entry.Jet_eta[j]) > 2.65 and abs(entry.Jet_eta[j]) < 3.139 : continue  #remove noisy jets
-            if entry.Jet_pt[j] < 30. : continue
+            if entry.Jet_pt[j]>20 and entry.Jet_pt[j] < 50 and entry.Jet_puId[j]  < 4  : continue #loose jetPU_iD
+            if str(era) == '2017'  and entry.Jet_pt[j] > 20 and entry.Jet_pt[j] < 50 and abs(entry.Jet_eta[j]) > 2.65 and abs(entry.Jet_eta[j]) < 3.139 : continue  #remove noisy jets
+            if entry.Jet_pt[j] < 20. : continue
             if abs(entry.Jet_eta[j]) > 4.7 : continue
+            phi1, eta1 = entry.Jet_phi[j], entry.Jet_eta[j]
+            dPhi = min(abs(phi2_1-phi1),2.*pi-abs(phi2_1-phi1))
+            DR = sqrt(dPhi**2 + (eta2_1-eta1)**2)
+            dPhi = min(abs(phi2_2-phi1),2.*pi-abs(phi2_2-phi1))
+            DR = min(DR,sqrt(dPhi**2 + (eta2_2-eta1)**2))
+            if DR < 0.5 : continue
+            if entry.Jet_pt[j] > 30 :
+		if abs(entry.Jet_eta[j]) < 2.4 and entry.Jet_btagDeepB[j] > bjet_discr : bJetList.append(j)
+		if abs(entry.Jet_eta[j]) < 2.4 and entry.Jet_btagDeepFlavB[j] > bjet_discrFlav : bJetListFlav.append(j)
+                jetList.append(j) 
 
+        return jetList, bJetList,bJetListFlav
 
-            dr1, dr2, dr3, dr4 = self.getDRnV(entry, Jet_eta[j], Jet_phi[j], Lep1.Eta(), Lep1.Phi()), self.getDRnV(entry, Jet_eta[j], Jet_phi[j], Lep2.Eta(), Lep2.Phi()), self.getDRnV(entry, Jet_eta[j], Jet_phi[j], tau1.Eta(), tau1.Phi()), self.getDRnV(entry, Jet_eta[j], Jet_phi[j], tau2.Eta(), tau2.Phi())
-
-            if dr1 < 0.5 or dr2 < 0.5 or dr3 < 0.5 or dr4 < 0.5 : continue
-            bjet_discr = 0.6321
-	    bjet_discrFlav = 0.0614
-            if str(era) == '2017' : bjet_discr = 0.4941
-            if str(era) == '2018' : bjet_discr = 0.4184
-            if True  and abs(entry.Jet_eta[j]) < 2.5 and entry.Jet_btagDeepB[j] > bjet_discr : bJetList.append(j)
-	    if True  and abs(entry.Jet_eta[j]) < 2.5 and entry.Jet_btagDeepFlavB[j] > bjet_discrFlav : bJetListFlav.append(j)
-            #if True and abs(entry.Jet_eta[j]) < 2.4 and entry.Jet_btagCSVV2[j] > 0.800 and entry.Jet_pt[j] > 30. : bJetList.append(j)
-	    #print '==================',entry.Jet_jetId[j], entry.Jet_pt[j],  entry.Jet_puId[j], isjj, entry.Jet_jetId[j]
-            jetList.append(j) 
-            if entry.Jet_pt[j] > 30 : nJet30 += 1
-
-        return nJet30, jetList, bJetList,bJetListFlav
-
-
-    def getJetsJME(self,entry,Lep1, Lep2, tau1,tau2,era) :
-	nJet30, jetList, bJetList, bJetListFlav = 0, [], [], []
-
-
-        for j in range(entry.nJet) :
-            if entry.Jet_jetId[j]  < 2  : continue  #require tigh jets
-            if entry.Jet_pt_nom[j] < 50 and entry.Jet_puId[j]  < 4  : continue #loose jetPU_iD
-            if str(era) == '2017'  and entry.Jet_pt_nom[j] > 30 and entry.Jet_pt_nom[j] < 50 and abs(entry.Jet_eta[j]) > 2.65 and abs(entry.Jet_eta[j]) < 3.139 : continue  #remove noisy jets
-            if entry.Jet_pt_nom[j] < 30. : continue
-            if abs(entry.Jet_eta[j]) > 4.7 : continue
-
-
-            dr1, dr2, dr3, dr4 = self.getDRnV(entry, Jet_eta[j], Jet_phi[j], Lep1.Eta(), Lep1.Phi()), self.getDRnV(entry, Jet_eta[j], Jet_phi[j], Lep2.Eta(), Lep2.Phi()), self.getDRnV(entry, Jet_eta[j], Jet_phi[j], tau1.Eta(), tau1.Phi()), self.getDRnV(entry, Jet_eta[j], Jet_phi[j], tau2.Eta(), tau2.Phi())
-
-            if dr1 < 0.5 or dr2 < 0.5 or dr3 < 0.5 or dr4 < 0.5 : continue
-            bjet_discr = 0.6321
-	    bjet_discrFlav = 0.0614
-            if str(era) == '2017' : bjet_discr = 0.4941
-            if str(era) == '2018' : bjet_discr = 0.4184
-            if True  and abs(entry.Jet_eta[j]) < 2.5 and entry.Jet_btagDeepB[j] > bjet_discr : bJetList.append(j)
-	    if True  and abs(entry.Jet_eta[j]) < 2.5 and entry.Jet_btagDeepFlavB[j] > bjet_discrFlav : bJetListFlav.append(j)
-            #if True and abs(entry.Jet_eta[j]) < 2.4 and entry.Jet_btagCSVV2[j] > 0.800 and entry.Jet_pt_nom[j] > 30. : bJetList.append(j)
-	    #print '==================',entry.Jet_jetId[j], entry.Jet_pt_nom[j],  entry.Jet_puId[j], isjj, entry.Jet_jetId[j]
-            jetList.append(j) 
-            if entry.Jet_pt_nom[j] > 30 : nJet30 += 1
-
-        return nJet30, jetList, bJetList,bJetListFlav
-
-
-    def getJetsMV(self,entry,LepList,era) :
-	nJet30, jetList, bJetList, bJetListFlav = 0, [], [], []
-
-
-        for j in range(entry.nJet) :
-            if entry.Jet_jetId[j]  < 2  : continue  #require tight jets
-            if entry.Jet_pt[j] < 50 and entry.Jet_puId[j]  < 4  : continue #loose jetPU_iD
-            if str(era) == '2017'  and entry.Jet_pt[j] > 30 and entry.Jet_pt[j] < 50 and abs(entry.Jet_eta[j]) > 2.65 and abs(entry.Jet_eta[j]) < 3.139 : continue  #remove noisy jets
-            if entry.Jet_pt[j] < 30. : continue
-            if abs(entry.Jet_eta[j]) > 4.7 : continue
-
-            #print 'will try', len(LepList)
-
-            #for iv, lepv in enumerate(LepList) : 
-            for iv, lv  in  enumerate(LepList) : 
-		dr = self.getDRnV(entry, entry.Jet_eta[j], entry.Jet_phi[j], LepList[iv].Eta(), LepList[iv].Phi())
-                #print 'for iv--->', iv, 'jet', j, entry.nJet, 'dr--', dr , LepList[iv].Eta(), LepList[iv].Phi(), LepList[iv].Pt()
-		if dr < 0.5 : continue
-
-            bjet_discr = 0.6321
-	    bjet_discrFlav = 0.0614
-            if str(era) == '2017' : bjet_discr = 0.4941
-            if str(era) == '2018' : bjet_discr = 0.4184
-            if True  and abs(entry.Jet_eta[j]) < 2.5 and entry.Jet_btagDeepB[j] > bjet_discr : bJetList.append(j)
-	    if True  and abs(entry.Jet_eta[j]) < 2.5 and entry.Jet_btagDeepFlavB[j] > bjet_discrFlav : bJetListFlav.append(j)
-            #if True and abs(entry.Jet_eta[j]) < 2.4 and entry.Jet_btagCSVV2[j] > 0.800 and entry.Jet_pt[j] > 30. : bJetList.append(j)
-	    #print '==================',entry.Jet_jetId[j], entry.Jet_pt[j],  entry.Jet_puId[j], isjj, entry.Jet_jetId[j]
-            jetList.append(j) 
-            if entry.Jet_pt[j] > 30 : nJet30 += 1
-
-        return nJet30, jetList, bJetList,bJetListFlav
 
 
     def getJetsJMEMV(self,entry,LepList,era, syst) :
-	nJet30, jetList, bJetList, bJetListT, bJetListFlav = 0, [], [], [], []
-       
+	jetList, bJetList, bJetListT, bJetListFlav = [], [], [], []
+	#print 'will try', len(LepList)
+	bjet_discr = 0.6321
+	bjet_discrT = 0.8953
+	bjet_discrFlav = 0.0614
+
+	if str(era) == '2017' : 
+	    bjet_discr = 0.4941
+	    bjet_discrT = 0.8001
+	if str(era) == '2018' : 
+	    bjet_discr = 0.4184
+	    bjet_discrT = 0.7527
+
+	failJets=[]
+        goodJets=[]
+        jeList=[]
+        bJetList=[]
         if syst !='' : syst="_"+syst
         for j in range(entry.nJet) :
             jpt = getattr(entry, "Jet_pt{0:s}".format(str(syst)), None)
@@ -736,35 +690,34 @@ class outTuple() :
             if jpt[j] < 25. : continue
             if abs(entry.Jet_eta[j]) > 4.7 : continue
 
-            #print 'will try', len(LepList)
-
             #for iv, lepv in enumerate(LepList) : 
-            for iv, lv  in  enumerate(LepList) : 
+            for iv, lv  in  enumerate(LepList) :
 		dr = self.getDRnV(entry, entry.Jet_eta[j], entry.Jet_phi[j], LepList[iv].Eta(), LepList[iv].Phi())
-                #print 'for iv--->', iv, 'jet', j, entry.nJet, 'dr--', dr , LepList[iv].Eta(), LepList[iv].Phi(), LepList[iv].Pt()
-		if dr < 0.5 : continue
-
-            bjet_discr = 0.6321
-            bjet_discrT = 0.8953
-	    bjet_discrFlav = 0.0614
-
-            if str(era) == '2017' : 
-                bjet_discr = 0.4941
-                bjet_discrT = 0.8001
-            if str(era) == '2018' : 
-                bjet_discr = 0.4184
-                bjet_discrT = 0.7527
+                if float(dr) > 0.5 : 
+                    #print 'seems goodfor iv--->', iv, 'jet', j, entry.nJet, 'dr--', dr , LepList[iv].Eta(), LepList[iv].Phi(), LepList[iv].Pt()
+                    if j not in goodJets : goodJets.append(j)
+		if float(dr) < 0.5 : 
+                    #print ' failed for lepton--->', iv, 'jet', j, 'njets', entry.nJet, 'dr--', dr , LepList[iv].Eta(), LepList[iv].Phi(), LepList[iv].Pt()
+                    if j not in failJets : failJets.append(j)
+                    #continue
 
 
-            if True  and abs(entry.Jet_eta[j]) < 2.4 and entry.Jet_btagDeepB[j] > bjet_discr : bJetList.append(j)
-            if True  and abs(entry.Jet_eta[j]) < 2.4 and entry.Jet_btagDeepB[j] > bjet_discrT : bJetListT.append(j)
-	    if True  and abs(entry.Jet_eta[j]) < 2.4 and entry.Jet_btagDeepFlavB[j] > bjet_discrFlav : bJetListFlav.append(j)
-            if jpt[j] > 30 : 
-                jetList.append(j) 
-                nJet30 += 1
+        #print 'some info', goodJets, failJets
+        for j in failJets : 
+            if j in goodJets : goodJets.remove(j)
 
 
-        return nJet30, jetList, bJetList,bJetListT,bJetListFlav
+        for jj in goodJets : 
+            
+            if jpt[jj] > 25 : 
+                #print 'will check now', jj, goodJets, entry.Jet_btagDeepB[jj], bjet_discr, jpt[jj], entry.Jet_btagDeepB[jj],  entry.Jet_pt[jj]
+		if abs(entry.Jet_eta[jj]) < 2.4 and entry.Jet_btagDeepB[jj] > bjet_discr : bJetList.append(jj)
+		if abs(entry.Jet_eta[jj]) < 2.4 and entry.Jet_btagDeepB[jj] > bjet_discrT : bJetListT.append(jj)
+		if abs(entry.Jet_eta[jj]) < 2.4 and entry.Jet_btagDeepFlavB[jj] > bjet_discrFlav : bJetListFlav.append(jj)
+
+                jetList.append(jj) 
+
+        return jetList, bJetList,bJetListT,bJetListFlav
 
 
 
@@ -1431,28 +1384,27 @@ class outTuple() :
 	    leplist.append(tau1)
 	    leplist.append(tau2)
 
-        # jet variables
+        #if jt1>-1 and jt2>-1 :  
+        #jetList, bJetList, bJetListFlav = self.getJets(entry,tau1,tau2,era) 
+        #print 'old ', jetList, bJetList
+	#else :  nJet30, jetList, bJetList, bJetListFlav = self.getJets(entry,LepP,LepM,era) 
+        #self.nbtagold[0] = len(bJetList)
+	#self.njetsold[0] = len(jetList)
 
 	#print 'inside', sysVariations
 	for ic, isys in enumerate(sysVariations):  
-	    #print 'passing in now ', ic, isys, sysVariations[ic]
-	    nJet30, jetList, bJetList, bJetListT, bJetListFlav = self.getJetsJMEMV(entry,leplist,era,isys) 
+	    jetList, bJetList, bJetListT, bJetListFlav = self.getJetsJMEMV(entry,leplist,era,isys) 
 
-	    self.njetspt20[ic] = len(jetList)
-	    self.njets[ic] = nJet30
+
+	    self.njets[ic] = len(jetList)
 	    self.nbtag[ic] = len(bJetList)
 	    self.nbtagT[ic] = len(bJetListT)
-	    #print 'gettting it for', ic, isys, nJet30, self.njets[ic], len(bJetList), self.nbtag[ic]
-	    #print ''
-	    #for ij in range(0, len(jetList)):
-		#self.jetId[0] = entry.Jet_jetId[ij]
-		#print ij, len(jetList), entry.Jet_jetId[jetList[ij]], entry.Jet_puId[jetList[ij]]
+
 
 	    if isys !='' and '_' not in isys: isys="_"+isys
 	    self.jpt_1[ic], self.jeta_1[ic], self.jphi_1[ic], self.jcsv_1[ic], self.jcsvfv_1[ic]= -9.99, -9.99, -9.99, -9.99, -9.99 
 	    if len(jetList) > 0 :
 		jpt1 = getattr(entry, "Jet_pt{0:s}".format(str(isys)), None)
-		#print '============================ get syst now>', isys, jetList[0], len(jetList), jpt1, nJet30, len(bJetList), len(bJetListT)
 		jj1 = jetList[0]
 		self.jpt_1[ic]  = jpt1[jj1]
 		self.jeta_1[ic] = entry.Jet_eta[jj1]
@@ -1519,7 +1471,6 @@ class outTuple() :
 			    self.beta_2_tr[ic] = entry.GenJet_eta[idx_genJet]
 			    self.bphi_2_tr[ic] = entry.GenJet_phi[idx_genJet]
 			except IndexError : pass
-
         self.t.Fill()
 
 	return
@@ -1683,7 +1634,6 @@ class outTuple() :
         self.nGoodMuon[0]     = nmuons
         self.cat[0]  = tauFun.catToNumber3L(cat)
         
-        
 
         try :
             self.weight[0]           = entry.genWeight
@@ -1778,13 +1728,6 @@ class outTuple() :
         self.Z_DR[0]       = self.getDR(entry,Lep1,Lep2)
 
         self.H_LT[0]       = Lep1.Pt() + Lep2.Pt()
-        #self.dRl1H[0]  = self.getDR(entry,Lep1,tau1+tau2)
-        #self.dRl2H[0]  = self.getDR(entry,Lep2,tau1+tau2)
-        #self.dRlH[0]  = self.getDR(entry,Lep1+Lep2,tau1+tau2)
-
-        #self.dPhil1H[0]  = self.getdPhi(entry,Lep1,tau1+tau2)
-        #self.dPhil2H[0]  = self.getdPhi(entry,Lep2,tau1+tau2)
-        #self.dPhilH[0]  = self.getdPhi(entry,Lep1+Lep2,tau1+tau2)
            
         self.pt_1[0]   = Lep1.Pt()
         self.phi_1[0]  = Lep1.Phi()
@@ -1822,8 +1765,6 @@ class outTuple() :
             self.tightId_2[0]      = entry.Muon_tightId[lep_index_2]
 	    self.mediumId_1[0]   = entry.Muon_mediumId[lep_index_1] 
 	    self.mediumId_2[0]   = entry.Muon_mediumId[lep_index_2] 
-	    self.tightId_1[0]   = entry.Muon_tightId[lep_index_1] 
-	    self.tightId_2[0]   = entry.Muon_tightId[lep_index_2] 
 	    self.mediumPromptId_1[0]   = entry.Muon_mediumPromptId[lep_index_1] 
 	    self.mediumPromptId_2[0]   = entry.Muon_mediumPromptId[lep_index_2] 
 	    self.isGlobal_1[0]   = entry.Muon_isGlobal[lep_index_1] 
@@ -1836,7 +1777,6 @@ class outTuple() :
         eL1, eL2= TLorentzVector(), TLorentzVector()  
         if nelectrons > 0 :
 	    ie = ElList[0]
-            iee = ElList[0]
 
             if len(ElList)>1 :
                 if entry.Electron_pt[ElList[0]] > entry.Electron_pt[ElList[1]] : 
@@ -1846,19 +1786,20 @@ class outTuple() :
 		    ie = ElList[1] 
 		    iee = ElList[0] 
 
-		self.pt_3[0]   = entry.Electron_pt[ie]
-		self.phi_3[0]  = entry.Electron_phi[ie]
-		self.eta_3[0]  = entry.Electron_eta[ie]
-		self.m_3[0]    = entry.Electron_mass[ie]
-		self.q_3[0]    = entry.Electron_charge[ie]
-		self.d0_3[0]   = entry.Electron_dxy[ie]
-		self.dZ_3[0]   = entry.Electron_dz[ie]
-		self.iso_3[0]  = entry.Electron_pfRelIso03_all[ie]
-		self.Electron_mvaFall17V2noIso_WP90_3[0]  = entry.Electron_mvaFall17V2noIso_WP90[ie]
-		try : self.gen_match_3[0] = ord(entry.Electron_genPartFlav[ie])
-		except AttributeError : self.gen_match_3[0] = -1
+	    self.pt_3[0]   = entry.Electron_pt[ie]
+	    self.phi_3[0]  = entry.Electron_phi[ie]
+	    self.eta_3[0]  = entry.Electron_eta[ie]
+	    self.m_3[0]    = entry.Electron_mass[ie]
+	    self.q_3[0]    = entry.Electron_charge[ie]
+	    self.d0_3[0]   = entry.Electron_dxy[ie]
+	    self.dZ_3[0]   = entry.Electron_dz[ie]
+	    self.iso_3[0]  = entry.Electron_pfRelIso03_all[ie]
+	    self.Electron_mvaFall17V2noIso_WP90_3[0]  = entry.Electron_mvaFall17V2noIso_WP90[ie]
+	    try : self.gen_match_3[0] = ord(entry.Electron_genPartFlav[ie])
+	    except AttributeError : self.gen_match_3[0] = -1
 
 
+            if len(ElList)>1 :
 		self.pt_4[0]   = entry.Electron_pt[iee]
 		self.phi_4[0]  = entry.Electron_phi[iee]
 		self.eta_4[0]  = entry.Electron_eta[iee]
@@ -1879,7 +1820,6 @@ class outTuple() :
         if nmuons > 0:
             
 	    im = MuList[0]
-            imm = MuList[0]
 
             if len(MuList)>1 :
                 if  entry.Muon_pt[MuList[0]] > entry.Muon_pt[MuList[1]] : 
@@ -1889,27 +1829,28 @@ class outTuple() :
 		    im = MuList[1] 
 		    imm = MuList[0] 
 
-		self.pt_3[0]     = entry.Muon_pt[im]
-		self.phi_3[0]    = entry.Muon_phi[im]
-		self.eta_3[0]    = entry.Muon_eta[im]
-		self.m_3[0]      = entry.Muon_mass[im]
-		self.q_3[0]      = entry.Muon_charge[im]
-		self.d0_3[0]     = entry.Muon_dxy[im]
-		self.dZ_3[0]     = entry.Muon_dz[im]
-		self.iso_3[0]    = entry.Muon_pfRelIso04_all[im]
-		self.tightId_3[0]   = entry.Muon_tightId[im] 
-		self.mediumId_3[0]      = entry.Muon_mediumId[im]
-		self.tightId_3[0]      = entry.Muon_tightId[im]
-		self.mediumPromptId_3[0]   = entry.Muon_mediumPromptId[im]
-		self.looseId_3[0]       = entry.Muon_looseId[im]
-		self.isGlobal_3[0]      = entry.Muon_isGlobal[im]
-		self.isTracker_3[0]     = entry.Muon_isTracker[im]
-		self.ip3d_3[0]       = entry.Muon_ip3d[im]
-		self.inTimeMuon_3[0]    = entry.Muon_inTimeMuon[im]
-		try : self.gen_match_3[0] = ord(entry.Muon_genPartFlav[im])
-		except AttributeError : self.gen_match_3[0] = -1
+	    self.pt_3[0]     = entry.Muon_pt[im]
+	    self.phi_3[0]    = entry.Muon_phi[im]
+	    self.eta_3[0]    = entry.Muon_eta[im]
+	    self.m_3[0]      = entry.Muon_mass[im]
+	    self.q_3[0]      = entry.Muon_charge[im]
+	    self.d0_3[0]     = entry.Muon_dxy[im]
+	    self.dZ_3[0]     = entry.Muon_dz[im]
+	    self.iso_3[0]    = entry.Muon_pfRelIso04_all[im]
+	    self.tightId_3[0]   = entry.Muon_tightId[im] 
+	    self.mediumId_3[0]      = entry.Muon_mediumId[im]
+	    self.tightId_3[0]      = entry.Muon_tightId[im]
+	    self.mediumPromptId_3[0]   = entry.Muon_mediumPromptId[im]
+	    self.looseId_3[0]       = entry.Muon_looseId[im]
+	    self.isGlobal_3[0]      = entry.Muon_isGlobal[im]
+	    self.isTracker_3[0]     = entry.Muon_isTracker[im]
+	    self.ip3d_3[0]       = entry.Muon_ip3d[im]
+	    self.inTimeMuon_3[0]    = entry.Muon_inTimeMuon[im]
+	    try : self.gen_match_3[0] = ord(entry.Muon_genPartFlav[im])
+	    except AttributeError : self.gen_match_3[0] = -1
 
 
+            if len(MuList)>1 :
 
 		self.pt_4[0]     = entry.Muon_pt[imm]
 		self.phi_4[0]    = entry.Muon_phi[imm]
@@ -1932,58 +1873,6 @@ class outTuple() :
 		eL1.SetPtEtaPhiM(entry.Muon_pt[MuList[0]],entry.Muon_eta[MuList[0]], entry.Muon_phi[MuList[0]], muonMass)
 		eL2.SetPtEtaPhiM(entry.Muon_pt[MuList[1]],entry.Muon_eta[MuList[1]], entry.Muon_phi[MuList[1]], muonMass)
 		self.mll2[0] = (eL1 + eL2).M()
-
-
-        '''	    
-	    # Fill variables for Leg3 and Leg4, where 3->tau(had) and 4->tau(had)
-	self.nTau[0] = ntaus
-        if ntaus > 0  :
-	    it = TauList[0]
-	  
-	    self.pt_4[0]     = entry.Tau_pt[it]
-	    self.phi_4[0]    = entry.Tau_phi[it]
-	    self.eta_4[0]    = entry.Tau_eta[it]
-	    self.m_4[0]      = entry.Tau_mass[it]
-	    self.q_4[0]      = entry.Tau_charge[it]
-	    self.d0_4[0]     = entry.Tau_dxy[it]
-	    self.dZ_4[0]     = entry.Tau_dz[it]
- 
-
-	    self.idDecayModeNewDMs_4[0] = entry.Tau_idDecayModeNewDMs[it]
-	    self.idDeepTau2017v2p1VSe_4[0] = ord(entry.Tau_idDeepTau2017v2p1VSe[it])
-	    self.idDeepTau2017v2p1VSjet_4[0] = ord(entry.Tau_idDeepTau2017v2p1VSjet[it])
-	    self.idDeepTau2017v2p1VSmu_4[0] = ord(entry.Tau_idDeepTau2017v2p1VSmu[it])
-	    self.idMVAnewDM2017v2_4[0] = ord(entry.Tau_idMVAnewDM2017v2[it])
-	    self.rawMVAnewDM2017v2_4[0] = entry.Tau_rawMVAnewDM2017v2[it]
-	    try : self.gen_match_4[0] = ord(entry.Tau_genPartFlav[it])
-	    except AttributeError : self.gen_match_4[0] = -1
-
-	    try : self.decayMode_4[0] = int(entry.Tau_decayMode[it])
-	    except AttributeError : self.decayMode_4[0] = -1
-            if len(TauList)>1 :
-                it = TauList[1]
-		self.pt_5[0]     = entry.Tau_pt[it]
-		self.phi_5[0]    = entry.Tau_phi[it]
-		self.eta_5[0]    = entry.Tau_eta[it]
-		self.m_5[0]      = entry.Tau_mass[it]
-		self.q_5[0]      = entry.Tau_charge[it]
-		self.d0_5[0]     = entry.Tau_dxy[it]
-		self.dZ_5[0]     = entry.Tau_dz[it]
-     
-
-		self.idDecayModeNewDMs_5[0] = entry.Tau_idDecayModeNewDMs[it]
-		self.idDeepTau2017v2p1VSe_5[0] = ord(entry.Tau_idDeepTau2017v2p1VSe[it])
-		self.idDeepTau2017v2p1VSjet_5[0] = ord(entry.Tau_idDeepTau2017v2p1VSjet[it])
-		self.idDeepTau2017v2p1VSmu_5[0] = ord(entry.Tau_idDeepTau2017v2p1VSmu[it])
-		self.idMVAnewDM2017v2_5[0] = ord(entry.Tau_idMVAnewDM2017v2[it])
-		self.rawMVAnewDM2017v2_5[0] = entry.Tau_rawMVAnewDM2017v2[it]
-		try : self.gen_match_5[0] = ord(entry.Tau_genPartFlav[it])
-		except AttributeError : self.gen_match_5[0] = -1
-
-		try : self.decayMode_5[0] = int(entry.Tau_decayMode[it])
-		except AttributeError : self.decayMode_5[0] = -1
-
-        '''
 
         # genMatch the di-lepton variables
 	if isMC :
@@ -2068,17 +1957,11 @@ class outTuple() :
 
 	for ic, isys in enumerate(sysVariations):  
 	    #print 'passing in now ', ic, isys, sysVariations[ic]
-	    nJet30, jetList, bJetList, bJetListT, bJetListFlav = self.getJetsJMEMV(entry,leplist,era,isys) 
-	    #print 'gettting it for', ic, isys
+	    jetList, bJetList, bJetListT, bJetListFlav = self.getJetsJMEMV(entry,leplist,era,isys) 
 
-	    self.njetspt20[ic] = len(jetList)
-	    self.njets[ic] = nJet30
+	    self.njets[ic] = len(jetList)
 	    self.nbtag[ic] = len(bJetList)
 	    self.nbtagT[ic] = len(bJetListT)
-	    #print ''
-	    #for ij in range(0, len(jetList)):
-		#self.jetId[0] = entry.Jet_jetId[ij]
-		#print ij, len(jetList), entry.Jet_jetId[jetList[ij]], entry.Jet_puId[jetList[ij]]
 
 	    if isys !='' and '_' not in isys: isys="_"+isys
 	    self.jpt_1[ic], self.jeta_1[ic], self.jphi_1[ic], self.jcsv_1[ic], self.jcsvfv_1[ic]= -9.99, -9.99, -9.99, -9.99, -9.99 
@@ -2152,11 +2035,9 @@ class outTuple() :
 			    self.bphi_2_tr[ic] = entry.GenJet_phi[idx_genJet]
 			except IndexError : pass
        
-        if self.nbtag[0] < 1 : self.t.Fill()
-        #self.weight[0] = 1.
+        if self.isTrig_1 !=0 : self.t.Fill()
+        #self.t.Fill()
         return
-
-
 
 
     def setWeight(self,weight) :
