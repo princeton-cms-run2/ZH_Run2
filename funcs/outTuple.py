@@ -701,8 +701,6 @@ class outTuple() :
                     if j not in failJets : failJets.append(j)
                     #continue
 
-
-        #print 'some info', goodJets, failJets
         for j in failJets : 
             if j in goodJets : goodJets.remove(j)
 
@@ -710,7 +708,6 @@ class outTuple() :
         for jj in goodJets : 
             
             if jpt[jj] > 25 : 
-                #print 'will check now', jj, goodJets, entry.Jet_btagDeepB[jj], bjet_discr, jpt[jj], entry.Jet_btagDeepB[jj],  entry.Jet_pt[jj]
 		if abs(entry.Jet_eta[jj]) < 2.4 and entry.Jet_btagDeepB[jj] > bjet_discr : bJetList.append(jj)
 		if abs(entry.Jet_eta[jj]) < 2.4 and entry.Jet_btagDeepB[jj] > bjet_discrT : bJetListT.append(jj)
 		if abs(entry.Jet_eta[jj]) < 2.4 and entry.Jet_btagDeepFlavB[jj] > bjet_discrFlav : bJetListFlav.append(jj)
