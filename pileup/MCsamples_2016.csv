@@ -19,9 +19,10 @@ ST_tW_antitop,Reducible,35.85,997870.0,997870.0,,/ST_tW_antitop_5f_DS_inclusiveD
 ST_tW_top,Reducible,35.85,1000000.0,1000000.0,,/ST_tW_top_5f_DS_inclusiveDecays_13TeV-powheg-pythia8_TuneCUETP8M1/alkaloge-Summer2016_nAODv5_DeepTID_v2p1-cb78e6d6915917e4b63fd5940fa9ea0f/USER
 ST_t_antitop,Reducible,80.95,38811017.0,38811017.0,,/ST_t-channel_antitop_4f_inclusiveDecays_13TeV-powhegV2-madspin-pythia8_TuneCUETP8M1/RunIISummer16NanoAODv5_PUMoriond17_v1-DeepTauv2p1_TauPOG-v1/USER
 ST_t_top,Reducible,136.02,67105876.0,67105876.0,,/ST_t-channel_top_4f_inclusiveDecays_13TeV-powhegV2-madspin-pythia8_TuneCUETP8M1/RunIISummer16NanoAODv5_PUMoriond17_v1-DeepTauv2p1_TauPOG-v1/USER
+TTGamma_Hadr,Rare,0.7953,4966500.0,4966500.0,,/TTGamma_Hadronic_TuneCUETP8M2T4_13TeV-amcatnlo-pythia8/alkaloge-Summer2016_nAODv5_DeepTID_v2p1-cb78e6d6915917e4b63fd5940fa9ea0f/USER
 TTGamma_1LT,Rare,0.7659,4711856.0,4711856.0,,/TTGamma_SingleLeptFromT_TuneCUETP8M2T4_13TeV-amcatnlo-pythia8/alkaloge-Summer2016_nAODv5_DeepTID_v2p1-cb78e6d6915917e4b63fd5940fa9ea0f/USER
 TTGamma_1LTbar,Rare,0.7659,4873181.0,4873181.0,,/TTGamma_SingleLeptFromTbar_TuneCUETP8M2T4_13TeV-amcatnlo-pythia8/alkaloge-Summer2016_nAODv5_DeepTID_v2p1-cb78e6d6915917e4b63fd5940fa9ea0f/USER
-TTGamma_2L,Rare,0.6343,4773650.0,4773650.0,,/TTGamma_Dilept_TuneCUETP8M2T4_13TeV-amcatnlo-pythia8/alkaloge-Summer2016_nAODv5_DeepTID_v2p1-cb78e6d6915917e4b63fd5940fa9ea0f/USER
+TTGamma_2L,Rare,0.6343,4773650.0,4773648.0,,/TTGamma_Dilept_TuneCUETP8M2T4_13TeV-amcatnlo-pythia8/alkaloge-Summer2016_nAODv5_DeepTID_v2p1-cb78e6d6915917e4b63fd5940fa9ea0f/USER
 TTHH,Rare,0.0007367,100000.0,100000.0,,/TTHH_TuneCUETP8M2T4_13TeV-madgraph-pythia8/alkaloge-Summer2016_nAODv5_DeepTID_v2p1-cb78e6d6915917e4b63fd5940fa9ea0f/USER
 TTJets_1LT,Reducible,114,49664175.0,49664175.0,,/TTJets_SingleLeptFromT_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/alkaloge-Summer2016_nAODv5_DeepTID_v2p1-cb78e6d6915917e4b63fd5940fa9ea0f/USER
 TTJets_1LTbar,Reducible,114,48387865.0,48387865.0,,/TTJets_SingleLeptFromTbar_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/alkaloge-Summer2016_nAODv5_DeepTID_v2p1-cb78e6d6915917e4b63fd5940fa9ea0f/USER
