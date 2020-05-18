@@ -68,7 +68,6 @@ def runSVFit(entry, channel,  doJME, variation) :
 	#measuredMETy = 'entry.metpt_{0:s}*sin(entry.metphi_{0:s}'.format(str(variation)) #entry.metpt_+variation*cos(entry.metphi_+variation)
 	measuredMETx = valpt*cos(valphi)
 	measuredMETy = valpt*sin(valphi)
-        #print 'variation', variation, valpt, valphi, '<=======metnom', e.metpt_nom
 
     #define MET covariance
     covMET = TMatrixD(2,2)
@@ -535,17 +534,6 @@ groups = ['fakes','f1', 'f2','bfl1', 'ljfl1', 'cfl1','jfl1','bfl2', 'ljfl2', 'cf
 ngroups = ['fakes','f1', 'f2','bfl1', 'ljfl1', 'cfl1','jfl1','bfl2', 'ljfl2', 'cfl2','jfl2','jft1', 'jft2','Signal','Other','Top','DY','WZ','ZZ','data']
 fgroups = ['bfl', 'ljfl',  'cfl','jfl', 'jft1', 'jft2']
 
-'''
-groupss = ['Other','Top','DY','WZ','ZZ', 'ZZ4L','Signal']
-
-groups = ['fakes','f1', 'f2', 'Signal','Other','Top','DY','WZ','ZZ','data']
-ngroups = ['fakes','f1', 'f2','Signal','Other','Top','DY','WZ','ZZ','data']
-
-for f in fgroups : 
-    for g in groupss :
-        groups.insert(0,g+'_'+f)
-        ngroups.insert(0,g+'_'+f)
-'''
 
 for group in groups :
     nickNames[group] = []
@@ -666,28 +654,11 @@ fOut = TFile( outFileName+".root", 'recreate' )
 #fe, fm, ft_et, ft_mt, f1_tt, f2_tt   = 0.0456, 0.0935, 0.1391, 0.1284, 0.0715, 0.0609
 # values with nbtag = 0 cut \
 
-fe_et, ft_et, fm_mt, ft_mt, f1_tt, f2_tt, fe_em, fm_em  = 0.0073, 0.1327, 0.0434, 0.1087,0.1318, 0.1327, 0.0101, 0.0380
-if era == '2017' : fe_et, ft_et, fm_mt, ft_mt, f1_tt, f2_tt, fe_em, fm_em  = 0.0082, 0.1236, 0.0581, 0.1083, 0.1146,0.1160,0.0081, 0.0346
-if era == '2018' : fe_et, ft_et, fm_mt, ft_mt, f1_tt, f2_tt, fe_em, fm_em  = 0.0083,0.1199, 0.0598, 0.1105, 0.1178, 0.1121, 0.01009, 0.0440
-
-
-#define the tightiD WP
-
-'''
-fW1, fW2, fW0 = {}, {}, {}
-fW1['et'], fW2['et'], fW0['et'] = getFakeWeights('e_et','t_et', WP)
-fW1['mt'], fW2['mt'], fW0['mt'] = getFakeWeights('m_mt','t_mt', WP)
-fW1['tt'], fW2['tt'], fW0['tt'] = getFakeWeights('t1_tt','t2_tt', WP)
-fW1['em'], fW2['em'], fW0['em'] = getFakeWeights('e_em','m_em', WP)
-'''
-
-global getsf,sf
 
 plotSettings = { # [nBins,xMin,xMax,units]
 
         "weight":[20,-10,10,"","PUWeight"],
         "weightPUtrue":[20,-10,10,"","PUtrue"],
-        "weightPUtrue":[20,-10,10,"","PU"],
         "nPV":[120,-0.5,119.5,"","nPV"],
         "nPU":[130,-0.5,129.5,"","nPU"],
         "nPUtrue":[130,-0.5,129.5,"","nPUtrue"],
@@ -750,8 +721,6 @@ plotSettings = { # [nBins,xMin,xMax,units]
         "mt_sv":[10,0,200,"[Gev]","m_{T}(#tau#tau)"],
         "m_sv":[10,0,200,"[Gev]","m(#tau#tau)(SV)"],
         "AMass":[50,50,550,"[Gev]","m_{Z+H}(SV)"],
-        #"CutFlowWeighted":[15,0.5,15.5,"","cutflow"],
-        #"CutFlow":[15,0.5,15.5,"","cutflow"]
 
         "Z_Pt":[10,0,200,"[Gev]","P_T(l_{1}l_{2})"],
         "Z_DR":[30,0,6,"[Gev]","#Delta R(l_{1}l_{2})"],
@@ -984,7 +953,7 @@ for group in groups :
 	    inFile = TFile.Open(inFileName)
 	    inFile.cd()
 
-	    print '========================================> will use this one',inFileName, inick, nickName
+	    #print '========================================> will use this one',inFileName, inick, nickName
 	    if group != 'data' :
 		hCutFlow[cat][nickName] = inFile.Get("hCutFlowWeighted_{0:s}".format(cat))
 	    else :
@@ -993,7 +962,7 @@ for group in groups :
 	    for i in range(1,10) :
 		WCounter[i-1][icat-1][inick] = float(hCutFlow[cat][nickName].GetBinContent(i))
                 hCutFlowN[cat][nickName].SetBinContent(i,WCounter[i-1][icat-1][inick])
-		print i, hCutFlow[cat][nickName].GetBinContent(i), hCutFlow[cat][nickName].GetXaxis().GetBinLabel(i), cat, ' <===>', WCounter[i-1][icat-1][inick], nickName
+		#print i, hCutFlow[cat][nickName].GetBinContent(i), hCutFlow[cat][nickName].GetXaxis().GetBinLabel(i), cat, ' <===>', WCounter[i-1][icat-1][inick], nickName
 
 	    inFile.Close()
 
@@ -1079,17 +1048,10 @@ for group in groups :
             binwidth = (xMax - xMin)/nBins
             hMC[group][cat][plotVar] = TH1D(hName,hName,nBins,xMin,xMax)
             hMC[group][cat][plotVar].SetDefaultSumw2()
-            hMC[group][cat][plotVar].GetXaxis().SetTitle(lTitle + ' ' + units)
-            if 'GeV' in units : hMC[group][cat][plotVar].GetYaxis().SetTitle("Events / "+str(binwidth)+" {0:s}".format(units))
-            if 'GeV' not in units : hMC[group][cat][plotVar].GetYaxis().SetTitle("Events / "+str(binwidth))
 
             hName = 'h{0:s}_{1:s}_{2:s}_nof'.format(group,cat,plotVar)
             hMCnof[group][cat][plotVar] = TH1D(hName,hName,nBins,xMin,xMax)
             hMCnof[group][cat][plotVar].SetDefaultSumw2()
-            hMCnof[group][cat][plotVar].GetXaxis().SetTitle(lTitle + ' ' + units)
-            if 'GeV' in units : hMC[group][cat][plotVar].GetYaxis().SetTitle("Events / "+str(binwidth)+" {0:s}".format(units))
-            if 'GeV' not in units : hMC[group][cat][plotVar].GetYaxis().SetTitle("Events / "+str(binwidth))
-
 
 
             hName = 'h{0:s}_{1:s}_{2:s}_FM'.format(group,cat,plotVar)
@@ -1111,7 +1073,8 @@ for group in groups :
         #print 'names are====================>', hMC[group][cat][plotVar].GetName()
 
         isData = False 
-        doJME = True
+        doJME = False
+        if str(args.inSystematics) != 'none' : doJME = False
         inFileName = '../MC/condor/{0:s}/{1:s}_{2:s}/{1:s}_{2:s}.root'.format(args.analysis,nickName,era)
 	#cf = os.path.isfile('{0:s}'.format(inFileName))
 	#if not cf : continue
@@ -1140,8 +1103,8 @@ for group in groups :
 	print '========================================> start looping on events now',inFileName, inick, nickName, sWeight
 
         systmet = ''
+	isys=0
 	if doJME:
-	    isys=0
 	    isys = systToNumber(str(args.inSystematics))
 	    #isys = 1
 	    if group=='data' : isys=1 #in case we run on data, consider the _nom systematic
@@ -1166,8 +1129,7 @@ for group in groups :
             isfakemc2 = False
 	    #if ('ZZTo4' in inFileName or 'ZH' in inFileName) and  i > 2000 : continue
 	    #if hGroup != 'data' and i > 200:continue
-            #if i > 10000 : continue
-            #sampleWeight = lumi/(WIncl_totgenwt/WIncl_xsec + WxGenweightsArr[i]/(WNJetsXsecs[i]*WJets_kfactor))
+            #if i > 100 : continue
 
             met = e.met
             metphi = e.metphi
@@ -1253,17 +1215,14 @@ for group in groups :
             H_LT = e.pt_3 + e.pt_4
             #if H_LT < args.LTcut : continue
 
-
             iCut +=1
             WCounter[iCut-1][icat-1][inick] += weightCF
             hCutFlowN[cat][nickName].SetBinContent(iCut-1, hCutFlowN[cat][nickName].GetBinContent(iCut-1)+weight)
             hCutFlowFM[cat][nickName].SetBinContent(iCut-1, hCutFlowFM[cat][nickName].GetBinContent(iCut-1)+weightFM)
 
             ######### nbtag
-	    if e.nbtag[isys] > 0 : continue
+	    if e.nbtag[isys] != 0 : continue
 	    #if e.mll > 100 or e.mll<80: continue
-
-
 
             iCut +=1
             WCounter[iCut-1][icat-1][inick] += weightCF
@@ -1678,6 +1637,8 @@ for group in groups :
 				hMC[hGroup][cat][plotVar].Fill(val,1)
 				hMCFM[hGroup][cat][plotVar].Fill(val,1)
 				hMCnof[hGroup][cat][plotVar].Fill(val,1)
+                                #if plotVar=='njets' or 'nbtag' in plotVar or 'jpt_' in plotVar or 'jeta_' in plotVar or 'bpt_' in plotVar or 'beta_' in plotVar or 'jphi' in plotVar or 'beta_' in plotVar or 'jphi_' in plotVar:  print 'data', plotVar, val
+                                #if 'njets' in plotVar : print e.njets[0], e.jpt_1[0], e.njets[1], plotVar, val, 'for isys', isys
                     except KeyError : continue
 
 		    #print hGroup, cat, plotVar, val

@@ -161,7 +161,12 @@ def convertToDNDM( histo) :
 
 #groups = ['Signal','fakes', 'f1', 'f2','bfl', 'ljfl',  'cfl','jfl','jft1', 'jft2','Other','Top','DY','WZ','ZZ','data']
 #groups = ['Signal','Other','Top','DY','WZ','ZZ','data']
-groups = ['bfl1', 'ljfl1', 'cfl1','jfl1','bfl2', 'ljfl2', 'cfl2','jfl2','jft1', 'jft2','fakes','f1', 'f2', 'Signal','Other','Top','DY','WZ','ZZ','data']
+groups = ['Signal','bfl1', 'ljfl1', 'cfl1','jfl1','bfl2', 'ljfl2', 'cfl2','jfl2','jft1', 'jft2','fakes','f1','f2',  'Other','Top','DY','WZ','ZZ', 'ZZ2L2Nu', 'ZZ2L2Q','ZZ2Q2Nu','data']
+groups = ['Signal','bfl1', 'ljfl1', 'cfl1','jfl1','bfl2', 'ljfl2', 'cfl2','jfl2','jft1', 'jft2','fakes','f1','f2', 'Other','Top','DY','WZ','ZZ','data']
+groupss = ['Signal','Other','Top','DY','WZ','ZZ','data']
+
+groupsZZincl = ['bfl1', 'ljfl1', 'cfl1','jfl1','bfl2', 'ljfl2', 'cfl2','jfl2','jft1', 'jft2','fakes','f1','f2',  'Signal','Other','Top','DY','WZ', 'ZZincl','data']
+groupsZZ4L = ['bfl1', 'ljfl1', 'cfl1','jfl1','bfl2', 'ljfl2', 'cfl2','jfl2','jft1', 'jft2','fakes','f1','f2', 'Signal','Other','Top','DY','WZ','ZZ4L','data']
 #groups = ['bfl1', 'ljfl1', 'cfl1','jfl1','bfl2', 'ljfl2', 'cfl2','jfl2','jft1', 'jft2','data','Signal']
 fakegroup = ['bfl1', 'ljfl1', 'cfl1','jfl1','bfl2', 'ljfl2', 'cfl2','jfl2','jft1', 'jft2']
 
@@ -174,7 +179,12 @@ kTop = TColor.GetColor("#ff8066")
 kDY = TColor.GetColor("#58d885")
 kWZ = TColor.GetColor('#d88558')
 kVVV = TColor.GetColor('#3e80db')
-colors = {'bfl':kCyan, 'ljfl':kRed+1,  'cfl':kCyan+2,'jfl':kGreen-3 ,  'data':0,'fakes':kMagenta-10,'f1':kMagenta-7, 'f2':kMagenta-5, 'WJets':kMagenta-10,'Other':kOrange,'ZZ':kAzure-9,'Top':kTop,'DY':kDY,'Signal':kRed+1, 'ZZincl':kAzure-9, 'Topp':kTop, 'WZincl':kBlue-8, 'WZ':kWZ, 'WWincl':kBlue-8, 'WW':kRed-8, 'VVV':kVVV, 'TTX':kTop, 'jft1':41, 'jft2':38, 'bfl1':7, 'ljfl1':8,  'cfl1':29,'jfl1':50, 'bfl2':93, 'ljfl2':9,  'cfl2':226,'jfl2':207}
+colors = {'bfl':kCyan, 'ljfl':kRed+1,  'cfl':kCyan+2,'jfl':kGreen-3 ,  'data':0,'fakes':kMagenta-10,'f1':kMagenta-7, 'f2':kMagenta-5, 'WJets':kMagenta-10,'Other':kOrange,'ZZ':kAzure-9,'Top':kTop,'DY':kDY,'Signal':kRed+1, 'ZZ4L':kAzure-8, 'Topp':kTop, 'WZincl':kBlue-8, 'WZ':kWZ, 'WWincl':kBlue-8, 'WW':kRed-8, 'VVV':kVVV, 'TTX':kTop, 'jft1':41, 'jft2':38, 'bfl1':7, 'ljfl1':8,  'cfl1':29,'jfl1':50, 'bfl2':93, 'ljfl2':9,  'cfl2':226,'jfl2':207}
+
+kfake = TColor.GetColor('#c34bb2')
+kf1 = TColor.GetColor('#d886c9')
+kf2 = TColor.GetColor('#a4c5b4')
+colors = {'bfl':kCyan, 'ljfl':kRed+1,  'cfl':kCyan+2,'jfl':kGreen-3 ,  'data':0, 'fakes':kfake,'f1':kf1, 'f2':kf2, 'WJets':kMagenta-10,'Other':kOrange,'ZZ':kAzure-9,'Top':kTop,'DY':kDY,'Signal':kRed+1, 'ZZ4L':kAzure-8, 'Topp':kTop, 'WZincl':kBlue-8, 'WZ':kWZ, 'WWincl':kBlue-8, 'WW':kRed-8, 'VVV':kVVV, 'TTX':kTop, 'jft1':41, 'jft2':38, 'bfl1':7, 'ljfl1':8,  'cfl1':29,'jfl1':50, 'bfl2':93, 'ljfl2':9,  'cfl2':226,'jfl2':207}
 
 
 '''
@@ -195,15 +205,18 @@ plotSettings={}
 plotSettings = { # [nBins,xMin,xMax,units]
         #"w_fm_new":[3,0.5,3.5,"","w1,w2,w0"],
         "m_sv":[10,0,200,"[Gev]","m(#tau#tau)(SV)"],
-        "mt_sv":[10,0,200,"[Gev]","mT(#tau#tau)(SV)"],
-        "mt_sv_FM":[10,0,200,"[Gev]","mT(#tau#tau)(SV)"],
+        #"mt_sv":[10,0,200,"[Gev]","mT(#tau#tau)(SV)"],
+        #"mt_sv_FM":[10,0,200,"[Gev]","mT(#tau#tau)(SV)"],
         "m_sv_FM":[10,0,200,"[Gev]","m(#tau#tau)FM(SV)"],
         "m_sv_new":[10,0,200,"[Gev]","m(#tau#tau_new)(SV)"],
         "m_sv_new_FM":[10,0,200,"[Gev]","m(#tau#tau_new_FM)(SV)"],
         "mt_sv_new_FM":[10,0,200,"[Gev]","mT(#tau#tau_new_FM)(SV)"],
-        "H_LT_FM":[10,0,200,"[Gev]","H_LT_FM(#tau#tau)"],
+
+        "mll":[40,50,130,"[Gev]","m(l^{+}l^{-})"],
+        #"H_LT_FM":[10,0,200,"[Gev]","H_LT_FM(#tau#tau)"],
         "H_LT":[10,0,200,"[Gev]","H_LT(#tau#tau FM)"],
 
+        #"cat":[10,-0.5,9.5,"","cat"], 
         "met":[50,0,250,"[GeV]","#it{p}_{T}^{miss}"], 
         "met_FM":[50,0,250,"[GeV]","#it{p}_{T}^{miss}"], 
         #"pt_1":[40,0,200,"[Gev]","P_{T}(#tau_{1})"],
@@ -213,10 +226,10 @@ plotSettings = { # [nBins,xMin,xMax,units]
         #"CutFlowFM":[15,0.5,15.5,"","Cutflow"],
         "gen_match_3":[30,-0.5,29.5,"","gen_match_3"],
         "gen_match_4":[30,-0.5,29.5,"","gen_match_4"],
-        #"gen_match_3_FM":[30,-0.5,29.5,"","gen_match_3"],
-        #"gen_match_4_FM":[30,-0.5,29.5,"","gen_match_4"],
-        #"iso_1":[20,0,1,"","relIso(l_{1})"],
-        #"iso_2":[20,0,1,"","relIso(l_{2})"],
+        "gen_match_3_FM":[30,-0.5,29.5,"","gen_match_3"],
+        "gen_match_4_FM":[30,-0.5,29.5,"","gen_match_4"],
+        "iso_1":[20,0,1,"","relIso(l_{1})"],
+        "iso_2":[20,0,1,"","relIso(l_{2})"],
 	"iso_3":[20,0,1,"","relIso(l_{3})"],
         "iso_4":[20,0,1,"","relIso(l_{4})"],
         "dZ_3":[10,0,0.2,"[cm]","d_{z}(l_{3})"],
@@ -225,7 +238,9 @@ plotSettings = { # [nBins,xMin,xMax,units]
         #"tightId_3":[3,-1.5,1.5,"","tightId_3"],
         #"tightId_4":[3,-1.5,1.5,"","tightId_4"],
         #"d0_4":[10,0,0.2,"[cm]","d_{xy}(l_{4})"]
-        #"njets":[10,-0.5,9.5,"","nJets"],
+        "njets":[10,-0.5,9.5,"","nJets"],
+        "jpt_1":[10,0,200,"[GeV]","Jet^{1} P_{T}"], 
+        "nbtag":[5,-0.5,4.5,"","nBTag"]
 
 }
 
@@ -353,6 +368,9 @@ plotSettingss= { # [nBins,xMin,xMax,units]
         "looseId_4":[10,-5,5,"","looseId_4"],
         "mediumId_4":[10,-5,5,"","mediumId_4"],
         "Electron_mvaFall17V2noIso_WP90_4":[10,-5,5,"","Electron_mvaFall17V2noIso_WP90_4"],
+
+        "Z_Pt":[10,0,200,"[Gev]","P_T(l_{1}l_{2})"],
+        "Z_DR":[60,0,6,"","#Delta R(l_{1}l_{2})"],
 
 }
 
@@ -594,13 +612,22 @@ plotSettingss = { # [nBins,xMin,xMax,units]
 
 
 def makeMultiPlots (year=2018,sign='OS', LTcut=0, tag=''):
+    col  = '4'
+    if 'ZPeak' in tag  : col = '5'
     for plotVar in plotSettings :
 
      #command="cd plots;montage -auto-orient -title {2:s} -tile 2x4 -geometry +5+5 -page A4 *{0:s}*_{1:s}_{2:s}_{3:s}_log_{4:s}brute.png Multi_{0:s}_{1:s}_{2:s}_{3:s}_{4:s}brute_log.pdf;cd ..".format(str(year),sign,plotVar, str(args.workingPoint),str(args.bruteworkingPoint))
      #os.system(command)
+     #Stack_2018_eeee_OS_m_sv_FM_64_log_64brute_0_ZPeak.png
      plotVar=plotVar.replace('[','_')
      plotVar=plotVar.replace(']','')
-     command="cd plots{5:s};montage -auto-orient -title {2:s} -tile 2x4 -geometry +5+5 -page A4 *{0:s}*_{1:s}_{2:s}_{3:s}_{4:s}brute{5:s}_{6:s}.png Multi_{0:s}_{1:s}_{2:s}_{3:s}_{4:s}brute{5:s}_{6:s}.pdf;cd ..".format(str(year),sign,plotVar, str(args.workingPoint),str(args.bruteworkingPoint), str(tag), str(args.inSystematics))
+     #print '--->', '*{0:s}*_{1:s}_{2:s}_{3:s}_log_{4:s}brute*.png'.format(str(year),sign,plotVar, str(args.workingPoint),str(args.bruteworkingPoint), str(tag), str(args.inSystematics), col)
+     if 'ZPeak' in tag : command="cd plots_ZPeak;montage -auto-orient -title {2:s} -tile 2x{7:s} -geometry +5+5 -page A4 *{0:s}*_{1:s}_{2:s}_{3:s}_*{4:s}brute*.png Multi_{0:s}_{1:s}_{2:s}_{3:s}_{4:s}brute{5:s}_{6:s}.pdf;cd ..".format(str(year),sign,plotVar, str(args.workingPoint),str(args.bruteworkingPoint), str(tag), str(args.inSystematics), col)
+
+     if tag=='ll' :      command="cd plots;montage -title {2:s} -auto-orient -tile 2x3 -geometry +5+5  -page B5 *{0:s}_ll*_{1:s}_{2:s}_{3:s}_{4:s}brute_{6:s}.png Multi_{0:s}_{1:s}_ll_{2:s}_{3:s}_{4:s}brute_{6:s}.pdf;cd ..".format(str(year),sign,plotVar, str(args.workingPoint),str(args.bruteworkingPoint), str(tag), str(args.inSystematics), col)
+
+     if tag=='' :      command="cd plots{5:s};montage -auto-orient -title {2:s} -tile 2x{7:s} -geometry +5+5 -page A4 *{0:s}*_{1:s}_{2:s}_{3:s}_{4:s}brute{5:s}_{6:s}.png Multi_{0:s}_{1:s}_{2:s}_{3:s}_{4:s}brute{5:s}_{6:s}.pdf;cd ..".format(str(year),sign,plotVar, str(args.workingPoint),str(args.bruteworkingPoint), str(tag), str(args.inSystematics), col)
+
      os.system(command)
      print command
 
@@ -709,9 +736,9 @@ def makeDiTauStack(outDir,inFile,rootDi,dndm = False, doRatio = False, year=2020
 
     xR=0.65   #legend parameters
     xR=0.2    #legend parameters
-    lg = TLegend(xR+0.4,0.6,xR+0.85,0.9)
-    lg.SetNColumns(2)
-    lgf = TLegend(xR+0.45,0.6,xR+0.85,0.9)
+    lg = TLegend(xR+0.35,0.6,xR+0.8,0.9)
+    lg.SetNColumns(3)
+    lgf = TLegend(xR+0.35,0.6,xR+0.8,0.9)
     lgf.SetNColumns(2)
     H = 600
     W = 600
@@ -977,6 +1004,7 @@ def makeDiTauStack(outDir,inFile,rootDi,dndm = False, doRatio = False, year=2020
 
 
             #print histo[plotVar][group].GetName(), histo[plotVar][group].GetNbinsX()
+	    if 'gen_match' in plotVar and group =='data': histo[plotVar][group].Scale(0)
 
 	    if 'gen_match' in plotVar :
 
@@ -1024,7 +1052,11 @@ def makeDiTauStack(outDir,inFile,rootDi,dndm = False, doRatio = False, year=2020
                 applySignalStyle(histo[plotVar][group])
             if group != 'data' and group != 'Signal' :
                 if group not in fakegroup : applyStyle(histo[plotVar][group],colors[group],1,1001)
-                else : applyStyle(histo[plotVar][group],colors[group],1,2003)
+                #if group== 'f1' or group== 'f2' : histo[plotVar][group].SetLineColor(kMagenta-10)
+                #if group== 'fakes'  : histo[plotVar][group].SetLineColor(kBlack)
+                if group in fakegroup : 
+                    applyStyle(histo[plotVar][group],colors[group],1,3001)
+
                 #if 'f1' not in group and 'f2' not in group and 'fakes' not in group and '_FM' not in plotVar : hs.Add(histo[plotVar][group]) 
                 #if group not in fakegroup and '_FM' in plotVar : hs.Add(histo[plotVar][group]) 
                 hs.Add(histo[plotVar][group]) 
@@ -1050,12 +1082,11 @@ def makeDiTauStack(outDir,inFile,rootDi,dndm = False, doRatio = False, year=2020
         '''
 
         hh = hsum.GetMaximum()
-        if histo[plotVar]['data'].GetMaximum() > hh : hh = histo[plotVar]['data'].GetMaximum()
+        hMax = hh*2
+        if histo[plotVar]['data'].GetMaximum() > hh : hMax = histo[plotVar]['data'].GetMaximum()
         if setLog : hMax = 75e+03+hh
         else  : 
-            if hh<10 : hMax = 10
-            if hh>10 and hh <20 : hMax = 20
-            if hh>20 and hh <30 : hMax = 30
+            hMax = 2*max(hsum.GetMaximum(),histo[plotVar]['data'].GetMaximum())
 
 	if setLog : hs.SetMinimum(0.001)
 	else : hs.SetMinimum(0.01)
@@ -1095,14 +1126,12 @@ def makeDiTauStack(outDir,inFile,rootDi,dndm = False, doRatio = False, year=2020
 
 	if dndm : hsum.GetYaxis().SetTitle("dN/d"+labelX)
 
-	'''
         for i in range(1,hsum.GetNbinsX()+1) : 
 	    try :
-	        if hsum.GetBinContent(i) > 0 and float(histo[plotVar]['Signal'].GetBinContent(i)/sqrt(histo[plotVar]['Signal'].GetBinContent(i) + hsum.GetBinContent(i))) > 20 : 
+	        if hsum.GetBinContent(i) > 0 and float(histo[plotVar]['Signal'].GetBinContent(i)/sqrt(histo[plotVar]['Signal'].GetBinContent(i) + hsum.GetBinContent(i))) > 0.2 : 
 	            #print 'will have to blind %i for var %s', i, plotVar
 	            histo[plotVar]['data'].SetBinContent(i,0)
 	    except ValueError : continue
-        '''
         
         #print 'for ',plotVar, histo[plotVar]['data'].GetEntries()
         bkgdErr = hsum.Clone("bkgdErr")
@@ -1120,6 +1149,11 @@ def makeDiTauStack(outDir,inFile,rootDi,dndm = False, doRatio = False, year=2020
 	if doRatio : 
 	    histo[plotVar]['data'].Draw("same ep hist")
 	histo[plotVar]['Signal'].Draw("same e1 hist")
+	#hsum2 = hsum.Clone("hsum2")
+        #hsum2.SetLineColor(histo[plotVar]['Signal'].GetLineColor())
+        #hsum2.SetFillColor(0)
+        #hsum2.Add(histo[plotVar]['Signal'])
+	#hsum2.Draw("same hist")
 
 	if doRatio :
 	    data2 = histo[plotVar]['data'].Clone("data")
@@ -1200,23 +1234,30 @@ def makeDiTauStack(outDir,inFile,rootDi,dndm = False, doRatio = False, year=2020
         colorgroup=[]
 	for group in groups :
 	    try :
-                if plotVar == 'met' : 
-                    if group != 'data' and group != 'Signal' and 'fakes' not in group and  'f1' not in group and  'f2' not in group: 
-                        if histo[plotVar][group].GetSumOfWeights() > 0 : 
-			    sizes.append(histo[plotVar][group].GetSumOfWeights())
-			    print group, cat, "\t", histo[plotVar][group].GetSumOfWeights() , "\t", '{0:10.3f}'.format(histo[plotVar][group].GetSumOfWeights()/hsum.GetSumOfWeights())
-			    piegroup.append(group)
-			    colorgroup.append(colors[group])
+                #if plotVar == 'met' : 
+                    #if group != 'data' and group != 'Signal' and 'fakes' not in group and  'f1' not in group and  'f2' not in group: 
+                        #if histo[plotVar][group].GetSumOfWeights() > 0 : 
+			    #sizes.append(histo[plotVar][group].GetSumOfWeights())
+			    #print group, cat, "\t", histo[plotVar][group].GetSumOfWeights() , "\t", '{0:10.3f}'.format(histo[plotVar][group].GetSumOfWeights()/hsum.GetSumOfWeights())
+			    #piegroup.append(group)
+			    #colorgroup.append(colors[group])
 		if group == 'data' : lg.AddEntry(histo[plotVar][group],group,"ple")
-		elif group == 'Signal' : lg.AddEntry(histo[plotVar][group],"ZH#rightarrow#tau#tau","pl")
+		elif group == 'Signal' : 
+                    lg.AddEntry(histo[plotVar][group],"ZH#rightarrow#tau#tau","pl")
+                    lgf.AddEntry(histo[plotVar][group],"ZH#rightarrow#tau#tau","pl")
+
 		else : 
-                    if 'f1' not in group and 'f2' not in group and 'fakes' not in group and '_FM' not in plotVar : lg.AddEntry(histo[plotVar][group],group,"f")
-                    if group not in fakegroup and '_FM' in plotVar :  lgf.AddEntry(histo[plotVar][group],group,"f")
+                    if 'f1' not in group and 'f2' not in group and 'fakes' not in group and '_FM' not in plotVar and group in groupss: lg.AddEntry(histo[plotVar][group],group,"f")
+                    #if group not in fakegroup and  group!='Top' and group!='DY' and '_FM' in plotVar :  lgf.AddEntry(histo[plotVar][group],group,"f")
+                    if group not in fakegroup and  group!='Top' and group!='DY' and group!='f1' and group!='f2' and 'fakes' !=group and '_FM' in plotVar :  lgf.AddEntry(histo[plotVar][group],group,"f")
+                    if group not in fakegroup and group=='f1' : lgf.AddEntry(histo[plotVar][group],'f1',"f")
+                    if group not in fakegroup and group=='f2' : lgf.AddEntry(histo[plotVar][group],'f2',"f")
+                    if group not in fakegroup and group=='fakes' : lgf.AddEntry(histo[plotVar][group],'f1,f2',"f")
                        
 	    except KeyError :
 		continue
         #sizes=[hW[cat]['Other'].GetBinContent(16)+hW[cat]['Top'].GetBinContent(16), hW[cat]['DY'].GetBinContent(16), hW[cat]['WZ'].GetBinContent(16), hW[cat]['ZZ'].GetBinContent(16) ]
-
+        
 
 	if '_FM' not in plotVar : lg.Draw("same")
 	if '_FM' in plotVar : lgf.Draw("same")
@@ -1228,7 +1269,8 @@ def makeDiTauStack(outDir,inFile,rootDi,dndm = False, doRatio = False, year=2020
 	#if sign == 'OS' : signText = 'Opposite Sign'
 	if sign == 'OS' : signText = 'OS {0:s}'.format(cat)
         
-	lTex2 = TLatex(histo[plotVar][group].GetBinLowEdge(histo[plotVar][group].GetNbinsX()-3), hMax*0.55,'{0:s}'.format(signText))
+	if setLog : lTex2 = TLatex(histo[plotVar][group].GetBinLowEdge(histo[plotVar][group].GetNbinsX()-3), hMax*0.55,'{0:s}'.format(signText))
+	else: lTex2 = TLatex(histo[plotVar][group].GetBinLowEdge(2), hMax*0.55,'{0:s}'.format(signText))
 	#lTex2 = TLatex(30.,0.8*hMax,'{0:s}'.format(signText))
         if setLog : lTex2 = TLatex(histo[plotVar][group].GetBinLowEdge(2),histo[plotVar][group].GetMinimum() + 1000,'{0:s}'.format(signText))
 	if 'CutFlow' in histo[plotVar][group].GetName() : 
@@ -1250,7 +1292,7 @@ def makeDiTauStack(outDir,inFile,rootDi,dndm = False, doRatio = False, year=2020
 	c.SetName(outFileBase)
 	c.SetTitle(outFileBase)
 	c.SaveAs("./plots{1:s}/{0:s}{1:s}.png".format(outFileBase,extratag))
-        if plotVar == 'met' :   makePie(sizes, piegroup, cat, colorgroup,'MC_2018')
+        #if plotVar == 'met' :   makePie(sizes, piegroup, cat, colorgroup,'MC_2018')
 
         #del histo[plotVar][group]
         #del hs
@@ -1284,14 +1326,16 @@ if __name__ == '__main__':
     lumi_sqrtS = "13 TeV"
 
     cats = { 1:'eeet', 2:'eemt', 3:'eett', 4:'eeem', 5:'mmet', 6:'mmmt', 7:'mmtt', 8:'mmem'}
-    #cats = { 1:'eeet', 2:'eeem'}
+    #cats = { 1:'llet', 2:'llmt', 3:'lltt', 4:'llem'}
     extratag=''
     if 'ZPeak' in inFileName : 
         extratag = '_ZPeak'
-        cats= { 1:'eeee', 2:'eemm' , 3:'mmee', 4:'mmmm', 5:'eee', 6:'eem', 7:'mme', 8:'mmm', 10:'ee', 11:'mm'}
+        cats= { 1:'eeee', 2:'eemm' , 3:'mmee', 4:'mmmm', 5:'eee', 6:'eem', 7:'mme', 8:'mmm', 9:'ee', 10:'mm'}
 
 
+    if len(cats)==4 : extratag ='ll'
 
+    print cats
 #   see comments on cat argument at top of file
 
     #cats = { 1:'eeet', 2:'eemt'}
@@ -1299,7 +1343,7 @@ if __name__ == '__main__':
     if args.cat.lower() == 'all' :
         for cat in cats.values() :
 	   print cat
-           makeDiTauStack('.','{0:s}'.format(inFileName),'', False, False, year=year,sign=sign,LTcut=LTcut,cat=cat)
+           #makeDiTauStack('.','{0:s}'.format(inFileName),'', False, False, year=year,sign=sign,LTcut=LTcut,cat=cat)
 	       
     makeMultiPlots(year=year,sign=sign,LTcut=LTcut, tag=extratag)
     #command="cd plots;montage -auto-orient -title {4:s} -tile 2x4 -geometry +5+5 -page A4 MC_{0:s}_pie_*.png Multi_pie_{0:s}_{1:s}_{2:s}_{3:s}brute.pdf;cd ..".format(str(year),sign, str(args.workingPoint),str(args.bruteworkingPoint), cat)
