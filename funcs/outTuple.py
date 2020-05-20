@@ -106,8 +106,6 @@ class outTuple() :
         self.rawMVAnewDM2017v2_3 = array('f',[0])
 
 
-        self.trigweight_3  = array('f',[0])
-        self.idisoweight_3 = array('f',[0])
         self.decayMode_3   = array('l',[0])
 
         self.pt_4        = array('f',[0])
@@ -163,8 +161,6 @@ class outTuple() :
         self.idMVAnewDM2017v2_5 = array('f',[0])
         self.rawMVAnewDM2017v2_5 = array('f',[0])
 
-        self.trigweight_4  = array('f',[0])
-        self.idisoweight_4 = array('f',[0])
         self.decayMode_4   = array('l',[0])
 
         # di-tau variables
@@ -384,8 +380,6 @@ class outTuple() :
         self.t.Branch('idMVAnewDM2017v2_3', self.idMVAnewDM2017v2_3, 'idMVAnewDM2017v2_3/F')
         self.t.Branch('rawMVAnewDM2017v2_3', self.rawMVAnewDM2017v2_3, 'rawMVAnewDM2017v2_3/F')
 
-        self.t.Branch('trigweight_3',  self.trigweight_3,  'trigweight_3/F')
-        self.t.Branch('idisoweight_3', self.idisoweight_3, 'idisoweight_3/F')
         self.t.Branch('decayMode_3',   self.decayMode_3,   'decayMode_3/I')
 
         self.t.Branch('pt_4',        self.pt_4,        'pt_4/F')
@@ -420,8 +414,6 @@ class outTuple() :
         self.t.Branch('idMVAnewDM2017v2_4', self.idMVAnewDM2017v2_4, 'idMVAnewDM2017v2_4/F')
         self.t.Branch('rawMVAnewDM2017v2_4', self.rawMVAnewDM2017v2_4, 'rawMVAnewDM2017v2_4/F')
 
-        self.t.Branch('trigweight_4',  self.trigweight_4,  'trigweight_4/F')
-        self.t.Branch('idisoweight_4', self.idisoweight_4, 'idisoweight_4/F')
         self.t.Branch('decayMode_4',   self.decayMode_4,   'decayMode_4/I')
 
 
@@ -1162,8 +1154,6 @@ class outTuple() :
 	    self.pfmt_3[0]    = self.get_mt('PFMet',    entry,tau1)
 	    self.puppimt_3[0] = self.get_mt('PUPPIMet', entry,tau1)
 
-	    self.trigweight_3[0]  = -999.   
-	    self.idisoweight_3[0] = -999.   
 	    
 	    # Fill variables for Leg4, where 4->tau(had)
 	    if channel != 'em':
@@ -1209,8 +1199,6 @@ class outTuple() :
 		try : self.decayMode_4[0] = int(entry.Tau_decayMode[jt2])
 		except AttributeError: self.decayMode_4[0] = -1
 
-		self.trigweight_4[0]  = -999.   # requires sf need help from Sam on these
-		self.idisoweight_4[0] = -999.   # requires sf need help from Sam on these
 
 	    # di-tau variables
 	    self.pt_tt[0]  = self.getPt_tt( entry, tau1, tau2)
@@ -1387,16 +1375,16 @@ class outTuple() :
 	#else :  nJet30, jetList, bJetList, bJetListFlav = self.getJets(entry,LepP,LepM,era) 
         #self.nbtagold[0] = len(bJetList)
 	#self.njetsold[0] = len(jetList)
+	#self.njets[0] = len(jetList)
+	#self.nbtag[0] = len(bJetList)
+	#self.nbtagT[0] = len(bJetList)
 
-	#print 'inside', sysVariations
 	for ic, isys in enumerate(sysVariations):  
 	    jetList, bJetList, bJetListT, bJetListFlav = self.getJetsJMEMV(entry,leplist,era,isys) 
-
 
 	    self.njets[ic] = len(jetList)
 	    self.nbtag[ic] = len(bJetList)
 	    self.nbtagT[ic] = len(bJetListT)
-
 
 	    if isys !='' and '_' not in isys: isys="_"+isys
 	    self.jpt_1[ic], self.jeta_1[ic], self.jphi_1[ic], self.jcsv_1[ic], self.jcsvfv_1[ic]= -9.99, -9.99, -9.99, -9.99, -9.99 
@@ -1408,6 +1396,7 @@ class outTuple() :
 		self.jphi_1[ic] = entry.Jet_phi[jj1]
 		self.jcsv_1[ic] = entry.Jet_btagDeepB[jj1]
 		self.jcsvfv_1[ic] = entry.Jet_btagDeepFlavB[jj1]
+                print 'will use', ic, len(jetList), jetList, self.jpt_1[ic], self.njets[ic]
 		
 		# genMatch jet1
 		if isMC:
