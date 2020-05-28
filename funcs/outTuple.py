@@ -314,7 +314,7 @@ class outTuple() :
         self.t.Branch('is_trigH',         self.is_trigH,          'is_trigH/I' )
         self.t.Branch('is_trigZ',         self.is_trigZ,          'is_trigZ/I' )
         self.t.Branch('is_trigZH',        self.is_trigZH,         'is_trigZH/I' )
-        self.t.Branch('evt',              self.evt,               'evt/I' )
+        self.t.Branch('evt',              self.evt,               'evt/l' )
         self.t.Branch('nPU',              self.nPU,               'nPU/I' )
         self.t.Branch('nPUEOOT',              self.nPUEOOT,               'nPUEOOT/I' )
         self.t.Branch('nPULOOT',              self.nPULOOT,               'nPULOOT/I' )
@@ -1396,7 +1396,7 @@ class outTuple() :
 		self.jphi_1[ic] = entry.Jet_phi[jj1]
 		self.jcsv_1[ic] = entry.Jet_btagDeepB[jj1]
 		self.jcsvfv_1[ic] = entry.Jet_btagDeepFlavB[jj1]
-                print 'will use', ic, len(jetList), jetList, self.jpt_1[ic], self.njets[ic]
+                #print 'will use', ic, len(jetList), jetList, self.jpt_1[ic], self.njets[ic]
 		
 		# genMatch jet1
 		if isMC:
