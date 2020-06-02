@@ -20,8 +20,13 @@ era=str(args.year)
 # get list of nickNames from input file
 nickNames = []
 dataset = {}
+xsec={}
+group={}
 for line in open(args.inFileName,'r').readlines() :
     nickName = line.split(',')[0]
+    xsec[nickName]= line.split(',')[2]
+    group[nickName]= line.split(',')[1]
+
     ds = line.split(',')[6].strip()
     if len(ds) < 5 : continue 
     nickNames.append(nickName)
@@ -32,6 +37,7 @@ print("len(nickNames)={0:d}".format(len(nickNames)))
 hIn, hW = {}, {}
 for nickName in nickNames :
     cf = os.path.isfile("./{0:s}_{1:s}/temp.root".format(nickName,era))
+    print '=========================================================================', nickName
     if not cf :
 	#os.system("hadd -f -k ./{0:s}_{1:s}/temp.root ./{0:s}_{1:s}/{0:s}_*.root".format(nickName,era))
 	os.system("hadd -f -k ./{0:s}_{1:s}/temp.root ./{0:s}_{1:s}/*_*.root".format(nickName,era))
@@ -59,15 +65,16 @@ if False :
 
 outLines = []
 print("Before opening f.")
+print xsec
 fOut= ("MC_{0:s}.root").format(args.year)
 f = TFile(fOut, 'recreate' )
 print("After opening f.")
-for nickName in hIn.keys() :
-    print("Adding {0:s} and {1:s} to output file.".format(str(hIn[nickName]),str(hW[nickName])))
+for cin, nickName in enumerate(hIn.keys()) :
+    #print("Adding {0:s} and {1:s} to output file.".format(str(hIn[nickName]),str(hW[nickName])))
     nEntries = hIn[nickName].GetEntries()
     totalWeight = hW[nickName].GetSumOfWeights()
-    print("nickName = {0:30s} entries={1:9.1f} weight={2:12.1f}".format(nickName,nEntries,totalWeight))
-    outLines.append("{0:s}, ,{1:.1f},{2:.1f}, ,{3:s}\n".format(nickName,nEntries,totalWeight,dataset[nickName])) 
+    #print("nickName = {0:30s} entries={1:9.1f} weight={2:12.1f}".format(nickName,nEntries,totalWeight))
+    outLines.append("{0:s},{1:s},{2:s},{3:.1f},{4:.1f},,{5:s}\n".format(nickName,group[nickName],xsec[nickName],nEntries,totalWeight,dataset[nickName])) 
     hIn[nickName].Write()
     hW[nickName].Write() 
 f.Close()
