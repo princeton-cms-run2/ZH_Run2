@@ -825,9 +825,10 @@ class outTuple() :
         self.q_2[0]  = -99
         self.isGlobal_1[0]  = -99
         self.isGlobal_2[0]  = -99
-        self.L1PreFiringWeight_Nom[0] = entry.L1PreFiringWeight_Nom
-        self.L1PreFiringWeight_Up[0] = entry.L1PreFiringWeight_Up
-        self.L1PreFiringWeight_Dn[0] = entry.L1PreFiringWeight_Dn
+        if isMC :
+	    self.L1PreFiringWeight_Nom[0] = entry.L1PreFiringWeight_Nom
+	    self.L1PreFiringWeight_Up[0] = entry.L1PreFiringWeight_Up
+	    self.L1PreFiringWeight_Dn[0] = entry.L1PreFiringWeight_Dn
 
         self.tightId_1[0]       = -1 
         self.mediumId_1[0]       = -1 
@@ -1563,9 +1564,10 @@ class outTuple() :
         self.q_2[0]  = -99
         self.isGlobal_1[0]  = -99
         self.isGlobal_2[0]  = -99
-        self.L1PreFiringWeight_Nom[0] = entry.L1PreFiringWeight_Nom
-        self.L1PreFiringWeight_Up[0] = entry.L1PreFiringWeight_Up
-        self.L1PreFiringWeight_Dn[0] = entry.L1PreFiringWeight_Dn
+        if isMC :
+	    self.L1PreFiringWeight_Nom[0] = entry.L1PreFiringWeight_Nom
+	    self.L1PreFiringWeight_Up[0] = entry.L1PreFiringWeight_Up
+	    self.L1PreFiringWeight_Dn[0] = entry.L1PreFiringWeight_Dn
 
         self.tightId_1[0]       = -1 
         self.mediumId_1[0]       = -1 
