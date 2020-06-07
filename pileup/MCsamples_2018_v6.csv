@@ -85,8 +85,8 @@ WZTo1L3Nu,WZ,3.293,1690064.0,9826531.1,,/WZTo1L3Nu_13TeV_amcatnloFXFX_madspin_py
 WZTo2L2Q,WZ,6.331,28193648.0,275210239.5,,/WZTo2L2Q_13TeV_amcatnloFXFX_madspin_pythia8/RunIIAutumn18NanoAODv6-Nano25Oct2019_102X_upgrade2018_realistic_v20-v1/NANOAODSIM
 WZTo3LNu,WZ,5.052,10749269.0,92490949.7,,/WZTo3LNu_TuneCP5_13TeV-amcatnloFXFX-pythia8/RunIIAutumn18NanoAODv6-Nano25Oct2019_102X_upgrade2018_realistic_v20-v1/NANOAODSIM
 WZTo3LNu_ext1,WZ,5.052,11248318.0,96752126.7,,/WZTo3LNu_TuneCP5_13TeV-amcatnloFXFX-pythia8/RunIIAutumn18NanoAODv6-Nano25Oct2019_102X_upgrade2018_realistic_v20_ext1-v1/NANOAODSIM
-WZTo3LNu_mllmin01,WZ,1,89479400.0,5646572282.3,,/WZTo3LNu_mllmin01_NNPDF31_TuneCP5_13TeV_powheg_pythia8/RunIIAutumn18NanoAODv6-Nano25Oct2019_102X_upgrade2018_realistic_v20-v1/NANOAODSIM
-WZTo3LNu_pow_ext1,WZ,1,1976600.0,9205237.4,,/WZTo3LNu_TuneCP5_13TeV-powheg-pythia8/RunIIAutumn18NanoAODv6-Nano25Oct2019_102X_upgrade2018_realistic_v20_ext1-v1/NANOAODSIM
+WZTo3LNu_mllmin01,WZ,5.032,89479400.0,5646572282.3,,/WZTo3LNu_mllmin01_NNPDF31_TuneCP5_13TeV_powheg_pythia8/RunIIAutumn18NanoAODv6-Nano25Oct2019_102X_upgrade2018_realistic_v20-v1/NANOAODSIM
+WZTo3LNu_pow_ext1,WZ,4.43,1976600.0,9205237.4,,/WZTo3LNu_TuneCP5_13TeV-powheg-pythia8/RunIIAutumn18NanoAODv6-Nano25Oct2019_102X_upgrade2018_realistic_v20_ext1-v1/NANOAODSIM
 WZZ_ext1,Other,0.05565,250000.0,14244.6,,/WZZ_TuneCP5_13TeV-amcatnlo-pythia8/RunIIAutumn18NanoAODv6-Nano25Oct2019_102X_upgrade2018_realistic_v20_ext1-v1/NANOAODSIM
 WminusHToTauTau,Signal,0.533,3896200.0,2109105.9,,/WminusHToTauTau_M125_13TeV_powheg_pythia8/RunIIAutumn18NanoAODv6-Nano25Oct2019_102X_upgrade2018_realistic_v20-v1/NANOAODSIM
 WplusHToTauTau,Signal,0.84,3784600.0,3282392.5,,/WplusHToTauTau_M125_13TeV_powheg_pythia8/RunIIAutumn18NanoAODv6-Nano25Oct2019_102X_upgrade2018_realistic_v20-v1/NANOAODSIM
