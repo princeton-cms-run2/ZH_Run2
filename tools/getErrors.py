@@ -15,6 +15,11 @@ for root, directories, filenames in os.walk('.'):
                 if 'info in' in lineLower : continue
                 if 'mass expected' in lineLower : continue
                 if 'rm: no match.' in lineLower : continue
+                if 'cloning into' in lineLower : continue
+                if 'nanoaodtools' in lineLower : continue
+                if 'double val' in lineLower : continue
+                if '^~~' in line : continue
+                if 'checking out files' in lineLower : continue 
                 if i > iLast+1 : 
                     print('***\nError in file{0:s}'.format(fName)) 
                     nError += 1 
