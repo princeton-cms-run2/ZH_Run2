@@ -1280,8 +1280,9 @@ class outTuple() :
             self.dZ_2[0]   = entry.Electron_dz[lep_index_2]
             self.Electron_mvaFall17V2noIso_WP90_1[0]  = entry.Electron_mvaFall17V2noIso_WP90[lep_index_1]
             self.Electron_mvaFall17V2noIso_WP90_2[0]  = entry.Electron_mvaFall17V2noIso_WP90[lep_index_2]
-            self.gen_match_1[0] = ord(entry.Electron_genPartFlav[lep_index_1])
-            self.gen_match_2[0] = ord(entry.Electron_genPartFlav[lep_index_2])
+            if isMC :
+		self.gen_match_1[0] = ord(entry.Electron_genPartFlav[lep_index_1])
+		self.gen_match_2[0] = ord(entry.Electron_genPartFlav[lep_index_2])
 
 
 	if channel_ll == 'mm' : 
@@ -1305,8 +1306,9 @@ class outTuple() :
 	    self.isGlobal_2[0]   = entry.Muon_isGlobal[lep_index_2] 
 	    self.isTracker_1[0]   = entry.Muon_isTracker[lep_index_1] 
 	    self.isTracker_2[0]   = entry.Muon_isTracker[lep_index_2] 
-            self.gen_match_1[0] = ord(entry.Muon_genPartFlav[lep_index_1])
-            self.gen_match_2[0] = ord(entry.Muon_genPartFlav[lep_index_2])
+            if isMC :
+		self.gen_match_1[0] = ord(entry.Muon_genPartFlav[lep_index_1])
+		self.gen_match_2[0] = ord(entry.Muon_genPartFlav[lep_index_2])
 
         
         # genMatch the di-lepton variables
@@ -1761,8 +1763,9 @@ class outTuple() :
             self.dZ_2[0]   = entry.Electron_dz[lep_index_2]
             self.Electron_mvaFall17V2noIso_WP90_1[0]  = entry.Electron_mvaFall17V2noIso_WP90[lep_index_1]
             self.Electron_mvaFall17V2noIso_WP90_2[0]  = entry.Electron_mvaFall17V2noIso_WP90[lep_index_2]
-            self.gen_match_1[0] = ord(entry.Electron_genPartFlav[lep_index_1])
-            self.gen_match_2[0] = ord(entry.Electron_genPartFlav[lep_index_2])
+            if isMC :
+		self.gen_match_1[0] = ord(entry.Electron_genPartFlav[lep_index_1])
+		self.gen_match_2[0] = ord(entry.Electron_genPartFlav[lep_index_2])
 
 	if channel_ll == 'mm' : 
 
@@ -1786,8 +1789,9 @@ class outTuple() :
 	    self.isGlobal_2[0]   = entry.Muon_isGlobal[lep_index_2] 
 	    self.isTracker_1[0]   = entry.Muon_isTracker[lep_index_1] 
 	    self.isTracker_2[0]   = entry.Muon_isTracker[lep_index_2] 
-            self.gen_match_1[0] = ord(entry.Muon_genPartFlav[lep_index_1])
-            self.gen_match_2[0] = ord(entry.Muon_genPartFlav[lep_index_2])
+            if isMC :
+		self.gen_match_1[0] = ord(entry.Muon_genPartFlav[lep_index_1])
+		self.gen_match_2[0] = ord(entry.Muon_genPartFlav[lep_index_2])
 
 
         #print ElList, MuList, TauList
