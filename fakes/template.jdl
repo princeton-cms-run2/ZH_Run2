@@ -1,0 +1,12 @@
+universe = vanilla
+Executable = condor_FILEIN_YEAR_CHANNEL.csh
+Output = FILEIN_YEAR_CHANNEL.out
+Error = FILEIN_YEAR_CHANNEL.err
+Log = FILEIN_YEAR_CHANNEL.log
+priority = 1
+
+transfer_input_files=/uscms_data/d3/alkaloge/ZH/CMSSW_10_2_9/src/fakes/makeFakeRateHistosCondor.py,/uscms_data/d3/alkaloge/ZH/CMSSW_10_2_9/src/plotting/makeAllPlotsZPeakCondor.py, /uscms_data/d3/alkaloge/ZH/CMSSW_10_2_9/src/plotting/makeAllPlotsZHCondor.py, FILEIN_YEAR_CHANNEL.txt, /uscms_data/d3/alkaloge/ZH/CMSSW_10_2_9/src/plotting/ScaleFactor.py, /uscms_data/d3/alkaloge/ZH/CMSSW_10_2_9/src/plotting/tools.tar.gz, /uscms_data/d3/alkaloge/ZH/CMSSW_10_2_9/src/plotting/fakeFactor.py, makeFakeRateHistosCondor.py, /uscms_data/d3/alkaloge/ZH/CMSSW_10_2_9/src/plotting/Type1_PFMET_2017.root,  /uscms_data/d3/alkaloge/ZH/CMSSW_10_2_9/src/plotting/Type1_PFMET_Run2016BtoH.root,  /uscms_data/d3/alkaloge/ZH/CMSSW_10_2_9/src/plotting/TypeI-PFMet_Run2018.root
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+x509userproxy = $ENV(X509_USER_PROXY)
+Queue 1

@@ -897,6 +897,7 @@ def goodElectron(entry, j) :
     if abs(entry.Electron_dxy[j]) > ee['ele_dxy']: return False
     if abs(entry.Electron_dz[j]) > ee['ele_dz']: return False
     if ord(entry.Electron_lostHits[j]) > ee['ele_lostHits']: return False
+    if ee['ele_iso_f'] and entry.Electron_pfRelIso03_all[j] >  ee['ele_iso']: return False
     if ee['ele_convVeto']:
         if not entry.Electron_convVeto[j]: return False
     if ee['ele_ID']:
@@ -947,6 +948,7 @@ def goodElectronExtraLepton(entry, j) :
     if abs(entry.Electron_dxy[j]) > ee['ele_dxy']: return False
     if abs(entry.Electron_dz[j]) > ee['ele_dz']: return False
     if ord(entry.Electron_lostHits[j]) > ee['ele_lostHits']: return False
+    if ee['ele_iso_f'] and entry.Electron_pfRelIso03_all[j] >  ee['ele_iso']: return False
     if ee['ele_convVeto']:
         if not entry.Electron_convVeto[j]: return False
     if ee['ele_ID']:
@@ -1139,6 +1141,7 @@ def findZ(goodElectronList, goodMuonList, entry) :
     mm = selections['mm'] # H->tau(mu)+tau(h) selections
     selpair,pairList, mZ, bestDiff = [],[], 91.19, 99999. 
     nElectron = len(goodElectronList)
+    #print 'going in tauFun', goodElectronList, nElectron, entry.event, entry.luminosityBlock, entry.run, bestDiff
     if nElectron > 1 :
         for i in range(nElectron) :
             ii = goodElectronList[i] 
@@ -1146,21 +1149,24 @@ def findZ(goodElectronList, goodMuonList, entry) :
             e1.SetPtEtaPhiM(entry.Electron_pt[ii],entry.Electron_eta[ii],entry.Electron_phi[ii],0.0005)
             for j in range(i+1,nElectron) :
                 jj = goodElectronList[j]
+                #print 'going in tauFun masses', goodElectronList, nElectron, entry.event, entry.luminosityBlock, entry.run, 'for', jj, ii, entry.Electron_charge[ii],  entry.Electron_charge[jj]
                 if entry.Electron_charge[ii] != entry.Electron_charge[jj] :
                     e2 = TLorentzVector()
                     e2.SetPtEtaPhiM(entry.Electron_pt[jj],entry.Electron_eta[jj],entry.Electron_phi[jj],0.0005)
                     cand = e1 + e2
                     mass = cand.M()
 		    #if mass < 60 or mass > 120 : continue
+                    #print 'going in tauFun masses', goodElectronList, nElectron, entry.event, entry.luminosityBlock, entry.run, bestDiff, 'is abs(mass-mZ > bestDiff', abs(mass-mZ), bestDiff, 'for', jj, ii
                     if abs(mass-mZ) < bestDiff :
                         bestDiff = abs(mass-mZ)
+                        #print 'masses', bestDiff, mass, entry.Electron_charge[jj], entry.Electron_charge[ii], entry.event, entry.luminosityBlock, entry.run, 'elect', jj, ii, goodElectronList
                         if entry.Electron_charge[ii] > 0. :
                             pairList = [e1,e2]
                             selpair = [ii,jj]
                         else : 
                             pairList = [e2,e1]
                             selpair = [jj,ii]
-                            
+                           
     nMuon = len(goodMuonList)
     if nMuon > 1 : 
         # find mass pairings
@@ -1187,7 +1193,7 @@ def findZ(goodElectronList, goodMuonList, entry) :
                             selpair = [jj,ii]
 
     # first particle of pair is positive
-    #print selpair
+    #print 'returning', selpair,  'is muon', nMuon, goodMuonList, 'isEl', nElectron, goodElectronList, entry.event, entry.luminosityBlock, entry.run
     return pairList, selpair
                     
                     

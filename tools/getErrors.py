@@ -16,6 +16,8 @@ for root, directories, filenames in os.walk('.'):
                 if 'mass expected' in lineLower : continue
                 if 'rm: no match.' in lineLower : continue
                 if 'cloning into' in lineLower : continue
+                if 'in member function' in lineLower : continue
+                if '%msg' in lineLower : continue
                 if 'nanoaodtools' in lineLower : continue
                 if 'double val' in lineLower : continue
                 if '^~~' in line : continue
