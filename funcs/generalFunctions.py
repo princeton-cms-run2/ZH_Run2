@@ -59,7 +59,7 @@ def genMatchTau(entry, jt, decayMode=''):
 
     return idx_match
 
-def checkMETFlags(entry, year) :
+def checkMETFlags(entry, year, isMC=False) :
     METfilter = False
     '''
     if entry.Flag_BadChargedCandidateFilter or entry.Flag_BadChargedCandidateSummer16Filter or entry.Flag_BadPFMuonFilter
@@ -74,13 +74,13 @@ def checkMETFlags(entry, year) :
     '''
 
 
-    if year== 2016 and (entry.Flag_goodVertices  == False or entry.Flag_globalSuperTightHalo2016Filter  == False or entry.Flag_HBHENoiseFilter == False or entry.Flag_HBHENoiseIsoFilter  == False or entry.Flag_EcalDeadCellTriggerPrimitiveFilter  == False or  entry.Flag_BadPFMuonFilter  == False or entry.Flag_eeBadScFilter  == False) : METfilter = True
+    if year== 2016 and (entry.Flag_goodVertices  == False or entry.Flag_HBHENoiseFilter == False or entry.Flag_HBHENoiseIsoFilter  == False or entry.Flag_EcalDeadCellTriggerPrimitiveFilter  == False or  entry.Flag_BadPFMuonFilter  == False or entry.Flag_ecalBadCalibFilter == False) : METfilter = True
 
-    if year== 2017 and (entry.Flag_goodVertices  == False or entry.Flag_globalSuperTightHalo2016Filter  == False or entry.Flag_HBHENoiseFilter  == False or entry.Flag_HBHENoiseIsoFilter  == False or entry.Flag_EcalDeadCellTriggerPrimitiveFilter  == False or  entry.Flag_BadPFMuonFilter   == False or entry.Flag_eeBadScFilter  == False or entry.Flag_BadChargedCandidateFilter == False) : METfilter = True
+    if year== 2017 and (entry.Flag_goodVertices  == False or entry.Flag_HBHENoiseFilter  == False or entry.Flag_HBHENoiseIsoFilter  == False or entry.Flag_EcalDeadCellTriggerPrimitiveFilter  == False or  entry.Flag_BadPFMuonFilter   == False or entry.Flag_ecalBadCalibFilter == False) : METfilter = True
 
-    if year== 2018 and (entry.Flag_goodVertices  == False or entry.Flag_globalSuperTightHalo2016Filter  == False or entry.Flag_HBHENoiseFilter  == False or entry.Flag_HBHENoiseIsoFilter  == False or entry.Flag_EcalDeadCellTriggerPrimitiveFilter  == False or  entry.Flag_BadPFMuonFilter == False  or entry.Flag_eeBadScFilter == False or entry.Flag_BadChargedCandidateFilter  == False) : METfilter = True
+    if year== 2018 and (entry.Flag_goodVertices  == False or entry.Flag_HBHENoiseFilter  == False or entry.Flag_HBHENoiseIsoFilter  == False or entry.Flag_EcalDeadCellTriggerPrimitiveFilter  == False or  entry.Flag_BadPFMuonFilter == False  or  entry.Flag_ecalBadCalibFilter == False) : METfilter = True
 
-
+    if not isMC and entry.Flag_globalSuperTightHalo2016Filter : METfilter = True
 
     return METfilter
 

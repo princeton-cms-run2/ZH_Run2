@@ -77,6 +77,7 @@ if MC :
     print "this is MC, will get PU etc", args.dataType
     PU = GF.pileUpWeight()
     PU.calculateWeights(args.nickName,args.year)
+    #else : PU.calculateWeights('TTJets_DiLept',args.year)
 else :
     CJ = ''#GF.checkJSON(filein='Cert_294927-306462_13TeV_EOY2017ReReco_Collisions17_JSON.txt')
     if args.year == 2016 : CJ = GF.checkJSON(filein='Cert_271036-284044_13TeV_ReReco_07Aug2017_Collisions16_JSON.txt')
@@ -97,7 +98,7 @@ era=str(args.year)
 outFileName = GF.getOutFileName(args).replace(".root",".ntup")
 
 if MC : 
-    if "WJetsToLNu" in outFileName:
+    if "WJetsToLNu" in outFileName and 'TWJets' not in outFileName:
 	hWxGenweightsArr = []
 	for i in range(5):
 	    hWxGenweightsArr.append(TH1D("W"+str(i)+"genWeights",\
@@ -117,7 +118,7 @@ if args.weights > 0 :
         hWeight.Fill(0, e.genWeight)
     
 
-        if "WJetsToLNu" in outFileName :
+        if "WJetsToLNu" in outFileName and 'TWJets' not in outFileName:
 
             npartons = ord(e.LHE_Njets)
 	    if  npartons <= 4: 	hWxGenweightsArr[npartons].Fill(0, e.genWeight)
@@ -130,7 +131,7 @@ if args.weights > 0 :
     print 'Will be saving the Weights in', fName
     fW.cd()
 
-    if "WJetsToLNu" in outFileName :
+    if "WJetsToLNu" in outFileName and 'TWJets' not in outFileName:
         for i in range(len(hWxGenweightsArr)):
             hWxGenweightsArr[i].Write()
     elif "DYJetsToLL" in outFileName:
@@ -179,7 +180,7 @@ for count, e in enumerate(inTree) :
         cutCounter[cat].count('InJSON')
 	if  MC :   cutCounterGenWeight[cat].countGenWeight('InJSON', e.genWeight)
     
-    MetFilter = GF.checkMETFlags(e,args.year)
+    MetFilter = GF.checkMETFlags(e,args.year, isMC)
     if MetFilter : continue
     
     for cat in cats: 
