@@ -80,7 +80,7 @@ def checkMETFlags(entry, year, isMC=False) :
 
     if year== 2018 and (entry.Flag_goodVertices  == False or entry.Flag_HBHENoiseFilter  == False or entry.Flag_HBHENoiseIsoFilter  == False or entry.Flag_EcalDeadCellTriggerPrimitiveFilter  == False or  entry.Flag_BadPFMuonFilter == False  or  entry.Flag_ecalBadCalibFilter == False) : METfilter = True
 
-    if not isMC and entry.Flag_globalSuperTightHalo2016Filter : METfilter = True
+    if not isMC and entry.Flag_globalSuperTightHalo2016Filter == False: METfilter = True
 
     return METfilter
 
