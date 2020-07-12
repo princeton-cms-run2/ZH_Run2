@@ -37,10 +37,6 @@ class outTuple() :
         self.nMuon            = array('l',[0])
         self.nTau            = array('l',[0])
         self.lumi             = array('l',[0])
-        self.is_trig          = array('l',[0])
-        self.is_trigH         = array('l',[0])
-        self.is_trigZ         = array('l',[0])
-        self.is_trigZH        = array('l',[0])
         self.evt              = array('l',[0])
         self.nPU              = array('l',[0])
         self.nPUEOOT              = array('l',[0])
@@ -314,10 +310,6 @@ class outTuple() :
         self.t.Branch('nMuon',              self.nMuon,               'nMuon/l' )
         self.t.Branch('nTau',              self.nTau,               'nTau/l' )
         self.t.Branch('lumi',             self.lumi,              'lumi/I' )
-        self.t.Branch('is_trig',          self.is_trig,           'is_trig/I' )
-        self.t.Branch('is_trigH',         self.is_trigH,          'is_trigH/I' )
-        self.t.Branch('is_trigZ',         self.is_trigZ,          'is_trigZ/I' )
-        self.t.Branch('is_trigZH',        self.is_trigZH,         'is_trigZH/I' )
         self.t.Branch('evt',              self.evt,               'evt/l' )
         self.t.Branch('nPU',              self.nPU,               'nPU/I' )
         self.t.Branch('nPUEOOT',              self.nPUEOOT,               'nPUEOOT/I' )
@@ -795,7 +787,7 @@ class outTuple() :
 	    if lepList[0] == TrigListLep[0] :
 	        is_trig_1 = 1.
 	    else:
-	        is_trig_1 = -1. #that means that the subleading fired the trigger
+	        is_trig_1 = -1. #that means that only the subleading fired the trigger
 
 
         if len(TrigListLep) == 2 :
@@ -928,17 +920,27 @@ class outTuple() :
         # pack trigger bits into integer word
 
         e = entry
-	bits=[]
 
-        try : bits.append(e.HLT_Ele35_WPTight_Gsf)
+        '''
+        List from Cecile 
+        single ele 2016: HLT Ele25 eta2p1 WPTight Gsf v and cut pt(ele)>26, eta(ele)<2.1
+        single ele 2017: HLT Ele27 WPTight Gsf v, HLT Ele32 WPTight Gsf v, HLT Ele35 WPTight Gsf v and cut pt(ele)>28, eta(ele)<2.1
+        single ele 2018: HLT Ele32 WPTight Gsf v, HLT Ele35 WPTight Gsf v and cut pt(ele)>33, eta(ele)<2.1
+        '''
+        
+	bits=[]
+        try : bits.append(e.HLT_Ele25_eta2p1_WPTight_Gsf)
+        except AttributeError : bits.append(False)
+        try : bits.append(e.HLT_Ele27_WPTight_Gsf)
         except AttributeError : bits.append(False)
         try : bits.append(e.HLT_Ele32_WPTight_Gsf)
         except AttributeError : bits.append(False)
-        try : bits.append(e.HLT_Ele27_eta2p1_WPTight_Gsf)
-        except AttributeError : bits.append(False) 
-        try : bits.append(e.HLT_Ele25_eta2p1_WPTight_Gsf)
+        try : bits.append(e.HLT_Ele35_WPTight_Gsf)
         except AttributeError : bits.append(False)
-
+        # pad upper bits in this byte with zeros (False) 
+        for i in range(4) :
+            bits.append(False)
+            
         try : bits.append(e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL)
         except AttributeError : bits.append(False)
         try : bits.append(e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ)
@@ -948,15 +950,28 @@ class outTuple() :
         for i, bit in enumerate(bits) :
             if bit : self.electronTriggerWord[0] += 2**i
 
+        '''
+        List from Cecile 
+        single mu 2016: HLT IsoMu22 v, HLT IsoMu22 eta2p1 v, HLT IsoTkMu22 v, HLT IsoTkMu22 eta2p1 v and cut pt(mu)>23, eta(mu)<2.1
+        single mu 2017: HLT IsoMu24 v, HLT IsoMu27 v and cut pt(mu)>25, eta(mu)<2.4
+        single mu 2018: HLT IsoMu24 v, HLT IsoMu27 v and cut pt(mu)>25, eta(mu)<2.4
+        '''
         bits=[]
-        try : bits.append(e.HLT_IsoMu27)
-        except AttributeError : bits.append(False) 
+        try : bits.append(e.HLT_IsoMu22)
+        except AttributeError : bits.append(False)
+        try : bits.append(e.HLT_IsoMu22_eta2p1)
+        except AttributeError : bits.append(False)
+        try : bits.append(e.HLT_IsoTkMu22)
+        except AttributeError : bits.append(False)
+        try : bits.append(e.HLT_IsoTkMu22_eta2p1)
+        except AttributeError : bits.append(False)
         try : bits.append(e.HLT_IsoMu24)
         except AttributeError : bits.append(False) 
-        try : bits.append(e.HLT_IsoTkMu24)
-        except AttributeError : bits.append(False)
-        for i in range(5) : bits.append(False)         # pad rest of this byte 
-        
+        try : bits.append(e.HLT_IsoMu27)
+        except AttributeError : bits.append(False) 
+
+        bits.append(False)                             # pad remaining bit in this bit 
+       
         try : bits.append(e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ)
         except AttributeError : bits.append(False) 
         try : bits.append(e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass8)
@@ -1679,35 +1694,45 @@ class outTuple() :
         # pack trigger bits into integer word
         year = int(era)
         e = entry
-	bits=[]
 
-        try : bits.append(e.HLT_Ele35_WPTight_Gsf)
+
+	bits=[]
+        try : bits.append(e.HLT_Ele25_eta2p1_WPTight_Gsf)
+        except AttributeError : bits.append(False)
+        try : bits.append(e.HLT_Ele27_WPTight_Gsf)
         except AttributeError : bits.append(False)
         try : bits.append(e.HLT_Ele32_WPTight_Gsf)
         except AttributeError : bits.append(False)
-        try : bits.append(e.HLT_Ele27_eta2p1_WPTight_Gsf)
-        except AttributeError : bits.append(False) 
-        try : bits.append(e.HLT_Ele25_eta2p1_WPTight_Gsf)
+        try : bits.append(e.HLT_Ele35_WPTight_Gsf)
         except AttributeError : bits.append(False)
 
+
+        # pad upper bits in this byte with zeros (False) 
+        for i in range(4) :
+            bits.append(False)
+            
         try : bits.append(e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL)
         except AttributeError : bits.append(False)
         try : bits.append(e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ)
         except AttributeError : bits.append(False) 
 
-        self.electronTriggerWord[0] = 0
-        for i, bit in enumerate(bits) :
-            if bit : self.electronTriggerWord[0] += 2**i
 
         bits=[]
-        try : bits.append(e.HLT_IsoMu27)
-        except AttributeError : bits.append(False) 
+        try : bits.append(e.HLT_IsoMu22)
+        except AttributeError : bits.append(False)
+        try : bits.append(e.HLT_IsoMu22_eta2p1)
+        except AttributeError : bits.append(False)
+        try : bits.append(e.HLT_IsoTkMu22)
+        except AttributeError : bits.append(False)
+        try : bits.append(e.HLT_IsoTkMu22_eta2p1)
+        except AttributeError : bits.append(False)
         try : bits.append(e.HLT_IsoMu24)
         except AttributeError : bits.append(False) 
-        try : bits.append(e.HLT_IsoTkMu24)
-        except AttributeError : bits.append(False)
-        for i in range(5) : bits.append(False)         # pad rest of this byte 
-        
+        try : bits.append(e.HLT_IsoMu27)
+        except AttributeError : bits.append(False) 
+
+        bits.append(False)                             # pad remaining bit in this bit 
+       
         try : bits.append(e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ)
         except AttributeError : bits.append(False) 
         try : bits.append(e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass8)
@@ -1718,6 +1743,7 @@ class outTuple() :
         except AttributeError : bits.append(False) 
         try : bits.append(e.HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_Mass8)
         except AttributeError : bits.append(False) 
+
 
         self.muonTriggerWord[0] = 0
         for i, bit in enumerate(bits) :
@@ -2079,7 +2105,4 @@ class outTuple() :
         self.f.Write()
         self.f.Close()
         return
-
-    
-
 

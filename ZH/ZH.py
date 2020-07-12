@@ -216,6 +216,8 @@ for count, e in enumerate(inTree) :
         goodElectronList = tauFun.makeGoodElectronList(e)
         goodMuonList = tauFun.makeGoodMuonList(e)
         goodElectronList, goodMuonList = tauFun.eliminateCloseLeptons(e, goodElectronList, goodMuonList)
+	goodElectronListExtraLepton=[]
+	goodMuonListExtraLepton=[]
 
 	lepList=[]
 
@@ -276,6 +278,7 @@ for count, e in enumerate(inTree) :
             elif tauMode == 'em' :
                 bestTauPair = tauFun.getBestEMuTauPair(e,cat=cat,pairList=pairList)
 	    else : continue
+
             
             if len(bestTauPair) < 1 :
                 if unique :
@@ -298,6 +301,26 @@ for count, e in enumerate(inTree) :
                 jt1, jt2 = bestTauPair[0], bestTauPair[1]
             else :
                 continue
+
+            goodElectronListExtraLepton = tauFun.makeGoodElectronListExtraLepton(e,lepList)
+            goodMuonListExtraLepton = tauFun.makeGoodMuonListExtraLepton(e,lepList)
+            goodElectronListExtraLepton, goodMuonListExtraLepton = tauFun.eliminateCloseLeptons(e, goodElectronListExtraLepton, goodMuonListExtraLepton)
+            if tauMode == 'et' :
+	        if bestTauPair[0] in goodElectronListExtraLepton : goodElectronListExtraLepton.remove(bestTauPair[0])
+
+            if tauMode == 'mt' :
+	        if bestTauPair[0] in goodMuonListExtraLepton : goodMuonListExtraLepton.remove(bestTauPair[0])
+
+            if tauMode == 'em' :
+	        if bestTauPair[0] in goodElectronListExtraLepton : goodElectronListExtraLepton.remove(bestTauPair[0])
+	        if bestTauPair[1] in goodMuonListExtraLepton : goodMuonListExtraLepton.remove(bestTauPair[1])
+
+
+            #if len(goodMuonListExtraLepton) > 0 or len(goodElectronListExtraLepton) >0 : 
+            #    print 'some info', cat, 'lepList', lepList, tauList, 'tauPair', bestTauPair, 'extra', goodElectronListExtraLepton, goodMuonListExtraLepton, 'will remove it'
+
+            if len(goodMuonListExtraLepton) > 0 or len(goodElectronListExtraLepton) >0 : continue
+
             cutCounter[cat].count("GoodTauPair")
 	    if  MC:   cutCounterGenWeight[cat].countGenWeight('GoodTauPair', e.genWeight)
 
