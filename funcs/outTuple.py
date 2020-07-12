@@ -920,6 +920,18 @@ class outTuple() :
         # pack trigger bits into integer word
 
         e = entry
+<<<<<<< HEAD
+=======
+
+        '''
+        List from Cecile 
+        single ele 2016: HLT Ele25 eta2p1 WPTight Gsf v and cut pt(ele)>26, eta(ele)<2.1
+        single ele 2017: HLT Ele27 WPTight Gsf v, HLT Ele32 WPTight Gsf v, HLT Ele35 WPTight Gsf v and cut pt(ele)>28, eta(ele)<2.1
+        single ele 2018: HLT Ele32 WPTight Gsf v, HLT Ele35 WPTight Gsf v and cut pt(ele)>33, eta(ele)<2.1
+        '''
+        
+	bits=[]
+>>>>>>> 7528ca7cc9136565d92f2ec9013583a875f2ca99
 
         '''
         List from Cecile 
@@ -935,11 +947,21 @@ class outTuple() :
         except AttributeError : bits.append(False)
         try : bits.append(e.HLT_Ele32_WPTight_Gsf)
         except AttributeError : bits.append(False)
+<<<<<<< HEAD
         try : bits.append(e.HLT_Ele35_WPTight_Gsf)
         except AttributeError : bits.append(False)
         # pad upper bits in this byte with zeros (False) 
         for i in range(4) :
             bits.append(False)
+=======
+        try : bits.append(e.HLT_Ele27_eta2p1_WPTight_Gsf)
+        except AttributeError : bits.append(False)
+        try : bits.append(e.HLT_Ele25_eta2p1_WPTight_Gsf)
+        except AttributeError : bits.append(False)
+        # pad upper bits in this byte with zeros (False) 
+        for i in range(4) :
+            bit.append(False)
+>>>>>>> 7528ca7cc9136565d92f2ec9013583a875f2ca99
             
         try : bits.append(e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL)
         except AttributeError : bits.append(False)
@@ -967,8 +989,21 @@ class outTuple() :
         except AttributeError : bits.append(False)
         try : bits.append(e.HLT_IsoMu24)
         except AttributeError : bits.append(False) 
+<<<<<<< HEAD
         try : bits.append(e.HLT_IsoMu27)
         except AttributeError : bits.append(False) 
+=======
+        try : bits.append(e.HLT_IsoTkMu24)
+        except AttributeError : bits.append(False)
+        try : bits.append(e.HLT_IsoMu22)
+        except AttributeError : bits.append(False)
+        try : bits.append(e.HLT_IsoMu22_eta2p1)
+        except AttributeError : bits.append(False)
+        try : bits.append(e.HLT_IsoTkMu22)
+        except AttributeError : bits.append(False)
+        try : bits.append(e.HLT_IsoTkMu22_eta2p1)
+        except AttributeError : bits.append(False)
+>>>>>>> 7528ca7cc9136565d92f2ec9013583a875f2ca99
 
         bits.append(False)                             # pad remaining bit in this bit 
        
