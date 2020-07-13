@@ -13,9 +13,9 @@ tt:
   tau_dz: 0.2
   lt_DR: 0.5
   tt_DR: 0.5
-  tau_vJet: 1
+  tau_vJet: 16
   tau_vMu: 1
-  tau_vEle: 1
+  tau_vEle: 4
 mt:
   mu_ID: false
   mu_pt: 10.
@@ -28,16 +28,16 @@ mt:
   mu_type: false
   tau_pt: 20
   tau_eta: 2.3
-  tau_antimu: 0
-  tau_antiele: 0
-  tau_eemt_antimu: 3
-  tau_decaymode: true
-  tau_id: 0
+  tau_antiMu: 0
+  tau_antiEle: 0
+  tau_eemt_antiMu: 3
+  tau_decayMode: true
+  tau_ID: 0
   tau_dz: 0.2
-  lt_dr: 0.5
-  tau_vjet: 1
+  lt_DR: 0.5
+  tau_vJet: 16
   tau_vMu: 8
-  tau_vEle: 1
+  tau_vEle: 4
 em: 
   mu_ID: false
   mu_dxy: 0.045
@@ -76,10 +76,9 @@ et:
   tau_decayMode: true
   tau_dz: 0.2
   tt_DR: 0.5
-  lt_DR: 0.5
   ele_iso_f: false
   ele_iso: 0.3
-  tau_vJet: 1
+  tau_vJet: 16
   tau_vMu: 1
   tau_vEle: 32
 mm:
