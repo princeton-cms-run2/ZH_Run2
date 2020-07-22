@@ -53,6 +53,8 @@ class outTuple() :
         self.LHE_Njets        = array('l',[0])
         self.electronTriggerWord  = array('l',[0])
         self.muonTriggerWord  = array('l',[0])         
+        self.whichTriggerWord  = array('l',[0])         
+        self.whichTriggerWordSubL  = array('l',[0])         
         
         self.nGoodElectron    = array('l',[0])
         self.nGoodMuon        = array('l',[0])
@@ -326,6 +328,8 @@ class outTuple() :
         self.t.Branch('Generator_weight', self.Generator_weight,  'Generator_weight/F' )
         self.t.Branch('electronTriggerWord',  self.electronTriggerWord, 'electronTriggerWord/I' )
         self.t.Branch('muonTriggerWord',      self.muonTriggerWord,  'muonTriggerWord/I' )
+        self.t.Branch('whichTriggerWord',      self.whichTriggerWord,  'whichTriggerWord/I' )
+        self.t.Branch('whichTriggerWordSubL',      self.whichTriggerWordSubL,  'whichTriggerWordSubL/I' )
         
         self.t.Branch('nGoodElectron',    self.nGoodElectron,     'nGoodElectron/I' )
         self.t.Branch('nGoodMuon',        self.nGoodMuon,         'nGoodMuon/I' )
@@ -761,44 +765,51 @@ class outTuple() :
         TrigListLep = []
         TrigListTau = []
         hltListLep  = []
+        hltListLepSubL  = []
 
         #channel_ll = 'mm' or 'ee'
         channel_ll = cat[:-2]
 
-	TrigListLep, hltListLep  = GF.findSingleLeptTrigger(lepList, entry, channel_ll, era)
+	TrigListLep, hltListLep, hltListLepSubL  = GF.findSingleLeptTrigger(lepList, entry, channel_ll, era)
 
 	TrigListLep = list(dict.fromkeys(TrigListLep))
+        #if len(hltListLep) > 0 or len(hltListLepSubL)>0 :     print GF.printEvent(entry)
 
+	#TrigListLepD, hltListLepD  = GF.findDoubleLeptTrigger(lepList, entry, channel_ll, era)
 
-	TrigListLepD, hltListLepD  = GF.findDoubleLeptTrigger(lepList, entry, channel_ll, era)
-
-	TrigListLepD = list(dict.fromkeys(TrigListLepD))
+	#TrigListLepD = list(dict.fromkeys(TrigListLepD))
 
 	#if len(TrigListLepD) > 0 : print TrigListLepD, hltListLepD, TrigListLep, hltListLep
-	if len(TrigListLepD) == 2 : 
-	    if lepList[0] == TrigListLepD[0] :
-	        is_Dtrig_1 = 1 #that means that the leading lepton 
-	    else : 
-	        is_Dtrig_1 = -1
+	#if len(TrigListLepD) == 2 : 
+	#    if lepList[0] == TrigListLepD[0] :
+	#        is_Dtrig_1 = 1 #that means that the leading lepton 
+	#    else : 
+	#        is_Dtrig_1 = -1
 
 
-        if len(TrigListLep) == 1 :
+        if len(hltListLep) > 0 and  len(hltListLepSubL) == 0 :
+            is_trig_1 = 1
+        if len(hltListLep) == 0 and len(hltListLepSubL) > 0 :
+            is_trig_1 = -1
+        if len(hltListLep) > 0 and len(hltListLepSubL)>0 :
+	    is_trig_1 = 2
 
-	    if lepList[0] == TrigListLep[0] :
-	        is_trig_1 = 1.
-	    else:
-	        is_trig_1 = -1. #that means that only the subleading fired the trigger
+        self.whichTriggerWord[0]=0
+        self.whichTriggerWordSubL[0]=0
 
-
-        if len(TrigListLep) == 2 :
-            if 'BothLept' in hltListLep :
-	        is_trig_1 = 1.
-	        is_trig_2 = 1.
-
-
-        #if len(TrigListLep) ==1 : print 'TrigerList ===========>', TrigListLep, lepList, hltListLep, channel_ll, 'istrig_1', is_trig_1, 'istrig_2', is_trig_2, 'lenTrigList', len(TrigListLep),  'lenLept', len(lepList), 'lepList_0', lepList[0], 'TrigList_0', TrigListLep[0], hltListLep
+        #if len(TrigListLep) >0 : print 'TrigerList ===========>', TrigListLep, lepList, hltListLep, channel_ll, 'istrig_1', is_trig_1, 'istrig_2', is_trig_2, 'lenTrigList', len(TrigListLep),  'lenLept', len(lepList), 'lepList_0', lepList[0], 'TrigList_0', TrigListLep[0], hltListLep
         
+        for i,bit in enumerate(hltListLep):
+                
+            if bit : 
+                self.whichTriggerWord[0] += 2**i
 
+        for j,bitt in enumerate(hltListLepSubL):
+            if bitt : self.whichTriggerWordSubL[0] += 2**j
+
+
+        #if channel_ll=='ee' and entry.luminosityBlock==90 and entry.event==8904: print self.whichTriggerWord[0], 'hlt', hltListLep, 'hltsub', hltListLepSubL
+        #print cat, self.whichTriggerWord
         # channel = 'mt', 'et', 'tt', or 'em'
         channel = cat[-2:]
         if jt1 > -1 and jt2 > -1 : self.cat[0]  = tauFun.catToNumber(cat)
@@ -938,8 +949,8 @@ class outTuple() :
         try : bits.append(e.HLT_Ele35_WPTight_Gsf)
         except AttributeError : bits.append(False)
         # pad upper bits in this byte with zeros (False) 
-        for i in range(4) :
-            bits.append(False)
+        #for i in range(4) :
+        #    bits.append(False)
             
         try : bits.append(e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL)
         except AttributeError : bits.append(False)
@@ -970,8 +981,8 @@ class outTuple() :
         try : bits.append(e.HLT_IsoMu27)
         except AttributeError : bits.append(False) 
 
-        for i in range(2) :
-            bits.append(False)                             # pad remaining bit in this bit 
+        #for i in range(2) :
+        #    bits.append(False)                             # pad remaining bit in this bit 
        
         try : bits.append(e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ)
         except AttributeError : bits.append(False) 
@@ -1515,6 +1526,7 @@ class outTuple() :
         channel_ll = cat[:2]
 
 	TrigListLep, hltListLep  = GF.findSingleLeptTrigger(lepList, entry, channel_ll, era)
+       
 
 	TrigListLep = list(dict.fromkeys(TrigListLep))
 
@@ -1543,37 +1555,6 @@ class outTuple() :
 	        is_trig_1 = 1.
 	        is_trig_2 = 1.
 
-        '''
-	TrigListLepD, hltListLepD  = GF.findDoubleLeptTrigger(lepList+lepList_2, entry, channel_ll, era)
-
-	TrigListLepD = list(dict.fromkeys(TrigListLepD))
-
-
-	if len(TrigListLepD) == 2 : 
-	    if lepList[0] == TrigListLepD[0] :
-	        is_Dtrig_1 = 1
-	    else : 
-	        is_Dtrig_1 = -1
-
-        #if len(TrigListLep) == 1 :
-
-	for i in TrigListLep :
-	    is_trig_1 += 2**i
-            #print 'trig_1', i, '2^i', 2**i, entry.event, is_trig_1
-
-	for i in TrigListLepD : 
-	    is_trig_2 += 2**i
-            #print 'trig_2', i, '2^i', 2**i, entry.event, is_trig_2, '===============>', is_trig_1
-	    #else:
-	    #    is_trig_1 = -1. #that means that a subleading lepton fired the trigger
-
-
-        #if len(TrigListLep) == 2 :
-        #    if 'BothLept' in hltListLep :
-	#        is_trig_1 = 1.
-	#        is_trig_2 = 1.
-
-        '''
 
         channel = cat[-2:]
         

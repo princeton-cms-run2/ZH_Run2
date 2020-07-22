@@ -13,7 +13,7 @@ from math import sqrt, pi
 
 # import from ZH_Run2/funcs/
 sys.path.insert(1,'../funcs/')
-import tauFun2 as TF
+import tauFun2
 import generalFunctions as GF 
 import outTuple
 import time
@@ -43,6 +43,7 @@ print("args={0:s}".format(str(args)))
 maxPrint = args.maxPrint 
 
 cutCounter = {}
+failedCounts={}
 cutCounterGenWeight = {}
 
 doJME  = args.doSystematics.lower() == 'true' or args.doSystematics.lower() == 'yes' or args.doSystematics == '1'
@@ -95,7 +96,7 @@ print 'systematics', doJME, varSystematics
 
 era=str(args.year)
 
-outFileName = GF.getOutFileName(args).replace(".root",".ntup")
+outFileName = GF.getOutFileName(args).replace(".root","_debug.ntup")
 
 if MC : 
     if "WJetsToLNu" in outFileName and 'TWJets' not in outFileName:
@@ -162,134 +163,240 @@ countMod = 1000
 isMC = True
 
 
+PUevents, UWevents = {}, {}
+for cat in cats :
+    PUevents[cat] = {}
+    UWevents[cat] = {}
+    failedCounts[cat]={}
+
+for cat in cats :
+    for line in open('PUunique_{0:s}.txt'.format(cat),'r').readlines() :
+        vals = line.split()
+        if len(vals) < 3 : continue
+        #run, LS, event = int(vals[0]), int(vals[1]), int(vals[2])
+        #LSrunEvent = "{0:d}:{1:d}:{2:d}".format(LS,run,event)
+
+        LS, run, event = int(vals[1]), int(vals[2]), int(vals[3])
+        LSrunEvent = "{0:d}:{1:d}:{2:d}".format(LS,run,event)
+        UWevents[cat][LSrunEvent] = line
+
+
+for cat in cats :
+    print 'for cat, there are UWunique:', cat, len(UWevents[cat])
+
 
 for count, e in enumerate(inTree) :
     if count % countMod == 0 :
         print("Count={0:d}".format(count))
         if count >= 10000 : countMod = 10000
     if count == nMax : break    
-    
+    #if count<70000 : continue
+    #if count>100000 : break
+    iCut=0
+    unique=False
+    evv="{0:d}:{1:d}:{2:d}".format(e.luminosityBlock,e.run,e.event)
+    evl="{0:d} {1:d} {2:d}".format(e.luminosityBlock,e.run,e.event)
+    iscat=''
+    for cat in cats :
+	for key in UWevents[cat].keys() :
+	    try : 
+		if key==evv : 
+		    print ''
+                    iscat=cat
+		    print 'Euruka==========>', evv, key , cat
+		    #print 'leptons indexes:', lepList, 'higgs pair indexes:', jt1, jt2
+		    #outTuple.Fill(e,SVFit,cat,jt1,jt2,LepP,LepM,lepList,isMC,era,doJME, varSystematics)a
+		    unique= True
+	    except KeyError : continue
+
+
+    if not unique : continue
+
+
+    if unique : print GF.printEvent(e)
+    failedCounts[cat][iCut]=+1
+    iCut+=1
+
+    '''
     for cat in cats : 
-        cutCounter[cat].count('All')
+        unique = evv in UWevents[cat]
+        if unique : print '------This is good', evv, cat
+        if not unique : continue
+        cutCounter[cat].count('1:All')
 	if  MC :   cutCounterGenWeight[cat].countGenWeight('All', e.genWeight)
+    '''
 
     isInJSON = False
+    iCut+=1
     if not MC : isInJSON = CJ.checkJSON(e.luminosityBlock,e.run)
     if not isInJSON and not MC :
         #print("Event not in JSON: Run:{0:d} LS:{1:d}".format(e.run,e.luminosityBlock))
+        print 'failed JSON', cat, e.luminosityBlock,e.run,e.event
+	failedCounts[cat][iCut]=+1
         continue
 
     for cat in cats: 
-        cutCounter[cat].count('InJSON')
+        cutCounter[cat].count('2:InJSON')
 	if  MC :   cutCounterGenWeight[cat].countGenWeight('InJSON', e.genWeight)
     
     MetFilter = GF.checkMETFlags(e,args.year, isMC)
-    if MetFilter : continue
+    iCut+=1
+    if MetFilter :
+        print 'failed METfilter', cat, e.luminosityBlock,e.run,e.event
+	failedCounts[cat][iCut]=+1
+        continue
     
     for cat in cats: 
-        cutCounter[cat].count('METfilter') 
+        cutCounter[cat].count('3:METfilter') 
 	if  MC :   cutCounterGenWeight[cat].countGenWeight('METfilter', e.genWeight)
 
 
 
-    if unique :
-        if e.event in uniqueEvents :
-            for cat in cats: cutCounter[cat].count('Unique') 
-        else :
-            continue
-    if not TF.goodTrigger(e, args.year) : continue
+    iCut+=1
+    if not tauFun.goodTrigger(e, args.year) : 
+        print 'Failed Trigger', cat, e.luminosityBlock, e.run, e.event, ':', cat
+	failedCounts[cat][iCut]=+1
+        continue
     
     for cat in cats: 
-	cutCounter[cat].count('Trigger')
+	cutCounter[cat].count('4:Trigger')
 	if  MC :   cutCounterGenWeight[cat].countGenWeight('Trigger', e.genWeight)
-            
+    
+    iCut+=1            
     for lepMode in ['ee','mm'] :
         if args.category != 'none' and not lepMode in args.category : continue
 
         if lepMode == 'ee' :
-            if e.nElectron < 2 : continue
+            if e.nElectron < 2 : 
+		print 'Failed lepMode count ee', cat, e.luminosityBlock, e.run, e.event, ':', cat
+	        failedCounts[cat][iCut]=+1
+		continue
             for cat in cats[:4] : 
-	        cutCounter[cat].count('LeptonCount')
+	        cutCounter[cat].count('5:LeptonCount')
 	        if  MC :   cutCounterGenWeight[cat].countGenWeight('LeptonCount', e.genWeight)
+
         if lepMode == 'mm' :
-            if e.nMuon < 2 : continue 
+            if e.nMuon < 2 :
+                print 'Failed lepMode count mm', cat, e.luminosityBlock, e.run, e.event, ':', cat
+	        failedCounts[cat][iCut]=+1
+                continue
+
             for cat in cats[4:] : 
-	        cutCounter[cat].count('LeptonCount')
+	        cutCounter[cat].count('5:LeptonCount')
 	        if  MC :   cutCounterGenWeight[cat].countGenWeight('LeptonCount', e.genWeight)
 
 
-        goodElectronList = TF.makeGoodElectronList(e)
-        goodMuonList = TF.makeGoodMuonList(e)
-        goodElectronList, goodMuonList = TF.eliminateCloseLeptons(e, goodElectronList, goodMuonList)
+        goodElectronList = tauFun.makeGoodElectronList(e)
+        goodMuonList = tauFun.makeGoodMuonList(e)
+        goodElectronList, goodMuonList = tauFun.eliminateCloseLeptons(e, goodElectronList, goodMuonList)
 	goodElectronListExtraLepton=[]
 	goodMuonListExtraLepton=[]
 
 	lepList=[]
 
-        
+        iCut+=1
         if lepMode == 'ee' :
-            if len(goodElectronList) < 2 : continue
+            
+            if len(goodElectronList) < 2 : 
+                print 'Failed goodElectronList', cat, e.luminosityBlock, e.run, e.event, ':', cat
+	        failedCounts[cat][iCut]=+1
+                continue
+
             for cat in cats[:4] :
-                cutCounter[cat].count('GoodLeptons')
+                cutCounter[cat].count('6:GoodLeptons')
 	        if  MC :   cutCounterGenWeight[cat].countGenWeight('GoodLeptons', e.genWeight)
 
-            pairList, lepList = TF.findZ(goodElectronList,[], e)
-            if len(lepList) != 2 : continue
+            iCut+=1
+            pairList, lepList = tauFun.findZ(goodElectronList,[], e)
+            if len(lepList) != 2 :
+	        failedCounts[cat][iCut]=+1
+                print 'Failed findZ ee', cat, e.luminosityBlock, e.run, e.event, ':', cat
+                continue
+
             for cat in cats[:4] : 
-	        cutCounter[cat].count('LeptonPair')
+	        cutCounter[cat].count('7:LeptonPair')
 	        if  MC :   cutCounterGenWeight[cat].countGenWeight('LeptonPair', e.genWeight)
         
         if lepMode == 'mm' :
-            if len(goodMuonList) < 2 : continue
+            if len(goodMuonList) < 2 : 
+                print 'Failed goodMuonList', cat, e.luminosityBlock, e.run, e.event, ':', cat
+	        failedCounts[cat][iCut]=+1
+                continue
+
             for cat in cats[4:] :
-                cutCounter[cat].count('GoodLeptons')
+                cutCounter[cat].count('6:GoodLeptons')
 	        if  MC :   cutCounterGenWeight[cat].countGenWeight('GoodLeptons', e.genWeight)
 
-            pairList, lepList = TF.findZ([],goodMuonList, e)
-            if len(lepList) != 2 : continue
+            iCut+=1
+            pairList, lepList = tauFun.findZ([],goodMuonList, e)
+            if len(lepList) != 2 : 
+                print 'Failed findZ mm', cat, e.luminosityBlock, e.run, e.event, ':', cat
+	        failedCounts[cat][iCut]=+1
+                continue
+
             for cat in cats[4:] : 
-	        cutCounter[cat].count('LeptonPair')
+	        cutCounter[cat].count('7:LeptonPair')
 	        if  MC :   cutCounterGenWeight[cat].countGenWeight('LeptonPair', e.genWeight)
 
         LepP, LepM = pairList[0], pairList[1]
         M = (LepM + LepP).M()
 	
-        if not TF.mllCut(M) :
+        iCut+=1
+        if not tauFun.mllCut(M) :
+            print 'Failed tau_mll ', cat, e.luminosityBlock, e.run, e.event, ':', cat
+	    failedCounts[cat][iCut]=+1
+            continue
+
             if unique :
                 print("Zmass Fail: : Event ID={0:d} cat={1:s} M={2:.2f}".format(e.event,cat,M))
                 #GF.printEvent(e)
                 #if MC : GF.printMC(e)
-            continue ##cut valid for both AZH and ZH
+            #continue ##cut valid for both AZH and ZH
 
         if lepMode == 'ee' :
             for cat in cats[:4]: 
-	        cutCounter[cat].count('FoundZ')
+	        cutCounter[cat].count('8:FoundZ')
 	        if  MC :   cutCounterGenWeight[cat].countGenWeight('FoundZ', e.genWeight)
         if lepMode == 'mm' :
             for cat in cats[4:]: 
-	        cutCounter[cat].count('FoundZ')
+	        cutCounter[cat].count('8:FoundZ')
 	        if  MC :   cutCounterGenWeight[cat].countGenWeight('FoundZ', e.genWeight)
+
+        iCut+=1
         for tauMode in ['et','mt','tt','em'] :
             if args.category != 'none' and tauMode != args.category[2:] : continue
             cat = lepMode + tauMode
             if tauMode == 'tt' :
-                tauList = TF.getTauList(cat, e, pairList=pairList)
-                bestTauPair = TF.getBestTauPair(cat, e, tauList )
+                tauList = tauFun.getTauList(cat, e, pairList=pairList, printOn=True)
+                bestTauPair = tauFun.getBestTauPair(cat, e, tauList , printOn=True)
                                     
             elif tauMode == 'et' :
-                bestTauPair = TF.getBestETauPair(e,cat=cat,pairList=pairList)
+                bestTauPair = tauFun.getBestETauPair(e,cat=cat,pairList=pairList)
             elif tauMode == 'mt' :
-                bestTauPair = TF.getBestMuTauPair(e,cat=cat,pairList=pairList)
+                bestTauPair = tauFun.getBestMuTauPair(e,cat=cat,pairList=pairList)
             elif tauMode == 'em' :
-                bestTauPair = TF.getBestEMuTauPair(e,cat=cat,pairList=pairList)
+                bestTauPair = tauFun.getBestEMuTauPair(e,cat=cat,pairList=pairList)
 	    else : continue
 
             
             if len(bestTauPair) < 1 :
+	        failedCounts[cat][iCut]=+1
+		print 'failed bestTauPair', cat, e.luminosityBlock,e.run,e.event
+
                 if unique :
-                    print("Tau Pair Fail: Event ID={0:d} cat={1:s}".format(e.event,cat))
-                    bestTauPair = TF.getBestEMuTauPair(e,cat=cat,pairList=pairList,printOn=True) 
-                    GF.printEvent(e)
+                    print("Tau Pair Fail: Event ID={0:d} cat={1:s}".format(e.event,cat ))
+                    #if bestTauPair = tauFun.getBestEMuTauPair(e,cat=cat,pairList=pairList,printOn=True) 
+		    if tauMode == 'tt' :
+                        tauList = tauFun.getTauList(cat, e, pairList=pairList, printOn=True)
+			bestTauPair = tauFun.getBestTauPair(cat, e, tauList,printOn=True)
+		    elif tauMode == 'et' :
+			bestTauPair = tauFun.getBestETauPair(e,cat=cat,pairList=pairList,printOn=True)
+		    elif tauMode == 'mt' :
+			bestTauPair = tauFun.getBestMuTauPair(e,cat=cat,pairList=pairList,printOn=True)
+		    elif tauMode == 'em' :
+			bestTauPair = tauFun.getBestEMuTauPair(e,cat=cat,pairList=pairList,printOn=True)
+		    else : continue
+                    #GF.printEvent(e)
                                     
                 if False and maxPrint > 0 and (tauMode == GF.eventID(e)[2:4]) :
                     maxPrint -= 1
@@ -298,18 +405,23 @@ for count, e in enumerate(inTree) :
                     print("goodMuonList={0:s} goodElectronList={1:s} Mll={3:.1f} bestTauPair={4:s}".format(
                         str(goodMuonList),str(goodElectronList),str(pairList),M,str(bestTauPair)))
                     print("Lep1.pt() = {0:.1f} Lep2.pt={1:.1f}".format(pairList[0].Pt(),pairList[1].Pt()))
-                    GF.printEvent(e)
+                    #GF.printEvent(e)
                     GF.printMC(e)
                 continue
 
             if len(bestTauPair) > 1 :
                 jt1, jt2 = bestTauPair[0], bestTauPair[1]
             else :
+                print 'failed len(bestTauPair)<2', cat, e.luminosityBlock,e.run,e.event
+	        failedCounts[cat][iCut]=+1
                 continue
 
-            goodElectronListExtraLepton = TF.makeGoodElectronListExtraLepton(e,lepList)
-            goodMuonListExtraLepton = TF.makeGoodMuonListExtraLepton(e,lepList)
-            goodElectronListExtraLepton, goodMuonListExtraLepton = TF.eliminateCloseLeptons(e, goodElectronListExtraLepton, goodMuonListExtraLepton)
+            cutCounter[cat].count("9:GoodTauPair")
+	    if  MC:   cutCounterGenWeight[cat].countGenWeight('GoodTauPair', e.genWeight)
+
+            goodElectronListExtraLepton = tauFun.makeGoodElectronListExtraLepton(e,lepList)
+            goodMuonListExtraLepton = tauFun.makeGoodMuonListExtraLepton(e,lepList)
+            goodElectronListExtraLepton, goodMuonListExtraLepton = tauFun.eliminateCloseLeptons(e, goodElectronListExtraLepton, goodMuonListExtraLepton)
             if tauMode == 'et' :
 	        if bestTauPair[0] in goodElectronListExtraLepton : goodElectronListExtraLepton.remove(bestTauPair[0])
 
@@ -324,10 +436,14 @@ for count, e in enumerate(inTree) :
             #if len(goodMuonListExtraLepton) > 0 or len(goodElectronListExtraLepton) >0 : 
             #    print 'some info', cat, 'lepList', lepList, tauList, 'tauPair', bestTauPair, 'extra', goodElectronListExtraLepton, goodMuonListExtraLepton, 'will remove it'
 
-            if len(goodMuonListExtraLepton) > 0 or len(goodElectronListExtraLepton) >0 : continue
+            iCut+=1
+            if len(goodMuonListExtraLepton) > 0 or len(goodElectronListExtraLepton) >0 : 
+                print 'failed extraLeptons', cat, e.luminosityBlock,e.run,e.event, 'extraMuons', len(goodMuonListExtraLepton), 'extraElectrons', len(goodElectronListExtraLepton)
+	        failedCounts[cat][iCut]=+1
+                continue
 
-            cutCounter[cat].count("GoodTauPair")
-	    if  MC:   cutCounterGenWeight[cat].countGenWeight('GoodTauPair', e.genWeight)
+            cutCounter[cat].count("10:ExtraLeptonVeto")
+	    if  MC:   cutCounterGenWeight[cat].countGenWeight('ExtraLeptonVeto', e.genWeight)
 
             if MC :
                 outTuple.setWeight(PU.getWeight(e.PV_npvs)) 
@@ -346,8 +462,9 @@ for count, e in enumerate(inTree) :
             SVFit = True
 	    
             if not MC : isMC = False
-
-            outTuple.Fill(e,SVFit,cat,jt1,jt2,LepP,LepM,lepList,isMC,era,doJME, varSystematics)
+            print 'properties', cat, LepP.Pt(), LepM.Pt(), 'higgs pair indexes', jt1, jt2
+            print ' Unique event made it!!!!',  cat, e.luminosityBlock, e.run, e.event, ':', cat
+            #outTuple.Fill(e,SVFit,cat,jt1,jt2,LepP,LepM,lepList,isMC,era,doJME, varSystematics)
 
 
             if maxPrint > 0 :
@@ -358,7 +475,7 @@ for count, e in enumerate(inTree) :
                 print("Lep1.pt() = {0:.1f} Lep2.pt={1:.1f}".format(pairList[0].Pt(),pairList[1].Pt()))
                 GF.printEvent(e)
                 print("Event ID={0:s} cat={1:s}".format(GF.eventID(e),cat))
-                
+
 
 dT = time.time() - tStart
 print("Run time={0:.2f} s  time/event={1:.1f} us".format(dT,1000000.*dT/count))
@@ -372,6 +489,7 @@ hLabels.append('LeptonCount')
 hLabels.append('GoodLeptons')
 hLabels.append('LeptonPair')
 hLabels.append('FoundZ')
+hLabels.append('ExtraLeptonVeto')
 hLabels.append('GoodTauPair')
 
 hCutFlow=[]
@@ -386,7 +504,7 @@ for icat,cat in enumerate(cats) :
     #if not MC : lcount=len(cutCounter[cat].getYield()) #lcount stands for how many different values you have
     #else : lcount=len(cutCounterGenWeight[cat].getYieldWeighted()) #lcount stands for how many different values you have
     lcount=len(hLabels)
-    print lcount, cat, icat
+    #print lcount, cat, icat
     for i in range(len(hLabels)) :
         hCutFlow[icat].GetXaxis().SetBinLabel(i+1,hLabels[i])
         if MC : hCutFlowW[icat].GetXaxis().SetBinLabel(i+1,hLabels[i])

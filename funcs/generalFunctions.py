@@ -3,6 +3,7 @@
 from ROOT import TLorentzVector
 from ROOT import TFile, TH1D, TCanvas, TGraph, kRed, kBlue, TLegend
 from math import sqrt, sin, cos, pi
+from termcolor import colored
 import numpy as np
 import json
 
@@ -28,6 +29,15 @@ def getLepIdxFrom4Vec(entry, lep_4vec, lep_type):
                             idx_lep = j
 
     return idx_lep
+
+def printTriggerObjects(e) :
+    print(' i    pt     phi   eta   ID   filter')
+    for i in range(e.nTrigObj) :
+        print('{0:3d}\t{1:5.1f}\t{2:5.2f}\t{3:5.2f}\t{4:5d}0x\t{5:04x}'.format(
+            i,e.TrigObj_pt[i],  e.TrigObj_phi[i], e.TrigObj_eta[i], e.TrigObj_id[i], e.TrigObj_filterBits[i]))
+    return
+
+
 
 def genMatchTau(entry, jt, decayMode=''):
     """ Classification: genMatching
@@ -86,18 +96,20 @@ def checkMETFlags(entry, year, isMC=False) :
 
 
 def printEvent(entry) :
+
     print("** Run={0:d} LS={1:d} Event={2:d} MET={3:.1f}".format(entry.run,entry.luminosityBlock,entry.event,entry.MET_pt))
     if entry.nMuon > 0 :
-        print("Muons\n # Q    Pt   Eta   Phi   Iso  Medium Tight Soft    dxy     dz   MC     dR     Pt   eta   phi")
+        print("Muons\n # Q    Pt   Eta   Phi   Iso  Medium Tight Soft    dxy     dz   MC     dR     Pt   eta   phi, genMatch")
         for j in range(entry.nMuon) :
             muSign = '+'
             if entry.Muon_charge[j] < 0 : muSign = '-'
             print("{0:2d} {1:2s}{2:5.1f}{3:6.2f}{4:6.2f}{5:7.3f} {6:5s} {7:5s} {8:5s}{9:7.3f}{10:7.3f}{11:s}".format(
                 j,muSign,entry.Muon_pt[j],entry.Muon_eta[j],entry.Muon_phi[j],entry.Muon_pfRelIso04_all[j],str(entry.Muon_mediumId[j]),str(entry.Muon_tightId[j]),
                 str(entry.Muon_softId[j]),entry.Muon_dxy[j],entry.Muon_dz[j],
-                getMCmatchString(entry.Muon_eta[j],entry.Muon_phi[j],entry)))
+                getMCmatchString(entry.Muon_eta[j],entry.Muon_phi[j],entry))), ord(entry.Muon_genPartFlav[j])
+
     if entry.nElectron > 0 :
-        print("Electrons                           Lost  \n # Q    Pt   Eta   Phi   Iso   Qual Hits  MVA  WP90    dxy     dz   MC     dR     Pt   eta   phi")
+        print("Electrons                           Lost  \n # Q    Pt   Eta   Phi   Iso   Qual Hits  MVA  WP90    dxy     dz   MC     dR     Pt   eta   phi genMatch")
         
         for j in range(entry.nElectron) :
             eSign = '+'
@@ -106,7 +118,7 @@ def printEvent(entry) :
               entry.Electron_pt[j],entry.Electron_eta[j],entry.Electron_phi[j],entry.Electron_miniPFRelIso_all[j],
               entry.Electron_cutBased[j],ord(entry.Electron_lostHits[j]),entry.Electron_mvaFall17V2noIso[j],entry.Electron_mvaFall17V2noIso_WP90[j],
               entry.Electron_dxy[j],entry.Electron_dz[j],                                             
-              getMCmatchString(entry.Electron_eta[j],entry.Electron_phi[j],entry)))
+              getMCmatchString(entry.Electron_eta[j],entry.Electron_phi[j],entry))), ord(entry.Electron_genPartFlav[j])
 
 
     #print("Lepton List\n    Pt    Eta    Phi ")
@@ -132,7 +144,7 @@ def printEvent(entry) :
 
     if True and entry.nTau > 0:
         print("Taus                                    |-Deep Tau-||-------Iso------|")
-        print(" #    Pt   Eta   Phi   Mode ID   DMID    vJ  vM  vE  Raw   Chg   Neu  jetIdx antiEl antiMu  dxy     dz  idMVA   rawIso  MC")
+        print(" #    Pt   Eta   Phi   Mode ID   DMID    vJ  vM  vE  Raw   Chg   Neu  jetIdx antiEl antiMu  dxy     dz  idMVA   rawIso  MC, genMatch")
         for j in range(entry.nTau) :
             print("{0:2d} {1:5.1f}{2:6.2f}{3:6.2f}{4:5d}  {5:5s} {6:5s}{18:4d}{19:4d}{20:4d} {7:6.2f}{8:6.2f}{9:6.2f}{10:6d}{11:6d}{12:6d}  {13:7.3f}{14:7.3f} {15:5d} {16:8.4f} {17:6s}".format(
                 j,entry.Tau_pt[j],entry.Tau_eta[j],entry.Tau_phi[j],entry.Tau_decayMode[j],
@@ -141,7 +153,7 @@ def printEvent(entry) :
                 entry.Tau_jetIdx[j],ord(entry.Tau_idAntiEle[j]),ord(entry.Tau_idAntiMu[j]),
                 entry.Tau_dxy[j],entry.Tau_dz[j],ord(entry.Tau_idMVAoldDM2017v2[j]),entry.Tau_rawMVAoldDM2017v2[j],
                 getMCmatchString(entry.Tau_eta[j],entry.Tau_phi[j],entry)[0:6],
-                ord(entry.Tau_idDeepTau2017v2p1VSjet[j]),ord(entry.Tau_idDeepTau2017v2p1VSmu[j]),ord(entry.Tau_idDeepTau2017v2p1VSe[j])))
+                ord(entry.Tau_idDeepTau2017v2p1VSjet[j]),ord(entry.Tau_idDeepTau2017v2p1VSmu[j]),ord(entry.Tau_idDeepTau2017v2p1VSe[j]))), ord(entry.Tau_genPartFlav[j])
 
     if True and entry.nTrigObj > 0 :
         trigID = { 11:"Electr", 22:"Photon", 13:"  Muon",15:"   Tau", 1:"   Jet", 6:"FatJet", 2:"   MET", 3:"    HT" , 4:"   MHT" }
@@ -238,6 +250,7 @@ def findDoubleLeptTrigger(goodLeptonList,entry,flavour,era):
     LepttrigList =[]
     nLepton = len(goodLeptonList)
     hltList = []
+    hltListSubL = []
     leadL = -1
     subleadL = -1
 
@@ -364,10 +377,11 @@ def findDoubleLeptTrigger(goodLeptonList,entry,flavour,era):
 
 
 
-def findSingleLeptTrigger(goodLeptonList,entry,flavour,era):
+def findSingleLeptTrigger(goodLeptonList,entry,flavour,era, printOn=False):
     LepttrigList =[]
     nLepton = len(goodLeptonList)
     hltList = []
+    hltListSubL = []
     leadL = -1
     subleadL = -1
 
@@ -402,9 +416,9 @@ def findSingleLeptTrigger(goodLeptonList,entry,flavour,era):
 
         #if era == '2016' and not HLT_Ele25_eta2p1_WPTight_Gsf and not HLT_Ele27_eta2p1_WPTight_Gsf : return LepttrigList, hltList
         #if era != '2016' and not HLT_Ele32_WPTight_Gsf and not HLT_Ele35_WPTight_Gsf :  return LepttrigList, hltList
-        if era == '2016' and not HLT_Ele25_eta2p1_WPTight_Gsf : return LepttrigList, hltList
-        if era == '2017' and not HLT_Ele27_WPTight_Gsf and not HLT_Ele32_WPTight_Gsf and not HLT_Ele35_WPTight_Gsf :  return LepttrigList, hltList
-        if era == '2018' and not HLT_Ele32_WPTight_Gsf and not HLT_Ele35_WPTight_Gsf :  return LepttrigList, hltList
+        if era == '2016' and not HLT_Ele25_eta2p1_WPTight_Gsf : return LepttrigList, hltList, hltListSubL
+        if era == '2017' and not HLT_Ele27_WPTight_Gsf and not HLT_Ele32_WPTight_Gsf and not HLT_Ele35_WPTight_Gsf :  return LepttrigList, hltList, hltListSubL
+        if era == '2018' and not HLT_Ele32_WPTight_Gsf and not HLT_Ele35_WPTight_Gsf :  return LepttrigList, hltList, hltListSubL
 	    
 	#if era == '2016' and entry.Electron_pt[goodLeptonList[0]] < 29 and entry.Electron_pt[goodLeptonList[1]] < 29 : return LepttrigList, hltList
 	#if era != '2016' and entry.Electron_pt[goodLeptonList[0]] < 37 and entry.Electron_pt[goodLeptonList[1]] < 37 : return LepttrigList, hltList
@@ -413,12 +427,6 @@ def findSingleLeptTrigger(goodLeptonList,entry,flavour,era):
         #single ele 2017: HLT Ele27 WPTight Gsf v, HLT Ele32 WPTight Gsf v, HLT Ele35 WPTight Gsf v and cut pt(ele)>28, eta(ele)<2.1
         #single ele 2018:  HLT Ele32 WPTight Gsf v, HLT Ele35 WPTight Gsf v and cut pt(ele)>33, eta(ele)<2.1
         
-        if entry.Electron_pt[goodLeptonList[0]] > entry.Electron_pt[goodLeptonList[1]]: 
-            leadL = goodLeptonList[0]
-            subleadL = goodLeptonList[1]
-        else : 
-            leadL = goodLeptonList[1]
-            subleadL = goodLeptonList[0]
 
 
     #if flavour == 'ee' :print 'pT ', entry.Electron_pt[leadL], entry.Electron_pt[subleadL], leadL, subleadL
@@ -448,18 +456,9 @@ def findSingleLeptTrigger(goodLeptonList,entry,flavour,era):
 
 
         #print ord(entry.Tau_idDeepTau2017v2p1VSmu[j]), ord(entry.Tau_idDeepTau2017v2p1VSe[j]), ord(entry.Tau_idDeepTau2017v2p1VSjet[j])
-        if era == '2016' and not HLT_IsoMu22 and not HLT_IsoMu22_eta2p1 and not HLT_IsoTkMu22 and not HLT_IsoTkMu22_eta2p1 :  return LepttrigList, hltList
-        if era != '2016' and not HLT_IsoMu24 and not HLT_IsoMu27 :  return LepttrigList, hltList
+        if era == '2016' and not HLT_IsoMu22 and not HLT_IsoMu22_eta2p1 and not HLT_IsoTkMu22 and not HLT_IsoTkMu22_eta2p1 :  return LepttrigList, hltList, hltListSubL
+        if era != '2016' and not HLT_IsoMu24 and not HLT_IsoMu27 :  return LepttrigList, hltList, hltListSubL
 
-
-        if entry.Muon_pt[goodLeptonList[0]] > entry.Muon_pt[goodLeptonList[1]]: 
-            leadL = goodLeptonList[0]
-            subleadL = goodLeptonList[1]
-        else : 
-            leadL = goodLeptonList[1]
-            subleadL = goodLeptonList[0]
-
-        #if entry.Muon_pt[leadL] < 29 and entry.Muon_pt[subleadL] < 29 : return LepttrigList, hltList
 
     #for 2017, 2018 according to nAOD documentation  qualityBitsDoc = cms.string("1 = TrkIsoVVL, 2 = Iso, 4 = OverlapFilter PFTau, 8 = 1mu, 16 = 2mu, 32 = 1mu-1e, 64 = 1mu-1tau, 128 = 3mu, 256 = 2mu-1e, 512 =1mu-2e"),
     ## for 2016 in particular  "1 = TrkIsoVVL, 2 = Iso, 4 = OverlapFilter PFTau, 8 = IsoTkMu"
@@ -469,156 +468,180 @@ def findSingleLeptTrigger(goodLeptonList,entry,flavour,era):
     #single mu 2018: HLT IsoMu24 v, HLT IsoMu27 v and cut pt(mu)>25, eta(mu)<2.4
     dR=100.
     dRr=100.
+    hltList=[]
+    hltListSubL=[]
     for iobj in range(0,entry.nTrigObj) :
 	dR=100.
 	dRr=100.
 	isbit2 = False
 	isbit8 = False
+        
+
         if 'ee' in flavour and abs(entry.TrigObj_id[iobj]) == 11 : 
+	    if entry.Electron_pt[goodLeptonList[0]] > entry.Electron_pt[goodLeptonList[1]]: 
+		leadL = goodLeptonList[0]
+		subleadL = goodLeptonList[1]
+	    else : 
+		leadL = goodLeptonList[1]
+		subleadL = goodLeptonList[0]
+
 	    dR = DRobj(entry.Electron_eta[leadL],entry.Electron_phi[leadL], entry.TrigObj_eta[iobj], entry.TrigObj_phi[iobj])
 	    dRr = DRobj(entry.Electron_eta[subleadL],entry.Electron_phi[subleadL], entry.TrigObj_eta[iobj], entry.TrigObj_phi[iobj])
 
+	    if entry.TrigObj_filterBits[iobj] &2 > 0:  isbit2 = True
+	    if entry.TrigObj_filterBits[iobj] &8 > 0 :  isbit8 = True
+
 	if 'mm' in flavour and abs(entry.TrigObj_id[iobj]) == 13 : 
+	    if entry.Muon_pt[goodLeptonList[0]] > entry.Muon_pt[goodLeptonList[1]]: 
+		leadL = goodLeptonList[0]
+		subleadL = goodLeptonList[1]
+	    else : 
+		leadL = goodLeptonList[1]
+		subleadL = goodLeptonList[0]
+
 	    dR = DRobj(entry.Muon_eta[leadL],entry.Muon_phi[leadL], entry.TrigObj_eta[iobj], entry.TrigObj_phi[iobj])
 	    dRr = DRobj(entry.Muon_eta[subleadL],entry.Muon_phi[subleadL], entry.TrigObj_eta[iobj], entry.TrigObj_phi[iobj])
 
 
+	    if entry.TrigObj_filterBits[iobj] &2 > 0:  isbit2 = True
+	    if entry.TrigObj_filterBits[iobj] &8 > 0 :  isbit8 = True
+
+
 	if dR < 0.5 : 
 
-	    if entry.TrigObj_filterBits[iobj] &2 :  isbit2 = True
-	    if entry.TrigObj_filterBits[iobj] &8 :  isbit8 = True
-		
 
-	    if era=='2016' and flavour == 'mm': 
-		if ( HLT_IsoMu22  and isbit2 ) or ( HLT_IsoTkMu22  and isbit8) :
-                    if entry.Muon_pt[leadL] > 23 and abs(entry.Muon_eta[leadL])<2.4:
-			issubLfired = True
-			hltList.append("LeadIsoMu")
+	    if str(era)=='2016' and flavour == 'mm': 
 
-		if  (HLT_IsoMu22_eta2p1 and isbit2 ) or (HLT_IsoTkMu22_eta2p1 and isbit8) :
-                    if entry.Muon_pt[leadL] > 23 and abs(entry.Muon_eta[leadL])<2.1:
-			issubLfired = True
-			hltList.append("LeadIsoMu")
+                if entry.Muon_pt[leadL] > 23 and abs(entry.Muon_eta[leadL]) < 2.1:
+                    if printOn : 
+			print ''
+			print entry.luminosityBlock, entry.run, entry.event
+			print("mm, iobj={7:d}, nTrigObj_id={0:d}, filter_bit={1:x}, dR_leading={2:f}, dR_subleading={3:f}, Muon_pT={4:f}, Muon_eta={5:f},  Muon_phi={6:f}, isbit2={8:b} isbit8={9:b}".format(entry.TrigObj_id[iobj], entry.TrigObj_filterBits[iobj], dR, dRr, entry.Muon_pt[leadL], abs(entry.Muon_eta[leadL]), entry.Muon_phi[leadL], iobj, isbit2, isbit8))
+			print 'HLT_IsoMu22:', HLT_IsoMu22, 'HLT_IsoMu22_eta2p1:', HLT_IsoMu22_eta2p1, 'HLT_IsoTkMu22:', HLT_IsoTkMu22, 'HLT_IsoTkMu22_eta2p1:', HLT_IsoTkMu22_eta2p1   
+                    #printTriggerObjects(entry)
+
+		    if (HLT_IsoMu22  and isbit2 )  :
+			hltList.append(True)
+                        if printOn: print 'HLT_IsoMu22:', HLT_IsoMu22
+
+		    if (HLT_IsoMu22_eta2p1 and isbit2 )  :
+			hltList.append(True)
+                        if printOn: print 'HLT_IsoMu22_eta2p1:', HLT_IsoMu22_eta2p1
+
+		    if  (HLT_IsoTkMu22  and isbit8) :
+			hltList.append(True)
+                        if printOn: print 'HLT_IsoTkMu22:', HLT_IsoTkMu22
+
+		    if  (HLT_IsoTkMu22_eta2p1 and isbit8) :
+			hltList.append(True)
+                        if printOn: print 'HLT_IsoTkMu22_eta2p1:', HLT_IsoTkMu22_eta2p1
+
 
 	    if era!='2016' and flavour == 'mm': 
-		if  (HLT_IsoMu24 and entry.Muon_pt[leadL] > 25) or \
-		(HLT_IsoMu27 and entry.Muon_pt[leadL] > 28) and abs(entry.Muon_eta[leadL])<2.4 and isbit2:
-		    issubLfired = True
-		    hltList.append("LeadIsoMu")
+		if  HLT_IsoMu24  and entry.Muon_pt[leadL] > 25 and abs(entry.Muon_eta[leadL]) < 2.1 and isbit2 :
+		    hltList.append(True)
+
+		if  HLT_IsoMu27 and entry.Muon_pt[leadL] > 25 and abs(entry.Muon_eta[leadL]) < 2.1 and isbit2 :
+		    hltList.append(True)
 
 
-	    if era=='2016' and flavour == 'ee': 
+	    if str(era)=='2016' and flavour == 'ee': 
+                if printOn:
+		    print ''
+		    print entry.luminosityBlock, entry.run, entry.event
+
+		    #print("ee, nTrigObj_id={0:d}, filter_bit={1:x}, dR_leading={2:f}, dR_subleading={3:f}, Electron_pT={4:f}, Electron_eta={5:f},  Electron_phi={9:f}, iobj={6:d}, obj_pt={10:f}, obj_eta={7:f}, obj_phi={8:f}".format(entry.TrigObj_id[iobj], entry.TrigObj_filterBits[iobj], dR, dRr, entry.Electron_pt[leadL], abs(entry.Electron_eta[leadL]), iobj, entry.TrigObj_eta[iobj], entry.TrigObj_phi[iobj], entry.Electron_phi[leadL], entry.TrigObj_pt[iobj])) 
+		    print("ee, iobj={7:d}, nTrigObj_id={0:d}, filter_bit={1:x}, dR_leading={2:f}, dR_subleading={3:f}, Electron_pT={4:f}, Electron_eta={5:f},  Electron_phi={6:f}, , isbit2={8:b} isbit8={9:b}".format(entry.TrigObj_id[iobj], entry.TrigObj_filterBits[iobj], dR, dRr, entry.Electron_pt[subleadL], abs(entry.Electron_eta[subleadL]), entry.Electron_phi[subleadL], iobj, isbit2, isbit8)) 
                 if HLT_Ele25_eta2p1_WPTight_Gsf and abs(entry.Electron_eta[leadL]) < 2.1 and entry.Electron_pt[leadL] > 26 :
-		    issubLfired = True
-		    hltList.append("LeadTightEle")
+		    if isbit2 : 
+                        hltList.append(True)
+                        if printOn:print 'HLT_Ele25_eta2p1_WPTight_Gsf: ',HLT_Ele25_eta2p1_WPTight_Gsf
 
-	    if era=='2017' and flavour == 'ee': 
+	    if str(era)=='2017' and flavour == 'ee': 
 
-                if ( HLT_Ele27_WPTight_Gsf and entry.Electron_pt[leadL] > 28) or \
-                ( HLT_Ele32_WPTight_Gsf and entry.Electron_pt[leadL] > 33) or \
-                ( HLT_Ele35_WPTight_Gsf and entry.Electron_pt[leadL] > 36) and abs(entry.Electron_eta[leadL]) < 2.5 and isbit2:
-		    issubLfired = True
-		    hltList.append("LeadTightEle")
+                if (HLT_Ele27_WPTight_Gsf) and abs(entry.Electron_eta[leadL]) < 2.1 and entry.Electron_pt[leadL] > 28 and isbit2 :
+		    hltList.append(True)
+                if (HLT_Ele32_WPTight_Gsf) and abs(entry.Electron_eta[leadL]) < 2.1 and entry.Electron_pt[leadL] > 28 and isbit2 :
+		    hltList.append(True)
+                if (HLT_Ele35_WPTight_Gsf) and abs(entry.Electron_eta[leadL]) < 2.1 and entry.Electron_pt[leadL] > 28 and isbit2 :
+		    hltList.append(True)
 
-	    if era=='2018' and flavour == 'ee': 
+	    if str(era)=='2018' and flavour == 'ee': 
 
-                if ( HLT_Ele32_WPTight_Gsf and entry.Electron_pt[leadL] > 33) or \
-                (HLT_Ele35_WPTight_Gsf and entry.Electron_pt[leadL] > 36) and abs(entry.Electron_eta[leadL]) < 2.5 and isbit2:
-		    issubLfired = True
-		    hltList.append("LeadTightEle")
+                if (HLT_Ele32_WPTight_Gsf) and abs(entry.Electron_eta[leadL]) < 2.1 and entry.Electron_pt[leadL] > 33 and isbit2 :
+		    hltList.append(True)
+                if (HLT_Ele35_WPTight_Gsf) and abs(entry.Electron_eta[leadL]) < 2.1 and entry.Electron_pt[leadL] > 33 and isbit2 :
+		    hltList.append(True)
 
-
-
-	    '''
-	    if era=='2016' and flavour == 'mm': 
-		if ((HLT_IsoMu22 or HLT_IsoMu22_eta2p1) and isbit2 ) or ((HLT_IsoTkMu22 or HLT_IsoTkMu22_eta2p1) and isbit8) :
-                    if entry.Muon_pt[leadL] > 23 and abs(entry.Muon_eta[leadL])<2.1:
-			isLfired = True
-			hltList.append("LeadIsoMu")
-
-	    if era!='2016' and flavour == 'mm': 
-		if  (HLT_IsoMu24 or HLT_IsoMu27) and entry.Muon_pt[leadL] > 25 and abs(entry.Muon_eta[leadL])<2.4 and isbit2 :
-		    isLfired = True
-		    hltList.append("LeadIsoMu")
-
-
-	    if era=='2016' and flavour == 'ee': 
-                if HLT_Ele25_eta2p1_WPTight_Gsf and abs(entry.Electron_eta[leadL]) < 2.1 and entry.Electron_pt[leadL] > 26 :
-		    isLfired = True
-		    hltList.append("LeadTightEle")
-
-	    if era=='2017' and flavour == 'ee': 
-
-                if (HLT_Ele27_WPTight_Gsf or HLT_Ele32_WPTight_Gsf or HLT_Ele35_WPTight_Gsf) and abs(entry.Electron_eta[leadL]) < 2.1 and entry.Electron_pt[leadL] > 28 and isbit2 :
-		    isLfired = True
-		    hltList.append("LeadTightEle")
-
-	    if era=='2018' and flavour == 'ee': 
-
-                if (HLT_Ele32_WPTight_Gsf or HLT_Ele35_WPTight_Gsf) and abs(entry.Electron_eta[leadL]) < 2.1 and entry.Electron_pt[leadL] > 33 and isbit2 :
-		    isLfired = True
-		    hltList.append("LeadTightEle")
-
-
-            #print entry.HLT_IsoMu22, entry.HLT_IsoMu22_eta2p1 , 'isoTrk', entry.HLT_IsoTkMu22 , entry.HLT_IsoTkMu22_eta2p1, entry.TrigObj_filterBits[iobj] & 2 , entry.TrigObj_filterBits[iobj] & 8
-            '''
 
 	if dRr < 0.5 : 
 
-	    if entry.TrigObj_filterBits[iobj] &2 :  isbit2 = True
-	    if entry.TrigObj_filterBits[iobj] &8 :  isbit8 = True
-			
-	    if era=='2016' and flavour == 'mm': 
-		if ( HLT_IsoMu22  and isbit2 ) or ( HLT_IsoTkMu22  and isbit8) :
-                    if entry.Muon_pt[subleadL] > 23 and abs(entry.Muon_eta[subleadL])<2.4:
-			issubLfired = True
-			hltList.append("SubIsoMu")
 
-		if  (HLT_IsoMu22_eta2p1 and isbit2 ) or (HLT_IsoTkMu22_eta2p1 and isbit8) :
-                    if entry.Muon_pt[subleadL] > 23 and abs(entry.Muon_eta[subleadL])<2.1:
-			issubLfired = True
-			hltList.append("SubIsoMu")
+	    if str(era)=='2016' and flavour == 'mm': 
+                if entry.Muon_pt[subleadL] > 23 and abs(entry.Muon_eta[subleadL])<2.1:
+                    #print("mm, subL nTrigObj_id={0:d}, filter_bit={1:x}, dR_leading={2:f}, dR_subleading={3:f}, Muon_pT={4:f}, Muon_eta={5:f},  Muon_phi={9:f}, iobj={6:d}, obj_pt={10:f}, obj_eta={7:f}, obj_phi={8:f}".format(entry.TrigObj_id[iobj], entry.TrigObj_filterBits[iobj], dR, dRr, entry.Muon_pt[subleadL], abs(entry.Muon_eta[subleadL]), iobj, entry.TrigObj_eta[iobj], entry.TrigObj_phi[iobj], entry.Muon_phi[subleadL], entry.TrigObj_pt[iobj])) 
+                    if printOn: 
+                        print("mm, subL iobj={7:d}, nTrigObj_id={0:d}, filter_bit={1:x}, dR_leading={2:f}, dR_subleading={3:f}, Muon_pT={4:f}, Muon_eta={5:f},  Muon_phi={6:f}, isbit2={8:b} isbit8={9:b}".format(entry.TrigObj_id[iobj], entry.TrigObj_filterBits[iobj], dR, dRr, entry.Muon_pt[subleadL], abs(entry.Muon_eta[subleadL]), entry.Muon_phi[subleadL], iobj, isbit2, isbit8)) 
+                        print 'HLT_IsoMu22:', HLT_IsoMu22, 'HLT_IsoMu22_eta2p1:', HLT_IsoMu22_eta2p1, 'HLT_IsoTkMu22:', HLT_IsoTkMu22, 'HLT_IsoTkMu22_eta2p1:', HLT_IsoTkMu22_eta2p1   
+		    if (HLT_IsoMu22  and isbit2)  :
+			hltListSubL.append(True)
+                        if printOn: print 'subL HLT_IsoMu22:', HLT_IsoMu22, 'dR', dRr
+
+		    if (HLT_IsoMu22_eta2p1 and isbit2)  :
+			hltListSubL.append(True)
+                        if printOn: print 'subL HLT_IsoMu22_eta2p1:', HLT_IsoMu22_eta2p1, 'dR', dRr
+
+		    if  (HLT_IsoTkMu22 and isbit8) :
+			hltListSubL.append(True)
+                        if printOn: print 'subL HLT_IsoTkMu22:', HLT_IsoTkMu22, 'dR', dRr
+
+		    if  (HLT_IsoTkMu22_eta2p1 and isbit8) :
+			hltListSubL.append(True)
+                        if printOn: print 'subL HLT_IsoTkMu22_eta2p1:', HLT_IsoTkMu22_eta2p1, 'dR', dRr
+
 
 	    if era!='2016' and flavour == 'mm': 
-		if  (HLT_IsoMu24 and entry.Muon_pt[subleadL] > 25 ) or \
-		(HLT_IsoMu27 and entry.Muon_pt[subleadL] > 28 ) and abs(entry.Muon_eta[subleadL])<2.4 and isbit2:
-		    issubLfired = True
-		    hltList.append("SubIsoMu")
+		if  HLT_IsoMu24  and entry.Muon_pt[subleadL] > 25 and abs(entry.Muon_eta[subleadL]) < 2.1 and isbit2 :
+		    hltListSubL.append(True)
+
+		if  HLT_IsoMu27 and entry.Muon_pt[subleadL] > 25 and abs(entry.Muon_eta[subleadL]) < 2.1 and isbit2 :
+		    hltListSubL.append(True)
 
 
-	    if era=='2016' and flavour == 'ee': 
-                if HLT_Ele25_eta2p1_WPTight_Gsf and abs(entry.Electron_eta[subleadL]) < 2.1 and entry.Electron_pt[subleadL] > 26 :
-		    issubLfired = True
-		    hltList.append("SubTightEle")
+	    if str(era)=='2016' and flavour == 'ee': 
+                if HLT_Ele25_eta2p1_WPTight_Gsf and abs(entry.Electron_eta[subleadL]) < 2.1 and entry.Electron_pt[subleadL] > 26 and isbit2:
+		    hltListSubL.append(True)
+                    #print("ee, subL nTrigObj_id={0:d}, filter_bit={1:x}, dR_leading={2:f}, dR_subleading={3:f}, Electron_pT={4:f}, Electron_eta={5:f},  Electron_phi={9:f}, iobj={6:d},  obj_pt={10:f}, obj_eta={7:f}, obj_phi={8:f}".format(entry.TrigObj_id[iobj], entry.TrigObj_filterBits[iobj], dR, dRr, entry.Electron_pt[subleadL], abs(entry.Electron_eta[subleadL]), iobj, entry.TrigObj_eta[iobj], entry.TrigObj_phi[iobj], entry.Electron_phi[subleadL], entry.TrigObj_eta[iobj])) 
+                    if printOn: 
+                        print("ee, subL iobj={7:d}, nTrigObj_id={0:d}, filter_bit={1:x}, dR_leading={2:f}, dR_subleading={3:f}, Electron_pT={4:f}, Electron_eta={5:f},  Electron_phi={6:f}".format(entry.TrigObj_id[iobj], entry.TrigObj_filterBits[iobj], dR, dRr, entry.Electron_pt[subleadL], abs(entry.Electron_eta[subleadL]), entry.Electron_phi[subleadL], iobj)) 
+                        print 'subL HLT_Ele25_eta2p1_WPTight_Gsf:', HLT_Ele25_eta2p1_WPTight_Gsf, 'dR', dRr
 
-	    if era=='2017' and flavour == 'ee': 
+	    if str(era)=='2017' and flavour == 'ee': 
 
-                if ( HLT_Ele27_WPTight_Gsf and entry.Electron_pt[subleadL] > 28) or \
-                ( HLT_Ele32_WPTight_Gsf and entry.Electron_pt[subleadL] > 33) or \
-                ( HLT_Ele35_WPTight_Gsf and entry.Electron_pt[subleadL] > 36) and abs(entry.Electron_eta[subleadL]) < 2.5 and isbit2:
-		    issubLfired = True
-		    hltList.append("SubTightEle")
+                if (HLT_Ele27_WPTight_Gsf) and abs(entry.Electron_eta[subleadL]) < 2.1 and entry.Electron_pt[subleadL] > 28 and isbit2 :
+		    hltListSubL.append(True)
+                if (HLT_Ele32_WPTight_Gsf) and abs(entry.Electron_eta[subleadL]) < 2.1 and entry.Electron_pt[subleadL] > 28 and isbit2 :
+		    hltListSubL.append(True)
+                if (HLT_Ele35_WPTight_Gsf) and abs(entry.Electron_eta[subleadL]) < 2.1 and entry.Electron_pt[subleadL] > 28 and isbit2 :
+		    hltListSubL.append(True)
 
-	    if era=='2018' and flavour == 'ee': 
+	    if str(era)=='2018' and flavour == 'ee': 
 
-                if ( HLT_Ele32_WPTight_Gsf and entry.Electron_pt[subleadL] > 33) or \
-                (HLT_Ele35_WPTight_Gsf and entry.Electron_pt[subleadL] > 36) and abs(entry.Electron_eta[subleadL]) < 2.5 and isbit2:
-		    issubLfired = True
-		    hltList.append("SubTightEle")
-
-
-            #print entry.HLT_IsoMu22, entry.HLT_IsoMu22_eta2p1 , 'isoTrk', entry.HLT_IsoTkMu22 , entry.HLT_IsoTkMu22_eta2p1, entry.TrigObj_filterBits[iobj] & 2 , entry.TrigObj_filterBits[iobj] & 8
+                if (HLT_Ele32_WPTight_Gsf) and abs(entry.Electron_eta[subleadL]) < 2.1 and entry.Electron_pt[subleadL] > 33 and isbit2 :
+		    hltListSubL.append(True)
+                if (HLT_Ele35_WPTight_Gsf) and abs(entry.Electron_eta[subleadL]) < 2.1 and entry.Electron_pt[subleadL] > 33 and isbit2 :
+		    hltListSubL.append(True)
 
 
-    #print isbit, hltList, flavour, isLfired
-    if isLfired == True : LepttrigList.append(leadL)
-    if issubLfired == True : LepttrigList.append(subleadL)
 
-    if isLfired == True and issubLfired == True : 
-        doubleLep = True 
-	hltList.append('BothLept')
 
-    return LepttrigList, hltList
+
+    if len(hltList)>0 : LepttrigList.append(leadL)
+    if len(hltListSubL)>0 : LepttrigList.append(subleadL)
+
+
+    #if flavour=='ee'  :  print '--------------->',  era, flavour, LepttrigList, 'hltL', hltList, 'hltSubL', hltListSubL, entry.luminosityBlock, entry.event
+    return LepttrigList, hltList, hltListSubL
 
 
 
