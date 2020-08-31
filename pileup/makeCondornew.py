@@ -10,7 +10,7 @@ def getArgs() :
     parser.add_argument("--nickName",default='MCpileup',help="Data set nick name.") 
     parser.add_argument("-m","--mode",default='anaXRD',help="Mode (script to run).")
     parser.add_argument("-y","--year",default=2017,type=str,help="Data taking period, 2016, 2017 or 2018")
-    parser.add_argument("-c","--concatenate",default=50,type=int,help="On how many files to run on each job")
+    parser.add_argument("-c","--concatenate",default=1,type=int,help="On how many files to run on each job")
     parser.add_argument("-s","--selection",default='ZH',type=str,help="select ZH or AZH")
     return parser.parse_args()
 
@@ -73,6 +73,9 @@ for nFile in range(0, len(dataset),mjobs) :
 
 
     fileName = getFileName(file)
+    server = 'cms-xrd-global.cern.ch'
+    if 'lpcsusyhiggs' in fileName : server = 'cmsxrootd.fnal.gov'
+
     maxx = mjobs
     if counter+mjobs > len(dataset) : 
         #print 'should include', nFile, -nFile-mjobs + len(dataset)+1, 'from ', len(dataset), counter
@@ -81,8 +84,8 @@ for nFile in range(0, len(dataset),mjobs) :
     for j in range(0,maxx) :
         #print 'shoud see', nFile+maxx, maxx, len(dataset)
         fileloop=dataset[nFile:nFile+maxx][j]
-        outLines.append("xrdcp root://cms-xrd-global.cern.ch/{0:s} inFile.root\n".format(fileloop)) 
-        outFileName = "{0:s}_{1:03d}.root".format(args.nickName,nFile+j)
+        outLines.append("xrdcp root://{1:s}/{0:s} inFile.root\n".format(fileloop,server))
+        outFileName = "{0:s}_{1:03d}.root".format(args.nickName,nFile+j+1)
         outLines.append("python makePileUpHisto.py -f inFile.root -o {0:s} -y {1:s}\n".format(outFileName, args.year))
         outLines.append("mv inFile.csv {0:s}\n".format(outFileName.replace(".root",".csv")))
         outLines.append("rm inFile.root\n".format(nFile+1))

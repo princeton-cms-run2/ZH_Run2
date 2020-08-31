@@ -13,8 +13,9 @@ from math import sqrt, pi
 
 # import from ZH_Run2/funcs/
 sys.path.insert(1,'../funcs/')
-import tauFun2
+import tauFun2 
 import generalFunctions as GF 
+import Weights 
 import outTuple
 import time
 
@@ -161,6 +162,7 @@ outTuple = outTuple.outTuple(outFileName, era)
 tStart = time.time()
 countMod = 1000
 isMC = True
+Weights=Weights.Weights(args.year)
 
 
 PUevents, UWevents = {}, {}
@@ -170,13 +172,14 @@ for cat in cats :
     failedCounts[cat]={}
 
 for cat in cats :
-    for line in open('PUunique_{0:s}.txt'.format(cat),'r').readlines() :
+    for line in open('UWunique_{0:s}.txt'.format(cat),'r').readlines() :
         vals = line.split()
         if len(vals) < 3 : continue
-        #run, LS, event = int(vals[0]), int(vals[1]), int(vals[2])
-        #LSrunEvent = "{0:d}:{1:d}:{2:d}".format(LS,run,event)
 
-        LS, run, event = int(vals[1]), int(vals[2]), int(vals[3])
+        run, LS, event = int(vals[0]), int(vals[1]), int(vals[2])
+
+        #LS, run, event = int(vals[1]), int(vals[2]), int(vals[3])
+
         LSrunEvent = "{0:d}:{1:d}:{2:d}".format(LS,run,event)
         UWevents[cat][LSrunEvent] = line
 
@@ -190,6 +193,7 @@ for count, e in enumerate(inTree) :
         print("Count={0:d}".format(count))
         if count >= 10000 : countMod = 10000
     if count == nMax : break    
+    applyes = Weights.applyES(e,args.year)
     #if count<70000 : continue
     #if count>100000 : break
     iCut=0
@@ -253,7 +257,7 @@ for count, e in enumerate(inTree) :
 
 
     iCut+=1
-    if not tauFun.goodTrigger(e, args.year) : 
+    if not tauFun2.goodTrigger(e, args.year) : 
         print 'Failed Trigger', cat, e.luminosityBlock, e.run, e.event, ':', cat
 	failedCounts[cat][iCut]=+1
         continue
@@ -286,9 +290,9 @@ for count, e in enumerate(inTree) :
 	        if  MC :   cutCounterGenWeight[cat].countGenWeight('LeptonCount', e.genWeight)
 
 
-        goodElectronList = tauFun.makeGoodElectronList(e)
-        goodMuonList = tauFun.makeGoodMuonList(e)
-        goodElectronList, goodMuonList = tauFun.eliminateCloseLeptons(e, goodElectronList, goodMuonList)
+        goodElectronList = tauFun2.makeGoodElectronList(e)
+        goodMuonList = tauFun2.makeGoodMuonList(e)
+        goodElectronList, goodMuonList = tauFun2.eliminateCloseLeptons(e, goodElectronList, goodMuonList)
 	goodElectronListExtraLepton=[]
 	goodMuonListExtraLepton=[]
 
@@ -307,7 +311,7 @@ for count, e in enumerate(inTree) :
 	        if  MC :   cutCounterGenWeight[cat].countGenWeight('GoodLeptons', e.genWeight)
 
             iCut+=1
-            pairList, lepList = tauFun.findZ(goodElectronList,[], e)
+            pairList, lepList = tauFun2.findZ(goodElectronList,[], e)
             if len(lepList) != 2 :
 	        failedCounts[cat][iCut]=+1
                 print 'Failed findZ ee', cat, e.luminosityBlock, e.run, e.event, ':', cat
@@ -328,7 +332,7 @@ for count, e in enumerate(inTree) :
 	        if  MC :   cutCounterGenWeight[cat].countGenWeight('GoodLeptons', e.genWeight)
 
             iCut+=1
-            pairList, lepList = tauFun.findZ([],goodMuonList, e)
+            pairList, lepList = tauFun2.findZ([],goodMuonList, e)
             if len(lepList) != 2 : 
                 print 'Failed findZ mm', cat, e.luminosityBlock, e.run, e.event, ':', cat
 	        failedCounts[cat][iCut]=+1
@@ -342,7 +346,7 @@ for count, e in enumerate(inTree) :
         M = (LepM + LepP).M()
 	
         iCut+=1
-        if not tauFun.mllCut(M) :
+        if not tauFun2.mllCut(M) :
             print 'Failed tau_mll ', cat, e.luminosityBlock, e.run, e.event, ':', cat
 	    failedCounts[cat][iCut]=+1
             continue
@@ -367,15 +371,15 @@ for count, e in enumerate(inTree) :
             if args.category != 'none' and tauMode != args.category[2:] : continue
             cat = lepMode + tauMode
             if tauMode == 'tt' :
-                tauList = tauFun.getTauList(cat, e, pairList=pairList, printOn=True)
-                bestTauPair = tauFun.getBestTauPair(cat, e, tauList , printOn=True)
+                tauList = tauFun2.getTauList(cat, e, pairList=pairList, printOn=True)
+                bestTauPair = tauFun2.getBestTauPair(cat, e, tauList , printOn=True)
                                     
             elif tauMode == 'et' :
-                bestTauPair = tauFun.getBestETauPair(e,cat=cat,pairList=pairList)
+                bestTauPair = tauFun2.getBestETauPair(e,cat=cat,pairList=pairList)
             elif tauMode == 'mt' :
-                bestTauPair = tauFun.getBestMuTauPair(e,cat=cat,pairList=pairList)
+                bestTauPair = tauFun2.getBestMuTauPair(e,cat=cat,pairList=pairList)
             elif tauMode == 'em' :
-                bestTauPair = tauFun.getBestEMuTauPair(e,cat=cat,pairList=pairList)
+                bestTauPair = tauFun2.getBestEMuTauPair(e,cat=cat,pairList=pairList)
 	    else : continue
 
             
@@ -385,16 +389,16 @@ for count, e in enumerate(inTree) :
 
                 if unique :
                     print("Tau Pair Fail: Event ID={0:d} cat={1:s}".format(e.event,cat ))
-                    #if bestTauPair = tauFun.getBestEMuTauPair(e,cat=cat,pairList=pairList,printOn=True) 
+                    #if bestTauPair = tauFun2.getBestEMuTauPair(e,cat=cat,pairList=pairList,printOn=True) 
 		    if tauMode == 'tt' :
-                        tauList = tauFun.getTauList(cat, e, pairList=pairList, printOn=True)
-			bestTauPair = tauFun.getBestTauPair(cat, e, tauList,printOn=True)
+                        tauList = tauFun2.getTauList(cat, e, pairList=pairList, printOn=True)
+			bestTauPair = tauFun2.getBestTauPair(cat, e, tauList,printOn=True)
 		    elif tauMode == 'et' :
-			bestTauPair = tauFun.getBestETauPair(e,cat=cat,pairList=pairList,printOn=True)
+			bestTauPair = tauFun2.getBestETauPair(e,cat=cat,pairList=pairList,printOn=True)
 		    elif tauMode == 'mt' :
-			bestTauPair = tauFun.getBestMuTauPair(e,cat=cat,pairList=pairList,printOn=True)
+			bestTauPair = tauFun2.getBestMuTauPair(e,cat=cat,pairList=pairList,printOn=True)
 		    elif tauMode == 'em' :
-			bestTauPair = tauFun.getBestEMuTauPair(e,cat=cat,pairList=pairList,printOn=True)
+			bestTauPair = tauFun2.getBestEMuTauPair(e,cat=cat,pairList=pairList,printOn=True)
 		    else : continue
                     #GF.printEvent(e)
                                     
@@ -419,9 +423,9 @@ for count, e in enumerate(inTree) :
             cutCounter[cat].count("9:GoodTauPair")
 	    if  MC:   cutCounterGenWeight[cat].countGenWeight('GoodTauPair', e.genWeight)
 
-            goodElectronListExtraLepton = tauFun.makeGoodElectronListExtraLepton(e,lepList)
-            goodMuonListExtraLepton = tauFun.makeGoodMuonListExtraLepton(e,lepList)
-            goodElectronListExtraLepton, goodMuonListExtraLepton = tauFun.eliminateCloseLeptons(e, goodElectronListExtraLepton, goodMuonListExtraLepton)
+            goodElectronListExtraLepton = tauFun2.makeGoodElectronListExtraLepton(e,lepList)
+            goodMuonListExtraLepton = tauFun2.makeGoodMuonListExtraLepton(e,lepList)
+            goodElectronListExtraLepton, goodMuonListExtraLepton = tauFun2.eliminateCloseLeptons(e, goodElectronListExtraLepton, goodMuonListExtraLepton)
             if tauMode == 'et' :
 	        if bestTauPair[0] in goodElectronListExtraLepton : goodElectronListExtraLepton.remove(bestTauPair[0])
 

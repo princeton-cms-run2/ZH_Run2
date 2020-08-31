@@ -8,6 +8,13 @@ import subprocess
 from ROOT import TLorentzVector
 from math import sqrt, sin, cos, pi
 from itertools import combinations
+import os
+import os.path
+import sys
+sys.path.append('../TauPOG')
+from TauPOG.TauIDSFs.TauIDSFTool import TauIDSFTool
+from TauPOG.TauIDSFs.TauIDSFTool import TauESTool
+from TauPOG.TauIDSFs.TauIDSFTool import TauFESTool
 
 __author__ = "Dan Marlow, Alexis Kalogeropoulos, Gage DeZoort"
 __date__   = "Monday, Oct. 28th, 2019"
@@ -16,6 +23,8 @@ __date__   = "Monday, Oct. 28th, 2019"
 with io.open('cuts.yaml', 'r') as stream:
     selections = yaml.load(stream)
 print "Using selections:\n", selections
+
+
 
 def goodTrigger(e, year):
     trig = selections['trig']
@@ -46,6 +55,7 @@ def goodTrigger(e, year):
     return (trig['singleLepton'] and goodSingle) or (trig['doubleLepton'] and goodDouble)  
 
     
+
 def getTauList(channel, entry, pairList=[],printOn=False) :
     """ tauFun.getTauList(): return a list of taus that 
                              pass the basic selection cuts               
@@ -63,7 +73,8 @@ def getTauList(channel, entry, pairList=[],printOn=False) :
 
     tauList = []
     tt = selections['tt'] # selections for H->tau(h)+tau(h)
-    for j in range(entry.nTau):    
+    for j in range(entry.nTau):   
+        #print entry.Tau_pt[j] 
         # apply tau(h) selections 
         if printOn : print 'looking for Tau j', j, 'Q', entry.Tau_charge[j]
         if entry.Tau_pt[j] < tt['tau_pt']: 
@@ -108,39 +119,6 @@ def getTauList(channel, entry, pairList=[],printOn=False) :
     if printOn  : print 'returning with tauList from getTauList', tauList
     return tauList
 
-
-def getGoodTauList(channel, entry, printOn=False) :
-    """ tauFun.getTauList(): return a list of taus that 
-                             pass the basic selection cuts               
-    """
-
-    if entry.nTau == 0: return []
-
-    tauList = []
-    tt = selections['tt'] # selections for H->tau(h)+tau(h)
-    for j in range(entry.nTau):    
-        # apply tau(h) selections 
-        if entry.Tau_pt[j] < tt['tau_pt']: continue
-        if abs(entry.Tau_eta[j]) > tt['tau_eta']: continue
-        if abs(entry.Tau_dz[j]) > tt['tau_dz']: continue
-        if not entry.Tau_idDecayModeNewDMs[j]: continue
-	if  entry.Tau_decayMode[j] == 5 or entry.Tau_decayMode[j] == 6 : continue
-        if abs(entry.Tau_charge[j]) != 1: continue
-
-        if tt['tau_vJet'] > 0  and not ord(entry.Tau_idDeepTau2017v2p1VSjet[j]) & tt['tau_vJet'] > 0 :
-            if printOn : print("        fail DeepTau vs. Jet={0:d}".format(ord(entry.Tau_idDeepTau2017v2p1VSjet[j])))
-            continue
-	if tt['tau_vEle'] > 0 and not ord(entry.Tau_idDeepTau2017v2p1VSe[j]) & tt['tau_vEle'] > 0 :
-            if printOn : print("        fail DeepTau vs. ele={0:d}".format(ord(entry.Tau_idDeepTau2017v2p1VSe[j])))
-            continue
-        if tt['tau_vMu'] > 0 and not ord(entry.Tau_idDeepTau2017v2p1VSmu[j]) & tt['tau_vMu'] > 0 :
-            if printOn : print("        fail DeepTau vs.  mu={0:d}".format(ord(entry.Tau_idDeepTau2017v2p1VSmu[j])))
-            continue
-
-        if printOn  : print 'returning with tauList', tauList
-        tauList.append(j)
-    
-    return tauList
 
 
 
@@ -284,8 +262,6 @@ def getBestTauPair(channel, entry, tauList,printOn=False) :
     if printOn : print 'these are the combinations', c, 'from', tauPairList
     tauPairList=list(c)
 
-    # Sort the pair list using a bubble sort
-    # The list is not fully sorted, since only the top pairing is needed
     if printOn : print 'Do I need to do the comparePair ? ', len(tauPairList),  tauPairList
    
     maxI= comparePairvspT(entry, tauPairList, printOn)
@@ -296,9 +272,9 @@ def getBestTauPair(channel, entry, tauList,printOn=False) :
     idx_tau1, idx_tau2 = tauPairList[0], tauPairList[1]
     if entry.Tau_pt[idx_tau2] > entry.Tau_pt[idx_tau1] : 
         if printOn : print 'Sorting tt tauPair', entry.Tau_pt[idx_tau2], entry.Tau_pt[idx_tau1], idx_tau2, idx_tau1
-        temp = tauPairList[0]
-        tauPairList[0] = tauPairList[1]
-        tauPairList[1] = temp
+        tauPairList = {}
+        tauPairList[0] = idx_tau2
+        tauPairList[1] = idx_tau1
         
     if printOn : print 'returning tt tauPairList', tauPairList
     return tauPairList
