@@ -399,6 +399,7 @@ def findSingleLeptTrigger(goodLeptonList,entry,flavour,era, printOn=False):
     HLT_IsoTkMu22_eta2p1= False
     HLT_Ele25_eta2p1_WPTight_Gsf = False
     HLT_Ele27_eta2p1_WPTight_Gsf = False
+    HLT_Ele27_WPTight_Gsf = False
     HLT_Ele32_WPTight_Gsf = False
     HLT_Ele35_WPTight_Gsf = False
 
@@ -413,6 +414,9 @@ def findSingleLeptTrigger(goodLeptonList,entry,flavour,era, printOn=False):
         except AttributeError : HLT_Ele32_WPTight_Gsf = False  
         try : HLT_Ele35_WPTight_Gsf = entry.HLT_Ele35_WPTight_Gsf
         except AttributeError : HLT_Ele35_WPTight_Gsf = False
+        
+        try : HLT_Ele27_WPTight_Gsf = entry.HLT_Ele27_WPTight_Gsf
+        except AttributeError : HLT_Ele27_WPTight_Gsf = False
 
         #if era == '2016' and not HLT_Ele25_eta2p1_WPTight_Gsf and not HLT_Ele27_eta2p1_WPTight_Gsf : return LepttrigList, hltList
         #if era != '2016' and not HLT_Ele32_WPTight_Gsf and not HLT_Ele35_WPTight_Gsf :  return LepttrigList, hltList

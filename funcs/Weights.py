@@ -1,6 +1,5 @@
 # !/usr/bin/env python
 
-""" tauFun.py: apply selection sequence to four-lepton final state """
 
 import io
 import yaml
@@ -19,7 +18,7 @@ muonMass  = 0.105
 
 class Weights() :
     def __init__(self,year):
-        campaign = {2016:'2016Legacy', 2017:'2017ReReco', 2018:'2018ReReco'}
+        #campaign = {2016:'2016Legacy', 2017:'2017ReReco', 2018:'2018ReReco'}
 	self.weights_muToTauFR={''}
 	self.weights_elToTauFR={''}
 	self.weights_mujToTauFR={''}
@@ -28,17 +27,15 @@ class Weights() :
 	self.weights_elTotauES={''}
 	self.weights_tauTotauES={''}
         self.tauV = TLorentzVector()
-        self.tauVcor = TLorentzVector()
         self.MetV = TLorentzVector()
-        self.MetVcor = TLorentzVector()
-	
+
+
 	if year == 2016 : 
 
 	    self.weights_mujToTauFR = {'DM1' : 0.85, 'lt0p4' : 1.21, '0p4to0p8' : 1.11, '0p8to1p2' : 1.20, '1p2to1p7' : 1.16, '1p7to2p3' : 2.25 }
 	    self.weights_muToTauFR = {'DM1' : 1.38, 'lt0p4' : 0.80, '0p4to0p8' : 0.81, '0p8to1p2' : 0.79, '1p2to1p7' : 0.68, '1p7to2p3' : 1.34 }
 	    self.weights_eljToTauFR = {'lt1p479_DM0' : 1.18, 'gt1p479_DM0' : 0.93, 'lt1p479_DM1' : 1.18, 'gt1p479_DM1' : 1.07 }
 	    self.weights_elToTauFR = {'lt1p479_DM0' : 0.80, 'gt1p479_DM0' : 0.72, 'lt1p479_DM1' : 1.14, 'gt1p479_DM1' : 0.64 }
-
 
 
 	    self.weights_tauTotauES = {'DM0' :-0.9, 'DM1' : -0.1, 'DM10' : 0.3, 'DM11' : -0.2}
@@ -56,7 +53,7 @@ class Weights() :
 
 	    self.weights_tauTotauES = {'DM0' :0.4, 'DM1' : 0.2, 'DM10' : 0.1, 'DM11' : -1.3}
 	    self.weights_elTotauES = {'DM0' :0.3, 'DM1' : 3.6, 'DM10' : 0, 'DM11' :0}
-	    self.weights_muTotauES = {'DM0' :0., 'DM1' : -0.5, 'DM10' : 0, 'DM11' :0}
+	    self.weights_muTotauES = {'DM0' :-0.2, 'DM1' : -0.8, 'DM10' : 0, 'DM11' :0}  ##that was different from Cecile
 
 	if year == 2018 : 
 
@@ -70,7 +67,6 @@ class Weights() :
 	    self.weights_muTotauES = {'DM0' :-0.2, 'DM1' : -1., 'DM10' : 0, 'DM11' :0}
 
 
-
 	''' 
 	for reco tauh matched to gen tauh at gen level in the format (dm0, dm1, dm10, dm11): for 2016 (-0.9%, -0.1%, +0.3%, -0.2%), for 2017 (+0.4%, +0.2%, +0.1%, -1.3%), for 2018 (-1.6%, -0.4%, -1.2%, -0.4%)
 
@@ -81,16 +77,15 @@ class Weights() :
     def applyES(self,entry, year, printOn=False) :
 
 
-        self.MetVcor.SetPx(entry.MET_pt * cos (entry.MET_phi))
-        if year==2017 : 
-            self.MetVcor.SetPx(entry.METFixEE2017_pt * cos (entry.METFixEE2017_phi))
-            entry.MET_pt = entry.METFixEE2017_pt
-            entry.MET_phi = entry.METFixEE2017_phi
-            entry.MET_covXX = entry.METFixEE2017_covXX
-            entry.MET_covXY = entry.METFixEE2017_covXY
-            entry.MET_covYY = entry.METFixEE2017_covYY
+        self.tauV.SetPtEtaPhiM(0,0,0,0)
+        self.MetV.SetPtEtaPhiM(0,0,0,0)
 
-        self.MetV = self.MetVcor
+        self.MetV.SetPx(entry.MET_pt * cos (entry.MET_phi))
+        self.MetV.SetPy(entry.MET_pt * sin (entry.MET_phi))
+        if year==2017 : 
+
+            self.MetV.SetPx(entry.METFixEE2017_pt * cos (entry.METFixEE2017_phi))
+            self.MetV.SetPy(entry.METFixEE2017_pt * sin (entry.METFixEE2017_phi))
 
 	for j in range(entry.nTau):    
 	   
@@ -104,41 +99,45 @@ class Weights() :
 
 
             self.tauV.SetPtEtaPhiM(entry.Tau_pt[j], entry.Tau_eta[j], entry.Tau_phi[j], entry.Tau_mass[j])
-            self.tauVcor = self.tauV
 
 	    gen_match = ord(entry.Tau_genPartFlav[j]) 
-            #print ''
-            #print 'before------------', entry.Tau_pt[j], entry.Tau_mass[j], 'met_pt', entry.MET_pt, 'phi', entry.MET_phi, entry.Tau_eta[j], 'match', gen_match, dm
 	    if gen_match == 5 :
-		self.tauVcor *=  (1 + self.weights_tauTotauES[dmm]*0.01)
-		#self.MetVcor +=  self.tauV*(1 + self.weights_tauTotauES[dmm]*0.01)
-                entry.Tau_mass[j] = self.tauVcor.M()
-                entry.Tau_pt[j] = self.tauVcor.Pt()
-                entry.Tau_phi[j] = self.tauVcor.Phi()
+
+                self.MetV.SetPx(self.MetV.Px()- self.tauV.Px()*self.weights_tauTotauES[dmm]*0.01 ) 
+                self.MetV.SetPy(self.MetV.Py()- self.tauV.Py()*self.weights_tauTotauES[dmm]*0.01 ) 
+		self.tauV *=  (1 + self.weights_tauTotauES[dmm]*0.01)
+
+                entry.Tau_mass[j] = self.tauV.M()
+                entry.Tau_pt[j] = self.tauV.Pt()
+                entry.Tau_phi[j] = self.tauV.Phi()
 
 		if dm == 1 :
 		    entry.Tau_mass[j] = 0.1396
-                    self.tauVcor.SetE(0.1396) ##is this legit ?
 
             if gen_match == 2 or gen_match == 4 :
 
 
-		self.tauVcor *=  (1 + self.weights_muTotauES[dmm]*0.01)
-		#self.MetVcor +=  self.tauV*(1 + self.weights_muTotauES[dmm]*0.01)
-		entry.Tau_mass[j] = self.tauVcor.M()
-		entry.Tau_pt[j] = self.tauVcor.Pt()
+                self.MetV.SetPx(self.MetV.Px()- self.tauV.Px()*self.weights_muTotauES[dmm]*0.01 ) 
+                self.MetV.SetPy(self.MetV.Py()- self.tauV.Py()*self.weights_muTotauES[dmm]*0.01 ) 
+		self.tauV *=  (1 + self.weights_muTotauES[dmm]*0.01)
+
+                entry.Tau_mass[j] = self.tauV.M()
+                entry.Tau_pt[j] = self.tauV.Pt()
+                entry.Tau_phi[j] = self.tauV.Phi()
 
 
                 # leptons faking taus // electron->tau
 	    if gen_match == 1 or gen_match == 3 :
 
-		self.tauVcor *=  (1 + self.weights_elTotauES[dmm]*0.01)
-		#self.MetVcor +=  self.tauV*(1 + self.weights_elTotauES[dmm]*0.01)
-		entry.Tau_mass[j] = self.tauVcor.M()
-		entry.Tau_pt[j] = self.tauVcor.Pt()
 
-	    self.MetVcor +=   self.tauV - self.tauVcor
-	    entry.MET_pt = self.MetVcor.Pt()
-	    entry.MET_phi = self.MetVcor.Phi()
-	    #print 'after------------', entry.Tau_pt[j], entry.Tau_mass[j], 'met_pt', entry.MET_pt, 'phi', entry.MET_phi, entry.Tau_eta[j], self.tauVcor.Eta()
+                self.MetV.SetPx(self.MetV.Px()- self.tauV.Px() *self.weights_elTotauES[dmm]*0.01) 
+                self.MetV.SetPy(self.MetV.Py()- self.tauV.Py() *self.weights_elTotauES[dmm]*0.01) 
+		self.tauV *=  (1 + self.weights_elTotauES[dmm]*0.01)
+
+                entry.Tau_mass[j] = self.tauV.M()
+                entry.Tau_pt[j] = self.tauV.Pt()
+                entry.Tau_phi[j] = self.tauV.Phi()
+
+        #print 'returning', entry.METFixEE2017_pt, self.MetV.Pt(), self.MetV.Phi()
+        return self.MetV.Pt(), self.MetV.Phi()
 

@@ -7,6 +7,7 @@
 import ROOT
 from ROOT import gSystem, gStyle, gROOT, kTRUE, TMatrixD
 from ROOT import TFile, TTree, TH1D, TCanvas, TLorentzVector, TLegend, TAxis, THStack, TGraphAsymmErrors, vector, gInterpreter
+from ROOT import RooWorkspace as WS
 gROOT.SetBatch(True) # don't pop up any plots
 gStyle.SetOptStat(0) # don't show any stats
 from math import sqrt, sin, cos, pi, tan, acos, atan2,log
@@ -21,6 +22,7 @@ from TauPOG.TauIDSFs.TauIDSFTool import TauIDSFTool
 from TauPOG.TauIDSFs.TauIDSFTool import TauESTool
 from TauPOG.TauIDSFs.TauIDSFTool import TauFESTool
 import fakeFactor 
+
 
 def catToNumber(cat) :
     number = { 'eeet':1, 'eemt':2, 'eett':3, 'eeem':4, 'mmet':5, 'mmmt':6, 'mmtt':7, 'mmem':8, 'et':9, 'mt':10, 'tt':11 }
@@ -333,6 +335,57 @@ Pblumi = 1000.
 tauID_w = 1.
 
 
+gInterpreter.ProcessLine('.L BTagCalibrationStandalone.cpp+') 
+calib = ROOT.BTagCalibration('csvv1', 'DeepCSV_{0:s}.csv'.format(era))
+# making a std::vector<std::string>> in python is a bit awkward, 
+# but works with root (needed to load other sys types):
+v_sys = getattr(ROOT, 'vector<string>')()
+#v_sys.push_back('up')
+#v_sys.push_back('down')
+
+# make a reader instance and load the sf data
+reader_b = ROOT.BTagCalibrationReader(
+    3,              # 0 is for loose op, 1: medium, 2: tight, 3: discr. reshaping
+    "central",      # central systematic type
+    v_sys,          # vector of other sys. types
+)    
+
+
+reader_b.load(
+    calib, 
+    0,          # 0 is for b flavour, 1: FLAV_C, 2: FLAV_UDSG 
+    "iterativefit"      # measurement type
+)
+
+reader_c = ROOT.BTagCalibrationReader(
+    3,              # 0 is for loose op, 1: medium, 2: tight, 3: discr. reshaping
+    "central",      # central systematic type
+    v_sys,          # vector of other sys. types
+)    
+
+
+reader_c.load(
+    calib, 
+    1,          # 0 is for b flavour, 1: FLAV_C, 2: FLAV_UDSG 
+    "iterativefit"      # measurement type
+)
+
+reader_light = ROOT.BTagCalibrationReader(
+    3,              # 0 is for loose op, 1: medium, 2: tight, 3: discr. reshaping
+    "central",      # central systematic type
+    v_sys,          # vector of other sys. types
+)    
+
+
+reader_light.load(
+    calib, 
+    2,          # 0 is for b flavour, 1: FLAV_C, 2: FLAV_UDSG 
+    "iterativefit"      # measurement type
+)
+
+
+
+
 # Tau Decay types
 kUndefinedDecayType, kTauToHadDecay,  kTauToElecDecay, kTauToMuDecay = 0, 1, 2, 3   
 
@@ -363,16 +416,23 @@ campaign = {2016:'2016Legacy', 2017:'2017ReReco', 2018:'2018ReReco'}
 
 
 
+
+
+
+
 if era == '2016' : 
     weights = {'lumi':35.92, 'tauID_w' :0.87, 'tauES_DM0' : -0.6, 'tauES_DM1' : -0.5,'tauES_DM10' : 0.0, 'mutauES_DM0' : -0.2, 'mutauES_DM1' : 1.5, 'eltauES_DM0' : 0.0, 'eltauES_DM1' : 9.5}
+
 
     weights_mujToTauFR = {'DM1' : 0.85, 'lt0p4' : 1.21, '0p4to0p8' : 1.11, '0p8to1p2' : 1.20, '1p2to1p7' : 1.16, '1p7to2p3' : 2.25 }
     weights_muToTauFR = {'DM1' : 1.38, 'lt0p4' : 0.80, '0p4to0p8' : 0.81, '0p8to1p2' : 0.79, '1p2to1p7' : 0.68, '1p7to2p3' : 1.34 }
     weights_eljToTauFR = {'lt1p479_DM0' : 1.18, 'gt1p479_DM0' : 0.93, 'lt1p479_DM1' : 1.18, 'gt1p479_DM1' : 1.07 }
     weights_elToTauFR = {'lt1p479_DM0' : 0.80, 'gt1p479_DM0' : 0.72, 'lt1p479_DM1' : 1.14, 'gt1p479_DM1' : 0.64 }
 
-    weights_muTotauES = {'DM0' : 0, 'DM1' : -0.5}
-    weights_elTotauES = {'DM0' :-0.5, 'DM1' : 6}
+    weights_tauTotauES = {'DM0' :-0.9, 'DM1' : -0.1, 'DM10' : 0.3, 'DM11' : -0.2}
+    weights_elTotauES = {'DM0' :-0.5, 'DM1' : 6, 'DM10' : 0, 'DM11' :0}
+    weights_muTotauES = {'DM0' :0., 'DM1' : -0.5, 'DM10' : 0, 'DM11' :0}
+
 
 
     TriggerSF={'dir' : './tools/ScaleFactors/TriggerEffs/', 'fileMuon' : 'Muon/SingleMuon_Run2016_IsoMu24orIsoMu27.root', 'fileElectron' : 'Electron/SingleElectron_Run2016_Ele25orEle27.root'}
@@ -380,11 +440,16 @@ if era == '2016' :
 
 
     TESSF={'dir' : 'TauPOG/TauIDSFs/data/', 'fileTES' : 'TauES_dm_2016Legacy.root'}
+    WorkSpace={'dir' : './', 'fileWS' : 'htt_scalefactors_legacy_2016.root'}
 
 
 
 if era == '2017' : 
     weights = {'lumi':41.53, 'tauID_w' :0.89, 'tauES_DM0' : 0.7, 'tauES_DM1' : -0.2,'tauES_DM10' : 0.1, 'mutauES_DM0' : 0.0, 'mutauES_DM1' : 0.0, 'eltauES_DM0' : 0.3, 'eltauES_DM1' : 3.6}
+
+
+
+
 
     weights_mujToTauFR = {'DM1' : 0.77, 'lt0p4' : 1.23, '0p4to0p8' : 1.07, '0p8to1p2' : 1.21, '1p2to1p7' : 1.21, '1p7to2p3' : 2.74 }
     weights_muToTauFR = {'DM1' : 0.69, 'lt0p4' : 1.14, '0p4to0p8' : 1., '0p8to1p2' : 0.87, '1p2to1p7' : 0.52, '1p7to2p3' : 1.47 }
@@ -392,12 +457,21 @@ if era == '2017' :
     weights_elToTauFR = {'lt1p479_DM0' : 0.98, 'gt1p479_DM0' : 0.80, 'lt1p479_DM1' : 1.07, 'gt1p479_DM1' : 0.64 }
 
 
-    weights_muTotauES = {'DM0' : -0.2, 'DM1' : -0.8}
-    weights_elTotauES = {'DM0' :-1.8, 'DM1' : 1.8}
+    weights_tauTotauES = {'DM0' :0.4, 'DM1' : 0.2, 'DM10' : 0.1, 'DM11' : -1.3}
+    #old weights_elTotauES = {'DM0' :0.3, 'DM1' : 3.6, 'DM10' : 0, 'DM11' :0}
+    #old weights_muTotauES = {'DM0' :0., 'DM1' : 0.0, 'DM10' : 0, 'DM11' :0}
+
+    weights_muTotauES = {'DM0' : -0.2, 'DM1' : -0.8, 'DM10' : 0, 'DM11' :0}
+    weights_elTotauES = {'DM0' :-1.8, 'DM1' : 1.8, 'DM10' : 0, 'DM11' :0}
+
+
+
+
 
     TriggerSF={'dir' : './tools/ScaleFactors/TriggerEffs/', 'fileMuon' : 'Muon/SingleMuon_Run2017_IsoMu24orIsoMu27.root', 'fileElectron' : 'Electron/SingleElectron_Run2017_Ele32orEle35.root'}
     LeptonSF={'dir' : './tools/ScaleFactors/LeptonEffs/', 'fileMuon0p2' : 'Muon/Muon_Run2017_IdIso_0p2.root', 'fileMuon0p15' : 'Muon/Muon_Run2017_IdIso_0p15.root', 'fileElectron0p1' : 'Electron/Electron_Run2017_IdIso_0p1.root',  'fileElectron0p15' : 'Electron/Electron_Run2017_IdIso_0p15.root'}
     TESSF={'dir' : 'TauPOG/TauIDSFs/data/', 'fileTES' : 'TauES_dm_2017ReReco.root'}
+    WorkSpace={'dir' : './', 'fileWS' : 'htt_scalefactors_legacy_2017.root'}
 
 if era == '2018' : 
     weights = {'lumi':59.74, 'tauID_w' :0.90, 'tauES_DM0' : -1.3, 'tauES_DM1' : -0.5,'tauES_DM10' : -1.2, 'mutauES_DM0' : 0.0, 'mutauES_DM1' : 0.0, 'eltauES_DM0' : 0.0, 'eltauES_DM1' : 0.0}
@@ -407,17 +481,33 @@ if era == '2018' :
     weights_elToTauFR = {'lt1p479_DM0' : 1.09, 'gt1p479_DM0' : 0.80, 'lt1p479_DM1' : 0.85, 'gt1p479_DM1' : 0.49 }
 
 
-    weights_muTotauES = {'DM0' : -0.2, 'DM1' : -1.}
-    weights_elTotauES = {'DM0' :-3.2, 'DM1' : 2.6}
+    #weights_muTotauES = {'DM0' : -0.2, 'DM1' : -1.}
+    #weights_elTotauES = {'DM0' :-3.2, 'DM1' : 2.6}
+
+
+    weights_tauTotauES = {'DM0' :-1.6, 'DM1' : -0.4, 'DM10' : -1.2, 'DM11' : -0.4}
+    weights_elTotauES = {'DM0' :-3.2, 'DM1' : 2.6, 'DM10' : 0, 'DM11' :0}
+    weights_muTotauES = {'DM0' :-0.2, 'DM1' : -1., 'DM10' : 0, 'DM11' :0}
+
+
 
     TriggerSF={'dir' : './tools/ScaleFactors/TriggerEffs/', 'fileMuon' : 'Muon/SingleMuon_Run2018_IsoMu24orIsoMu27.root', 'fileElectron' : 'Electron/SingleElectron_Run2018_Ele32orEle35.root'}
     LeptonSF={'dir' : './tools/ScaleFactors/LeptonEffs/', 'fileMuon0p2' : 'Muon/Muon_Run2018_IdIso_0p2.root', 'fileMuon0p15' : 'Muon/Muon_Run2018_IdIso_0p15.root', 'fileElectron0p1' : 'Electron/Electron_Run2018_IdIso_0p1.root',  'fileElectron0p15' : 'Electron/Electron_Run2018_IdIso_0p15.root'}
     TESSF={'dir' : 'TauPOG/TauIDSFs/data/', 'fileTES' : 'TauES_dm_2018ReReco.root'}
+    WorkSpace={'dir' : './', 'fileWS' : 'htt_scalefactors_legacy_2018.root'}
 
 
 if era == '2016' : recoilCorrector  = ROOT.RecoilCorrector("./Type1_PFMET_Run2016BtoH.root");
 if era == '2017' : recoilCorrector  = ROOT.RecoilCorrector("./Type1_PFMET_2017.root");
 if era == '2018' : recoilCorrector  = ROOT.RecoilCorrector("./TypeI-PFMet_Run2018.root");
+
+
+finWS=("{0:s}{1:s}".format(WorkSpace['dir'],WorkSpace['fileWS']))
+fInws=TFile(finWS, 'read') 
+fInws.cd()
+wspace = WS.RooWorkspace("w")
+wspace=fInws.Get("w")
+
 
 # use this utility class to screen out duplicate events
 DD = {}
@@ -782,10 +872,11 @@ hLabels.append('GoodTauPair')
 
 hLabels.append(str(args.sign)) #bin 11
 hLabels.append('goodIso_Id')
-hLabels.append('H_LT > '+str(args.LTcut))
 hLabels.append('nbtag=0')
+hLabels.append('btagSF')
 hLabels.append('TriggerSF')
 hLabels.append('LeptonSF')
+hLabels.append('TrackingSF')
 hLabels.append('TauID')
 
 WCounter = [[[0 for k in xrange(cols)] for j in xrange(rows)] for i in xrange(nicks)]
@@ -1249,6 +1340,10 @@ for ig, group in enumerate(groups) :
 
         systmet = ''
 	isys=0
+	mu_iso = 0.15
+	el_iso = 0.15
+	mu_eta = 2.4
+	el_eta = 2.5
 	if doJME:
 	    isys = systToNumber(str(args.inSystematics))
 	    #isys = 1
@@ -1267,13 +1362,15 @@ for ig, group in enumerate(groups) :
             weightTIDUp = 1.
             weightTIDDown = 1.
 	    ww = 1.
+            btag_sf = 1.
             lepton_sf = 1.
             cat = cats[e.cat]
             icat = catToNumber(cat)
-            tight1 = False
-            tight2 = False
+            tight1 = True
+            tight2 = True
             isfakemc1 = False
             isfakemc2 = False
+        
 	    #if ('ZZTo4' in inFileName or 'ZH' in inFileName) and  i > 2000 : continue
 	    #if hGroup != 'data' and i > 1000:continue
             if i % 5000 ==0: print i, 'from ', nentries
@@ -1286,8 +1383,8 @@ for ig, group in enumerate(groups) :
 		metphi = getattr(e, 'metphi_'+sysmet, None)
             #print 'ok now', doJME, isys, args.inSystematics, 'njets-->', njets, e.njets[0], e.njets[1], e.njets[2], 'btag-->', nbtag, e.nbtag[0], e.nbtag[1], e.nbtag[2], 'met-->', met, metphi, 'and met_nom', e.metpt_nom, e.metphi_nom, 'for syst', args.inSystematics, 'jetpT--->', jpt_1, e.jpt_1[0], e.jpt_1[1], e.jpt_1[2], group, i, nickName
 
-            if e.isTrig_1 == 0 and e.isDoubleTrig==0 : continue  
-            #if e.isTrig_1 == 0 : continue  
+            #if e.isTrig_1 == 0 and e.isDoubleTrig==0 : continue  
+            if e.isTrig_1 == 0 : continue  
 	    if e.q_1*e.q_2 > 0 : continue
             if args.sign == 'SS':
                if e.q_3*e.q_4 < 0. : continue
@@ -1324,31 +1421,55 @@ for ig, group in enumerate(groups) :
 
 
             ##############good ISO
-	    if cat[:2] == 'mm' :  
-                if  e.iso_1 > 0.2 or (e.isGlobal_1 < 1 and e.isTracker_1 < 1) or e.mediumId_1 < 1: continue
-                if  e.iso_2 > 0.2 or (e.isGlobal_2 < 1 and e.isTracker_2 < 1) or e.mediumId_2 < 1: continue
 
-	    if cat[:2] == 'ee' and  (e.iso_1 > 0.15 or e.iso_2 > 0.15) : continue
-	    if cat[:2] == 'ee' and  (e.Electron_mvaFall17V2noIso_WP90_1 < 1 or e.Electron_mvaFall17V2noIso_WP90_2 < 1) : continue
-            
+
+	    if cat[:2] == 'mm' :  
+                    if (e.iso_1 > mu_iso or e.iso_2 > mu_iso) : continue
+                    if (abs(e.eta_1) > mu_eta or abs(e.eta_2) > mu_eta) : continue
+                    if (e.mediumId_1 < 1 or e.mediumId_2 < 1) : continue
+                    if (e.isGlobal_1 < 1 and e.isTracker_1 < 1) : continue
+                    if (e.isGlobal_2 < 1 and e.isTracker_2 < 1) : continue
+
+	    if cat[:2] == 'ee' :
+                if e.iso_1 > el_iso or e.iso_2 > el_iso : continue
+                if (abs(e.eta_1) > el_eta or abs(e.eta_2) > el_eta) : continue
+	        if e.Electron_mvaFall17V2noIso_WP90_1 < 1 or e.Electron_mvaFall17V2noIso_WP90_2 < 1 : continue
+
+
+
+            # and now tauWP cuts
 	    if cat[2:] == 'em'  :
-	        if  e.iso_3 < 0.15 and e.Electron_mvaFall17V2noIso_WP90_3 >0  : tight1 = True
-                if  e.iso_4 < 0.20 and (e.isGlobal_4 > 0 or e.isTracker_4 > 0) and e.mediumId_4 >0  : tight2 = True
+                if abs(e.eta_3) > el_eta : tight1 = False
+	        if e.Electron_mvaFall17V2noIso_WP90_3 < 1 or e.iso_3 > el_iso  : tight1 = False
+
+                if e.isGlobal_4 < 1 and e.isTracker_4 < 1  : continue
+                if e.iso_4 > mu_iso : tight2 = False
+                if e.mediumId_4  <1 : tight2 = False
+                if abs(e.eta_4) > mu_eta : tight2 = False
+
+
+		#if nickName == 'ZHToTauTau' and (e.evt % 100 == 0) :
+		#    print("Event={0:8d} em iso_3={1:.3f} iso_4={2:.3f} WP90={3}".format(e.evt,e.iso_3,e.iso_4, e.Electron_mvaFall17V2noIso_WP90_3))
 
 	    if cat[2:] == 'mt':
-                if  e.iso_3 < 0.20 and (e.isGlobal_3 > 0 or e.isTracker_3 >0) and e.mediumId_3 >0 : tight1 = True
+                if e.isGlobal_3 < 1 and e.isTracker_3 < 1 : continue
+                if e.iso_3 > mu_iso  : tight1 = False
+                if e.mediumId_3  <1 : tight1 = False
+                if abs(e.eta_3) > mu_eta : tight1 = False
 
-	    if cat[2:] == 'et' :
-                if  e.iso_3 < 0.15 and e.Electron_mvaFall17V2noIso_WP90_3 >0 : tight1 = True
+	    if (cat[2:] == 'et') :
+                if  e.Electron_mvaFall17V2noIso_WP90_3 < 1 or e.iso_3 > el_iso : tight1 = False
+                if abs(e.eta_3) > el_eta : tight1 = False
 
-	    if cat[2:] == 'tt' :
-                if e.idDeepTau2017v2p1VSjet_3 >= WPSR-1  : tight1 = True
-                if e.idDeepTau2017v2p1VSjet_4 >= WPSR-1  : tight2 = True
-
-	    if (cat[2:] == 'et' or cat[2:] =='mt') and e.idDeepTau2017v2p1VSjet_4 >= WPSR-1 : tight2 = True
             
-	    #if abs(e.dZ_3) > 0.02 or abs(e.dZ_4) > 0.02 : continue
-	    #if abs(e.d0_3) > 0.02 or abs(e.d0_4) > 0.02 : continue
+	    if cat[2:] == 'tt' :
+                    tight1 = e.idDeepTau2017v2p1VSjet_3 >  WPSR-1 and e.idDeepTau2017v2p1VSmu_3 >= 0 and  e.idDeepTau2017v2p1VSe_3 >= 0
+                    tight2 = e.idDeepTau2017v2p1VSjet_4 >  WPSR-1 and e.idDeepTau2017v2p1VSmu_4 >= 0 and  e.idDeepTau2017v2p1VSe_4 >= 0
+
+	    if cat[2:] == 'mt' : tight2 = e.idDeepTau2017v2p1VSjet_4 >  WPSR-1 and e.idDeepTau2017v2p1VSmu_4 >= 0 and  e.idDeepTau2017v2p1VSe_4 >= 0
+	    if cat[2:] == 'et' : tight2  = e.idDeepTau2017v2p1VSjet_4 > WPSR-1 and e.idDeepTau2017v2p1VSmu_4 >= 0 and  e.idDeepTau2017v2p1VSe_4 >= 0
+
+
             
             if group != 'data' :
                 if not tight1 or not tight2 : continue
@@ -1365,14 +1486,14 @@ for ig, group in enumerate(groups) :
 
 
             ########H_LT
-            H_LT = e.pt_3 + e.pt_4
+            '''
             #if H_LT < args.LTcut : continue
 
             iCut +=1
             WCounter[iCut-1][icat-1][inick] += weightCF
             hCutFlowN[cat][nickName].SetBinContent(iCut-1, hCutFlowN[cat][nickName].GetBinContent(iCut-1)+weight)
             hCutFlowFM[cat][nickName].SetBinContent(iCut-1, hCutFlowFM[cat][nickName].GetBinContent(iCut-1)+weightFM)
-
+            '''
             ######### nbtag
 	    #if e.mll > 100 or e.mll<80: continue
 	    try :
@@ -1391,139 +1512,161 @@ for ig, group in enumerate(groups) :
 
             
        
-            if e.pt_1 < 10 or e.pt_2 < 10 : continue
-            if e.pt_3 < 10 or e.pt_4 < 10 : continue
-            #SingleLepton is fired but no DoubleLepton
-            if e.isTrig_1 != 0: 
-
-                #leading fired the trigger
-		if e.isTrig_1 == 1 and e.isTrig_2 == 0: 
-		    if cat[:2] == 'mm' and e.pt_1 < 29 : continue
-		    if cat[:2] == 'ee' and era == '2016' and e.pt_1 < 29 : continue
-		    if cat[:2] == 'ee' and era != '2016' and e.pt_1 < 37 : continue
-
-		#subleading fired the trigger
-		if e.isTrig_1 == -1 and e.isTrig_2 == 0: 
-		#if e.isTrig_1 == -1 : 
-		    if cat[:2] == 'mm' and e.pt_2 < 29 : continue
-		    if cat[:2] == 'ee' and era == '2016' and e.pt_2 < 29 : continue
-		    if cat[:2] == 'ee' and era != '2016' and e.pt_2 < 37 : continue
-
-		# both fired the trigger _isTrig_2 = 1
-		
-		if e.isTrig_2 == 1 : 
-		    if cat[:2] == 'mm' and e.pt_1 < 29 and e.pt_2 < 29: continue
-		    if cat[:2] == 'ee' and era == '2016' and e.pt_1 <  29 and  e.pt_2 < 29 : continue
-		    if cat[:2] == 'ee' and era != '2016' and e.pt_1 < 37 and e.pt_2 < 37 : continue
-           
-            if e.isDoubleTrig!=0 and e.isTrig_1 == 0 : #the DoubleLepton trigger was fired but not the SingleLepton
-
-		if cat[:2] == 'mm' and (e.pt_1 < 19 or e.pt_2 < 10): continue
-		if cat[:2] == 'ee' and (e.pt_1 < 25 or e.pt_2 < 14): continue
-            
             if group == 'data' :
                 if DD[cat].checkEvent(e,cat) : continue 
-                #if e.m_sv > 180 : print e.lumi, e.run, e.evt, cat, e.met 
+
+            ##### btag
+
+            
+            if group != 'data' :
+		nj=e.njets[0]
+		if nj > 0 :
+		    #for ib in range(0, int(nj)) :
+                    #    print nj, ib, e.jeta[ib], e.jpt[ib], i, cat
+
+		    for ib in range(0, int(nj)) :
+                        try : 
+			    flv = 0
+			    if abs(e.jflavour[ib]) == 5 : 
+				btag_sf *= reader_b.eval_auto_bounds( 'central',  0,     abs(e.jeta[ib]), e.jpt[ib])
+			    if abs(e.jflavour[ib]) == 4 : 
+				btag_sf *= reader_c.eval_auto_bounds( 'central',  1,     abs(e.jeta[ib]), e.jpt[ib])
+			    if abs(e.jflavour[ib]) < 4 or abs(e.jflavour[ib]) == 21 :
+				btag_sf *= reader_light.eval_auto_bounds( 'central',  2,     abs(e.jeta[ib]), e.jpt[ib])
+                        except IndexError : btag_sf = 1.
+
+		weight *= btag_sf
+		weightFM *= btag_sf
+            iCut +=1
+            WCounter[iCut-1][icat-1][inick] += weightCF
+            hCutFlowN[cat][nickName].SetBinContent(iCut-1, hCutFlowN[cat][nickName].GetBinContent(iCut-1)+weight)
+            hCutFlowFM[cat][nickName].SetBinContent(iCut-1, hCutFlowFM[cat][nickName].GetBinContent(iCut-1)+weightFM)
 
 
-           
-	    eff_trig_d_1, eff_trig_d_2 = 1.,1.
-	    eff_trig_mc_1, eff_trig_mc_2 = 1.,1.
 
-	    eff_id_d_1, eff_id_d_2, eff_id_d_3, eff_id_d_4 = 1.,1.,1.,1.
-	    eff_id_mc_1, eff_id_mc_2, eff_id_mc_3, eff_id_mc_4 = 1.,1.,1.,1.
+            trigw=1
+            tracking_sf = 1.
+            lepton_sf = 1.
 
             if group != 'data' :
-		#leading firing the trigger
-		if e.isTrig_1 == 1 and e.isTrig_2 == 0 : 
+		if cat[:2] == 'mm' :      
+		    trigw = 1.
+		    
+		    if e.isTrig_1==1 : 
+			wspace.var("m_pt").setVal(e.pt_1)
+			wspace.var("m_eta").setVal(e.eta_1)
+			trigw *=  wspace.function("m_trg_ic_ratio").getVal()
+
+		    if e.isTrig_1==-1 : 
+			wspace.var("m_pt").setVal(e.pt_2)
+			wspace.var("m_eta").setVal(e.eta_2)
+			trigw *=  wspace.function("m_trg_ic_ratio").getVal()
+
+		    if  e.isTrig_1==2 : 
+			wspace.var("m_pt").setVal(e.pt_1)
+			wspace.var("m_eta").setVal(e.eta_1)
+			trigw1 =  wspace.function("m_trg_ic_ratio").getVal()
+
+			wspace.var("m_pt").setVal(e.pt_2)
+			wspace.var("m_eta").setVal(e.eta_2)
+			trigw2 =  wspace.function("m_trg_ic_ratio").getVal()
+
+			trigw = float( 1-(1-trigw1) * (1-trigw2))
+
+		    wspace.var("m_pt").setVal(e.pt_1)
+		    wspace.var("m_eta").setVal(e.eta_1)
+		    lepton_sf = wspace.function("m_idiso_ic_ratio").getVal()
+		    tracking_sf = wspace.function("m_trk_ratio").getVal()
+		    wspace.var("m_pt").setVal(e.pt_2)
+		    wspace.var("m_eta").setVal(e.eta_2)
+		    lepton_sf *= wspace.function("m_idiso_ic_ratio").getVal()
+		    tracking_sf *= wspace.function("m_trk_ratio").getVal()
 
 
-		    if cat[:2] == 'mm' :                
-			eff_trig_d_1 =  sf_MuonTrig.get_EfficiencyData(e.pt_1,e.eta_1)
-			eff_trig_mc_1 =  sf_MuonTrig.get_EfficiencyMC(e.pt_1,e.eta_1)
+		if cat[:2] == 'ee' :      
+		    trigw = 1.
+		    
+		    if e.isTrig_1==1 : 
+			wspace.var("e_pt").setVal(e.pt_1)
+			wspace.var("e_eta").setVal(e.eta_1)
+			trigw *=  wspace.function("e_trg_ic_ratio").getVal()
 
-		    if cat[:2] == 'ee' :                 
-			eff_trig_d_1 =  sf_EleTrig.get_EfficiencyData(e.pt_1,e.eta_1)
-			eff_trig_mc_1 =  sf_EleTrig.get_EfficiencyMC(e.pt_1,e.eta_1)
-		    if eff_trig_mc_1 !=0 :		trigw = float(eff_trig_d_1/eff_trig_mc_1)
-		    else : continue
+		    if e.isTrig_1==-1 : 
+			wspace.var("e_pt").setVal(e.pt_2)
+			wspace.var("e_eta").setVal(e.eta_2)
+			trigw *=  wspace.function("e_trg_ic_ratio").getVal()
 
-		#subleading firing the trigger
-		if e.isTrig_1 == -1 and e.isTrig_2 == 0: 
-		    if cat[:2] == 'mm' :                 
-			eff_trig_d_2 =  sf_MuonTrig.get_EfficiencyData(e.pt_2,e.eta_2)
-			eff_trig_mc_2 =  sf_MuonTrig.get_EfficiencyMC(e.pt_2,e.eta_2)
+		    if e.isTrig_1==2 : 
+			wspace.var("e_pt").setVal(e.pt_1)
+			wspace.var("e_eta").setVal(e.eta_1)
+			trigw1 =  wspace.function("e_trg_ic_ratio").getVal()
 
-		    if cat[:2] == 'ee' :                 
-			eff_trig_d_2 =  sf_EleTrig.get_EfficiencyData(e.pt_2,e.eta_2)
-			eff_trig_mc_2 =  sf_EleTrig.get_EfficiencyMC(e.pt_2,e.eta_2)
+			wspace.var("e_pt").setVal(e.pt_2)
+			wspace.var("e_eta").setVal(e.eta_2)
+			trigw2 =  wspace.function("e_trg_ic_ratio").getVal()
 
-		    if eff_trig_mc_2 !=0 :		trigw = float(eff_trig_d_2/eff_trig_mc_2)
-		    else : continue
+			trigw = float( 1-(1-trigw1) * (1-trigw2))
+
+		    wspace.var("e_pt").setVal(e.pt_1)
+		    wspace.var("e_eta").setVal(e.eta_1)
+		    lepton_sf = wspace.function("e_idiso_ic_ratio").getVal()
+		    tracking_sf = wspace.function("e_trk_ratio").getVal()
+		    wspace.var("e_pt").setVal(e.pt_2)
+		    wspace.var("e_eta").setVal(e.eta_2)
+		    lepton_sf *= wspace.function("e_idiso_ic_ratio").getVal()
+		    tracking_sf *= wspace.function("e_trk_ratio").getVal()
+
+		if cat[2:] =='et' : 
+		    wspace.var("e_pt").setVal(e.pt_3)
+		    wspace.var("e_eta").setVal(e.eta_3)
+		    lepton_sf *= wspace.function("e_idiso_ic_ratio").getVal()
+		    tracking_sf *= wspace.function("e_trk_ratio").getVal()
+
+		if cat[2:] =='mt' : 
+		    wspace.var("m_pt").setVal(e.pt_3)
+		    wspace.var("m_eta").setVal(e.eta_3)
+		    lepton_sf *= wspace.function("m_idiso_ic_ratio").getVal()
+		    tracking_sf *= wspace.function("m_trk_ratio").getVal()
+
+		if cat[2:] =='et' or cat[2:] =='mt' or cat[2:] =='tt': 
+		    wspace.var("t_pt").setVal(e.pt_4)
+		    wspace.var("t_eta").setVal(e.eta_4)
+
+		if cat[2:] =='em' : 
+		    wspace.var("e_pt").setVal(e.pt_3)
+		    wspace.var("e_eta").setVal(e.eta_3)
+		    lepton_sf *= wspace.function("e_idiso_ic_ratio").getVal()
+		    tracking_sf *= wspace.function("e_trk_ratio").getVal()
+		    wspace.var("m_pt").setVal(e.pt_4)
+		    wspace.var("m_eta").setVal(e.eta_4)
+		    lepton_sf *= wspace.function("m_idiso_ic_ratio").getVal()
+		    tracking_sf *= wspace.function("m_trk_ratio").getVal()
 
 
-		#both firing the trigger
-		if e.isTrig_1 == 1 and e.isTrig_2 == 1 : 
-		    if cat[:2] == 'mm' :                 
-			eff_trig_d_1 =  sf_MuonTrig.get_EfficiencyData(e.pt_1,e.eta_1)
-			eff_trig_mc_1 = sf_MuonTrig.get_EfficiencyMC(e.pt_1,e.eta_1)
-			eff_trig_d_2 =  sf_MuonTrig.get_EfficiencyData(e.pt_2,e.eta_2)
-			eff_trig_mc_2 = sf_MuonTrig.get_EfficiencyMC(e.pt_2,e.eta_2)
-
-		    if cat[:2] == 'ee' :                 
-			eff_trig_d_1 =  sf_EleTrig.get_EfficiencyData(e.pt_1,e.eta_1)
-			eff_trig_mc_1 =  sf_EleTrig.get_EfficiencyMC(e.pt_1,e.eta_1)
-			eff_trig_d_2 =  sf_EleTrig.get_EfficiencyData(e.pt_2,e.eta_2)
-			eff_trig_mc_2 =  sf_EleTrig.get_EfficiencyMC(e.pt_2,e.eta_2)
-
-		    if eff_trig_mc_1 != 0 and eff_trig_mc_2 == 0  : 	trigw = float(eff_trig_d_1/eff_trig_mc_1)
-		    elif eff_trig_mc_1 == 0 and eff_trig_mc_2 != 0  : trigw = float(eff_trig_d_2/eff_trig_mc_2)
-		    elif eff_trig_mc_1 == 0 and eff_trig_mc_2 == 0  : continue 
-		    else : 	trigw = float(1- (1-eff_trig_d_1/eff_trig_mc_1) * (1-eff_trig_d_2/eff_trig_mc_2))
-
-		if e.isDoubleTrig!=0 and e.isTrig_1 == 0 : trigw = 1
+		#if e.isDoubleTrig!=0 and e.isTrig_1 == 0 : trigw = 1
 		weight *= trigw 
 		weightFM *= trigw 
+           
+
 
             iCut +=1
             WCounter[iCut-1][icat-1][inick] += weightCF
             hCutFlowN[cat][nickName].SetBinContent(iCut-1, hCutFlowN[cat][nickName].GetBinContent(iCut-1)+weight)
             hCutFlowFM[cat][nickName].SetBinContent(iCut-1, hCutFlowFM[cat][nickName].GetBinContent(iCut-1)+weightFM)
 
-            if group != 'data' :
-		#############3lepton SFs
-		if cat[:2] == 'mm' :                 
-			eff_id_d_1 =  sf_MuonId.get_EfficiencyData(e.pt_1,e.eta_1)
-			eff_id_mc_1 = sf_MuonId.get_EfficiencyMC(e.pt_1,e.eta_1)
-
-			eff_id_d_2 =  sf_MuonId.get_EfficiencyData(e.pt_2,e.eta_2)
-			eff_id_mc_2 = sf_MuonId.get_EfficiencyMC(e.pt_2,e.eta_2)
-
-		if cat[:2] == 'ee' :                 
-			eff_id_d_1 =  sf_ElectronId.get_EfficiencyData(e.pt_1,e.eta_1)
-			eff_id_mc_1 = sf_ElectronId.get_EfficiencyMC(e.pt_1,e.eta_1)
-
-			eff_id_d_2 =  sf_ElectronId.get_EfficiencyData(e.pt_2,e.eta_2)
-			eff_id_mc_2 = sf_ElectronId.get_EfficiencyMC(e.pt_2,e.eta_2)
-
-		if cat[2:] == 'mt' :
-			eff_id_d_3 =  sf_MuonId.get_EfficiencyData(e.pt_3,e.eta_3)
-			eff_id_mc_3 = sf_MuonId.get_EfficiencyMC(e.pt_3,e.eta_3)
-
-		if cat[2:] == 'et' :
-			eff_id_d_3 =  sf_ElectronId.get_EfficiencyData(e.pt_3,e.eta_3)
-			eff_id_mc_3 = sf_ElectronId.get_EfficiencyMC(e.pt_3,e.eta_3)
-
-		if cat[2:] == 'em' :               
-			eff_id_d_3 =  sf_ElectronId.get_EfficiencyData(e.pt_3,e.eta_3)
-			eff_id_mc_3 = sf_ElectronId.get_EfficiencyMC(e.pt_3,e.eta_3)
-			eff_id_d_4 =  sf_MuonId.get_EfficiencyData(e.pt_4,e.eta_4)
-			eff_id_mc_4 = sf_MuonId.get_EfficiencyMC(e.pt_4,e.eta_4)
-
-		lepton_sf = float (eff_id_d_1/eff_id_mc_1 * eff_id_d_2/eff_id_mc_2 * eff_id_d_3/eff_id_mc_3 * eff_id_d_4/eff_id_mc_4)
-
+        
+	    if group != 'data' :
 		weight *= lepton_sf
 		weightFM *= lepton_sf
+
+            iCut +=1
+            WCounter[iCut-1][icat-1][inick] += weightCF
+            hCutFlowN[cat][nickName].SetBinContent(iCut-1, hCutFlowN[cat][nickName].GetBinContent(iCut-1)+weight)
+            hCutFlowFM[cat][nickName].SetBinContent(iCut-1, hCutFlowFM[cat][nickName].GetBinContent(iCut-1)+weightFM)
+
+	    if group != 'data' :
+		weight *= tracking_sf
+		weightFM *= tracking_sf
 
             iCut +=1
             WCounter[iCut-1][icat-1][inick] += weightCF
@@ -1648,7 +1791,6 @@ for ig, group in enumerate(groups) :
 	    if cat[:2] == 'ee' :  
 		L1g.SetPtEtaPhiM(e.pt_1_tr, e.eta_1_tr,e.phi_1_tr,electronMass)
 		L2g.SetPtEtaPhiM(e.pt_2_tr, e.eta_2_tr,e.phi_2_tr,electronMass)
-
 		L1.SetPtEtaPhiM(e.pt_1, e.eta_1,e.phi_1,electronMass)
 		L2.SetPtEtaPhiM(e.pt_2, e.eta_2,e.phi_2,electronMass)
 
@@ -1678,12 +1820,15 @@ for ig, group in enumerate(groups) :
 
                 # leptons faking taus // muon->tau
 		if e.gen_match_4 == 2 or e.gen_match_4 == 4 :
+
 		    if e.decayMode_4 == 1 :  
 		        weight *= weights_muToTauFR['DM1']
+                        '''
 			tauV4cor  *= (1 +  weights_muTotauES['DM1']*0.01)
 			tauV4corUp  *= (1 +  weights_muTotauES['DM1']*0.01)
 			tauV4corDown  *= (1 +  weights_muTotauES['DM1']*0.01)
 			MetVcor +=  tauV4*(1 +  weights_muTotauES['DM1']*0.01)
+                        '''
 
 		    if e.decayMode_4 == 0 :  
 			if abs(e.eta_4) < 0.4                        : weightTID *= weights_muToTauFR['lt0p4'] *  weights_mujToTauFR['lt0p4']
@@ -1691,11 +1836,12 @@ for ig, group in enumerate(groups) :
 			if abs(e.eta_4) > 0.8 and abs(e.eta_4 < 1.2) : weightTID *= weights_muToTauFR['0p8to1p2'] * weights_mujToTauFR['0p8to1p2']
 			if abs(e.eta_4) > 1.2 and abs(e.eta_4 < 1.7) : weightTID *= weights_muToTauFR['1p2to1p7'] * weights_mujToTauFR['1p2to1p7']
 			if abs(e.eta_4) > 1.7 and abs(e.eta_4 < 2.3) : weightTID *= weights_muToTauFR['1p7to2p3'] * weights_mujToTauFR['1p7to2p3']
+                        '''
 			tauV4cor *= (1 +  weights_muTotauES['DM0']*0.01)
 			tauV4corUp *= (1 +  weights_muTotauES['DM0']*0.01)
 			tauV4corDown *= (1 +  weights_muTotauES['DM0']*0.01)
 			MetVcor +=   tauV4*(1 +  weights_muTotauES['DM0']*0.01)
-
+                        '''
 
 
                 # leptons faking taus // electron->tau
@@ -1704,18 +1850,23 @@ for ig, group in enumerate(groups) :
 		    if e.decayMode_4 == 0 :  
 			if abs(e.eta_4) < 1.479     : weightTID *= weights_elToTauFR['lt1p479_DM0'] * weights_eljToTauFR['lt1p479_DM0']
 			if abs(e.eta_4) > 1.479     : weightTID *= weights_elToTauFR['gt1p479_DM0'] * weights_eljToTauFR['gt1p479_DM0']
+                        '''
 			tauV4cor  *= (1 +  weights_elTotauES['DM0']*0.01)
 			tauV4corUp  *= (1 +  weights_elTotauES['DM0']*0.01)
 			tauV4corDown  *= (1 +  weights_elTotauES['DM0']*0.01)
 			MetVcor +=   tauV4*(1 +  weights_elTotauES['DM0']*0.01)
+                        '''
 
 		    if e.decayMode_4 == 1 :  
-			if abs(e.eta_4) < 1.479     : weightTID *= weights_elToTauFR['lt1p479_DM1'] * weights_eljToTauFR['lt1p479_DM1']
+			if abs(e.eta_4) < 1.479     : weightTID *= weights_elToTauFR['lt1p479_DM1'] * weights_eljToTauFR['lt1p479_DM1']			
+                        if abs(e.eta_4) > 1.479     : weightTID *= weights_elToTauFR['gt1p479_DM1'] * weights_eljToTauFR['gt1p479_DM1']
 			if abs(e.eta_4) > 1.479     : weightTID *= weights_elToTauFR['gt1p479_DM1'] * weights_eljToTauFR['gt1p479_DM1']
+                        '''
 			tauV4cor  *= (1 +  weights_elTotauES['DM1']*0.01)
 			tauV4corUp  *= (1 +  weights_elTotauES['DM1']*0.01)
 			tauV4corDown  *= (1 +  weights_elTotauES['DM1']*0.01)
 			MetVcor +=   tauV4*(1 +  weights_elTotauES['DM1']*0.01)
+                        '''
 
 		
                 if  cat[2:] == 'tt' :
@@ -1724,10 +1875,12 @@ for ig, group in enumerate(groups) :
 		    if e.gen_match_3 == 2 or e.gen_match_3 == 4 :
 			if e.decayMode_3 == 1 :  
 			    weightTID *= weights_muToTauFR['DM1']
+                            '''
 			    tauV3cor  *= (1 +  weights_muTotauES['DM1']*0.01)
 			    tauV3corUp  *= (1 +  weights_muTotauES['DM1']*0.01)
 			    tauV3corDown  *= (1 +  weights_muTotauES['DM1']*0.01)
 			    MetVcor +=   tauV3*(1 +  weights_muTotauES['DM1']*0.01)
+                            '''
 
 			if e.decayMode_3 == 0 :  
 			    if abs(e.eta_3) < 0.4                        : weightTID *= weights_muToTauFR['lt0p4'] *  weights_mujToTauFR['lt0p4']
@@ -1736,10 +1889,12 @@ for ig, group in enumerate(groups) :
 			    if abs(e.eta_3) > 1.2 and abs(e.eta_3 < 1.7) : weightTID *= weights_muToTauFR['1p2to1p7'] * weights_mujToTauFR['1p2to1p7']
 			    if abs(e.eta_3) > 1.7 and abs(e.eta_3 < 2.3) : weightTID *= weights_muToTauFR['1p7to2p3'] * weights_mujToTauFR['1p7to2p3']
 
+                            '''
 			    tauV3cor  *= (1 +  weights_muTotauES['DM0']*0.01)
 			    tauV3corUp  *= (1 +  weights_muTotauES['DM0']*0.01)
 			    tauV3corDown  *= (1 +  weights_muTotauES['DM0']*0.01)
 			    MetVcor +=   tauV3*(1 +  weights_muTotauES['DM0']*0.01)
+                            '''
 
 
                     # electron faking _3 tau
@@ -1748,20 +1903,27 @@ for ig, group in enumerate(groups) :
 			if e.decayMode_3 == 0 :  
 			    if abs(e.eta_3) < 1.479     : weightTID *= weights_elToTauFR['lt1p479_DM0'] * weights_eljToTauFR['lt1p479_DM0']
 			    if abs(e.eta_3) > 1.479     : weightTID *= weights_elToTauFR['gt1p479_DM0'] * weights_eljToTauFR['gt1p479_DM0']
+
+                            '''
 			    tauV3cor  *= (1 +  weights_elTotauES['DM0']*0.01)
 			    tauV3corUp  *= (1 +  weights_elTotauES['DM0']*0.01)
 			    tauV3corDown  *= (1 +  weights_elTotauES['DM0']*0.01)
 			    MetVcor +=   tauV3*(1 +  weights_elTotauES['DM0']*0.01)
+                            '''
 
 			if e.decayMode_3 == 1 :  
 			    if abs(e.eta_3) < 1.479     : weightTID *= weights_elToTauFR['lt1p479_DM1'] * weights_eljToTauFR['lt1p479_DM1']
 			    if abs(e.eta_3) > 1.479     : weightTID *= weights_elToTauFR['gt1p479_DM1'] * weights_eljToTauFR['gt1p479_DM1']
 
+                            '''
 			    tauV3cor  *= (1 +  weights_elTotauES['DM1']*0.01)
 			    tauV3corUp  *= (1 +  weights_elTotauES['DM1']*0.01)
 			    tauV3corDown  *= (1 +  weights_elTotauES['DM1']*0.01)
 			    MetVcor +=   tauV3*(1 +  weights_elTotauES['DM1']*0.01)
-		if cat[2:] == 'tt' and e.gen_match_3 == 5 : 
+                            '''
+
+		if cat[2:] == 'tt' :
+                    if e.gen_match_3 == 5 : 
 			weightTID *= tauSFTool.getSFvsPT(e.pt_3,e.gen_match_3)
 			weightTIDUp *= tauSFTool.getSFvsPT(e.pt_3,e.gen_match_3, unc='Up')
 			weightTIDDown *= tauSFTool.getSFvsPT(e.pt_3,e.gen_match_3, unc='Down')
@@ -1769,27 +1931,33 @@ for ig, group in enumerate(groups) :
 			tauV3cor *= testool.getTES(e.pt_3, e.decayMode_3, e.gen_match_3)
 			tauV3corUp *= testool.getTES(e.pt_3, e.decayMode_3, e.gen_match_3,unc='Up')
 			tauV3corDown *= testool.getTES(e.pt_3, e.decayMode_3, e.gen_match_3,unc='Down')
+
+
+                        '''
 			if e.decayMode_3 == 1 : 
 			    e.m_3 =  0.1396  
 			    tauV3cor.SetE(0.1396)
 			    tauV3corUp.SetE(0.1396)
 			    tauV3corDown.SetE(0.1396)
 			MetVcor +=   tauV3 - tauV3cor
+                        '''
 
-                if  cat[2:] == 'tt' or cat[2:] == 'mt' or cat[2:] == 'et' :
+                if  cat[2:] == 'tt'  or cat[2:] == 'mt' or cat[2:] == 'et' :
 		    if e.gen_match_4 == 5 : 
 			weightTID *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4)
 			weightTIDUp *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4, unc='Up')
 			weightTIDDown *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4, unc='Down')
 			tauV4cor *= testool.getTES(e.pt_4, e.decayMode_4, e.gen_match_4)
+                        '''
 			if e.decayMode_4 == 1 : 
 			    e.m_4 =  0.1396  
 			    tauV4cor.SetE(0.1396)
 			MetVcor+=   tauV4 - tauV4cor
+                        '''
 
                 #if isW or isDY : print 'try', MetVcor.Pt(), MetV.Pt()
 
-                weight *= weightTID
+                #weight *= weightTID
                 #weightFM *= weightTID * ww
 
             iCut +=1
@@ -1857,6 +2025,7 @@ for ig, group in enumerate(groups) :
             tauV = tauV3cor + tauV4cor
 	    #print fastMTTmass, 'm now==================', ZPt, cat
 
+            H_LT = e.pt_3 + e.pt_4
             if fastMTTmass <290 : 
 		if hGroup != 'data' : 
 		    if hGroup !='fakes' and hGroup !='f1' and hGroup != 'f2' and hGroup !='Reducible': 

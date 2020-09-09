@@ -37,6 +37,7 @@ GluGluTo2mu2nu,Other,0.0054,500000.0,500000.0,,/GluGluToContinToZZTo2mu2nu_13TeV
 GluGluTo2mu2tau,Other,0.0054,499800.0,499800.0,,/GluGluToContinToZZTo2mu2tau_13TeV_MCFM701_pythia8/RunIISummer16NanoAODv7-PUMoriond17_Nano02Apr2020_102X_mcRun2_asymptotic_v8-v1/NANOAODSIM
 GluGluTo4e,Other,0.0027,978600.0,978600.0,,/GluGluToContinToZZTo4e_13TeV_MCFM701_pythia8/RunIISummer16NanoAODv7-PUMoriond17_Nano02Apr2020_102X_mcRun2_asymptotic_v8-v1/NANOAODSIM
 GluGluTo4mu,Other,0.0027,995200.0,995200.0,,/GluGluToContinToZZTo4mu_13TeV_MCFM701_pythia8/RunIISummer16NanoAODv7-PUMoriond17_Nano02Apr2020_102X_mcRun2_asymptotic_v8-v1/NANOAODSIM
+GluGluTo4tau,Other,0.0054,495800.0,495800.0,,/GluGluToContinToZZTo4tau_13TeV_MCFM701_pythia8/RunIISummer16NanoAODv7-PUMoriond17_Nano02Apr2020_102X_mcRun2_asymptotic_v8-v1/NANOAODSIM
 GluGluToHToTauTau,Signal,48.58*0.0627,9673200.0,9673200.0,,/GluGluHToTauTau_M125_13TeV_powheg_pythia8/RunIISummer16NanoAODv7-PUMoriond17_Nano02Apr2020_102X_mcRun2_asymptotic_v8-v1/NANOAODSIM
 GluGluZH_HToWW_ZTo2L,Other,0.00262,148525.0,148525.0,,/GluGluZH_HToWW_M125_13TeV_powheg_pythia8/RunIISummer16NanoAODv7-PUMoriond17_Nano02Apr2020_102X_mcRun2_asymptotic_v8-v1/NANOAODSIM
 HZJ_HToWW,Other,0.163,295529.0,222635.9,,/HZJ_HToWW_M125_13TeV_powheg_pythia8/RunIISummer16NanoAODv7-PUMoriond17_Nano02Apr2020_102X_mcRun2_asymptotic_v8-v1/NANOAODSIM
@@ -111,8 +112,10 @@ WZZ,Other,0.05565,246800.0,13736.4,,/WZZ_TuneCUETP8M1_13TeV-amcatnlo-pythia8/Run
 ZHToTauTau,Signal,0.7612*0.0627,599803.0,451664.6,,/ZHToTauTau_M125_13TeV_powheg_pythia8/RunIISummer16NanoAODv7-PUMoriond17_Nano02Apr2020_102X_mcRun2_asymptotic_v8-v1/NANOAODSIM
 ZZ_ext1,ZZ,12.14,998034.0,998034.0,,/ZZ_TuneCUETP8M1_13TeV-pythia8/RunIISummer16NanoAODv7-PUMoriond17_Nano02Apr2020_102X_mcRun2_asymptotic_v8_ext1-v1/NANOAODSIM
 ZZTo2L2Q,Other,3.688,15462693.0,78447679.0,,/ZZTo2L2Q_13TeV_amcatnloFXFX_madspin_pythia8/RunIISummer16NanoAODv7-PUMoriond17_Nano02Apr2020_102X_mcRun2_asymptotic_v8-v1/NANOAODSIM
-ZZTo4L_ext1,ZZ,1.382,96451124.0,96451124.0,,/ZZTo4L_13TeV_powheg_pythia8_ext1/RunIISummer16NanoAODv6-PUMoriond17_Nano25Oct2019_102X_mcRun2_asymptotic_v7-v1/NANOAODSIM
+ZZTo4L_ext1,ZZ,1.382,96451124.0,96451124.0,,/ZZTo4L_13TeV_powheg_pythia8_ext1/RunIISummer16NanoAODv7-PUMoriond17_Nano02Apr2020_102X_mcRun2_asymptotic_v8-v1/NANOAODSIM
 ZZTo4Lmcnlo_ext1,ZZ,1.365,10711278.0,20479341.8,,/ZZTo4L_13TeV-amcatnloFXFX-pythia8/RunIISummer16NanoAODv7-PUMoriond17_Nano02Apr2020_102X_mcRun2_asymptotic_v8_ext1-v1/NANOAODSIM
 ZZTo4L,ZZ,1.382,6669988.0,6669988.0,,/ZZTo4L_13TeV_powheg_pythia8/RunIISummer16NanoAODv7-PUMoriond17_Nano02Apr2020_102X_mcRun2_asymptotic_v8-v1/NANOAODSIM
 ZZZ,Other,0.01398,249237.0,3499.4,,/ZZZ_TuneCUETP8M1_13TeV-amcatnlo-pythia8/RunIISummer16NanoAODv7-PUMoriond17_Nano02Apr2020_102X_mcRun2_asymptotic_v8-v1/NANOAODSIM
 ZZ,ZZ,12.14,990064.0,990064.0,,/ZZ_TuneCUETP8M1_13TeV-pythia8/RunIISummer16NanoAODv7-PUMoriond17_Nano02Apr2020_102X_mcRun2_asymptotic_v8-v1/NANOAODSIM
+HWminus,Other,0.114,299799.0,159582.2,,/HWminusJ_HToWW_M125_13TeV_powheg_pythia8/RunIISummer16NanoAODv7-PUMoriond17_Nano02Apr2020_102X_mcRun2_asymptotic_v8-v1/NANOAODSIM
+HWplus,Other,0.180,299997.0,255007.3,,/HWplusJ_HToWW_M125_13TeV_powheg_pythia8/RunIISummer16NanoAODv7-PUMoriond17_Nano02Apr2020_102X_mcRun2_asymptotic_v8-v1/NANOAODSIM

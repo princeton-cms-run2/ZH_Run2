@@ -93,3 +93,5 @@ ZZTo2L2Q,ZZ,3.688,27900469.0,157311194.4,,/ZZTo2L2Q_13TeV_amcatnloFXFX_madspin_p
 ZZTo2Q2Nu,ZZ,4.416,57633049.0,410907783.6,,/ZZTo2Q2Nu_TuneCP5_13TeV_amcatnloFXFX_madspin_pythia8/RunIIAutumn18NanoAODv7-Nano02Apr2020_102X_upgrade2018_realistic_v21-v1/NANOAODSIM
 ZZTo4Lmcnlo,ZZ,1.365,26371225.0,55635904.3,,/ZZTo4L_TuneCP5_13TeV-amcatnloFXFX-pythia8/RunIIAutumn18NanoAODv7-Nano02Apr2020_102X_upgrade2018_realistic_v21-v1/NANOAODSIM
 ZZZ_ext1,Other,0.01398,152000.0,2234.8,,/ZZZ_TuneCP5_13TeV-amcatnlo-pythia8/RunIIAutumn18NanoAODv7-Nano02Apr2020_102X_upgrade2018_realistic_v21_ext1-v1/NANOAODSIM
+HWminus,Other,0.114,968600.0,524422.5,,/HWminusJ_HToWW_M125_13TeV_powheg_jhugen724_pythia8_TuneCP5/RunIIAutumn18NanoAODv7-Nano02Apr2020_102X_upgrade2018_realistic_v21-v1/NANOAODSIM
+HWplus,Other,0.180,988000.0,856958.4,,/HWplusJ_HToWW_M125_13TeV_powheg_jhugen724_pythia8_TuneCP5/RunIIAutumn18NanoAODv7-Nano02Apr2020_102X_upgrade2018_realistic_v21-v1/NANOAODSIM

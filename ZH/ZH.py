@@ -10,11 +10,15 @@ import sys
 import numpy as np
 from ROOT import TFile, TTree, TH1, TH1D, TCanvas, TLorentzVector  
 from math import sqrt, pi
+#from TauPOG.TauIDSFs.TauIDSFTool import TauIDSFTool
+#from TauPOG.TauIDSFs.TauIDSFTool import TauESTool
+#from TauPOG.TauIDSFs.TauIDSFTool import TauFESTool
 
 # import from ZH_Run2/funcs/
 sys.path.insert(1,'../funcs/')
 import tauFun2 as TF
 import generalFunctions as GF 
+import Weights 
 import outTuple
 import time
 
@@ -162,17 +166,19 @@ countMod = 1000
 isMC = True
 
 
+Weights=Weights.Weights(args.year)
+
 
 for count, e in enumerate(inTree) :
     if count % countMod == 0 :
         print("Count={0:d}".format(count))
         if count >= 10000 : countMod = 10000
     if count == nMax : break    
-    
+
+
     for cat in cats : 
         cutCounter[cat].count('All')
 	if  MC :   cutCounterGenWeight[cat].countGenWeight('All', e.genWeight)
-
     isInJSON = False
     if not MC : isInJSON = CJ.checkJSON(e.luminosityBlock,e.run)
     if not isInJSON and not MC :
@@ -198,11 +204,20 @@ for count, e in enumerate(inTree) :
         else :
             continue
     if not TF.goodTrigger(e, args.year) : continue
-    
+
+
     for cat in cats: 
 	cutCounter[cat].count('Trigger')
 	if  MC :   cutCounterGenWeight[cat].countGenWeight('Trigger', e.genWeight)
-            
+
+    met_pt = float(e.MET_pt)
+    met_phi = float(e.MET_phi)
+    #print 'before ---------------------fix-----------------', e.METFixEE2017_pt, e.METFixEE2017_phi, e.event, met_pt
+    if MC :
+        met_pt, met_phi = Weights.applyES(e,args.year)
+    #print 'after fixxxxxxxxxxxx', e.MET_pt, 'tauES corrected', met_pt, met_phi, count
+
+
     for lepMode in ['ee','mm'] :
         if args.category != 'none' and not lepMode in args.category : continue
 
@@ -226,7 +241,7 @@ for count, e in enumerate(inTree) :
 
 	lepList=[]
 
-        
+               
         if lepMode == 'ee' :
             if len(goodElectronList) < 2 : continue
             for cat in cats[:4] :
@@ -269,12 +284,13 @@ for count, e in enumerate(inTree) :
             for cat in cats[4:]: 
 	        cutCounter[cat].count('FoundZ')
 	        if  MC :   cutCounterGenWeight[cat].countGenWeight('FoundZ', e.genWeight)
+
         for tauMode in ['et','mt','tt','em'] :
             if args.category != 'none' and tauMode != args.category[2:] : continue
             cat = lepMode + tauMode
             if tauMode == 'tt' :
                 tauList = TF.getTauList(cat, e, pairList=pairList)
-                bestTauPair = TF.getBestTauPair(cat, e, tauList )
+                bestTauPair = TF.getBestTauPair(cat, e, tauList)
                                     
             elif tauMode == 'et' :
                 bestTauPair = TF.getBestETauPair(e,cat=cat,pairList=pairList)
@@ -346,8 +362,11 @@ for count, e in enumerate(inTree) :
             SVFit = True
 	    
             if not MC : isMC = False
+             
+            #print 'again--------------->', e.MET_pt, e.MET_phi
 
-            outTuple.Fill(e,SVFit,cat,jt1,jt2,LepP,LepM,lepList,isMC,era,doJME, varSystematics)
+            outTuple.Fill(e,SVFit,cat,jt1,jt2,LepP,LepM,lepList,isMC,era,doJME, varSystematics, met_pt, met_phi)
+            #outTuple.Fill(e,SVFit,cat,jt1,jt2,LepP,LepM,lepList,isMC,era,doJME, varSystematics)
 
 
             if maxPrint > 0 :
