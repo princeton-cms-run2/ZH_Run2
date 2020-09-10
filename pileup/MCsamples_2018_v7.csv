@@ -82,10 +82,10 @@ WZTo3LNu_pow_ext1,WZ,4.43,1976600.0,9205237.4,,/WZTo3LNu_TuneCP5_13TeV-powheg-py
 WZTo3LNu,WZ,5.052,10749269.0,92490949.7,,/WZTo3LNu_TuneCP5_13TeV-amcatnloFXFX-pythia8/RunIIAutumn18NanoAODv7-Nano02Apr2020_102X_upgrade2018_realistic_v21-v1/NANOAODSIM
 WZZ_ext1,Other,0.05565,54000.0,3063.3,,/WZZ_TuneCP5_13TeV-amcatnlo-pythia8/RunIIAutumn18NanoAODv7-Nano02Apr2020_102X_upgrade2018_realistic_v21_ext1-v1/NANOAODSIM
 ZHToTauTau,Signal,0.7612*0.0627,4761815.0,3757651.7,,/ZHToTauTau_M125_13TeV_powheg_pythia8/RunIIAutumn18NanoAODv7-Nano02Apr2020_102X_upgrade2018_realistic_v21-v1/NANOAODSIM
-ZZ4L_DoubleScattering,ZZ,9.2,1000000.0,1005418.3,,/ZZTo4L_TuneCP5_DoubleScattering_13TeV-pythia8/RunIIAutumn18NanoAODv7-Nano02Apr2020_102X_upgrade2018_realistic_v21-v1/NANOAODSIM
-ZZ4L_ext1,ZZ,1.325,6689900.0,8862775.9,,/ZZTo4L_TuneCP5_13TeV_powheg_pythia8/RunIIAutumn18NanoAODv7-Nano02Apr2020_102X_upgrade2018_realistic_v21_ext1-v1/NANOAODSIM
-ZZ4L_ext2,ZZ,1.325,98870000.0,130979976.1,,/ZZTo4L_TuneCP5_13TeV_powheg_pythia8/RunIIAutumn18NanoAODv7-Nano02Apr2020_102X_upgrade2018_realistic_v21_ext2-v1/NANOAODSIM
-ZZ4L,ZZ,1.325,70234000.0,966990213.3,,/ZZTo4L_M-1toInf_TuneCP5_13TeV_powheg_pythia8/RunIIAutumn18NanoAODv7-Nano02Apr2020_102X_upgrade2018_realistic_v21-v1/NANOAODSIM
+ZZTo4L_DoubleScattering,ZZ,9.2,1000000.0,1005418.3,,/ZZTo4L_TuneCP5_DoubleScattering_13TeV-pythia8/RunIIAutumn18NanoAODv7-Nano02Apr2020_102X_upgrade2018_realistic_v21-v1/NANOAODSIM
+ZZTo4L_ext1,ZZ,1.325,6689900.0,8862775.9,,/ZZTo4L_TuneCP5_13TeV_powheg_pythia8/RunIIAutumn18NanoAODv7-Nano02Apr2020_102X_upgrade2018_realistic_v21_ext1-v1/NANOAODSIM
+ZZTo4L_ext2,ZZ,1.325,98870000.0,130979976.1,,/ZZTo4L_TuneCP5_13TeV_powheg_pythia8/RunIIAutumn18NanoAODv7-Nano02Apr2020_102X_upgrade2018_realistic_v21_ext2-v1/NANOAODSIM
+ZZTo4L,ZZ,1.325,70234000.0,966990213.3,,/ZZTo4L_M-1toInf_TuneCP5_13TeV_powheg_pythia8/RunIIAutumn18NanoAODv7-Nano02Apr2020_102X_upgrade2018_realistic_v21-v1/NANOAODSIM
 ZZ,Other,12.14,1979000.0,1978776.8,,/ZZ_TuneCP5_13TeV-pythia8/RunIIAutumn18NanoAODv7-Nano02Apr2020_102X_upgrade2018_realistic_v21-v1/NANOAODSIM
 ZZTo2L2Nu_ext1,ZZ,1.325,8382600.0,5036332.2,,/ZZTo2L2Nu_TuneCP5_13TeV_powheg_pythia8/RunIIAutumn18NanoAODv7-Nano02Apr2020_102X_upgrade2018_realistic_v21_ext1-v1/NANOAODSIM
 ZZTo2L2Nu_ext2,ZZ,1.325,48046000.0,28866684.4,,/ZZTo2L2Nu_TuneCP5_13TeV_powheg_pythia8/RunIIAutumn18NanoAODv7-Nano02Apr2020_102X_upgrade2018_realistic_v21_ext2-v1/NANOAODSIM
