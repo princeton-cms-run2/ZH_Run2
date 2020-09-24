@@ -1,0 +1,24 @@
+# this is a comment
+keep * # start with all
+#keep Electron*
+#keep Muon*
+#keep Jet*
+drop Photon*
+drop *AK8*
+drop Chs*
+drop Fat*
+drop IsoTrack*
+drop Puppi*
+drop Soft*
+drop Sub*
+drop HLT_Tri*
+drop HLT_Zero*
+drop HLT_Uncorrected*
+drop HLT*Jet*
+drop HLT*MET*
+drop HLT_PF*
+drop HLT_Di*
+drop HLT_Calo*
+drop HLT*Photon*
+drop L1_*
+drop Calo*

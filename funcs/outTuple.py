@@ -3,7 +3,7 @@
 from ROOT import TLorentzVector, TH1
 from math import sqrt, sin, cos, pi
 import tauFun2
-import ROOT
+import ROOT, array
 import os
 import sys
 import generalFunctions as GF
@@ -13,7 +13,7 @@ electronMass = 0.0005
 muonMass  = 0.105
 class outTuple() :
     
-    def __init__(self,fileName, era):
+    def __init__(self,fileName, era, doSyst=False,shift=[]):
         from array import array
         from ROOT import TFile, TTree
 
@@ -26,7 +26,74 @@ class outTuple() :
             else :
                 ROOT.gInterpreter.ProcessLine(".L {0:s}.cc++".format(baseName))   
                 # .L is not just for .so files, also .cc
-        
+       
+        ########### JetMet systematics
+	self.listsyst=['njets', 'nbtag', 'jpt', 'jeta', 'jflavour','MET_pt', 'MET_phi']
+	self.jessyst=['_nom','_jesAbsolute', '_jesAbsolute_{0:s}'.format(str(era)), '_jesBBEC1', '_jesBBEC1_{0:s}'.format(str(era)), '_jesEC2', '_jesEC2_{0:s}'.format(str(era)), '_jesFlavorQCD', '_jesHF', '_jesHF_{0:s}'.format(str(era)), '_jesRelativeBal', '_jesRelativeSample_{0:s}'.format(str(era)), '_jesHEMIssue', '_jesTotal', '_jer']  
+
+        #shift are the ES basd systematics
+
+	varss=['Up','Down']
+        self.n = array('f', [ 0 ])
+
+        self.allsystMET = []
+        self.allsystJets = []
+        self.jetsVariations=[]
+        self.list_of_arrays = []           
+        self.list_of_arraysJetsPt = []           
+        self.list_of_arraysJetsEta = []           
+        self.list_of_arraysJetsFlavour = []           
+        self.list_of_arraysJetsNbtag = []           
+        self.list_of_arraysJetsNjets = []           
+        self.list_of_arraysJetsFlavour = []           
+	self.tauMass = 1.7768 
+
+        if doSyst : 
+
+	    #self.jetsVariations.append('_nom')
+	    self.allsystMET = []
+	    self.allsystJets = []
+	    #create a list with Up/Down from the above combinations
+	    
+	    for i_ in self.listsyst :
+		for jes in self.jessyst :
+		    if 'nom' not in jes :
+			for var in varss :
+			    if 'MET' in i_ : 
+				self.allsystMET.append(i_+jes+var)
+				self.list_of_arrays.append(array('f', [ 0 ]))
+		    if 'nom' in jes :
+			if 'MET' in i_ : 
+			    self.allsystMET.append(i_+jes)
+			    self.list_of_arrays.append(array('f', [ 0 ]))
+                        
+            for jes in self.jessyst :
+		    if 'nom' not in jes :   
+		        for var in varss :
+			    self.allsystJets.append(jes+var)
+			    self.list_of_arraysJetsNjets.append( array('f',[0]))
+			    self.list_of_arraysJetsNbtag.append( array('f',[0]))
+			    self.list_of_arraysJetsFlavour.append( array('f',[-9.99]*15))
+			    self.list_of_arraysJetsEta.append( array('f',[-9.99]*15))
+			    self.list_of_arraysJetsPt.append( array('f',[-9.99]*15))
+		    if 'nom' in jes :   
+			self.allsystJets.append(jes)
+			self.list_of_arraysJetsNjets.append( array('f',[0]))
+			self.list_of_arraysJetsNbtag.append( array('f',[0]))
+			self.list_of_arraysJetsFlavour.append( array('f',[-9.99]*15))
+			self.list_of_arraysJetsEta.append( array('f',[-9.99]*15))
+			self.list_of_arraysJetsPt.append( array('f',[-9.99]*15))
+                     
+                
+	    #for i_ in self.allsystMET :  self.list_of_arrays.append(array('f', [ 0 ]))
+
+	    #for i_ in self.allsystJets :  
+		
+             
+
+        print '------>systematics list', self.allsystMET
+        print '------>jetssystematics list', self.allsystJets
+
 
         self.f = TFile( fileName, 'recreate' )
         self.t = TTree( 'Events', 'Output tree' )
@@ -82,7 +149,7 @@ class outTuple() :
         self.dZ_3        = array('f',[0])
         self.mt_3        = array('f',[0])
         self.pfmt_3      = array('f',[0])
-        self.puppimt_3   = array('f',[0])
+        #self.puppimt_3   = array('f',[0])
         self.iso_3       = array('f',[0])
         self.Electron_mvaFall17V2noIso_WP90_1 = array('f',[0])
         self.Electron_mvaFall17V2noIso_WP90_2 = array('f',[0])
@@ -98,7 +165,6 @@ class outTuple() :
         self.isGlobal_3       = array('f',[0])
         self.isTracker_3       = array('f',[0])
         self.ip3d_3       = array('f',[0])
-        self.inTimeMuon_3       = array('f',[0])
 
         self.idDecayModeNewDMs_3 = array('f',[0])
         self.idDeepTau2017v2p1VSe_3 = array('f',[0])
@@ -124,7 +190,7 @@ class outTuple() :
         self.dZ_4        = array('f',[0])
         self.mt_4        = array('f',[0])
         self.pfmt_4      = array('f',[0])
-        self.puppimt_4   = array('f',[0])
+        #self.puppimt_4   = array('f',[0])
         self.iso_4       = array('f',[0])
         self.gen_match_4 = array('l',[0])
         self.tightId_4       = array('f',[0])
@@ -134,7 +200,6 @@ class outTuple() :
         self.isGlobal_4       = array('f',[0])
         self.isTracker_4       = array('f',[0])
         self.ip3d_4       = array('f',[0])
-        self.inTimeMuon_4       = array('f',[0])
 
 
         self.idDecayModeNewDMs_4 = array('f',[0])
@@ -145,7 +210,7 @@ class outTuple() :
         self.rawMVAnewDM2017v2_4 = array('f',[0])
 
 
-
+        '''
         self.pt_5        = array('f',[0])
         self.phi_5       = array('f',[0])
         self.eta_5       = array('f',[0])
@@ -162,7 +227,7 @@ class outTuple() :
         self.idDeepTau2017v2p1VSmu_5 = array('f',[0])
         self.idMVAnewDM2017v2_5 = array('f',[0])
         self.rawMVAnewDM2017v2_5 = array('f',[0])
-
+        '''
         self.decayMode_4   = array('l',[0])
 
         # di-tau variables
@@ -224,10 +289,8 @@ class outTuple() :
         # MET variables
         self.met         = array('f',[0])
         self.metphi      = array('f',[0])
-        self.metnoTES         = array('f',[0])
-        self.metphinoTES      = array('f',[0])
-        self.puppimet    = array('f',[0])
-        self.puppimetphi = array('f',[0])
+        #self.puppimet    = array('f',[0])
+        #self.puppimetphi = array('f',[0])
         self.metcov00    = array('f',[0])
         self.metcov01    = array('f',[0])
         self.metcov10    = array('f',[0])
@@ -236,22 +299,10 @@ class outTuple() :
 
         #systematics
 
-        self.metpt_nom = array('f',[0])
-        self.metphi_nom = array('f',[0])
-        self.metpt_JER = array('f',[0])
-        self.metphi_JER = array('f',[0])
-        self.metpt_JERUp = array('f',[0])
-        self.metphi_JERUp = array('f',[0])
-        self.metpt_JERDown = array('f',[0])
-        self.metphi_JERDown = array('f',[0])
-        self.metpt_JESUp = array('f',[0])
-        self.metphi_JESUp = array('f',[0])
-        self.metpt_JESDown = array('f',[0])
-        self.metphi_JESDown = array('f',[0])
-        self.metpt_UnclUp = array('f',[0])
-        self.metphi_UnclUp = array('f',[0])
-        self.metpt_UnclDown = array('f',[0])
-        self.metphi_UnclDown = array('f',[0])
+        self.MET_pt_UnclUp = array('f',[0])
+        self.MET_phi_UnclUp = array('f',[0])
+        self.MET_pt_UnclDown = array('f',[0])
+        self.MET_phi_UnclDown = array('f',[0])
         self.met_UnclX = array('f',[0])
         self.met_UnclY = array('f',[0])
 
@@ -263,31 +314,33 @@ class outTuple() :
 
         # jet variables
         #self.njetsold = array('f',[-1]*8)
-        self.njets     = array('f',[0]*8)
-        self.nbtag     = array('f',[0]*8)
+        self.njets     = array('f',[0])
+        self.nbtag     = array('f',[0])
 
         self.btagWeightDeepCSVB     = array('f',[0])
         #self.nbtagold     = array('f',[-1]*8)
-        self.nbtagT     = array('f',[0]*8)
+        self.nbtagT     = array('f',[0])
         self.HTXS_Higgs_cat     = array('l',[0])
         self.HTXS_Higgs_pt     = array('f',[0])
 
-        self.jpt_1     = array('f',[0]*8)
-        self.jpt_1_tr  = array('f',[0]*8)
-        self.jeta_1    = array('f',[0]*8)
-        self.jeta_1_tr = array('f',[0]*8)
-        self.jphi_1    = array('f',[0]*8)
-        self.jphi_1_tr = array('f',[0]*8)
-        self.jcsv_1    = array('f',[0]*8)
-        self.jcsvfv_1    = array('f',[0]*8)
-        self.jpt_2     = array('f',[0]*8)
-        self.jpt_2_tr  = array('f',[0]*8)
-        self.jeta_2    = array('f',[0]*8)
-        self.jeta_2_tr = array('f',[0]*8)
-        self.jphi_2    = array('f',[0]*8)
-        self.jphi_2_tr = array('f',[0]*8)
-        self.jcsv_2    = array('f',[0]*8)
-        self.jcsvfv_2    = array('f',[0]*8)
+        '''
+        self.jpt_1     = array('f',[0])
+        self.jpt_1_tr  = array('f',[0])
+        self.jeta_1    = array('f',[0])
+        self.jeta_1_tr = array('f',[0])
+        self.jphi_1    = array('f',[0])
+        self.jphi_1_tr = array('f',[0])
+        self.jcsv_1    = array('f',[0])
+        self.jcsvfv_1    = array('f',[0])
+        self.jpt_2     = array('f',[0])
+        self.jpt_2_tr  = array('f',[0])
+        self.jeta_2    = array('f',[0])
+        self.jeta_2_tr = array('f',[0])
+        self.jphi_2    = array('f',[0])
+        self.jphi_2_tr = array('f',[0])
+        self.jcsv_2    = array('f',[0])
+        self.jcsvfv_2    = array('f',[0])
+        '''
         self.iso_2       = array('f',[0])
         self.q_2       = array('f',[0])
         self.tightId_2       = array('f',[0])
@@ -314,6 +367,7 @@ class outTuple() :
         self.bphi_2_tr = array('f',[0]*8)
         self.bcsv_2    = array('f',[0]*8)
         self.bcsvfv_2    = array('f',[0]*8)
+
 
       
         self.t.Branch('run',              self.run,               'run/l' )
@@ -363,7 +417,7 @@ class outTuple() :
         self.t.Branch('dZ_3',        self.dZ_3,        'dZ_3/F')
         self.t.Branch('mt_3',        self.mt_3,        'mt_3/F')
         self.t.Branch('pfmt_3',      self.pfmt_3,      'pfmt_3/F')
-        self.t.Branch('puppimt_3',   self.puppimt_3,   'puppimt_3/F')
+        #self.t.Branch('puppimt_3',   self.puppimt_3,   'puppimt_3/F')
         self.t.Branch('iso_3',       self.iso_3,       'iso_3/F')
         self.t.Branch('Electron_mvaFall17V2noIso_WP90_1', self.Electron_mvaFall17V2noIso_WP90_1, 'Electron_mvaFall17V2noIso_WP90_1/F')
         self.t.Branch('Electron_mvaFall17V2noIso_WP90_2', self.Electron_mvaFall17V2noIso_WP90_2, 'Electron_mvaFall17V2noIso_WP90_2/F')
@@ -379,7 +433,6 @@ class outTuple() :
         self.t.Branch('isGlobal_3', self.isGlobal_3, 'isGlobal_3/F')
         self.t.Branch('isTracker_3', self.isTracker_3, 'isTracker_3/F')
         self.t.Branch('ip3d_3', self.ip3d_3, 'ip3d_3/F')
-        self.t.Branch('inTimeMuon_3', self.inTimeMuon_3, 'inTimeMuon_3/F')
 
 
         self.t.Branch('idDecayModeNewDMs_3', self.idDecayModeNewDMs_3, 'idDecayModeNewDMs_3/F')
@@ -403,7 +456,7 @@ class outTuple() :
         self.t.Branch('dZ_4',        self.dZ_4,        'dZ_4/F')
         self.t.Branch('mt_4',        self.mt_4,        'mt_4/F')
         self.t.Branch('pfmt_4',      self.pfmt_4,      'pfmt_4/F')
-        self.t.Branch('puppimt_4',   self.puppimt_4,   'puppimt_4/F')
+        #self.t.Branch('puppimt_4',   self.puppimt_4,   'puppimt_4/F')
         self.t.Branch('iso_4',       self.iso_4,       'iso_4/F')
         self.t.Branch('gen_match_4', self.gen_match_4, 'gen_match_4/l')
         self.t.Branch('tightId_4', self.tightId_4, 'tightId_4/F')
@@ -413,7 +466,6 @@ class outTuple() :
         self.t.Branch('isGlobal_4', self.isGlobal_4, 'isGlobal_4/F')
         self.t.Branch('isTracker_4', self.isTracker_4, 'isTracker_4/F')
         self.t.Branch('ip3d_4', self.ip3d_4, 'ip3d_4/F')
-        self.t.Branch('inTimeMuon_4', self.inTimeMuon_4, 'inTimeMuon_4/F')
 
 
         self.t.Branch('idDecayModeNewDMs_4', self.idDecayModeNewDMs_4, 'idDecayModeNewDMs_4/F')
@@ -425,7 +477,7 @@ class outTuple() :
 
         self.t.Branch('decayMode_4',   self.decayMode_4,   'decayMode_4/I')
 
-
+        '''
         self.t.Branch('pt_5',        self.pt_5,        'pt_5/F')
         self.t.Branch('phi_5',       self.phi_5,       'phi_5/F')
         self.t.Branch('eta_5',       self.eta_5,       'eta_5/F')
@@ -443,7 +495,7 @@ class outTuple() :
         self.t.Branch('idDeepTau2017v2p1VSmu_5', self.idDeepTau2017v2p1VSmu_5, 'idDeepTau2017v2p1VSmu_5/F')
         self.t.Branch('idMVAnewDM2017v2_5', self.idMVAnewDM2017v2_5, 'idMVAnewDM2017v2_5/F')
         self.t.Branch('rawMVAnewDM2017v2_5', self.rawMVAnewDM2017v2_5, 'rawMVAnewDM2017v2_5/F')
-
+        '''
 
 
 
@@ -511,32 +563,18 @@ class outTuple() :
         self.t.Branch('looseId_2', self.looseId_2, 'looseId_2/F')
 
         #systematics
-        self.t.Branch('metpt_nom', self.metpt_nom, 'metpt_nom/F')
-        self.t.Branch('metphi_nom', self.metphi_nom, 'metphi_nom/F')
-        self.t.Branch('metpt_JER', self.metpt_JER, 'metpt_JER/F')
-        self.t.Branch('metphi_JER', self.metphi_JER, 'metphi_JER/F')
-        self.t.Branch('metpt_JERUp', self.metpt_JERUp, 'metpt_JERUp/F')
-        self.t.Branch('metphi_JERUp', self.metphi_JERUp, 'metphi_JERUp/F')
-        self.t.Branch('metpt_JERDown', self.metpt_JERDown, 'metpt_JERDown/F')
-        self.t.Branch('metphi_JERDown', self.metphi_JERDown, 'metphi_JERDown/F')
-        self.t.Branch('metpt_JESUp', self.metpt_JESUp, 'metpt_JESUp/F')
-        self.t.Branch('metphi_JESUp', self.metphi_JESUp, 'metphi_JESUp/F')
-        self.t.Branch('metpt_JESDown', self.metpt_JESDown, 'metpt_JESDown/F')
-        self.t.Branch('metphi_JESDown', self.metphi_JESDown, 'metphi_JESDown/F')
-        self.t.Branch('metpt_UnclUp', self.metpt_UnclUp, 'metpt_UnclUp/F')
-        self.t.Branch('metphi_UnclUp', self.metphi_UnclUp, 'metphi_UnclUp/F')
-        self.t.Branch('metpt_UnclDown', self.metpt_UnclDown, 'metpt_UnclDown/F')
-        self.t.Branch('metphi_UnclDown', self.metphi_UnclDown, 'metphi_UnclDown/F')
+        self.t.Branch('MET_pt_UnclUp', self.MET_pt_UnclUp, 'MET_pt_UnclUp/F')
+        self.t.Branch('MET_phi_UnclUp', self.MET_phi_UnclUp, 'MET_phi_UnclUp/F')
+        self.t.Branch('MET_pt_UnclDown', self.MET_pt_UnclDown, 'MET_pt_UnclDown/F')
+        self.t.Branch('MET_phi_UnclDown', self.MET_phi_UnclDown, 'MET_phi_UnclDown/F')
         self.t.Branch('met_UnclX', self.met_UnclX, 'met_UnclX/F')
         self.t.Branch('met_UnclY', self.met_UnclY, 'met_UnclY/F')
         
         # MET variables
         self.t.Branch('met', self.met, 'met/F')
         self.t.Branch('metphi', self.metphi, 'metphi/F')
-        self.t.Branch('metnoTES', self.metnoTES, 'metnoTES/F')
-        self.t.Branch('metphinoTES', self.metphinoTES, 'metphinoTES/F')
-        self.t.Branch('puppimet', self.puppimet, 'puppimet/F')
-        self.t.Branch('puppimetphi', self.puppimetphi, 'puppimetphi/F')
+        #self.t.Branch('puppimet', self.puppimet, 'puppimet/F')
+        #self.t.Branch('puppimetphi', self.puppimetphi, 'puppimetphi/F')
         self.t.Branch('metcov00', self.metcov00, 'metcov00/F')
         self.t.Branch('metcov01', self.metcov01, 'metcov01/F')
         self.t.Branch('metcov10', self.metcov10, 'metcov10/F')
@@ -551,9 +589,9 @@ class outTuple() :
         # jet variables
         #self.t.Branch('njetsold', self.njetsold, 'njetsold[8]/F') 
         #self.t.Branch('nbtagold', self.nbtagold, 'nbtagold[8]/F')
-        self.t.Branch('njets', self.njets, 'njets[8]/F')
-        self.t.Branch('nbtag', self.nbtag, 'nbtag[8]/F')
-        self.t.Branch('nbtagT', self.nbtagT, 'nbtagT[8]/F')
+        self.t.Branch('njets', self.njets, 'njets/F')
+        self.t.Branch('nbtag', self.nbtag, 'nbtag/F')
+        self.t.Branch('nbtagT', self.nbtagT, 'nbtagT/F')
         self.t.Branch('btagWeightDeepCSVB', self.btagWeightDeepCSVB, 'btagWeightDeepCSVB/F')
         self.t.Branch('HTXS_Higgs_cat', self.HTXS_Higgs_cat, 'HTXS_Higgs_cat/l')
         self.t.Branch('HTXS_Higgs_pt', self.HTXS_Higgs_pt, 'HTXS_Higgs_pt/F')
@@ -562,41 +600,85 @@ class outTuple() :
         self.t.Branch('jflavour',     self.jflavour,     'jflavour[15]/F' )
         self.t.Branch('jeta',     self.jeta,     'jeta[15]/F' )
         self.t.Branch('jpt',     self.jpt,     'jpt[15]/F' )
-        self.t.Branch('jpt_1',     self.jpt_1,     'jpt_1[8]/F' )
-        self.t.Branch('jpt_2',     self.jpt_2,     'jpt_2[8]/F' )
 
-        self.t.Branch('jpt_1_tr',  self.jpt_1_tr,  'jpt_1_tr[8]/F' )
-        self.t.Branch('jeta_1',    self.jeta_1,    'jeta_1[8]/F' ) 
-        self.t.Branch('jeta_1_tr', self.jeta_1_tr, 'jeta_1_tr[8]/F' )
-        self.t.Branch('jphi_1',    self.jphi_1,    'jphi_1[8]/F' )
-        self.t.Branch('jphi_1_tr', self.jphi_1_tr, 'jphi_1_tr[8]/F' )
-        self.t.Branch('jcsv_1',    self.jcsv_1,    'jcsv_1[8]/F' )
-        self.t.Branch('jcsvfv_1', self.jcsvfv_1, 'jcsvfv_1[8]/F' )
-        self.t.Branch('jpt_2',     self.jpt_2,     'jpt_2[8]/F' )
-        self.t.Branch('jpt_2_tr',  self.jpt_2_tr,  'jpt_2_tr[8]/F' )
-        self.t.Branch('jeta_2',    self.jeta_2,    'jeta_2[8]/F' ) 
-        self.t.Branch('jeta_2_tr', self.jeta_2_tr, 'jeta_2_tr[8]/F' )
-        self.t.Branch('jphi_2',    self.jphi_2,    'jphi_2[8]/F' )
-        self.t.Branch('jphi_2_tr', self.jphi_2_tr, 'jphi_2_tr[8]/F' )
-        self.t.Branch('jcsv_2',    self.jcsv_2,    'jcsv_2[8]/F' )
-        self.t.Branch('jcsvfv_2', self.jcsvfv_2, 'jcsvfv_2[8]/F' )
+        '''
+        self.t.Branch('jpt_1',     self.jpt_1,     'jpt_1/F' )
+        self.t.Branch('jpt_2',     self.jpt_2,     'jpt_2/F' )
 
-        self.t.Branch('bpt_1',     self.bpt_1,     'bpt_1[8]/F' )
-        self.t.Branch('bpt_1_tr',  self.bpt_1_tr,  'bpt_1_tr[8]/F' )
-        self.t.Branch('beta_1',    self.beta_1,    'beta_1[8]/F' ) 
-        self.t.Branch('beta_1_tr', self.beta_1_tr, 'beta_1_tr[8]/F' )
-        self.t.Branch('bphi_1',    self.bphi_1,    'bphi_1[8]/F' )
-        self.t.Branch('bphi_1_tr', self.bphi_1_tr, 'bphi_1_tr[8]/F' )
-        self.t.Branch('bcsv_1',    self.bcsv_1,    'bcsv_1[8]/F' )
-        self.t.Branch('bcsvfv_1', self.bcsvfv_1, 'bcsvfv_1[8]/F' )
-        self.t.Branch('bpt_2',     self.bpt_2,     'bpt_2[8]/F' )
-        self.t.Branch('bpt_2_tr',  self.bpt_2_tr,  'bpt_2_tr[8]/F' )
-        self.t.Branch('beta_2',    self.beta_2,    'beta_2[8]/F' )
-        self.t.Branch('beta_2_tr', self.beta_2_tr, 'beta_2_tr[8]/F' )
-        self.t.Branch('bphi_2',    self.bphi_2,    'bphi_2[8]/F' )
-        self.t.Branch('bphi_2_tr', self.bphi_2_tr, 'bphi_2_tr[8]/F' )
-        self.t.Branch('bcsv_2',    self.bcsv_2,    'bcsv_2[8]/F' )
-        self.t.Branch('bcsvfv_2', self.bcsvfv_2, 'bcsvfv_2[8]/F' )
+        self.t.Branch('jpt_1_tr',  self.jpt_1_tr,  'jpt_1_tr/F' )
+        self.t.Branch('jeta_1',    self.jeta_1,    'jeta_1/F' ) 
+        self.t.Branch('jeta_1_tr', self.jeta_1_tr, 'jeta_1_tr/F' )
+        self.t.Branch('jphi_1',    self.jphi_1,    'jphi_1/F' )
+        self.t.Branch('jphi_1_tr', self.jphi_1_tr, 'jphi_1_tr/F' )
+        self.t.Branch('jcsv_1',    self.jcsv_1,    'jcsv_1/F' )
+        self.t.Branch('jcsvfv_1', self.jcsvfv_1, 'jcsvfv_1/F' )
+        self.t.Branch('jpt_2',     self.jpt_2,     'jpt_2/F' )
+        self.t.Branch('jpt_2_tr',  self.jpt_2_tr,  'jpt_2_tr/F' )
+        self.t.Branch('jeta_2',    self.jeta_2,    'jeta_2/F' ) 
+        self.t.Branch('jeta_2_tr', self.jeta_2_tr, 'jeta_2_tr/F' )
+        self.t.Branch('jphi_2',    self.jphi_2,    'jphi_2/F' )
+        self.t.Branch('jphi_2_tr', self.jphi_2_tr, 'jphi_2_tr/F' )
+        self.t.Branch('jcsv_2',    self.jcsv_2,    'jcsv_2/F' )
+        self.t.Branch('jcsvfv_2', self.jcsvfv_2, 'jcsvfv_2/F' )
+
+        self.t.Branch('bpt_1',     self.bpt_1,     'bpt_1/F' )
+        self.t.Branch('bpt_1_tr',  self.bpt_1_tr,  'bpt_1_tr/F' )
+        self.t.Branch('beta_1',    self.beta_1,    'beta_1/F' ) 
+        self.t.Branch('beta_1_tr', self.beta_1_tr, 'beta_1_tr/F' )
+        self.t.Branch('bphi_1',    self.bphi_1,    'bphi_1/F' )
+        self.t.Branch('bphi_1_tr', self.bphi_1_tr, 'bphi_1_tr/F' )
+        self.t.Branch('bcsv_1',    self.bcsv_1,    'bcsv_1/F' )
+        self.t.Branch('bcsvfv_1', self.bcsvfv_1, 'bcsvfv_1/F' )
+        self.t.Branch('bpt_2',     self.bpt_2,     'bpt_2[F' )
+        self.t.Branch('bpt_2_tr',  self.bpt_2_tr,  'bpt_2_tr/F' )
+        self.t.Branch('beta_2',    self.beta_2,    'beta_2/F' )
+        self.t.Branch('beta_2_tr', self.beta_2_tr, 'beta_2_tr/F' )
+        self.t.Branch('bphi_2',    self.bphi_2,    'bphi_2/F' )
+        self.t.Branch('bphi_2_tr', self.bphi_2_tr, 'bphi_2_tr/F' )
+        self.t.Branch('bcsv_2',    self.bcsv_2,    'bcsv_2/F' )
+        self.t.Branch('bcsvfv_2', self.bcsvfv_2, 'bcsvfv_2/F' )
+        '''
+
+
+        #self.MET_pt_jesEC2Up  = array('f',[0])
+        #self.t.Branch('MET_pt_jesEC2Up', self.MET_pt_jesEC2Up, 'MET_pt_jesEC2Up/F' )
+        self.tN=[]
+        for i, isyst in enumerate(shift) : 
+            #if isyst == "Events" : continue
+            #else  : 
+            if i > 0 : 
+                self.tN.append(isyst)
+                self.tN[i-1]  = self.t.CloneTree(0)
+                self.tN[i-1].SetName(isyst)
+                self.tN[i-1].SetBranchStatus("*Up",0)
+                self.tN[i-1].SetBranchStatus("*Down",0)
+                self.tN[i-1].SetBranchStatus("Gen*",0)
+                self.tN[i-1].SetBranchStatus("*_tr*",0)
+                #self.tN[i-1].SetBranchStatus("*HTXS*",0)
+                self.tN[i-1].SetBranchStatus("*L1*",0)
+                self.tN[i-1].SetBranchStatus("*LHE*",0)
+                self.tN[i-1].SetBranchStatus("*PU*",0)
+                self.tN[i-1].SetBranchStatus("*Trigger*",0)
+                print '====================>',self.tN[i-1], self.tN[i-1].GetName()
+
+        if doSyst : 
+                #Book the branches and the arrays needed to store variables
+		for i, v in enumerate(self.allsystMET):
+                 
+                    if str(era)=='2017' : 
+                        v = v.replace('MET','METFixEE2017')
+                    iMET= v.replace('METFixEE2017','MET')
+
+	            self.t.Branch(iMET, self.list_of_arrays[i], '{0:s}/F'.format(iMET))
+
+		for i, v in enumerate(self.allsystJets):
+		    self.t.Branch('njets{0:s}'.format(v), self.list_of_arraysJetsNjets[i], 'njets{0:s}/F'.format(v))
+		    self.t.Branch('nbtag{0:s}'.format(v), self.list_of_arraysJetsNbtag[i], 'nbtag{0:s}/F'.format(v))
+		    self.t.Branch('jflavour{0:s}'.format(v), self.list_of_arraysJetsFlavour[i], 'jflavour{0:s}[15]/F'.format(v))
+		    self.t.Branch('jpt{0:s}'.format(v), self.list_of_arraysJetsPt[i], 'jpt{0:s}[15]/F'.format(v))
+		    self.t.Branch('jeta{0:s}'.format(v), self.list_of_arraysJetsEta[i], 'jeta{0:s}[15]/F'.format(v))
+
+
 
     def get_mt(self,METtype,entry,tau) :
         if METtype == 'MVAMet' :
@@ -690,28 +772,33 @@ class outTuple() :
         goodJets=[]
         jeList=[]
         bJetList=[]
-        if syst !='' : syst="_"+syst
+        #if syst !='' : syst="_"+syst
+     
+        if 'nom' in syst : syst='_nom'
+          
         for j in range(entry.nJet) :
-            jpt = getattr(entry, "Jet_pt{0:s}".format(str(syst)), None)
 
-            #print jpt[j],  entry.Jet_pt[j],  syst
+            try : 
+		jpt = getattr(entry, "Jet_pt{0:s}".format(str(syst)), None)
+                #if syst=='_nom' : print jpt[j],  entry.Jet_pt[j],  syst
 
-            if entry.Jet_jetId[j]  < 2  : continue  #require tight jets
-            if jpt[j] > 30 and jpt[j] < 50 and entry.Jet_puId[j]  < 4  : continue #loose jetPU_iD
-            if str(era) == '2017'  and jpt[j] > 20 and jpt[j] < 50 and abs(entry.Jet_eta[j]) > 2.65 and abs(entry.Jet_eta[j]) < 3.139 : continue  #remove noisy jets
-            if jpt[j] < 25. : continue
-            if abs(entry.Jet_eta[j]) > 4.7 : continue
+		if entry.Jet_jetId[j]  < 2  : continue  #require tight jets
+		if jpt[j] > 30 and jpt[j] < 50 and entry.Jet_puId[j]  < 4  : continue #loose jetPU_iD
+		if str(era) == '2017'  and jpt[j] > 20 and jpt[j] < 50 and abs(entry.Jet_eta[j]) > 2.65 and abs(entry.Jet_eta[j]) < 3.139 : continue  #remove noisy jets
+		if jpt[j] < 25. : continue
+		if abs(entry.Jet_eta[j]) > 4.7 : continue
 
-            #for iv, lepv in enumerate(LepList) : 
-            for iv, lv  in  enumerate(LepList) :
-		dr = self.getDRnV(entry, entry.Jet_eta[j], entry.Jet_phi[j], LepList[iv].Eta(), LepList[iv].Phi())
-                if float(dr) > 0.5 : 
-                    #print 'seems goodfor iv--->', iv, 'jet', j, entry.nJet, 'dr--', dr , LepList[iv].Eta(), LepList[iv].Phi(), LepList[iv].Pt()
-                    if j not in goodJets : goodJets.append(j)
-		if float(dr) < 0.5 : 
-                    #print ' failed for lepton--->', iv, 'jet', j, 'njets', entry.nJet, 'dr--', dr , LepList[iv].Eta(), LepList[iv].Phi(), LepList[iv].Pt()
-                    if j not in failJets : failJets.append(j)
-                    #continue
+		#for iv, lepv in enumerate(LepList) : 
+		for iv, lv  in  enumerate(LepList) :
+		    dr = self.getDRnV(entry, entry.Jet_eta[j], entry.Jet_phi[j], LepList[iv].Eta(), LepList[iv].Phi())
+		    if float(dr) > 0.5 : 
+			#print 'seems goodfor iv--->', iv, 'jet', j, entry.nJet, 'dr--', dr , LepList[iv].Eta(), LepList[iv].Phi(), LepList[iv].Pt()
+			if j not in goodJets : goodJets.append(j)
+		    if float(dr) < 0.5 : 
+			#print ' failed for lepton--->', iv, 'jet', j, 'njets', entry.nJet, 'dr--', dr , LepList[iv].Eta(), LepList[iv].Phi(), LepList[iv].Pt()
+			if j not in failJets : failJets.append(j)
+			#continue
+            except : continue
 
         for j in failJets : 
             if j in goodJets : goodJets.remove(j)
@@ -780,13 +867,16 @@ class outTuple() :
         ttP4 = FMTT.getBestP4()
         return ttP4.M(), ttP4.Mt() 
     
-    def Fill(self, entry, SVFit, cat, jt1, jt2, LepP, LepM, lepList, isMC, era, doUncertainties=False , sysVariations=[], met_pt=-99, met_phi=-99) :
+    def Fill(self, entry, SVFit, cat, jt1, jt2, LepP, LepM, lepList, isMC, era, doUncertainties=False ,  met_pt=-99, met_phi=-99, systIndex=0) :
     #def Fill(self, entry, SVFit, cat, jt1, jt2, LepP, LepM, lepList, isMC, era,  doUncertainties=False , sysVariations=[]) :
         ''' - jt1 and jt2 point to the selected tau candidates according to the table below.
             - if e.g., channel = 'et', the jt1 points to the electron list and jt2 points to the tau list.
             - LepP and LepM are TLorentz vectors for the positive and negative members of the dilepton pair
         '''
+        SystIndex = int(systIndex)
 
+        
+        if SystIndex >0 : doUncertainties=False
         is_trig_1, is_trig_2, is_Dtrig_1 = 0., 0., 0.
         TrigListLep = []
         TrigListTau = []
@@ -795,166 +885,164 @@ class outTuple() :
 
         #channel_ll = 'mm' or 'ee'
         channel_ll = cat[:-2]
+	channel = cat[-2:]
 
-	TrigListLep, hltListLep, hltListLepSubL  = GF.findSingleLeptTrigger(lepList, entry, channel_ll, era)
+        if SystIndex ==0 : 
+	    TrigListLep, hltListLep, hltListLepSubL  = GF.findSingleLeptTrigger(lepList, entry, channel_ll, era)
 
-	TrigListLep = list(dict.fromkeys(TrigListLep))
-        #if len(hltListLep) > 0 or len(hltListLepSubL)>0 :     print GF.printEvent(entry)
+	    TrigListLep = list(dict.fromkeys(TrigListLep))
+	    #if len(hltListLep) > 0 or len(hltListLepSubL)>0 :     print GF.printEvent(entry)
 
-	#TrigListLepD, hltListLepD  = GF.findDoubleLeptTrigger(lepList, entry, channel_ll, era)
+	    #TrigListLepD, hltListLepD  = GF.findDoubleLeptTrigger(lepList, entry, channel_ll, era)
 
-	#TrigListLepD = list(dict.fromkeys(TrigListLepD))
+	    #TrigListLepD = list(dict.fromkeys(TrigListLepD))
 
-	#if len(TrigListLepD) > 0 : print TrigListLepD, hltListLepD, TrigListLep, hltListLep
-	#if len(TrigListLepD) == 2 : 
-	#    if lepList[0] == TrigListLepD[0] :
-	#        is_Dtrig_1 = 1 #that means that the leading lepton 
-	#    else : 
-	#        is_Dtrig_1 = -1
-
-
-        if len(hltListLep) > 0 and  len(hltListLepSubL) == 0 :
-            is_trig_1 = 1
-        if len(hltListLep) == 0 and len(hltListLepSubL) > 0 :
-            is_trig_1 = -1
-        if len(hltListLep) > 0 and len(hltListLepSubL)>0 :
-	    is_trig_1 = 2
-
-        self.whichTriggerWord[0]=0
-        self.whichTriggerWordSubL[0]=0
-
-        #if len(TrigListLep) >0 : print 'TrigerList ===========>', TrigListLep, lepList, hltListLep, channel_ll, 'istrig_1', is_trig_1, 'istrig_2', is_trig_2, 'lenTrigList', len(TrigListLep),  'lenLept', len(lepList), 'lepList_0', lepList[0], 'TrigList_0', TrigListLep[0], hltListLep
-        
-        for i,bit in enumerate(hltListLep):
-                
-            if bit : 
-                self.whichTriggerWord[0] += 2**i
-
-        for j,bitt in enumerate(hltListLepSubL):
-            if bitt : self.whichTriggerWordSubL[0] += 2**j
+	    #if len(TrigListLepD) > 0 : print TrigListLepD, hltListLepD, TrigListLep, hltListLep
+	    #if len(TrigListLepD) == 2 : 
+	    #    if lepList[0] == TrigListLepD[0] :
+	    #        is_Dtrig_1 = 1 #that means that the leading lepton 
+	    #    else : 
+	    #        is_Dtrig_1 = -1
 
 
-        #if channel_ll=='ee' and entry.luminosityBlock==90 and entry.event==8904: print self.whichTriggerWord[0], 'hlt', hltListLep, 'hltsub', hltListLepSubL
-        #print cat, self.whichTriggerWord
-        # channel = 'mt', 'et', 'tt', or 'em'
-        channel = cat[-2:]
-        if jt1 > -1 and jt2 > -1 : self.cat[0]  = tauFun2.catToNumber(cat)
-        
-        self.entries += 1
+	    if len(hltListLep) > 0 and  len(hltListLepSubL) == 0 :
+		is_trig_1 = 1
+	    if len(hltListLep) == 0 and len(hltListLepSubL) > 0 :
+		is_trig_1 = -1
+	    if len(hltListLep) > 0 and len(hltListLepSubL)>0 :
+		is_trig_1 = 2
 
-        self.run[0]  = entry.run
-        self.nElectron[0]  = entry.nElectron
-        self.nMuon[0]  = entry.nMuon
-        self.nTau[0]  = entry.nTau
-        self.lumi[0] = entry.luminosityBlock 
-        self.evt[0]  = entry.event
-        self.iso_1[0]  = -99
-        self.iso_2[0]  = -99
-        self.q_1[0]  = -99
-        self.q_2[0]  = -99
-        self.isGlobal_1[0]  = -99
-        self.isGlobal_2[0]  = -99
-        try:
-	    self.L1PreFiringWeight_Nom[0] = entry.L1PreFiringWeight_Nom
-	    self.L1PreFiringWeight_Up[0] = entry.L1PreFiringWeight_Up
-	    self.L1PreFiringWeight_Dn[0] = entry.L1PreFiringWeight_Dn
-        except AttributeError : 
-	    self.L1PreFiringWeight_Nom[0] = 1
-	    self.L1PreFiringWeight_Up[0] = 1
-	    self.L1PreFiringWeight_Dn[0] = 1
+	    self.whichTriggerWord[0]=0
+	    self.whichTriggerWordSubL[0]=0
 
-        self.tightId_1[0]       = -1 
-        self.mediumId_1[0]       = -1 
-        self.mediumPromptId_1[0]   = -1
-        self.looseId_1[0]       = -1
-        self.isGlobal_1[0]      = -1
-        self.isTracker_1[0]     = -1
+	    #if len(TrigListLep) >0 : print 'TrigerList ===========>', TrigListLep, lepList, hltListLep, channel_ll, 'istrig_1', is_trig_1, 'istrig_2', is_trig_2, 'lenTrigList', len(TrigListLep),  'lenLept', len(lepList), 'lepList_0', lepList[0], 'TrigList_0', TrigListLep[0], hltListLep
+	    
+	    for i,bit in enumerate(hltListLep):
+		    
+		if bit : 
+		    self.whichTriggerWord[0] += 2**i
 
-        self.tightId_2[0]       = -1 
-        self.mediumId_2[0]       = -1 
-        self.mediumPromptId_2[0]   = -1
-        self.looseId_2[0]       = -1
-        self.isGlobal_2[0]      = -1
-        self.isTracker_2[0]     = -1
-
-        self.decayMode_3[0]        = -1
-        self.idDecayModeNewDMs_3[0]= -1
-        self.idDeepTau2017v2p1VSe_3[0] = -1
-        self.idDeepTau2017v2p1VSjet_3[0] = -1
-        self.idDeepTau2017v2p1VSmu_3[0] = -1
-        self.idMVAnewDM2017v2_3[0] = -1
-        self.rawMVAnewDM2017v2_3[0] = -1
-        self.mediumId_3[0]       = -1 
-        self.mediumPromptId_3[0]   = -1
-        self.looseId_3[0]       = -1
-        self.isGlobal_3[0]      = -1
-        self.isTracker_3[0]     = -1
-        self.ip3d_3[0]          = -1
-        self.inTimeMuon_3[0]    = -1
-
-        self.decayMode_4[0]      = -1
-        self.idDecayModeNewDMs_4[0] = -1
-        self.idDeepTau2017v2p1VSe_4[0] = -1
-        self.idDeepTau2017v2p1VSjet_4[0] = -1
-        self.idDeepTau2017v2p1VSmu_4[0] = -1
-        self.idMVAnewDM2017v2_4[0] = -1
-        self.rawMVAnewDM2017v2_4[0] = -1
-        self.mediumId_4[0]       = -1 
-        self.mediumPromptId_4[0]   = -1
-        self.looseId_4[0]       = -1
-        self.isGlobal_4[0]      = -1
-        self.isTracker_4[0]     = -1
-        self.ip3d_4[0]          = -1
-        self.inTimeMuon_4[0]    = -1
-	self.GenPart_statusFlags_1[0]    = -1
-	self.GenPart_status_1[0]    = -1
-	self.GenPart_statusFlags_2[0]    = -1
-	self.GenPart_status_2[0]    = -1
-	self.GenPart_statusFlags_3[0]    = -1
-	self.GenPart_status_3[0]    = -1
-	self.GenPart_statusFlags_4[0]    = -1
-	self.GenPart_status_4[0]    = -1
-        self.gen_match_1[0] = -1
-        self.gen_match_2[0] = -1
-        self.gen_match_3[0] = -1
-        self.gen_match_4[0] = -1
-        self.gen_match_5[0] = -1
+	    for j,bitt in enumerate(hltListLepSubL):
+		if bitt : self.whichTriggerWordSubL[0] += 2**j
 
 
+	    #if channel_ll=='ee' and entry.luminosityBlock==90 and entry.event==8904: print self.whichTriggerWord[0], 'hlt', hltListLep, 'hltsub', hltListLepSubL
+	    #print cat, self.whichTriggerWord
+	    # channel = 'mt', 'et', 'tt', or 'em'
+	    
+	    self.entries += 1
+
+	    self.run[0]  = entry.run
+	    self.nElectron[0]  = entry.nElectron
+	    self.nMuon[0]  = entry.nMuon
+	    self.nTau[0]  = entry.nTau
+	    self.lumi[0] = entry.luminosityBlock 
+	    self.evt[0]  = entry.event
+	    self.iso_1[0]  = -99
+	    self.iso_2[0]  = -99
+	    self.q_1[0]  = -99
+	    self.q_2[0]  = -99
+	    self.isGlobal_1[0]  = -99
+	    self.isGlobal_2[0]  = -99
+	    try:
+		self.L1PreFiringWeight_Nom[0] = entry.L1PreFiringWeight_Nom
+		self.L1PreFiringWeight_Up[0] = entry.L1PreFiringWeight_Up
+		self.L1PreFiringWeight_Dn[0] = entry.L1PreFiringWeight_Dn
+	    except AttributeError : 
+		self.L1PreFiringWeight_Nom[0] = 1
+		self.L1PreFiringWeight_Up[0] = 1
+		self.L1PreFiringWeight_Dn[0] = 1
+
+		
+	    self.tightId_1[0]       = -1 
+	    self.mediumId_1[0]       = -1 
+	    self.mediumPromptId_1[0]   = -1
+	    self.looseId_1[0]       = -1
+	    self.isGlobal_1[0]      = -1
+	    self.isTracker_1[0]     = -1
+
+	    self.tightId_2[0]       = -1 
+	    self.mediumId_2[0]       = -1 
+	    self.mediumPromptId_2[0]   = -1
+	    self.looseId_2[0]       = -1
+	    self.isGlobal_2[0]      = -1
+	    self.isTracker_2[0]     = -1
+
+	    self.decayMode_3[0]        = -1
+	    self.idDecayModeNewDMs_3[0]= -1
+	    self.idDeepTau2017v2p1VSe_3[0] = -1
+	    self.idDeepTau2017v2p1VSjet_3[0] = -1
+	    self.idDeepTau2017v2p1VSmu_3[0] = -1
+	    self.idMVAnewDM2017v2_3[0] = -1
+	    self.rawMVAnewDM2017v2_3[0] = -1
+	    self.mediumId_3[0]       = -1 
+	    self.mediumPromptId_3[0]   = -1
+	    self.looseId_3[0]       = -1
+	    self.isGlobal_3[0]      = -1
+	    self.isTracker_3[0]     = -1
+	    self.ip3d_3[0]          = -1
+
+	    self.decayMode_4[0]      = -1
+	    self.idDecayModeNewDMs_4[0] = -1
+	    self.idDeepTau2017v2p1VSe_4[0] = -1
+	    self.idDeepTau2017v2p1VSjet_4[0] = -1
+	    self.idDeepTau2017v2p1VSmu_4[0] = -1
+	    self.idMVAnewDM2017v2_4[0] = -1
+	    self.rawMVAnewDM2017v2_4[0] = -1
+	    self.mediumId_4[0]       = -1 
+	    self.mediumPromptId_4[0]   = -1
+	    self.looseId_4[0]       = -1
+	    self.isGlobal_4[0]      = -1
+	    self.isTracker_4[0]     = -1
+	    self.ip3d_4[0]          = -1
+	    self.GenPart_statusFlags_1[0]    = -1
+	    self.GenPart_status_1[0]    = -1
+	    self.GenPart_statusFlags_2[0]    = -1
+	    self.GenPart_status_2[0]    = -1
+	    self.GenPart_statusFlags_3[0]    = -1
+	    self.GenPart_status_3[0]    = -1
+	    self.GenPart_statusFlags_4[0]    = -1
+	    self.GenPart_status_4[0]    = -1
+	    self.gen_match_1[0] = -1
+	    self.gen_match_2[0] = -1
+	    self.gen_match_3[0] = -1
+	    self.gen_match_4[0] = -1
+	    #self.gen_match_5[0] = -1
+
+
+	    try :
+		self.weight[0]           = entry.genWeight
+		self.LHEweight[0]        = entry.LHEWeight_originalXWGTUP
+		self.Generator_weight[0] = entry.Generator_weight
+		self.LHE_Njets[0]        = ord(entry.LHE_Njets) 
+		self.nPU[0]  = entry.Pileup_nPU
+		self.nPUEOOT[0]  = entry.Pileup_sumEOOT
+		self.nPULOOT[0]  = entry.Pileup_sumLOOT
+		self.nPUtrue[0]  = entry.Pileup_nTrueInt
+		self.nPV[0]  = entry.PV_npvs
+		self.nPVGood[0]  = entry.PV_npvsGood
+			    
+	    except AttributeError :
+		self.weight[0]           = 1. 
+		self.weightPU[0]         = -1
+		self.weightPUtrue[0]     = -1
+		self.LHEweight[0]        = 1. 
+		self.Generator_weight[0] = 1.
+		self.LHE_Njets[0] = -1
+		self.nPU[0]  = -1
+		self.nPUEOOT[0]  = -1
+		self.nPULOOT[0]  = -1
+		self.nPUtrue[0]  = -1
+		self.nPV[0]  = -1
+		self.nPVGood[0]  = -1
+        '''
         goodElectronList = tauFun2.makeGoodElectronList(entry)
         goodMuonList = tauFun2.makeGoodMuonList(entry)
         
         self.nGoodElectron[0] = len(goodElectronList)
         self.nGoodMuon[0]     = len(goodMuonList)
-        
-
-        try :
-            self.weight[0]           = entry.genWeight
-            self.LHEweight[0]        = entry.LHEWeight_originalXWGTUP
-            self.Generator_weight[0] = entry.Generator_weight
-            self.LHE_Njets[0]        = ord(entry.LHE_Njets) 
-	    self.nPU[0]  = entry.Pileup_nPU
-	    self.nPUEOOT[0]  = entry.Pileup_sumEOOT
-	    self.nPULOOT[0]  = entry.Pileup_sumLOOT
-	    self.nPUtrue[0]  = entry.Pileup_nTrueInt
-	    self.nPV[0]  = entry.PV_npvs
-	    self.nPVGood[0]  = entry.PV_npvsGood
-                        
-        except AttributeError :
-            self.weight[0]           = 1. 
-            self.weightPU[0]         = -1
-            self.weightPUtrue[0]     = -1
-            self.LHEweight[0]        = 1. 
-            self.Generator_weight[0] = 1.
-            self.LHE_Njets[0] = -1
-	    self.nPU[0]  = -1
-	    self.nPUEOOT[0]  = -1
-	    self.nPULOOT[0]  = -1
-	    self.nPUtrue[0]  = -1
-	    self.nPV[0]  = -1
-	    self.nPVGood[0]  = -1
-
         # pack trigger bits into integer word
+        '''
 
         e = entry
 
@@ -965,70 +1053,71 @@ class outTuple() :
         single ele 2018: HLT Ele32 WPTight Gsf v, HLT Ele35 WPTight Gsf v and cut pt(ele)>33, eta(ele)<2.1
         '''
         
-	bits=[]
-        try : bits.append(e.HLT_Ele25_eta2p1_WPTight_Gsf)
-        except AttributeError : bits.append(False)
-        try : bits.append(e.HLT_Ele27_WPTight_Gsf)
-        except AttributeError : bits.append(False)
-        try : bits.append(e.HLT_Ele32_WPTight_Gsf)
-        except AttributeError : bits.append(False)
-        try : bits.append(e.HLT_Ele35_WPTight_Gsf)
-        except AttributeError : bits.append(False)
-        # pad upper bits in this byte with zeros (False) 
-        #for i in range(4) :
-        #    bits.append(False)
-            
-        try : bits.append(e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL)
-        except AttributeError : bits.append(False)
-        try : bits.append(e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ)
-        except AttributeError : bits.append(False) 
+        if int(SystIndex) ==0 : 
+	    bits=[]
+	    try : bits.append(e.HLT_Ele25_eta2p1_WPTight_Gsf)
+	    except AttributeError : bits.append(False)
+	    try : bits.append(e.HLT_Ele27_WPTight_Gsf)
+	    except AttributeError : bits.append(False)
+	    try : bits.append(e.HLT_Ele32_WPTight_Gsf)
+	    except AttributeError : bits.append(False)
+	    try : bits.append(e.HLT_Ele35_WPTight_Gsf)
+	    except AttributeError : bits.append(False)
+	    # pad upper bits in this byte with zeros (False) 
+	    #for i in range(4) :
+	    #    bits.append(False)
+		
+	    try : bits.append(e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL)
+	    except AttributeError : bits.append(False)
+	    try : bits.append(e.HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ)
+	    except AttributeError : bits.append(False) 
 
-        self.electronTriggerWord[0] = 0
-        for i, bit in enumerate(bits) :
-            if bit : self.electronTriggerWord[0] += 2**i
+	    self.electronTriggerWord[0] = 0
+	    for i, bit in enumerate(bits) :
+		if bit : self.electronTriggerWord[0] += 2**i
 
-        '''
-        List from Cecile 
-        single mu 2016: HLT IsoMu22 v, HLT IsoMu22 eta2p1 v, HLT IsoTkMu22 v, HLT IsoTkMu22 eta2p1 v and cut pt(mu)>23, eta(mu)<2.1
-        single mu 2017: HLT IsoMu24 v, HLT IsoMu27 v and cut pt(mu)>25, eta(mu)<2.4
-        single mu 2018: HLT IsoMu24 v, HLT IsoMu27 v and cut pt(mu)>25, eta(mu)<2.4
-        '''
-        bits=[]
-        try : bits.append(e.HLT_IsoMu22)
-        except AttributeError : bits.append(False)
-        try : bits.append(e.HLT_IsoMu22_eta2p1)
-        except AttributeError : bits.append(False)
-        try : bits.append(e.HLT_IsoTkMu22)
-        except AttributeError : bits.append(False)
-        try : bits.append(e.HLT_IsoTkMu22_eta2p1)
-        except AttributeError : bits.append(False)
-        try : bits.append(e.HLT_IsoMu24)
-        except AttributeError : bits.append(False) 
-        try : bits.append(e.HLT_IsoMu27)
-        except AttributeError : bits.append(False) 
+	    '''
+	    List from Cecile 
+	    single mu 2016: HLT IsoMu22 v, HLT IsoMu22 eta2p1 v, HLT IsoTkMu22 v, HLT IsoTkMu22 eta2p1 v and cut pt(mu)>23, eta(mu)<2.1
+	    single mu 2017: HLT IsoMu24 v, HLT IsoMu27 v and cut pt(mu)>25, eta(mu)<2.4
+	    single mu 2018: HLT IsoMu24 v, HLT IsoMu27 v and cut pt(mu)>25, eta(mu)<2.4
+	    '''
+	    bits=[]
+	    try : bits.append(e.HLT_IsoMu22)
+	    except AttributeError : bits.append(False)
+	    try : bits.append(e.HLT_IsoMu22_eta2p1)
+	    except AttributeError : bits.append(False)
+	    try : bits.append(e.HLT_IsoTkMu22)
+	    except AttributeError : bits.append(False)
+	    try : bits.append(e.HLT_IsoTkMu22_eta2p1)
+	    except AttributeError : bits.append(False)
+	    try : bits.append(e.HLT_IsoMu24)
+	    except AttributeError : bits.append(False) 
+	    try : bits.append(e.HLT_IsoMu27)
+	    except AttributeError : bits.append(False) 
 
-        #for i in range(2) :
-        #    bits.append(False)                             # pad remaining bit in this bit 
-       
-        try : bits.append(e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ)
-        except AttributeError : bits.append(False) 
-        try : bits.append(e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass8)
-        except AttributeError : bits.append(False)
-        try : bits.append(e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass3p8)
-        except AttributeError : bits.append(False)
-        try : bits.append(e.HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ)
-        except AttributeError : bits.append(False) 
-        try : bits.append(e.HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_Mass8)
-        except AttributeError : bits.append(False) 
+	    #for i in range(2) :
+	    #    bits.append(False)                             # pad remaining bit in this bit 
+	   
+	    try : bits.append(e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ)
+	    except AttributeError : bits.append(False) 
+	    try : bits.append(e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass8)
+	    except AttributeError : bits.append(False)
+	    try : bits.append(e.HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass3p8)
+	    except AttributeError : bits.append(False)
+	    try : bits.append(e.HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ)
+	    except AttributeError : bits.append(False) 
+	    try : bits.append(e.HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_Mass8)
+	    except AttributeError : bits.append(False) 
 
-        self.muonTriggerWord[0] = 0
-        for i, bit in enumerate(bits) :
-            if bit : self.muonTriggerWord[0] += 2**i
+	    self.muonTriggerWord[0] = 0
+	    for i, bit in enumerate(bits) :
+		if bit : self.muonTriggerWord[0] += 2**i
 
-
+        #neede for all systematics as jt1/jt2 may change per systematic
+	if jt1 > -1 and jt2 > -1 : self.cat[0]  = tauFun2.catToNumber(cat)
         if jt1>-1 or jt2 >-1 :
 
-	    tauMass = 1.7768 
 	    tau1, tau2 = TLorentzVector(), TLorentzVector()
 
 	    # Fill variables for Leg3, where 3->tau(ele) and 4->tau(had)
@@ -1042,7 +1131,6 @@ class outTuple() :
 		self.dZ_3[0]   = entry.Electron_dz[jt1]
 		self.iso_3[0]  = entry.Electron_pfRelIso03_all[jt1]
 		self.Electron_mvaFall17V2noIso_WP90_3[0]  = entry.Electron_mvaFall17V2noIso_WP90[jt1]
-
 		
 		# Fill genMatch variables for tau(ele)
 		if isMC:
@@ -1060,8 +1148,10 @@ class outTuple() :
 		    try: self.gen_match_3[0] = ord(entry.Electron_genPartFlav[jt1])
 		    except AttributeError: self.gen_match_3[0] = -1
 		
-		tau1.SetPtEtaPhiM(entry.Electron_pt[jt1],entry.Electron_eta[jt1], entry.Electron_phi[jt1], tauMass)
-		tau2.SetPtEtaPhiM(entry.Tau_pt[jt2],entry.Tau_eta[jt2],entry.Tau_phi[jt2],tauMass)
+		tau1.SetPtEtaPhiM(entry.Electron_pt[jt1],entry.Electron_eta[jt1], entry.Electron_phi[jt1], self.tauMass)
+                tmass= self.tauMass
+                if entry.Tau_decayMode[jt2] == 0 : tmass= 0.13960
+		tau2.SetPtEtaPhiM(entry.Tau_pt[jt2],entry.Tau_eta[jt2],entry.Tau_phi[jt2],tmass)
 		
 		tauListE=[jt1]
 	       
@@ -1082,7 +1172,7 @@ class outTuple() :
 		    try : self.gen_match_3[0] = ord(entry.Electron_genPartFlav[jt1])
 		    except AttributeError : self.gen_match_3[0] = -1
 		
-		tau1.SetPtEtaPhiM(entry.Electron_pt[jt1], entry.Electron_eta[jt1], entry.Electron_phi[jt1], tauMass)
+		tau1.SetPtEtaPhiM(entry.Electron_pt[jt1], entry.Electron_eta[jt1], entry.Electron_phi[jt1], self.tauMass)
 													    #???
 		# fill genMatch for tau(ele)
 		if isMC:
@@ -1112,12 +1202,11 @@ class outTuple() :
 		self.isGlobal_4[0]      = entry.Muon_isGlobal[jt2]
 		self.isTracker_4[0]     = entry.Muon_isTracker[jt2]
 		self.ip3d_4[0]       = entry.Muon_ip3d[jt2]
-		self.inTimeMuon_4[0]    = entry.Muon_inTimeMuon[jt2]
 		if isMC:
 		    try : self.gen_match_4[0] = ord(entry.Muon_genPartFlav[jt2]) 
 		    except AttributeError : self.gen_match_4[0] = -1
 		
-		tau2.SetPtEtaPhiM(entry.Muon_pt[jt2], entry.Muon_eta[jt2], entry.Muon_phi[jt2], tauMass) 
+		tau2.SetPtEtaPhiM(entry.Muon_pt[jt2], entry.Muon_eta[jt2], entry.Muon_phi[jt2], self.tauMass) 
 
 		# fill genMatch for tau(mu)
 		if isMC:
@@ -1150,14 +1239,15 @@ class outTuple() :
 		self.isGlobal_3[0]      = entry.Muon_isGlobal[jt1]
 		self.isTracker_3[0]     = entry.Muon_isTracker[jt1]
 		self.ip3d_3[0]       = entry.Muon_ip3d[jt1]
-		self.inTimeMuon_3[0]    = entry.Muon_inTimeMuon[jt1]
 		
 		if isMC:
 		    try : self.gen_match_3[0] = ord(entry.Muon_genPartFlav[jt1])
 		    except AttributeError : self.gen_match_3[0] = -1
 		
-		tau1.SetPtEtaPhiM(entry.Muon_pt[jt1], entry.Muon_eta[jt1], entry.Muon_phi[jt1], tauMass)
-		tau2.SetPtEtaPhiM(entry.Tau_pt[jt2],  entry.Tau_eta[jt2],  entry.Tau_phi[jt2],  tauMass) 
+		tau1.SetPtEtaPhiM(entry.Muon_pt[jt1], entry.Muon_eta[jt1], entry.Muon_phi[jt1], self.tauMass)
+                tmass= self.tauMass
+                if entry.Tau_decayMode[jt2] == 0 : tmass= 0.13960
+		tau2.SetPtEtaPhiM(entry.Tau_pt[jt2],  entry.Tau_eta[jt2],  entry.Tau_phi[jt2],  tmass) 
 		
 		# fill genMatch for tau(mu)
 		if isMC:
@@ -1181,7 +1271,7 @@ class outTuple() :
 		self.q_3[0]      = entry.Tau_charge[jt1]
 		self.d0_3[0]     = entry.Tau_dxy[jt1]
 		self.dZ_3[0]     = entry.Tau_dz[jt1]
-     
+                #print '=========================================--------------------------------> inside', entry.Tau_mass[jt1] , entry.Tau_pt[jt1], jt1, int(entry.Tau_decayMode[jt1])
 
 		self.idDecayModeNewDMs_3[0] = entry.Tau_idDecayModeNewDMs[jt1]
 		self.idDeepTau2017v2p1VSe_3[0] = ord(entry.Tau_idDeepTau2017v2p1VSe[jt1])
@@ -1211,8 +1301,12 @@ class outTuple() :
 		try : self.decayMode_3[0] = int(entry.Tau_decayMode[jt1])
 		except AttributeError : self.decayMode_3[0] = -1
 
-		tau1.SetPtEtaPhiM(entry.Tau_pt[jt1], entry.Tau_eta[jt1], entry.Tau_phi[jt1], tauMass)
-		tau2.SetPtEtaPhiM(entry.Tau_pt[jt2], entry.Tau_eta[jt2], entry.Tau_phi[jt2], tauMass)
+                tmass= self.tauMass
+                if entry.Tau_decayMode[jt1] == 0 : tmass= 0.13960
+		tau1.SetPtEtaPhiM(entry.Tau_pt[jt1], entry.Tau_eta[jt1], entry.Tau_phi[jt1], tmass)
+                tmass= self.tauMass
+                if entry.Tau_decayMode[jt2] == 0 : tmass= 0.13960
+		tau2.SetPtEtaPhiM(entry.Tau_pt[jt2], entry.Tau_eta[jt2], entry.Tau_phi[jt2], tmass)
 		
 	    else :
 		print("Invalid channel={0:s} in outTuple(). Exiting.".format(channel))
@@ -1220,7 +1314,7 @@ class outTuple() :
 		
 	    self.mt_3[0]      = self.get_mt('MVAMet',   entry,tau1)
 	    self.pfmt_3[0]    = self.get_mt('PFMet',    entry,tau1)
-	    self.puppimt_3[0] = self.get_mt('PUPPIMet', entry,tau1)
+	    #self.puppimt_3[0] = self.get_mt('PUPPIMet', entry,tau1)
 
 	    
 	    # Fill variables for Leg4, where 4->tau(had)
@@ -1244,7 +1338,7 @@ class outTuple() :
 		
 		self.mt_4[0]      = self.get_mt('MVAMet',   entry, tau2) 
 		self.pfmt_4[0]    = self.get_mt('PFMet',    entry, tau2)
-		self.puppimt_4[0] = self.get_mt('PUPPIMet', entry, tau2) 
+		#self.puppimt_4[0] = self.get_mt('PUPPIMet', entry, tau2) 
 
 
 		# genMatch the hadronic tau candidate
@@ -1296,6 +1390,7 @@ class outTuple() :
         # di-lepton variables.   _p and _m refer to plus and minus charge
         if jt1>-1 and jt2>-1 : self.AMass[0]       = (Lep1 + Lep2 + tau1 + tau2).M() 
         self.mll[0]       = (Lep1 + Lep2).M()
+        '''
         self.Z_DR[0]       = self.getDR(entry,Lep1,Lep2)
        
         self.H_LT[0]       = Lep1.Pt() + Lep2.Pt()
@@ -1306,7 +1401,7 @@ class outTuple() :
         self.dPhil1H[0]  = self.getdPhi(entry,Lep1,tau1+tau2)
         self.dPhil2H[0]  = self.getdPhi(entry,Lep2,tau1+tau2)
         self.dPhilH[0]  = self.getdPhi(entry,Lep1+Lep2,tau1+tau2)
-           
+        '''
         self.pt_1[0]   = Lep1.Pt()
         self.phi_1[0]  = Lep1.Phi()
         self.eta_1[0]  = Lep1.Eta()
@@ -1401,8 +1496,8 @@ class outTuple() :
         
         #self.btagWeightDeepCSVB[0]  = entry.btagWeight_DeepCSVB
         #print 'inside after filling----------------------->', entry.MET_pt,  self.met[0], met_pt
-        self.puppimet[0]    = entry.PuppiMET_pt
-        self.puppimetphi[0] = entry.PuppiMET_phi
+        #self.puppimet[0]    = entry.PuppiMET_pt
+        #self.puppimetphi[0] = entry.PuppiMET_phi
 
         
 	if isMC :
@@ -1412,45 +1507,32 @@ class outTuple() :
         
         # MET variables
         if met_pt != -99 : 
-	    self.met[0]         = met_pt
+	    self.met[0]         = met_pt 
 	    self.metphi[0]      = met_phi
         else : 
              self.met[0]= entry.MET_pt
              self.metphi[0]= entry.MET_phi
-        #print '============================================================================>inside fillTree', self.met[0], met_pt, self.metphi[0], met_phi
+
 
         if str(era) != '2017' : 
-	    self.metnoTES[0]      = entry.MET_pt
-	    self.metphinoTES[0]   = entry.MET_phi
+
 	    self.metcov00[0] = entry.MET_covXX
 	    self.metcov01[0] = entry.MET_covXY
-	    self.metcov10[0] = entry.MET_covXY	
+	    self.metcov10[0] = entry.MET_covXY
 	    self.metcov11[0] = entry.MET_covYY
 	    self.met_UnclX = entry.MET_MetUnclustEnUpDeltaX
 	    self.met_UnclY = entry.MET_MetUnclustEnUpDeltaY
 
 	    if doUncertainties : 
-		self.metpt_nom[0] = entry.MET_pt_nom
-		self.metphi_nom[0] =  entry.MET_phi_nom
 		if isMC : 
-		    self.metpt_JER[0] = entry.MET_pt_jer
-		    self.metphi_JER[0] = entry.MET_phi_jer
-		    self.metpt_JERUp[0] = entry.MET_pt_jerUp
-		    self.metphi_JERUp[0] = entry.MET_phi_jerUp
-		    self.metpt_JERDown[0] = entry.MET_pt_jerDown
-		    self.metphi_JERDown[0] = entry.MET_phi_jerDown
-		    self.metpt_JESUp[0] = entry.MET_pt_jesTotalUp
-		    self.metphi_JESUp[0] = entry.MET_phi_jesTotalUp
-		    self.metpt_JESDown[0] = entry.MET_pt_jesTotalDown
-		    self.metphi_JESDown[0] = entry.MET_phi_jesTotalDown
-		    self.metpt_UnclUp[0] = entry.MET_pt_unclustEnUp
-		    self.metphi_UnclUp[0] = entry.MET_phi_unclustEnUp
-		    self.metpt_UnclDown[0] = entry.MET_pt_unclustEnDown
-		    self.metphi_UnclDown[0] = entry.MET_phi_unclustEnDown
+		    self.MET_pt_UnclUp[0] = entry.MET_pt_unclustEnUp
+		    self.MET_phi_UnclUp[0] = entry.MET_phi_unclustEnUp
+		    self.MET_pt_UnclDown[0] = entry.MET_pt_unclustEnDown
+		    self.MET_phi_UnclDown[0] = entry.MET_phi_unclustEnDown
+
+
 
         else : 
-	    self.metnoTES[0] = entry.METFixEE2017_pt
-	    self.metphinoTES[0] = entry.METFixEE2017_phi
 	    self.metcov00[0] = entry.METFixEE2017_covXX
 	    self.metcov01[0] = entry.METFixEE2017_covXY
 	    self.metcov10[0] = entry.METFixEE2017_covXY
@@ -1459,23 +1541,11 @@ class outTuple() :
 	    self.met_UnclY = entry.METFixEE2017_MetUnclustEnUpDeltaY
 
 	    if doUncertainties : 
-		self.metpt_nom[0] = entry.METFixEE2017_pt_nom
-		self.metphi_nom[0] =  entry.METFixEE2017_phi_nom
 		if isMC : 
-		    self.metpt_JER[0] = entry.METFixEE2017_pt_jer
-		    self.metphi_JER[0] = entry.METFixEE2017_phi_jer
-		    self.metpt_JERUp[0] = entry.METFixEE2017_pt_jerUp
-		    self.metphi_JERUp[0] = entry.METFixEE2017_phi_jerUp
-		    self.metpt_JERDown[0] = entry.METFixEE2017_pt_jerDown
-		    self.metphi_JERDown[0] = entry.METFixEE2017_phi_jerDown
-		    self.metpt_JESUp[0] = entry.METFixEE2017_pt_jesTotalUp
-		    self.metphi_JESUp[0] = entry.METFixEE2017_phi_jesTotalUp
-		    self.metpt_JESDown[0] = entry.METFixEE2017_pt_jesTotalDown
-		    self.metphi_JESDown[0] = entry.METFixEE2017_phi_jesTotalDown
-		    self.metpt_UnclUp[0] = entry.METFixEE2017_pt_unclustEnUp
-		    self.metphi_UnclUp[0] = entry.METFixEE2017_phi_unclustEnUp
-		    self.metpt_UnclDown[0] = entry.METFixEE2017_pt_unclustEnDown
-		    self.metphi_UnclDown[0] = entry.METFixEE2017_phi_unclustEnDown
+		    self.MET_pt_UnclUp[0] = entry.METFixEE2017_pt_unclustEnUp
+		    self.MET_phi_UnclUp[0] = entry.METFixEE2017_phi_unclustEnUp
+		    self.MET_pt_UnclDown[0] = entry.METFixEE2017_pt_unclustEnDown
+		    self.MET_phi_UnclDown[0] = entry.METFixEE2017_phi_unclustEnDown
 
         # trig
 	self.isTrig_1[0]   = is_trig_1
@@ -1488,32 +1558,45 @@ class outTuple() :
 	    leplist.append(tau1)
 	    leplist.append(tau2)
 
-        #if jt1>-1 and jt2>-1 :  
-        #jetList, bJetList, bJetListFlav = self.getJets(entry,tau1,tau2,era) 
-        #print 'old ', jetList, bJetList
-	#else :  nJet30, jetList, bJetList, bJetListFlav = self.getJets(entry,LepP,LepM,era) 
-        #self.nbtagold[0] = len(bJetList)
-	#self.njetsold[0] = len(jetList)
-	#self.njets[0] = len(jetList)
-	#self.nbtag[0] = len(bJetList)
-	#self.nbtagT[0] = len(bJetList)
+        if doUncertainties: 
+                for i, v in enumerate(self.allsystMET) : 
 
-	for ic, isys in enumerate(sysVariations):  
-	    jetList, jetListFlav, jetListEta, jetListPt,bJetList, bJetListT, bJetListFlav = self.getJetsJMEMV(entry,leplist,era,isys) 
+                    if str(era)=='2017' :
+                        #i_ should be the righ-hand of the branch and should retain the METFixEE2017 if y=2017 
+                        #iMET should appear always at the branch name...
+                        v = v.replace('MET','METFixEE2017')
+                    iMET= v.replace('METFixEE2017','MET')
 
-	    self.njets[ic] = len(jetList)
-	    self.nbtag[ic] = len(bJetList)
-	    self.nbtagT[ic] = len(bJetListT)
 
-	    for ifl in range(0,len(jetListPt)) :
-                #print 'jets----------------->', jetList, jetListFlav, len(jetList), len(jetListFlav)
-		self.jflavour[ifl]  = jetListFlav[ifl]
-		self.jeta[ifl]  = jetListEta[ifl]
-		self.jpt[ifl]  = jetListPt[ifl]
+		    j = getattr(entry, "{0:s}".format(str(v)))
+		    self.list_of_arrays[i][0] = j
 
-	    if isys !='' and '_' not in isys: isys="_"+isys
-	    self.jpt_1[ic], self.jeta_1[ic], self.jphi_1[ic], self.jcsv_1[ic], self.jcsvfv_1[ic]= -9.99, -9.99, -9.99, -9.99, -9.99
+                for i, v in enumerate(self.allsystJets) : 
+                #njets_sys, nbtag_sys
+                    #print i, v 
+		    jetList, jetListFlav, jetListEta, jetListPt,bJetList, bJetListT, bJetListFlav = self.getJetsJMEMV(entry,leplist,era,v) 
 
+	            self.list_of_arraysJetsNjets[i][0] = len(jetList)
+	            self.list_of_arraysJetsNbtag[i][0] = len(bJetList)
+		    for ifl in range(len(jetList)) :
+			self.list_of_arraysJetsPt[i][ifl] = jetListPt[ifl]
+			self.list_of_arraysJetsEta[i][ifl] = jetListEta[ifl]
+			self.list_of_arraysJetsFlavour[i][ifl] = jetListFlav[ifl]
+
+
+        #fill the un-corrected or just in the case you dont care to doUncertainties       
+        nom_=''
+	jetList, jetListFlav, jetListEta, jetListPt,bJetList, bJetListT, bJetListFlav = self.getJetsJMEMV(entry,leplist,era,'') 
+	self.njets[0] = len(jetList)
+	self.nbtag[0] = len(bJetList)
+	self.nbtagT[0] = len(bJetList)
+	for ifl in range(len(jetListPt)) :
+	    self.jflavour[ifl]  = jetListFlav[ifl]
+	    self.jeta[ifl]  = jetListEta[ifl]
+	    self.jpt[ifl]  = jetListPt[ifl]
+
+
+        '''
 	    if len(jetList) > 0 :
 		jpt1 = getattr(entry, "Jet_pt{0:s}".format(str(isys)), None)
 		jj1 = jetList[0]
@@ -1583,11 +1666,17 @@ class outTuple() :
 			    self.beta_2_tr[ic] = entry.GenJet_eta[idx_genJet]
 			    self.bphi_2_tr[ic] = entry.GenJet_phi[idx_genJet]
 			except IndexError : pass
-        self.t.Fill()
+
+        '''
+
+        #if  self.nbtag[0] == 0 : 
+	if SystIndex == 0 : 
+            self.t.Fill()
+	else : self.tN[SystIndex-1].Fill()
 
 	return
 
-    def Fill3L(self, entry, cat, LepP, LepM, lepList, lepList_2, ElList, MuList, TauList, isMC, era, doUncertainties=False, sysVariations=[]) :
+    def Fill3L(self, entry, cat, LepP, LepM, lepList, lepList_2, ElList, MuList, TauList, isMC, era, doUncertainties=False,met_pt=-99, met_phi=-99) :
         ''' - jt1 point to the selected tau candidates according to the table below.
             - LepP and LepM are TLorentz vectors for the positive and negative members of the dilepton pair
         ''' 
@@ -1687,7 +1776,6 @@ class outTuple() :
         self.isGlobal_3[0]      = -1
         self.isTracker_3[0]     = -1
         self.ip3d_3[0]          = -1
-        self.inTimeMuon_3[0]    = -1
 
         self.decayMode_4[0]      = -1
         self.idDecayModeNewDMs_4[0] = -1
@@ -1702,11 +1790,11 @@ class outTuple() :
         self.isGlobal_4[0]      = -1
         self.isTracker_4[0]     = -1
         self.ip3d_4[0]          = -1
-        self.inTimeMuon_4[0]    = -1
         self.gen_match_1[0] = -1
         self.gen_match_2[0] = -1
         self.gen_match_3[0] = -1
         self.gen_match_4[0] = -1
+        '''
         self.gen_match_5[0] = -1
 
         self.decayMode_5[0]      = -1
@@ -1716,6 +1804,7 @@ class outTuple() :
         self.idDeepTau2017v2p1VSmu_5[0] = -1
         self.idMVAnewDM2017v2_5[0] = -1
         self.rawMVAnewDM2017v2_5[0] = -1
+        '''
 
         goodElectronList = tauFun2.makeGoodElectronList(entry)
         goodMuonList = tauFun2.makeGoodMuonList(entry)
@@ -1952,7 +2041,6 @@ class outTuple() :
 	    self.isGlobal_3[0]      = entry.Muon_isGlobal[im]
 	    self.isTracker_3[0]     = entry.Muon_isTracker[im]
 	    self.ip3d_3[0]       = entry.Muon_ip3d[im]
-	    self.inTimeMuon_3[0]    = entry.Muon_inTimeMuon[im]
 	    try : self.gen_match_3[0] = ord(entry.Muon_genPartFlav[im])
 	    except AttributeError : self.gen_match_3[0] = -1
 
@@ -1974,7 +2062,6 @@ class outTuple() :
 		self.isGlobal_4[0]      = entry.Muon_isGlobal[imm]
 		self.isTracker_4[0]     = entry.Muon_isTracker[imm]
 		self.ip3d_4[0]       = entry.Muon_ip3d[imm]
-		self.inTimeMuon_4[0]    = entry.Muon_inTimeMuon[imm]
 		try : self.gen_match_4[0] = ord(entry.Muon_genPartFlav[imm])
 		except AttributeError : self.gen_match_4[0] = -1
 		eL1.SetPtEtaPhiM(entry.Muon_pt[MuList[0]],entry.Muon_eta[MuList[0]], entry.Muon_phi[MuList[0]], muonMass)
@@ -2018,8 +2105,8 @@ class outTuple() :
         # MET variables
         self.met[0]         = entry.MET_pt    
         self.metphi[0]      = entry.MET_phi
-        self.puppimet[0]    = entry.PuppiMET_pt
-        self.puppimetphi[0] = entry.PuppiMET_phi
+        #self.puppimet[0]    = entry.PuppiMET_pt
+        #self.puppimetphi[0] = entry.PuppiMET_phi
         #self.btagWeightDeepCSVB[0]  = entry.btagWeight_DeepCSVB
         
         self.metcov00[0] = entry.MET_covXX
@@ -2028,27 +2115,37 @@ class outTuple() :
         self.metcov11[0] = entry.MET_covYY
 	self.met_UnclX = entry.MET_MetUnclustEnUpDeltaX
 	self.met_UnclY = entry.MET_MetUnclustEnUpDeltaY
-        
-        self.metpt_nom[0] = entry.MET_pt
-        self.metphi_nom[0] =  entry.MET_phi
-        if doUncertainties : 
-            self.metpt_nom[0] = entry.MET_pt_nom
-            self.metphi_nom[0] =  entry.MET_phi_nom
-            if isMC : 
-		self.metpt_JER[0] = entry.MET_pt_jer
-		self.metphi_JER[0] = entry.MET_phi_jer
-		self.metpt_JERUp[0] = entry.MET_pt_jerUp
-		self.metphi_JERUp[0] = entry.MET_phi_jerUp
-		self.metpt_JERDown[0] = entry.MET_pt_jerDown
-		self.metphi_JERDown[0] = entry.MET_phi_jerDown
-		self.metpt_JESUp[0] = entry.MET_pt_jesTotalUp
-		self.metphi_JESUp[0] = entry.MET_phi_jesTotalUp
-		self.metpt_JESDown[0] = entry.MET_pt_jesTotalDown
-		self.metphi_JESDown[0] = entry.MET_phi_jesTotalDown
-		self.metpt_UnclUp[0] = entry.MET_pt_unclustEnUp
-		self.metphi_UnclUp[0] = entry.MET_phi_unclustEnUp
-		self.metpt_UnclDown[0] = entry.MET_pt_unclustEnDown
-		self.metphi_UnclDown[0] = entry.MET_phi_unclustEnDown
+
+        if str(era) != '2017' : 
+
+	    self.metcov00[0] = entry.MET_covXX
+	    self.metcov01[0] = entry.MET_covXY
+	    self.metcov10[0] = entry.MET_covXY
+	    self.metcov11[0] = entry.MET_covYY
+	    self.met_UnclX = entry.MET_MetUnclustEnUpDeltaX
+	    self.met_UnclY = entry.MET_MetUnclustEnUpDeltaY
+
+	    if doUncertainties : 
+		if isMC : 
+		    self.MET_pt_UnclUp[0] = entry.MET_pt_unclustEnUp
+		    self.MET_phi_UnclUp[0] = entry.MET_phi_unclustEnUp
+		    self.MET_pt_UnclDown[0] = entry.MET_pt_unclustEnDown
+		    self.MET_phi_UnclDown[0] = entry.MET_phi_unclustEnDown
+
+        else : 
+	    self.metcov00[0] = entry.METFixEE2017_covXX
+	    self.metcov01[0] = entry.METFixEE2017_covXY
+	    self.metcov10[0] = entry.METFixEE2017_covXY
+	    self.metcov11[0] = entry.METFixEE2017_covYY
+	    self.met_UnclX = entry.METFixEE2017_MetUnclustEnUpDeltaX
+	    self.met_UnclY = entry.METFixEE2017_MetUnclustEnUpDeltaY
+
+	    if doUncertainties : 
+		if isMC : 
+		    self.MET_pt_UnclUp[0] = entry.METFixEE2017_pt_unclustEnUp
+		    self.MET_phi_UnclUp[0] = entry.METFixEE2017_phi_unclustEnUp
+		    self.MET_pt_UnclDown[0] = entry.METFixEE2017_pt_unclustEnDown
+		    self.MET_phi_UnclDown[0] = entry.METFixEE2017_phi_unclustEnDown
 
 
         # trig
@@ -2063,6 +2160,49 @@ class outTuple() :
         if eL1.Pt()> 0 : leplist.append(eL1)
         if eL2.Pt()> 0 : leplist.append(eL2)
 
+        if doUncertainties: 
+                for i, v in enumerate(self.allsystMET) : 
+
+
+                    if str(era)=='2017' :
+                        #i_ should be the righ-hand of the branch and should retain the METFixEE2017 if y=2017 
+                        #iMET should appear always at the branch name...
+                        v = v.replace('MET','METFixEE2017')
+                    iMET= v.replace('METFixEE2017','MET')
+
+
+		    j = getattr(entry, "{0:s}".format(str(v)))
+		    self.list_of_arrays[i][0] = j
+
+                for i, v in enumerate(self.allsystJets) : 
+                #njets_sys, nbtag_sys
+                    #print i, v 
+		    jetList, jetListFlav, jetListEta, jetListPt,bJetList, bJetListT, bJetListFlav = self.getJetsJMEMV(entry,leplist,era,v) 
+
+	            self.list_of_arraysJetsNjets[i][0] = len(jetList)
+	            self.list_of_arraysJetsNbtag[i][0] = len(bJetList)
+		    for ifl in range(len(jetList)) :
+			self.list_of_arraysJetsPt[i][ifl] = jetListPt[ifl]
+			self.list_of_arraysJetsEta[i][ifl] = jetListEta[ifl]
+			self.list_of_arraysJetsFlavour[i][ifl] = jetListFlav[ifl]
+
+
+        #fill the un-corrected or just in the case you dont care to doUncertainties       
+        nom_=''
+	jetList, jetListFlav, jetListEta, jetListPt,bJetList, bJetListT, bJetListFlav = self.getJetsJMEMV(entry,leplist,era,'') 
+	self.njets[0] = len(jetList)
+	self.nbtag[0] = len(bJetList)
+	self.nbtagT[0] = len(bJetList)
+	for ifl in range(len(jetListPt)) :
+	    self.jflavour[ifl]  = jetListFlav[ifl]
+	    self.jeta[ifl]  = jetListEta[ifl]
+	    self.jpt[ifl]  = jetListPt[ifl]
+
+
+
+
+
+        '''
 	for ic, isys in enumerate(sysVariations):  
 	    #print 'passing in now ', ic, isys, sysVariations[ic]
 	    jetList, jetListFlav,jetListEta, jetListPt, bJetList, bJetListT, bJetListFlav = self.getJetsJMEMV(entry,leplist,era,isys) 
@@ -2142,9 +2282,10 @@ class outTuple() :
 			    self.beta_2_tr[ic] = entry.GenJet_eta[idx_genJet]
 			    self.bphi_2_tr[ic] = entry.GenJet_phi[idx_genJet]
 			except IndexError : pass
+           '''
        
         if self.isTrig_1 !=0 : self.t.Fill()
-        #self.t.Fill()
+        self.t.Fill()
         return
 
 
@@ -2161,6 +2302,9 @@ class outTuple() :
         #print("outTuple.setWeight() weight={0:f}".format(weight))
         return
 
+    def FillTree(self) :
+        self.t.Fill()
+  
     def writeTree(self) :
         print("In outTuple.writeTree() entries={0:d}".format(self.entries)) 
         self.f.Write()

@@ -51,6 +51,7 @@ cutCounterGenWeight = {}
 
 doJME  = args.doSystematics.lower() == 'true' or args.doSystematics.lower() == 'yes' or args.doSystematics == '1'
 
+doJME = True
 cats = ['eeet','eemt','eett','eeem','mmet','mmmt','mmtt','mmem']
 
 for cat in cats : 
@@ -88,14 +89,17 @@ else :
     if args.year == 2017 : CJ = GF.checkJSON(filein='Cert_294927-306462_13TeV_EOY2017ReReco_Collisions17_JSON.txt')
     if args.year == 2018 : CJ = GF.checkJSON(filein='Cert_314472-325175_13TeV_17SeptEarlyReReco2018ABC_PromptEraD_Collisions18_JSON.txt')
 
+
+'''
 varSystematics=['']
 if doJME : varSystematics= ['', 'nom', 'jesTotalUp', 'jesTotalDown', 'jerUp', 'jerDown']
 if not MC : 
     if doJME : varSystematics= ['', 'nom']
 
 if not doJME  : varSystematics=['']
+'''
 
-print 'systematics', doJME, varSystematics
+print 'systematics', doJME
 
 era=str(args.year)
 
@@ -158,7 +162,34 @@ if args.unique != 'none' :
     print("******* Analyzing only {0:d} events from {1:s} ******.".format(len(uniqueEvents),args.unique))
     
 print("Opening {0:s} as output.".format(outFileName))
-outTuple = outTuple.outTuple(outFileName, era)
+
+sysT = ["Central"]
+
+sysall = [
+'scale_e', 'scale_m_etalt1p2', 'scale_m_eta1p2to2p1', 'scale_m_etagt2p1',
+'scale_t_1prong', 'scale_t_1prong1pizero', 'scale_t_3prong', 'scale_t_3prong1pizero']
+
+#sysall = ['scale_e']
+
+upS=sysall
+downS=sysall
+
+for i, sys in enumerate(sysall) : 
+    sysT.append(sys+'Up')
+    sysT.append(sys+'Down')
+
+#sysT = sysT  + upS + downS
+
+#sysT=['Central']
+print sysT
+
+#sysT = ["Central"]
+if not MC : sysT = ["Central"]
+
+#sysT = ["Central"]
+doSyst= True
+outTuple = outTuple.outTuple(outFileName, era, doSyst, sysT)
+
 
 
 tStart = time.time()
@@ -181,9 +212,9 @@ for count, e in enumerate(inTree) :
 	if  MC :   cutCounterGenWeight[cat].countGenWeight('All', e.genWeight)
     isInJSON = False
     if not MC : isInJSON = CJ.checkJSON(e.luminosityBlock,e.run)
-    if not isInJSON and not MC :
-        #print("Event not in JSON: Run:{0:d} LS:{1:d}".format(e.run,e.luminosityBlock))
-        continue
+    #if not isInJSON and not MC :
+    #    #print("Event not in JSON: Run:{0:d} LS:{1:d}".format(e.run,e.luminosityBlock))
+    #    continue
 
     for cat in cats: 
         cutCounter[cat].count('InJSON')
@@ -212,173 +243,196 @@ for count, e in enumerate(inTree) :
 
     met_pt = float(e.MET_pt)
     met_phi = float(e.MET_phi)
-    #print 'before ---------------------fix-----------------', e.METFixEE2017_pt, e.METFixEE2017_phi, e.event, met_pt
-    if MC :
-        met_pt, met_phi = Weights.applyES(e,args.year)
-    #print 'after fixxxxxxxxxxxx', e.MET_pt, 'tauES corrected', met_pt, met_phi, count
+    if era=='2017' :
+	met_pt = float(e.METFixEE2017_pt)
+	met_phi = float(e.METFixEE2017_phi)
+
+    if doJME : 
+        met_pt = float(e.MET_pt_nom)
+        met_phi = float(e.MET_phi_nom)
+        if era=='2017' :
+	    met_pt = float(e.METFixEE2017_pt_nom)
+	    met_phi = float(e.METFixEE2017_phi_nom)
+
+    tauMass=[]
+    tauPt=[]
+    metPtPhi=[]
+    metPtPhi.append(float(met_pt))
+    metPtPhi.append(float(met_phi))
+    #the very first time, save the tauMass and tauPt as this will be needed for the prong-systematics
+    if len(tauMass) == 0 :
+        #print 'METTTTTTTTTTTTTTTTTTTTTTTTT', met_pt, met_phi, e.event
+	for j in range(e.nTau):
+	    tauMass.append(e.Tau_mass[j])
+	    tauPt.append(e.Tau_pt[j])
+        #print tauMass, tauPt
+    for isyst, systematic in enumerate(sysT) : 
+
+	#print 'before ---------------------fix-----------------', e.METFixEE2017_pt, e.METFixEE2017_phi, e.event, met_pt
+	if MC :
+	    met_pt, met_phi = Weights.applyES(e, args.year, systematic, tauMass, tauPt,metPtPhi)
+	    #print 'after fixxxxxxxxxxxx', e.MET_pt, 'nom', e.MET_pt_nom, 'what is fed in', metPtPhi[0], 'tauES corrected', met_pt, systematic
 
 
-    for lepMode in ['ee','mm'] :
-        if args.category != 'none' and not lepMode in args.category : continue
+	for lepMode in ['ee','mm'] :
+	    if args.category != 'none' and not lepMode in args.category : continue
 
-        if lepMode == 'ee' :
-            if e.nElectron < 2 : continue
-            for cat in cats[:4] : 
-	        cutCounter[cat].count('LeptonCount')
-	        if  MC :   cutCounterGenWeight[cat].countGenWeight('LeptonCount', e.genWeight)
-        if lepMode == 'mm' :
-            if e.nMuon < 2 : continue 
-            for cat in cats[4:] : 
-	        cutCounter[cat].count('LeptonCount')
-	        if  MC :   cutCounterGenWeight[cat].countGenWeight('LeptonCount', e.genWeight)
-
-
-        goodElectronList = TF.makeGoodElectronList(e)
-        goodMuonList = TF.makeGoodMuonList(e)
-        goodElectronList, goodMuonList = TF.eliminateCloseLeptons(e, goodElectronList, goodMuonList)
-	goodElectronListExtraLepton=[]
-	goodMuonListExtraLepton=[]
-
-	lepList=[]
-
-               
-        if lepMode == 'ee' :
-            if len(goodElectronList) < 2 : continue
-            for cat in cats[:4] :
-                cutCounter[cat].count('GoodLeptons')
-	        if  MC :   cutCounterGenWeight[cat].countGenWeight('GoodLeptons', e.genWeight)
-
-            pairList, lepList = TF.findZ(goodElectronList,[], e)
-            if len(lepList) != 2 : continue
-            for cat in cats[:4] : 
-	        cutCounter[cat].count('LeptonPair')
-	        if  MC :   cutCounterGenWeight[cat].countGenWeight('LeptonPair', e.genWeight)
-        
-        if lepMode == 'mm' :
-            if len(goodMuonList) < 2 : continue
-            for cat in cats[4:] :
-                cutCounter[cat].count('GoodLeptons')
-	        if  MC :   cutCounterGenWeight[cat].countGenWeight('GoodLeptons', e.genWeight)
-
-            pairList, lepList = TF.findZ([],goodMuonList, e)
-            if len(lepList) != 2 : continue
-            for cat in cats[4:] : 
-	        cutCounter[cat].count('LeptonPair')
-	        if  MC :   cutCounterGenWeight[cat].countGenWeight('LeptonPair', e.genWeight)
-
-        LepP, LepM = pairList[0], pairList[1]
-        M = (LepM + LepP).M()
-	
-        if not TF.mllCut(M) :
-            if unique :
-                print("Zmass Fail: : Event ID={0:d} cat={1:s} M={2:.2f}".format(e.event,cat,M))
-                #GF.printEvent(e)
-                #if MC : GF.printMC(e)
-            continue ##cut valid for both AZH and ZH
-
-        if lepMode == 'ee' :
-            for cat in cats[:4]: 
-	        cutCounter[cat].count('FoundZ')
-	        if  MC :   cutCounterGenWeight[cat].countGenWeight('FoundZ', e.genWeight)
-        if lepMode == 'mm' :
-            for cat in cats[4:]: 
-	        cutCounter[cat].count('FoundZ')
-	        if  MC :   cutCounterGenWeight[cat].countGenWeight('FoundZ', e.genWeight)
-
-        for tauMode in ['et','mt','tt','em'] :
-            if args.category != 'none' and tauMode != args.category[2:] : continue
-            cat = lepMode + tauMode
-            if tauMode == 'tt' :
-                tauList = TF.getTauList(cat, e, pairList=pairList)
-                bestTauPair = TF.getBestTauPair(cat, e, tauList)
-                                    
-            elif tauMode == 'et' :
-                bestTauPair = TF.getBestETauPair(e,cat=cat,pairList=pairList)
-            elif tauMode == 'mt' :
-                bestTauPair = TF.getBestMuTauPair(e,cat=cat,pairList=pairList)
-            elif tauMode == 'em' :
-                bestTauPair = TF.getBestEMuTauPair(e,cat=cat,pairList=pairList)
-	    else : continue
-
-            
-            if len(bestTauPair) < 1 :
-                if unique :
-                    print("Tau Pair Fail: Event ID={0:d} cat={1:s}".format(e.event,cat))
-                    bestTauPair = TF.getBestEMuTauPair(e,cat=cat,pairList=pairList,printOn=True) 
-                    GF.printEvent(e)
-                                    
-                if False and maxPrint > 0 and (tauMode == GF.eventID(e)[2:4]) :
-                    maxPrint -= 1
-                    print("Failed tau-pair cut")
-                    print("Event={0:d} cat={1:s}".format(e.event,cat))
-                    print("goodMuonList={0:s} goodElectronList={1:s} Mll={3:.1f} bestTauPair={4:s}".format(
-                        str(goodMuonList),str(goodElectronList),str(pairList),M,str(bestTauPair)))
-                    print("Lep1.pt() = {0:.1f} Lep2.pt={1:.1f}".format(pairList[0].Pt(),pairList[1].Pt()))
-                    GF.printEvent(e)
-                    GF.printMC(e)
-                continue
-
-            if len(bestTauPair) > 1 :
-                jt1, jt2 = bestTauPair[0], bestTauPair[1]
-            else :
-                continue
-
-            goodElectronListExtraLepton = TF.makeGoodElectronListExtraLepton(e,lepList)
-            goodMuonListExtraLepton = TF.makeGoodMuonListExtraLepton(e,lepList)
-            goodElectronListExtraLepton, goodMuonListExtraLepton = TF.eliminateCloseLeptons(e, goodElectronListExtraLepton, goodMuonListExtraLepton)
-            if tauMode == 'et' :
-	        if bestTauPair[0] in goodElectronListExtraLepton : goodElectronListExtraLepton.remove(bestTauPair[0])
-
-            if tauMode == 'mt' :
-	        if bestTauPair[0] in goodMuonListExtraLepton : goodMuonListExtraLepton.remove(bestTauPair[0])
-
-            if tauMode == 'em' :
-	        if bestTauPair[0] in goodElectronListExtraLepton : goodElectronListExtraLepton.remove(bestTauPair[0])
-	        if bestTauPair[1] in goodMuonListExtraLepton : goodMuonListExtraLepton.remove(bestTauPair[1])
+	    if lepMode == 'ee' :
+		if e.nElectron < 2 : continue
+		for cat in cats[:4] : 
+		    cutCounter[cat].count('LeptonCount')
+		    if  MC :   cutCounterGenWeight[cat].countGenWeight('LeptonCount', e.genWeight)
+	    if lepMode == 'mm' :
+		if e.nMuon < 2 : continue 
+		for cat in cats[4:] : 
+		    cutCounter[cat].count('LeptonCount')
+		    if  MC :   cutCounterGenWeight[cat].countGenWeight('LeptonCount', e.genWeight)
 
 
-            #if len(goodMuonListExtraLepton) > 0 or len(goodElectronListExtraLepton) >0 : 
-            #    print 'some info', cat, 'lepList', lepList, tauList, 'tauPair', bestTauPair, 'extra', goodElectronListExtraLepton, goodMuonListExtraLepton, 'will remove it'
+	    goodElectronList = TF.makeGoodElectronList(e)
+	    goodMuonList = TF.makeGoodMuonList(e)
+	    goodElectronList, goodMuonList = TF.eliminateCloseLeptons(e, goodElectronList, goodMuonList)
+	    goodElectronListExtraLepton=[]
+	    goodMuonListExtraLepton=[]
 
-            if len(goodMuonListExtraLepton) > 0 or len(goodElectronListExtraLepton) >0 : continue
+	    lepList=[]
 
-            cutCounter[cat].count("GoodTauPair")
-	    if  MC:   cutCounterGenWeight[cat].countGenWeight('GoodTauPair', e.genWeight)
+		   
+	    if lepMode == 'ee' :
+		if len(goodElectronList) < 2 : continue
+		for cat in cats[:4] :
+		    cutCounter[cat].count('GoodLeptons')
+		    if  MC :   cutCounterGenWeight[cat].countGenWeight('GoodLeptons', e.genWeight)
 
-            if MC :
-                outTuple.setWeight(PU.getWeight(e.PV_npvs)) 
-                outTuple.setWeightPU(PU.getWeight(e.Pileup_nPU)) 
-                outTuple.setWeightPUtrue(PU.getWeight(e.Pileup_nTrueInt)) 
-		#print 'nPU', e.Pileup_nPU, e.Pileup_nTrueInt, PU.getWeight(e.Pileup_nPU), PU.getWeight(e.Pileup_nTrueInt), PU.getWeight(e.PV_npvs), PU.getWeight(e.PV_npvsGood)
-	    else : 
-                outTuple.setWeight(1.) 
-                outTuple.setWeightPU(1.) ##
-                outTuple.setWeightPUtrue(1.)
-
-
-            #cutCounter[cat].count("VVtightTauPair")
-	    #if MC :   cutCounterGenWeight[cat].countGenWeight('VVtightTauPair', e.genWeight)
-                        
-            SVFit = True
+		pairList, lepList = TF.findZ(goodElectronList,[], e)
+		if len(lepList) != 2 : continue
+		for cat in cats[:4] : 
+		    cutCounter[cat].count('LeptonPair')
+		    if  MC :   cutCounterGenWeight[cat].countGenWeight('LeptonPair', e.genWeight)
 	    
-            if not MC : isMC = False
-             
-            #print 'again--------------->', e.MET_pt, e.MET_phi
+	    if lepMode == 'mm' :
+		if len(goodMuonList) < 2 : continue
+		for cat in cats[4:] :
+		    cutCounter[cat].count('GoodLeptons')
+		    if  MC :   cutCounterGenWeight[cat].countGenWeight('GoodLeptons', e.genWeight)
 
-            outTuple.Fill(e,SVFit,cat,jt1,jt2,LepP,LepM,lepList,isMC,era,doJME, varSystematics, met_pt, met_phi)
-            #outTuple.Fill(e,SVFit,cat,jt1,jt2,LepP,LepM,lepList,isMC,era,doJME, varSystematics)
+		pairList, lepList = TF.findZ([],goodMuonList, e)
+		if len(lepList) != 2 : continue
+		for cat in cats[4:] : 
+		    cutCounter[cat].count('LeptonPair')
+		    if  MC :   cutCounterGenWeight[cat].countGenWeight('LeptonPair', e.genWeight)
+
+	    LepP, LepM = pairList[0], pairList[1]
+	    M = (LepM + LepP).M()
+	    
+	    if not TF.mllCut(M) :
+		if unique :
+		    print("Zmass Fail: : Event ID={0:d} cat={1:s} M={2:.2f}".format(e.event,cat,M))
+		    #GF.printEvent(e)
+		    #if MC : GF.printMC(e)
+		continue ##cut valid for both AZH and ZH
+
+	    if lepMode == 'ee' :
+		for cat in cats[:4]: 
+		    cutCounter[cat].count('FoundZ')
+		    if  MC :   cutCounterGenWeight[cat].countGenWeight('FoundZ', e.genWeight)
+	    if lepMode == 'mm' :
+		for cat in cats[4:]: 
+		    cutCounter[cat].count('FoundZ')
+		    if  MC :   cutCounterGenWeight[cat].countGenWeight('FoundZ', e.genWeight)
+
+	    for tauMode in ['et','mt','tt','em'] :
+		if args.category != 'none' and tauMode != args.category[2:] : continue
+		cat = lepMode + tauMode
+		if tauMode == 'tt' :
+		    tauList = TF.getTauList(cat, e, pairList=pairList)
+		    bestTauPair = TF.getBestTauPair(cat, e, tauList)
+					
+		elif tauMode == 'et' :
+		    bestTauPair = TF.getBestETauPair(e,cat=cat,pairList=pairList)
+		elif tauMode == 'mt' :
+		    bestTauPair = TF.getBestMuTauPair(e,cat=cat,pairList=pairList)
+		elif tauMode == 'em' :
+		    bestTauPair = TF.getBestEMuTauPair(e,cat=cat,pairList=pairList)
+		else : continue
+
+		
+		if len(bestTauPair) < 1 :
+		    if unique :
+			print("Tau Pair Fail: Event ID={0:d} cat={1:s}".format(e.event,cat))
+			bestTauPair = TF.getBestEMuTauPair(e,cat=cat,pairList=pairList,printOn=True) 
+			GF.printEvent(e)
+					
+		    if False and maxPrint > 0 and (tauMode == GF.eventID(e)[2:4]) :
+			maxPrint -= 1
+			print("Failed tau-pair cut")
+			print("Event={0:d} cat={1:s}".format(e.event,cat))
+			print("goodMuonList={0:s} goodElectronList={1:s} Mll={3:.1f} bestTauPair={4:s}".format(
+			    str(goodMuonList),str(goodElectronList),str(pairList),M,str(bestTauPair)))
+			print("Lep1.pt() = {0:.1f} Lep2.pt={1:.1f}".format(pairList[0].Pt(),pairList[1].Pt()))
+			GF.printEvent(e)
+			GF.printMC(e)
+		    continue
+
+		if len(bestTauPair) > 1 :
+		    jt1, jt2 = bestTauPair[0], bestTauPair[1]
+		else :
+		    continue
+
+		goodElectronListExtraLepton = TF.makeGoodElectronListExtraLepton(e,lepList)
+		goodMuonListExtraLepton = TF.makeGoodMuonListExtraLepton(e,lepList)
+		goodElectronListExtraLepton, goodMuonListExtraLepton = TF.eliminateCloseLeptons(e, goodElectronListExtraLepton, goodMuonListExtraLepton)
+		if tauMode == 'et' :
+		    if bestTauPair[0] in goodElectronListExtraLepton : goodElectronListExtraLepton.remove(bestTauPair[0])
+
+		if tauMode == 'mt' :
+		    if bestTauPair[0] in goodMuonListExtraLepton : goodMuonListExtraLepton.remove(bestTauPair[0])
+
+		if tauMode == 'em' :
+		    if bestTauPair[0] in goodElectronListExtraLepton : goodElectronListExtraLepton.remove(bestTauPair[0])
+		    if bestTauPair[1] in goodMuonListExtraLepton : goodMuonListExtraLepton.remove(bestTauPair[1])
 
 
-            if maxPrint > 0 :
-                maxPrint -= 1
-                print("\n\nGood Event={0:d} cat={1:s}  MCcat={2:s}".format(e.event,cat,GF.eventID(e)))
-                print("goodMuonList={0:s} goodElectronList={1:s} Mll={2:.1f} bestTauPair={3:s}".format(
-                    str(goodMuonList),str(goodElectronList),M,str(bestTauPair)))
-                print("Lep1.pt() = {0:.1f} Lep2.pt={1:.1f}".format(pairList[0].Pt(),pairList[1].Pt()))
-                GF.printEvent(e)
-                print("Event ID={0:s} cat={1:s}".format(GF.eventID(e),cat))
-                
+		#if len(goodMuonListExtraLepton) > 0 or len(goodElectronListExtraLepton) >0 : 
+		#    print 'some info', cat, 'lepList', lepList, tauList, 'tauPair', bestTauPair, 'extra', goodElectronListExtraLepton, goodMuonListExtraLepton, 'will remove it'
 
+		if len(goodMuonListExtraLepton) > 0 or len(goodElectronListExtraLepton) >0 : continue
+
+		cutCounter[cat].count("GoodTauPair")
+		if  MC:   cutCounterGenWeight[cat].countGenWeight('GoodTauPair', e.genWeight)
+
+		if MC :
+		    outTuple.setWeight(PU.getWeight(e.PV_npvs)) 
+		    outTuple.setWeightPU(PU.getWeight(e.Pileup_nPU)) 
+		    outTuple.setWeightPUtrue(PU.getWeight(e.Pileup_nTrueInt)) 
+		    #print 'nPU', e.Pileup_nPU, e.Pileup_nTrueInt, PU.getWeight(e.Pileup_nPU), PU.getWeight(e.Pileup_nTrueInt), PU.getWeight(e.PV_npvs), PU.getWeight(e.PV_npvsGood)
+		else : 
+		    outTuple.setWeight(1.) 
+		    outTuple.setWeightPU(1.) ##
+		    outTuple.setWeightPUtrue(1.)
+
+
+		#cutCounter[cat].count("VVtightTauPair")
+		#if MC :   cutCounterGenWeight[cat].countGenWeight('VVtightTauPair', e.genWeight)
+			    
+		SVFit = True
+		#SVFit = False
+		
+		if not MC : isMC = False
+		 
+		#print 'again--------------->', e.MET_pt, e.MET_phi
+                #print 'will Fill for syst', isyst, sysT[isyst]
+		outTuple.Fill(e,SVFit,cat,jt1,jt2,LepP,LepM,lepList,isMC,era,doJME, met_pt, met_phi, isyst)
+
+		if maxPrint > 0 :
+		    maxPrint -= 1
+		    print("\n\nGood Event={0:d} cat={1:s}  MCcat={2:s}".format(e.event,cat,GF.eventID(e)))
+		    print("goodMuonList={0:s} goodElectronList={1:s} Mll={2:.1f} bestTauPair={3:s}".format(
+			str(goodMuonList),str(goodElectronList),M,str(bestTauPair)))
+		    print("Lep1.pt() = {0:.1f} Lep2.pt={1:.1f}".format(pairList[0].Pt(),pairList[1].Pt()))
+		    GF.printEvent(e)
+		    print("Event ID={0:s} cat={1:s}".format(GF.eventID(e),cat))
+    
 dT = time.time() - tStart
 print("Run time={0:.2f} s  time/event={1:.1f} us".format(dT,1000000.*dT/count))
 
@@ -395,6 +449,13 @@ hLabels.append('GoodTauPair')
 
 hCutFlow=[]
 hCutFlowW=[]
+
+#
+outTuple.writeTree()
+fW = TFile( outFileName, 'update' )
+fW.cd()
+
+print '------------------------->',fW, outFileName
 for icat,cat in enumerate(cats) :
     print('\nSummary for {0:s}'.format(cat))
     cutCounter[cat].printSummary()
@@ -420,13 +481,15 @@ for icat,cat in enumerate(cats) :
             hCutFlowW[icat].Fill(i+1, float(yieldsW))
         #print cutCounter[cat].getYield()[i], i, cutCounter[cat].getLabels()[i]
 
-    
+       
     hCutFlow[icat].Sumw2()
-    if MC : hCutFlowW[icat].Sumw2()
+    hCutFlow[icat].Write()
+    if MC : 
+        hCutFlowW[icat].Sumw2()
+        hCutFlowW[icat].Write()
     icat+=1
 
 if not MC : CJ.printJSONsummary()
 
 
-outTuple.writeTree()
 
