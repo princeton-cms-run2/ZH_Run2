@@ -165,6 +165,7 @@ def getArgs() :
     parser.add_argument("-e", "--extraTag",type=str, default='',help='extra tag; wL, noL wrt to fakes method')
     parser.add_argument("-g", "--genTag",type=str, default='',help='extra tag for gen, pow or mcnlo')
     parser.add_argument("-i", "--isLocal",type=str, default=0,help='local or condor')
+    parser.add_argument("-t", "--gType",type=str, default='',help='type : data, Signal, Other')
     
     return parser.parse_args()
 
@@ -334,7 +335,6 @@ if str(args.inSystematics) not in varSystematics :
 Pblumi = 1000.
 tauID_w = 1.
 
-
 gInterpreter.ProcessLine('.L BTagCalibrationStandalone.cpp+') 
 calib = ROOT.BTagCalibration('csvv1', 'DeepCSV_{0:s}.csv'.format(era))
 # making a std::vector<std::string>> in python is a bit awkward, 
@@ -384,8 +384,6 @@ reader_light.load(
 )
 
 
-
-
 # Tau Decay types
 kUndefinedDecayType, kTauToHadDecay,  kTauToElecDecay, kTauToMuDecay = 0, 1, 2, 3   
 
@@ -404,12 +402,6 @@ hnames =['hm_sv_new', 'hm_sv_new_FM']
 print 'compiled it====================================================================='
 
 weights= {''}
-weights_muToTauFR={''}
-weights_elToTauFR={''}
-weights_mujToTauFR={''}
-weights_eljToTauFR={''}
-weights_muTotauES={''}
-weights_elTotauES={''}
 
 
 campaign = {2016:'2016Legacy', 2017:'2017ReReco', 2018:'2018ReReco'}
@@ -423,21 +415,8 @@ campaign = {2016:'2016Legacy', 2017:'2017ReReco', 2018:'2018ReReco'}
 if era == '2016' : 
     weights = {'lumi':35.92, 'tauID_w' :0.87, 'tauES_DM0' : -0.6, 'tauES_DM1' : -0.5,'tauES_DM10' : 0.0, 'mutauES_DM0' : -0.2, 'mutauES_DM1' : 1.5, 'eltauES_DM0' : 0.0, 'eltauES_DM1' : 9.5}
 
-
-    weights_mujToTauFR = {'DM1' : 0.85, 'lt0p4' : 1.21, '0p4to0p8' : 1.11, '0p8to1p2' : 1.20, '1p2to1p7' : 1.16, '1p7to2p3' : 2.25 }
-    weights_muToTauFR = {'DM1' : 1.38, 'lt0p4' : 0.80, '0p4to0p8' : 0.81, '0p8to1p2' : 0.79, '1p2to1p7' : 0.68, '1p7to2p3' : 1.34 }
-    weights_eljToTauFR = {'lt1p479_DM0' : 1.18, 'gt1p479_DM0' : 0.93, 'lt1p479_DM1' : 1.18, 'gt1p479_DM1' : 1.07 }
-    weights_elToTauFR = {'lt1p479_DM0' : 0.80, 'gt1p479_DM0' : 0.72, 'lt1p479_DM1' : 1.14, 'gt1p479_DM1' : 0.64 }
-
-    weights_tauTotauES = {'DM0' :-0.9, 'DM1' : -0.1, 'DM10' : 0.3, 'DM11' : -0.2}
-    weights_elTotauES = {'DM0' :-0.5, 'DM1' : 6, 'DM10' : 0, 'DM11' :0}
-    weights_muTotauES = {'DM0' :0., 'DM1' : -0.5, 'DM10' : 0, 'DM11' :0}
-
-
-
     TriggerSF={'dir' : './tools/ScaleFactors/TriggerEffs/', 'fileMuon' : 'Muon/SingleMuon_Run2016_IsoMu24orIsoMu27.root', 'fileElectron' : 'Electron/SingleElectron_Run2016_Ele25orEle27.root'}
     LeptonSF={'dir' : './tools/ScaleFactors/LeptonEffs/', 'fileMuon0p2' : 'Muon/Muon_Run2016_IdIso_0p2.root', 'fileMuon0p15' : 'Muon/Muon_Run2016_IdIso_0p15.root', 'fileElectron0p1' : 'Electron/Electron_Run2016_IdIso_0p1.root',  'fileElectron0p15' : 'Electron/Electron_Run2016_IdIso_0p15.root'}
-
 
     TESSF={'dir' : 'TauPOG/TauIDSFs/data/', 'fileTES' : 'TauES_dm_2016Legacy.root'}
     WorkSpace={'dir' : './', 'fileWS' : 'htt_scalefactors_legacy_2016.root'}
@@ -449,25 +428,6 @@ if era == '2017' :
 
 
 
-
-
-    weights_mujToTauFR = {'DM1' : 0.77, 'lt0p4' : 1.23, '0p4to0p8' : 1.07, '0p8to1p2' : 1.21, '1p2to1p7' : 1.21, '1p7to2p3' : 2.74 }
-    weights_muToTauFR = {'DM1' : 0.69, 'lt0p4' : 1.14, '0p4to0p8' : 1., '0p8to1p2' : 0.87, '1p2to1p7' : 0.52, '1p7to2p3' : 1.47 }
-    weights_eljToTauFR = {'lt1p479_DM0' : 1.09, 'gt1p479_DM0' : 0.86, 'lt1p479_DM1' : 1.10, 'gt1p479_DM1' : 1.03 }
-    weights_elToTauFR = {'lt1p479_DM0' : 0.98, 'gt1p479_DM0' : 0.80, 'lt1p479_DM1' : 1.07, 'gt1p479_DM1' : 0.64 }
-
-
-    weights_tauTotauES = {'DM0' :0.4, 'DM1' : 0.2, 'DM10' : 0.1, 'DM11' : -1.3}
-    #old weights_elTotauES = {'DM0' :0.3, 'DM1' : 3.6, 'DM10' : 0, 'DM11' :0}
-    #old weights_muTotauES = {'DM0' :0., 'DM1' : 0.0, 'DM10' : 0, 'DM11' :0}
-
-    weights_muTotauES = {'DM0' : -0.2, 'DM1' : -0.8, 'DM10' : 0, 'DM11' :0}
-    weights_elTotauES = {'DM0' :-1.8, 'DM1' : 1.8, 'DM10' : 0, 'DM11' :0}
-
-
-
-
-
     TriggerSF={'dir' : './tools/ScaleFactors/TriggerEffs/', 'fileMuon' : 'Muon/SingleMuon_Run2017_IsoMu24orIsoMu27.root', 'fileElectron' : 'Electron/SingleElectron_Run2017_Ele32orEle35.root'}
     LeptonSF={'dir' : './tools/ScaleFactors/LeptonEffs/', 'fileMuon0p2' : 'Muon/Muon_Run2017_IdIso_0p2.root', 'fileMuon0p15' : 'Muon/Muon_Run2017_IdIso_0p15.root', 'fileElectron0p1' : 'Electron/Electron_Run2017_IdIso_0p1.root',  'fileElectron0p15' : 'Electron/Electron_Run2017_IdIso_0p15.root'}
     TESSF={'dir' : 'TauPOG/TauIDSFs/data/', 'fileTES' : 'TauES_dm_2017ReReco.root'}
@@ -475,20 +435,6 @@ if era == '2017' :
 
 if era == '2018' : 
     weights = {'lumi':59.74, 'tauID_w' :0.90, 'tauES_DM0' : -1.3, 'tauES_DM1' : -0.5,'tauES_DM10' : -1.2, 'mutauES_DM0' : 0.0, 'mutauES_DM1' : 0.0, 'eltauES_DM0' : 0.0, 'eltauES_DM1' : 0.0}
-    weights_mujToTauFR = {'DM1' : 0.79, 'lt0p4' : 1.11, '0p4to0p8' : 1.05, '0p8to1p2' : 1.18, '1p2to1p7' : 1.06, '1p7to2p3' : 1.79 }
-    weights_muToTauFR = {'DM1' : 0.55, 'lt0p4' : 1.08, '0p4to0p8' : 0.78, '0p8to1p2' : 0.77, '1p2to1p7' : 0.75, '1p7to2p3' : 2.02 }
-    weights_eljToTauFR = {'lt1p479_DM0' : 1.21, 'gt1p479_DM0' : 0.92, 'lt1p479_DM1' : 1.18, 'gt1p479_DM1' : 1.04 }
-    weights_elToTauFR = {'lt1p479_DM0' : 1.09, 'gt1p479_DM0' : 0.80, 'lt1p479_DM1' : 0.85, 'gt1p479_DM1' : 0.49 }
-
-
-    #weights_muTotauES = {'DM0' : -0.2, 'DM1' : -1.}
-    #weights_elTotauES = {'DM0' :-3.2, 'DM1' : 2.6}
-
-
-    weights_tauTotauES = {'DM0' :-1.6, 'DM1' : -0.4, 'DM10' : -1.2, 'DM11' : -0.4}
-    weights_elTotauES = {'DM0' :-3.2, 'DM1' : 2.6, 'DM10' : 0, 'DM11' :0}
-    weights_muTotauES = {'DM0' :-0.2, 'DM1' : -1., 'DM10' : 0, 'DM11' :0}
-
 
 
     TriggerSF={'dir' : './tools/ScaleFactors/TriggerEffs/', 'fileMuon' : 'Muon/SingleMuon_Run2018_IsoMu24orIsoMu27.root', 'fileElectron' : 'Electron/SingleElectron_Run2018_Ele32orEle35.root'}
@@ -505,6 +451,9 @@ if era == '2018' : recoilCorrector  = ROOT.RecoilCorrector("./TypeI-PFMet_Run201
 finWS=("{0:s}{1:s}".format(WorkSpace['dir'],WorkSpace['fileWS']))
 fInws=TFile(finWS, 'read') 
 fInws.cd()
+
+
+#ROOT.gROOT.LoadMacro("CrystalBallEfficiency.cxx+")
 wspace = WS.RooWorkspace("w")
 wspace=fInws.Get("w")
 
@@ -635,11 +584,19 @@ nickNames, xsec, totalWeight, sampleWeight = {}, {}, {}, {}
 
 #groups = ['fakes','Signal','Other','Top','DY','WZ','ZZ','data']
 #groups = ['Signal','Other','Top','DY','WZ','ZZ','data','fakes','f1','f2']
-groups = ['Reducible','fakes','f1', 'f2','gfl1','bfl1', 'lfl1','lfl2','ljfl1', 'cfl1','jfl1','bfl2', 'ljfl2', 'cfl2','jfl2','jft1', 'jft2','Signal','Other','Top','DY','WZ','ZZ','data']
+groups = ['Reducible','fakes','f1', 'f2','gfl1','bfl1', 'lfl1','lfl2','ljfl1', 'cfl1','jfl1','bfl2', 'ljfl2', 'cfl2','jfl2','jft1', 'jft2','qqZH','ggZH', 'WH','Other','Top','DY','WZ','ZZ','data']
 
-ngroups = ['Reducible', 'fakes','f1', 'f2','gfl1','bfl1', 'lfl1','lfl2','ljfl1', 'cfl1','jfl1','bfl2', 'ljfl2', 'cfl2','jfl2','jft1', 'jft2','Signal','Other','Top','DY','WZ','ZZ','data']
-ngroups = ['Reducible', 'fakes','f1', 'f2','gfl1','bfl1', 'lfl1','lfl2','ljfl1', 'cfl1','jfl1','bfl2', 'ljfl2', 'cfl2','jfl2','jft1', 'jft2','Signal','Other','ZZ','data']
+ngroups = ['Reducible', 'fakes','f1', 'f2','gfl1','bfl1', 'lfl1','lfl2','ljfl1', 'cfl1','jfl1','bfl2', 'ljfl2', 'cfl2','jfl2','jft1', 'jft2','qqZH','ggZH', 'WH','Other','Top','DY','WZ','ZZ','data']
+ngroups = ['Reducible', 'fakes','f1', 'f2','gfl1','bfl1', 'lfl1','lfl2','ljfl1', 'cfl1','jfl1','bfl2', 'ljfl2', 'cfl2','jfl2','jft1', 'jft2','qqZH','ggZH', 'WH','Other','ZZ','data']
+
+ngroups = ['Reducible', 'fakes','f1', 'f2','gfl1','bfl1', 'lfl1','lfl2','ljfl1', 'cfl1','jfl1','bfl2', 'ljfl2', 'cfl2','jfl2','jft1', 'jft2','qqZH','ggZH', 'WH','Other','ZZ','data']
+
+ngroups = ['Reducible', 'fakes','f1', 'f2','gfl1','bfl1', 'lfl1','lfl2','ljfl1', 'cfl1','jfl1','bfl2', 'ljfl2', 'cfl2','jfl2','jft1', 'jft2','Other','ZZ']
 fgroups = ['bfl', 'ljfl',  'cfl','jfl', 'jft1', 'jft2']
+
+if str(args.gType.lower()) != 'other' : 
+    ngroups = [] 
+    ngroups.append(str(args.gType))
 
 
 for group in groups :
@@ -770,11 +727,15 @@ FF = fakeFactor.fakeFactor(args.year,WP,extratag, vertag)
 ffout='testZH_{0:s}_{1:s}.root'.format(extratag,vertag)
 if vertag== '' : ffout='testZH_{0:s}.root'.format(extratag)
 
+ffout='testFile.root'
+
 print("Opening {0:s} as output.".format(ffout))
 fOut = TFile( ffout, 'recreate' )
 
-
 plotSettings = { # [nBins,xMin,xMax,units]
+        "m_sv":[20,0,400,"[Gev]","m(#tau#tau)(SV)"]}
+
+plotSettingss = { # [nBins,xMin,xMax,units]
 
         "weight":[20,-10,10,"","PUWeight"],
         "weightPUtrue":[20,-10,10,"","PUtrue"],
@@ -847,7 +808,6 @@ plotSettings = { # [nBins,xMin,xMax,units]
         "gen_match_2":[30,-0.5,29.5,"","gen_match_2"],
         "gen_match_3":[30,-0.5,29.5,"","gen_match_3"],
         "gen_match_4":[30,-0.5,29.5,"","gen_match_4"]
-
         }
 
 
@@ -890,8 +850,16 @@ if str(args.bruteworkingPoint=='64') : wpp = 'VTight'
 if str(args.bruteworkingPoint=='128') : wpp = 'VVTight'
 
 tauSFTool = TauIDSFTool(campaign[args.year],'DeepTau2017v2p1VSjet',wpp)
-testool = TauESTool(campaign[args.year])
-festool = TauESTool(campaign[args.year])
+testool = TauESTool(campaign[args.year],'DeepTau2017v2p1VSjet', TESSF['dir'])
+festool = TauESTool(campaign[args.year],'DeepTau2017v2p1VSjet')
+
+#antiEleSFToolVVL = TauIDSFTool(campaign[args.year],'DeepTau2017v2p1VSe','VVLoose')
+#antiMuSFToolVL  = TauIDSFTool(campaign[args.year],'DeepTau2017v2p1VSmu','VLoose')
+antiEleSFToolT = TauIDSFTool(campaign[args.year],'DeepTau2017v2p1VSe','Tight')
+antiMuSFToolT  = TauIDSFTool(campaign[args.year],'DeepTau2017v2p1VSmu','Tight')
+
+
+
 sf_MuonTrig = SF.SFs()
 sf_MuonTrig.ScaleFactor("{0:s}{1:s}".format(TriggerSF['dir'],TriggerSF['fileMuon']))
 sf_EleTrig = SF.SFs()
@@ -911,7 +879,10 @@ for icat, cat in cats.items()[0:8] :
     hCutFlowFM[cat] = {}
     hW[cat] = {}
 
+isSignal = False
 for group in groups :
+
+    if 'qqZH' in group or 'ggZH' in group or 'WH' in group  : isSignal = True
     for inick, nickName in enumerate(nickNames[group]) :
         #if group == 'data':
 	#    #inFileName = './data/{0:s}/data_{1:s}/{2:s}.root'.format(args.analysis,era,nickName)
@@ -1249,16 +1220,16 @@ for ig, group in enumerate(groups) :
 
 
 	hName = 'h{0:s}_{1:s}_m_sv_new_FMjall'.format(group,cat)
-	hm_sv_new_FMjall[group][cat] = TH1D(hName ,hName, 21,-0.5,20.5)
-	hm_sv_new_FMjall[group][cat] = TH1D(hName ,hName, 21,-0.5,20.5)
+	hm_sv_new_FMjall[group][cat] = TH1D(hName ,hName, 21,0,21)
+	hm_sv_new_FMjall[group][cat] = TH1D(hName ,hName, 21,0,21)
 	hm_sv_new_FMjall[group][cat].SetDefaultSumw2()
 
 	hName = 'h{0:s}_{1:s}_m_sv_new_FMjallv2'.format(group,cat)
-	hm_sv_new_FMjallv2[group][cat] = TH1D(hName ,hName, 14,-0.5,13.5)
+	hm_sv_new_FMjallv2[group][cat] = TH1D(hName ,hName, 14,0,14)
 	hm_sv_new_FMjallv2[group][cat].SetDefaultSumw2()
 
 	hName = 'h{0:s}_{1:s}_m_sv_new_jall'.format(group,cat)
-	hm_sv_new_jall[group][cat] = TH1D(hName ,hName, 21,-0.5,20.5)
+	hm_sv_new_jall[group][cat] = TH1D(hName ,hName, 21,0,21)
 	hm_sv_new_jall[group][cat].SetDefaultSumw2()
 
 	hName = 'h{0:s}_{1:s}_mt_sv_new'.format(group,cat)
@@ -1352,6 +1323,8 @@ for ig, group in enumerate(groups) :
             sysmet = systForMET(str(args.inSystematics))
 
         for i, e in enumerate(inTree) :
+
+            inTree.GetEntry(i)
             iCut=icut
             hGroup = group
             trigw = 1.
@@ -1375,8 +1348,12 @@ for ig, group in enumerate(groups) :
 	    #if hGroup != 'data' and i > 1000:continue
             if i % 5000 ==0: print i, 'from ', nentries
             #if i > 10000 : break
-            met = e.met
-            metphi = e.metphi
+            try : 
+                met = e.MET_pt_nom
+                metphi = e.MET_phi_nom
+            except AttributeError :
+                met = e.met
+                metphi = e.metphi
             
 	    if str(args.inSystematics) != 'none': 
 		met = getattr(e, 'metpt_'+sysmet, None)
@@ -1509,15 +1486,11 @@ for ig, group in enumerate(groups) :
             ########### Trigger
             ################### Trigger SF
             
-
-            
        
             if group == 'data' :
                 if DD[cat].checkEvent(e,cat) : continue 
 
             ##### btag
-
-            
             if group != 'data' :
 		nj=e.njets[0]
 		if nj > 0 :
@@ -1537,6 +1510,7 @@ for ig, group in enumerate(groups) :
 
 		weight *= btag_sf
 		weightFM *= btag_sf
+
             iCut +=1
             WCounter[iCut-1][icat-1][inick] += weightCF
             hCutFlowN[cat][nickName].SetBinContent(iCut-1, hCutFlowN[cat][nickName].GetBinContent(iCut-1)+weight)
@@ -1545,6 +1519,8 @@ for ig, group in enumerate(groups) :
 
 
             trigw=1
+            trigw1=1
+            trigw2=1
             tracking_sf = 1.
             lepton_sf = 1.
 
@@ -1675,12 +1651,10 @@ for ig, group in enumerate(groups) :
 
             ##########
 
-            puppimet_tree = e.puppimet
             fW1, fW2, fW0 = 0,0,0
 
 	    #if group != 'data' :
             #    if  not tight1 or not tight2 : continue
-	    
                 
 	    if group == 'data' :
 		if dataDriven :
@@ -1794,12 +1768,12 @@ for ig, group in enumerate(groups) :
 		L1.SetPtEtaPhiM(e.pt_1, e.eta_1,e.phi_1,electronMass)
 		L2.SetPtEtaPhiM(e.pt_2, e.eta_2,e.phi_2,electronMass)
 
-            if group != 'data' :
+            if group != 'data' and not isSignal:
 
 
 	        # recoils
-		njetsforrecoil = e.njets[isys]
-		if (isW)  : njetsforrecoil = e.njets[isys]+1
+		njetsforrecoil = e.njets
+		if (isW)  : njetsforrecoil = e.njets+1
                 if isW or isDY :
 		    boson = TLorentzVector()
 		    if cat[:2] == 'mm' :  
@@ -1816,111 +1790,80 @@ for ig, group in enumerate(groups) :
 		    MetVcor.SetPx(mett[0])
 		    MetVcor.SetPy(mett[1])
 
-            if group != 'data' and (cat[2:] == 'et' or cat[2:]  == 'mt' or  cat[2:] == 'tt') :
+            if group != 'data' and (cat[2:] == 'et' or cat[2:]  == 'mt' or cat[2:]  == 'tt') :
 
                 # leptons faking taus // muon->tau
-		if e.gen_match_4 == 2 or e.gen_match_4 == 4 :
+		if e.gen_match_4 == 1 or e.gen_match_4 == 3 :  weightTID *= antiEleSFToolT.getSFvsEta(e.eta_4,e.gen_match_4)
+		if e.gen_match_4 == 2 or e.gen_match_4 == 4 :  weightTID *= antiMuSFToolT.getSFvsEta(e.eta_4,e.gen_match_4)
 
+                '''
 		    if e.decayMode_4 == 1 :  
-		        weight *= weights_muToTauFR['DM1']
-                        '''
 			tauV4cor  *= (1 +  weights_muTotauES['DM1']*0.01)
 			tauV4corUp  *= (1 +  weights_muTotauES['DM1']*0.01)
 			tauV4corDown  *= (1 +  weights_muTotauES['DM1']*0.01)
 			MetVcor +=  tauV4*(1 +  weights_muTotauES['DM1']*0.01)
-                        '''
 
-		    if e.decayMode_4 == 0 :  
-			if abs(e.eta_4) < 0.4                        : weightTID *= weights_muToTauFR['lt0p4'] *  weights_mujToTauFR['lt0p4']
-			if abs(e.eta_4) > 0.4 and abs(e.eta_4 < 0.8) : weightTID *= weights_muToTauFR['0p4to0p8'] * weights_mujToTauFR['0p4to0p8']
-			if abs(e.eta_4) > 0.8 and abs(e.eta_4 < 1.2) : weightTID *= weights_muToTauFR['0p8to1p2'] * weights_mujToTauFR['0p8to1p2']
-			if abs(e.eta_4) > 1.2 and abs(e.eta_4 < 1.7) : weightTID *= weights_muToTauFR['1p2to1p7'] * weights_mujToTauFR['1p2to1p7']
-			if abs(e.eta_4) > 1.7 and abs(e.eta_4 < 2.3) : weightTID *= weights_muToTauFR['1p7to2p3'] * weights_mujToTauFR['1p7to2p3']
-                        '''
 			tauV4cor *= (1 +  weights_muTotauES['DM0']*0.01)
 			tauV4corUp *= (1 +  weights_muTotauES['DM0']*0.01)
 			tauV4corDown *= (1 +  weights_muTotauES['DM0']*0.01)
 			MetVcor +=   tauV4*(1 +  weights_muTotauES['DM0']*0.01)
-                        '''
 
-
-                # leptons faking taus // electron->tau
-		if e.gen_match_4 == 1 or e.gen_match_4 == 3 :
 
 		    if e.decayMode_4 == 0 :  
-			if abs(e.eta_4) < 1.479     : weightTID *= weights_elToTauFR['lt1p479_DM0'] * weights_eljToTauFR['lt1p479_DM0']
-			if abs(e.eta_4) > 1.479     : weightTID *= weights_elToTauFR['gt1p479_DM0'] * weights_eljToTauFR['gt1p479_DM0']
-                        '''
 			tauV4cor  *= (1 +  weights_elTotauES['DM0']*0.01)
 			tauV4corUp  *= (1 +  weights_elTotauES['DM0']*0.01)
 			tauV4corDown  *= (1 +  weights_elTotauES['DM0']*0.01)
 			MetVcor +=   tauV4*(1 +  weights_elTotauES['DM0']*0.01)
-                        '''
 
 		    if e.decayMode_4 == 1 :  
-			if abs(e.eta_4) < 1.479     : weightTID *= weights_elToTauFR['lt1p479_DM1'] * weights_eljToTauFR['lt1p479_DM1']			
-                        if abs(e.eta_4) > 1.479     : weightTID *= weights_elToTauFR['gt1p479_DM1'] * weights_eljToTauFR['gt1p479_DM1']
-			if abs(e.eta_4) > 1.479     : weightTID *= weights_elToTauFR['gt1p479_DM1'] * weights_eljToTauFR['gt1p479_DM1']
-                        '''
 			tauV4cor  *= (1 +  weights_elTotauES['DM1']*0.01)
 			tauV4corUp  *= (1 +  weights_elTotauES['DM1']*0.01)
 			tauV4corDown  *= (1 +  weights_elTotauES['DM1']*0.01)
 			MetVcor +=   tauV4*(1 +  weights_elTotauES['DM1']*0.01)
-                        '''
+                '''
 
 		
                 if  cat[2:] == 'tt' :
 		    #muon faking _3 tau
 
-		    if e.gen_match_3 == 2 or e.gen_match_3 == 4 :
+		    if e.gen_match_3 == 2 or e.gen_match_3 == 4 : weightTID *= antiMuSFToolT.getSFvsEta(e.eta_3,e.gen_match_3)
+		    if e.gen_match_4 == 2 or e.gen_match_4 == 4 : weightTID *= antiMuSFToolT.getSFvsEta(e.eta_4,e.gen_match_4)
+
+		    if e.gen_match_3 == 1 or e.gen_match_3 == 3 : weightTID *= antiEleSFToolT.getSFvsEta(e.eta_3,e.gen_match_3)
+		    if e.gen_match_4 == 1 or e.gen_match_4 == 3 : weightTID *= antiEleSFToolT.getSFvsEta(e.eta_4,e.gen_match_4)
+                    '''
+
 			if e.decayMode_3 == 1 :  
-			    weightTID *= weights_muToTauFR['DM1']
-                            '''
 			    tauV3cor  *= (1 +  weights_muTotauES['DM1']*0.01)
 			    tauV3corUp  *= (1 +  weights_muTotauES['DM1']*0.01)
 			    tauV3corDown  *= (1 +  weights_muTotauES['DM1']*0.01)
 			    MetVcor +=   tauV3*(1 +  weights_muTotauES['DM1']*0.01)
-                            '''
 
 			if e.decayMode_3 == 0 :  
-			    if abs(e.eta_3) < 0.4                        : weightTID *= weights_muToTauFR['lt0p4'] *  weights_mujToTauFR['lt0p4']
-			    if abs(e.eta_3) > 0.4 and abs(e.eta_3 < 0.8) : weightTID *= weights_muToTauFR['0p4to0p8'] * weights_mujToTauFR['0p4to0p8']
-			    if abs(e.eta_3) > 0.8 and abs(e.eta_3 < 1.2) : weightTID *= weights_muToTauFR['0p8to1p2'] * weights_mujToTauFR['0p8to1p2']
-			    if abs(e.eta_3) > 1.2 and abs(e.eta_3 < 1.7) : weightTID *= weights_muToTauFR['1p2to1p7'] * weights_mujToTauFR['1p2to1p7']
-			    if abs(e.eta_3) > 1.7 and abs(e.eta_3 < 2.3) : weightTID *= weights_muToTauFR['1p7to2p3'] * weights_mujToTauFR['1p7to2p3']
 
-                            '''
 			    tauV3cor  *= (1 +  weights_muTotauES['DM0']*0.01)
 			    tauV3corUp  *= (1 +  weights_muTotauES['DM0']*0.01)
 			    tauV3corDown  *= (1 +  weights_muTotauES['DM0']*0.01)
 			    MetVcor +=   tauV3*(1 +  weights_muTotauES['DM0']*0.01)
-                            '''
 
 
                     # electron faking _3 tau
 		    if e.gen_match_3 == 1 or e.gen_match_3 == 3 :
 		        #weightTID *= festool.getFES(e.eta_3,e.decayMode_3,e.gen_match_3)
 			if e.decayMode_3 == 0 :  
-			    if abs(e.eta_3) < 1.479     : weightTID *= weights_elToTauFR['lt1p479_DM0'] * weights_eljToTauFR['lt1p479_DM0']
-			    if abs(e.eta_3) > 1.479     : weightTID *= weights_elToTauFR['gt1p479_DM0'] * weights_eljToTauFR['gt1p479_DM0']
 
-                            '''
 			    tauV3cor  *= (1 +  weights_elTotauES['DM0']*0.01)
 			    tauV3corUp  *= (1 +  weights_elTotauES['DM0']*0.01)
 			    tauV3corDown  *= (1 +  weights_elTotauES['DM0']*0.01)
 			    MetVcor +=   tauV3*(1 +  weights_elTotauES['DM0']*0.01)
-                            '''
 
 			if e.decayMode_3 == 1 :  
-			    if abs(e.eta_3) < 1.479     : weightTID *= weights_elToTauFR['lt1p479_DM1'] * weights_eljToTauFR['lt1p479_DM1']
-			    if abs(e.eta_3) > 1.479     : weightTID *= weights_elToTauFR['gt1p479_DM1'] * weights_eljToTauFR['gt1p479_DM1']
 
-                            '''
 			    tauV3cor  *= (1 +  weights_elTotauES['DM1']*0.01)
 			    tauV3corUp  *= (1 +  weights_elTotauES['DM1']*0.01)
 			    tauV3corDown  *= (1 +  weights_elTotauES['DM1']*0.01)
 			    MetVcor +=   tauV3*(1 +  weights_elTotauES['DM1']*0.01)
-                            '''
+                    '''
 
 		if cat[2:] == 'tt' :
                     if e.gen_match_3 == 5 : 
@@ -1928,12 +1871,14 @@ for ig, group in enumerate(groups) :
 			weightTIDUp *= tauSFTool.getSFvsPT(e.pt_3,e.gen_match_3, unc='Up')
 			weightTIDDown *= tauSFTool.getSFvsPT(e.pt_3,e.gen_match_3, unc='Down')
 
+                        #print 'tesSTOOL', testool.getTES(e.pt_3, e.decayMode_3, e.gen_match_3)
+
+                        '''
 			tauV3cor *= testool.getTES(e.pt_3, e.decayMode_3, e.gen_match_3)
 			tauV3corUp *= testool.getTES(e.pt_3, e.decayMode_3, e.gen_match_3,unc='Up')
 			tauV3corDown *= testool.getTES(e.pt_3, e.decayMode_3, e.gen_match_3,unc='Down')
 
 
-                        '''
 			if e.decayMode_3 == 1 : 
 			    e.m_3 =  0.1396  
 			    tauV3cor.SetE(0.1396)
@@ -1947,8 +1892,9 @@ for ig, group in enumerate(groups) :
 			weightTID *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4)
 			weightTIDUp *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4, unc='Up')
 			weightTIDDown *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4, unc='Down')
-			tauV4cor *= testool.getTES(e.pt_4, e.decayMode_4, e.gen_match_4)
+
                         '''
+			tauV4cor *= testool.getTES(e.pt_4, e.decayMode_4, e.gen_match_4)
 			if e.decayMode_4 == 1 : 
 			    e.m_4 =  0.1396  
 			    tauV4cor.SetE(0.1396)
@@ -1987,6 +1933,11 @@ for ig, group in enumerate(groups) :
             L2.SetPtEtaPhiM(e.pt_2, e.eta_2,e.phi_2,mass)
             ZPt = (L1+L2).Pt()
 
+	    ewkweight = 1.
+	    if  nickName == 'ZHToTauTau' :  
+                ewkweight = FF.getEWKWeight(ZPt, "central")
+                #print 'for signal---------------------->', nickName, ewkweight
+
 	    for plotVar in plotSettings:
 		#print plotVar
 		val = getattr(e, plotVar, None)
@@ -1998,8 +1949,8 @@ for ig, group in enumerate(groups) :
                 #    val = e.metpt_nom - e.met
                 #if plotVar =='metvs' and group=='data': val = 0.
 
-                if plotVar=='njets' or 'nbtag' in plotVar or 'jpt_' in plotVar or 'jeta_' in plotVar or 'bpt_' in plotVar or 'beta_' in plotVar or 'jphi' in plotVar or 'beta_' in plotVar or 'jphi_' in plotVar:  
-                    val=val[isys]
+                #if plotVar=='njets' or 'nbtag' in plotVar or 'jpt_' in plotVar or 'jeta_' in plotVar or 'bpt_' in plotVar or 'beta_' in plotVar or 'jphi' in plotVar or 'beta_' in plotVar or 'jphi_' in plotVar:  
+                #    val=val[isys]
 
 		if val is not None: 
                     try: 
@@ -2167,7 +2118,7 @@ for group in ngroups:
 
 
         htest = TH1D("hCutFlowAllGroup_"+cat,"AllGroupCutFlow",20,-0.5,19.5)
-        if 'data' not in group and 'Signal' not in group : htest.Add(hCutFlowPerGroup[group][cat])
+        if 'data' not in group and not isSignal : htest.Add(hCutFlowPerGroup[group][cat])
         
         #for syst in varSystematics : 
 	#OverFlow(hm_sv_new[group][cat])

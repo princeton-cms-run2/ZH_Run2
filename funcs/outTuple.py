@@ -28,7 +28,7 @@ class outTuple() :
                 # .L is not just for .so files, also .cc
        
         ########### JetMet systematics
-	self.listsyst=['njets', 'nbtag', 'jpt', 'jeta', 'jflavour','MET_pt', 'MET_phi']
+	self.listsyst=['njets', 'nbtag', 'jpt', 'jeta', 'jflavour','MET_T1_pt', 'MET_T1_phi', 'MET_pt', 'MET_phi', 'MET_T1Smear_pt', 'MET_T1Smear_phi']
 	self.jessyst=['_nom','_jesAbsolute', '_jesAbsolute_{0:s}'.format(str(era)), '_jesBBEC1', '_jesBBEC1_{0:s}'.format(str(era)), '_jesEC2', '_jesEC2_{0:s}'.format(str(era)), '_jesFlavorQCD', '_jesHF', '_jesHF_{0:s}'.format(str(era)), '_jesRelativeBal', '_jesRelativeSample_{0:s}'.format(str(era)), '_jesHEMIssue', '_jesTotal', '_jer']  
 
         #shift are the ES basd systematics
@@ -63,19 +63,11 @@ class outTuple() :
 				self.allsystMET.append(i_+jes+var)
 				self.list_of_arrays.append(array('f', [ 0 ]))
 		    if 'nom' in jes :
-			if 'MET' in i_ : 
-			    self.allsystMET.append(i_+jes)
-			    self.list_of_arrays.append(array('f', [ 0 ]))
+			if 'MET' in i_ : continue
+			    #self.allsystMET.append(i_+jes)
+			    #self.list_of_arrays.append(array('f', [ 0 ]))
                         
             for jes in self.jessyst :
-		    if 'nom' not in jes :   
-		        for var in varss :
-			    self.allsystJets.append(jes+var)
-			    self.list_of_arraysJetsNjets.append( array('f',[0]))
-			    self.list_of_arraysJetsNbtag.append( array('f',[0]))
-			    self.list_of_arraysJetsFlavour.append( array('f',[-9.99]*15))
-			    self.list_of_arraysJetsEta.append( array('f',[-9.99]*15))
-			    self.list_of_arraysJetsPt.append( array('f',[-9.99]*15))
 		    if 'nom' in jes :   
 			self.allsystJets.append(jes)
 			self.list_of_arraysJetsNjets.append( array('f',[0]))
@@ -83,6 +75,14 @@ class outTuple() :
 			self.list_of_arraysJetsFlavour.append( array('f',[-9.99]*15))
 			self.list_of_arraysJetsEta.append( array('f',[-9.99]*15))
 			self.list_of_arraysJetsPt.append( array('f',[-9.99]*15))
+		    else :   
+		        for var in varss :
+			    self.allsystJets.append(jes+var)
+			    self.list_of_arraysJetsNjets.append( array('f',[0]))
+			    self.list_of_arraysJetsNbtag.append( array('f',[0]))
+			    self.list_of_arraysJetsFlavour.append( array('f',[-9.99]*15))
+			    self.list_of_arraysJetsEta.append( array('f',[-9.99]*15))
+			    self.list_of_arraysJetsPt.append( array('f',[-9.99]*15))
                      
                 
 	    #for i_ in self.allsystMET :  self.list_of_arrays.append(array('f', [ 0 ]))
@@ -289,6 +289,8 @@ class outTuple() :
         # MET variables
         self.met         = array('f',[0])
         self.metphi      = array('f',[0])
+        self.metNoTauES      = array('f',[0])
+        self.metphiNoTauES      = array('f',[0])
         #self.puppimet    = array('f',[0])
         #self.puppimetphi = array('f',[0])
         self.metcov00    = array('f',[0])
@@ -573,6 +575,8 @@ class outTuple() :
         # MET variables
         self.t.Branch('met', self.met, 'met/F')
         self.t.Branch('metphi', self.metphi, 'metphi/F')
+        self.t.Branch('metNoTauES', self.metNoTauES, 'metNoTauES/F')
+        self.t.Branch('metphiNoTauES', self.metphiNoTauES, 'metphiNoTauES/F')
         #self.t.Branch('puppimet', self.puppimet, 'puppimet/F')
         #self.t.Branch('puppimetphi', self.puppimetphi, 'puppimetphi/F')
         self.t.Branch('metcov00', self.metcov00, 'metcov00/F')
@@ -648,8 +652,24 @@ class outTuple() :
             #else  : 
             if i > 0 : 
                 self.tN.append(isyst)
-                self.tN[i-1]  = self.t.CloneTree(0)
-                self.tN[i-1].SetName(isyst)
+                self.t.SetBranchStatus("*Up",0)
+                self.t.SetBranchStatus("*Down",0)
+                self.t.SetBranchStatus("Gen*",0)
+                self.t.SetBranchStatus("*_tr*",0)
+                self.t.SetBranchStatus("*L1*",0)
+                self.t.SetBranchStatus("*LHE*",0)
+                self.t.SetBranchStatus("*PU*",0)
+                self.t.SetBranchStatus("*Trigger*",0)
+                self.t.SetBranchStatus("dR*",0)
+                self.t.SetBranchStatus("dPhi*",0)
+                self.t.SetBranchStatus("Z_*",0)
+                self.t.SetBranchStatus("*PV*",0)
+                #self.t.SetBranchStatus("*triggerWord*",0)
+                self.t.SetBranchStatus("*ip3d*",0)
+                self.t.SetBranchStatus("nbtagT",0)
+                #self.t.SetBranchStatus("*_T1*",0)
+
+                '''
                 self.tN[i-1].SetBranchStatus("*Up",0)
                 self.tN[i-1].SetBranchStatus("*Down",0)
                 self.tN[i-1].SetBranchStatus("Gen*",0)
@@ -659,6 +679,9 @@ class outTuple() :
                 self.tN[i-1].SetBranchStatus("*LHE*",0)
                 self.tN[i-1].SetBranchStatus("*PU*",0)
                 self.tN[i-1].SetBranchStatus("*Trigger*",0)
+                '''
+                self.tN[i-1]  = self.t.CloneTree()
+                self.tN[i-1].SetName(isyst)
                 print '====================>',self.tN[i-1], self.tN[i-1].GetName()
 
         if doSyst : 
@@ -770,17 +793,18 @@ class outTuple() :
 
 	failJets=[]
         goodJets=[]
-        jeList=[]
         bJetList=[]
         #if syst !='' : syst="_"+syst
      
         if 'nom' in syst : syst='_nom'
           
+        #if entry.event==18093 and syst=='_jesEC2Up' : print "Jet_pt{0:s}".format(str(syst)), entry.event, entry.nJet
         for j in range(entry.nJet) :
 
             try : 
 		jpt = getattr(entry, "Jet_pt{0:s}".format(str(syst)), None)
                 #if syst=='_nom' : print jpt[j],  entry.Jet_pt[j],  syst
+                #if entry.event==18093 and syst=='_jesEC2Up' : print 'inside jets', jpt[j], syst, entry.event, "Jet_pt{0:s}".format(str(syst))
 
 		if entry.Jet_jetId[j]  < 2  : continue  #require tight jets
 		if jpt[j] > 30 and jpt[j] < 50 and entry.Jet_puId[j]  < 4  : continue #loose jetPU_iD
@@ -810,7 +834,8 @@ class outTuple() :
                 jetListFlav.append(entry.Jet_partonFlavour[jj])
             except AttributeError  : jetListFlav.append(0)
             jetListEta.append(entry.Jet_eta[jj])
-            jetListPt.append(entry.Jet_pt[jj])
+            jpt = getattr(entry, "Jet_pt{0:s}".format(str(syst)), None)
+            jetListPt.append(jpt[jj])
 
             
             if jpt[jj] > 25 : 
@@ -819,8 +844,10 @@ class outTuple() :
 		    if entry.Jet_btagDeepB[jj] > bjet_discr : bJetList.append(jj)
 		    if entry.Jet_btagDeepB[jj] > bjet_discrT : bJetListT.append(jj)
 		    if entry.Jet_btagDeepFlavB[jj] > bjet_discrFlav : bJetListFlav.append(jj)
+            if jpt[jj] > 30 : 
                 jetList.append(jj) 
 
+        #if entry.event==18093 and syst=='_jesEC2Up': print 'going out....', jetList, jetListPt, syst
         return jetList, jetListFlav, jetListEta,  jetListPt, bJetList,bJetListT,bJetListFlav
 
 
@@ -867,7 +894,7 @@ class outTuple() :
         ttP4 = FMTT.getBestP4()
         return ttP4.M(), ttP4.Mt() 
     
-    def Fill(self, entry, SVFit, cat, jt1, jt2, LepP, LepM, lepList, isMC, era, doUncertainties=False ,  met_pt=-99, met_phi=-99, systIndex=0) :
+    def Fill(self, entry, SVFit, cat, jt1, jt2, LepP, LepM, lepList, isMC, era, doUncertainties=False ,  met_pt=-99, met_phi=-99, systIndex=0) : 
     #def Fill(self, entry, SVFit, cat, jt1, jt2, LepP, LepM, lepList, isMC, era,  doUncertainties=False , sysVariations=[]) :
         ''' - jt1 and jt2 point to the selected tau candidates according to the table below.
             - if e.g., channel = 'et', the jt1 points to the electron list and jt2 points to the tau list.
@@ -1505,14 +1532,65 @@ class outTuple() :
 	    self.HTXS_Higgs_pt[0]         = entry.HTXS_Higgs_pt
         
         
-        # MET variables
+        # MET variables  at this point this is the TauES corrected MET
         if met_pt != -99 : 
 	    self.met[0]         = met_pt 
 	    self.metphi[0]      = met_phi
-        else : 
-             self.met[0]= entry.MET_pt
-             self.metphi[0]= entry.MET_phi
 
+        else : 
+	    if not doUncertainties : 
+		if str(era) != '2017' : 
+		    self.met[0]= entry.MET_pt
+		    self.metphi[0]= entry.MET_phi
+		if str(era) == '2017' : 
+		    self.met[0]= entry.METFixEE2017_pt
+		    self.metphi[0]= entry.METFixEE2017_phi
+	    if  doUncertainties : 
+
+		if str(era) != '2017' : 
+                    try : 
+			self.met[0]= entry.MET_T1_pt
+			self.metphi[0]= entry.MET_T1_phi
+                    except AttributeError : 
+			self.met[0]= entry.MET_pt_nom
+			self.metphi[0]= entry.MET_phi_nom
+
+		if str(era) == '2017' : 
+                    try : 
+			self.met[0]= entry.METFixEE2017_T1_pt
+			self.metphi[0]= entry.METFixEE2017_T1_phi
+                    except AttributeError : 
+			self.met[0]= entry.METFixEE2017_pt_nom
+			self.metphi[0]= entry.METFixEE2017_phi_nom
+
+        #metNoTauES holds the uncorrected TauES MET - if not doUncerta -> holds the default ucorrected MET, if doUncert the T1_corrected
+
+        if str(era) != '2017' : 
+	    self.metNoTauES[0]         = entry.MET_pt
+	    self.metphiNoTauES[0]         = entry.MET_phi
+
+	    if doUncertainties : 
+                try : 
+		    self.metNoTauES[0]         = entry.MET_T1_pt
+		    self.metphiNoTauES[0]         = entry.MET_T1_phi
+                except AttributeError : 
+		    self.metNoTauES[0]         = entry.MET_pt_nom
+		    self.metphiNoTauES[0]         = entry.MET_phi_nom
+
+        if str(era) == '2017' : 
+	    self.metNoTauES[0]         = entry.METFixEE2017_pt
+	    self.metphiNoTauES[0]         = entry.METFixEE2017_phi
+
+	    if doUncertainties : 
+                try :
+		    self.metNoTauES[0]         = entry.METFixEE2017_T1_pt
+		    self.metphiNoTauES[0]         = entry.METFixEE2017_T1_phi
+                except AttributeError : 
+		    self.metNoTauES[0]         = entry.METFixEE2017_pt_nom
+		    self.metphiNoTauES[0]         = entry.METFixEE2017_phi_nom
+
+
+        #print 'met', self.met[0], 'metnoTauES', self.metNoTauES[0], 'met_T1', entry.MET_T1_pt, 'doUncert ?', doUncertainties
 
         if str(era) != '2017' : 
 
@@ -1567,18 +1645,18 @@ class outTuple() :
                         v = v.replace('MET','METFixEE2017')
                     iMET= v.replace('METFixEE2017','MET')
 
-
-		    j = getattr(entry, "{0:s}".format(str(v)))
+                    try : j = getattr(entry, "{0:s}".format(str(v)))
+                    except AttributeError : j = -9.99
 		    self.list_of_arrays[i][0] = j
 
                 for i, v in enumerate(self.allsystJets) : 
                 #njets_sys, nbtag_sys
-                    #print i, v 
 		    jetList, jetListFlav, jetListEta, jetListPt,bJetList, bJetListT, bJetListFlav = self.getJetsJMEMV(entry,leplist,era,v) 
 
 	            self.list_of_arraysJetsNjets[i][0] = len(jetList)
 	            self.list_of_arraysJetsNbtag[i][0] = len(bJetList)
 		    for ifl in range(len(jetList)) :
+                        #if 'jesEC2Up' in v : print 'jets for systematics', i, v , ifl, entry.event, jetListPt
 			self.list_of_arraysJetsPt[i][ifl] = jetListPt[ifl]
 			self.list_of_arraysJetsEta[i][ifl] = jetListEta[ifl]
 			self.list_of_arraysJetsFlavour[i][ifl] = jetListFlav[ifl]
@@ -1975,13 +2053,13 @@ class outTuple() :
 	    ie = ElList[0]
 
             if len(ElList)>1 :
+
                 if entry.Electron_pt[ElList[0]] > entry.Electron_pt[ElList[1]] : 
 		    ie = ElList[0] 
 		    iee = ElList[1] 
 		else : 
 		    ie = ElList[1] 
 		    iee = ElList[0] 
-
 	    self.pt_3[0]   = entry.Electron_pt[ie]
 	    self.phi_3[0]  = entry.Electron_phi[ie]
 	    self.eta_3[0]  = entry.Electron_eta[ie]

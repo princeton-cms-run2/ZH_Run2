@@ -51,7 +51,7 @@ cutCounterGenWeight = {}
 
 doJME  = args.doSystematics.lower() == 'true' or args.doSystematics.lower() == 'yes' or args.doSystematics == '1'
 
-doJME = True
+#doJME = True
 cats = ['eeet','eemt','eett','eeem','mmet','mmmt','mmtt','mmem']
 
 for cat in cats : 
@@ -67,6 +67,7 @@ if isAZH : print 'You are running on the AZH mode !!!'
 
 inFile = TFile.Open(inFileName)
 inFile.cd()
+
 inTree = inFile.Get("Events")
 nentries = inTree.GetEntries()
 nMax = nentries
@@ -89,15 +90,6 @@ else :
     if args.year == 2017 : CJ = GF.checkJSON(filein='Cert_294927-306462_13TeV_EOY2017ReReco_Collisions17_JSON.txt')
     if args.year == 2018 : CJ = GF.checkJSON(filein='Cert_314472-325175_13TeV_17SeptEarlyReReco2018ABC_PromptEraD_Collisions18_JSON.txt')
 
-
-'''
-varSystematics=['']
-if doJME : varSystematics= ['', 'nom', 'jesTotalUp', 'jesTotalDown', 'jerUp', 'jerDown']
-if not MC : 
-    if doJME : varSystematics= ['', 'nom']
-
-if not doJME  : varSystematics=['']
-'''
 
 print 'systematics', doJME
 
@@ -243,36 +235,71 @@ for count, e in enumerate(inTree) :
 
     met_pt = float(e.MET_pt)
     met_phi = float(e.MET_phi)
+
     if era=='2017' :
 	met_pt = float(e.METFixEE2017_pt)
 	met_phi = float(e.METFixEE2017_phi)
 
     if doJME : 
-        met_pt = float(e.MET_pt_nom)
-        met_phi = float(e.MET_phi_nom)
+        if era!='2017' :
+	    try : 
+		met_pt = float(e.MET_pt_nom)
+		met_phi = float(e.MET_phi_nom)
+	    except AttributeError : 
+		met_pt = float(e.MET_T1_pt)
+		met_phi = float(e.MET_T1_phi)
         if era=='2017' :
-	    met_pt = float(e.METFixEE2017_pt_nom)
-	    met_phi = float(e.METFixEE2017_phi_nom)
+            try : 
+		met_pt = float(e.METFixEE2017_pt_nom)
+		met_phi = float(e.METFixEE2017_phi_nom)
+	    except AttributeError : 
+		met_pt = float(e.METFixEE2017_T1_pt)
+		met_phi = float(e.METFixEE2017_T1_phi)
 
     tauMass=[]
     tauPt=[]
+    eleMass=[]
+    elePt=[]
+    muMass=[]
+    muPt=[]
     metPtPhi=[]
     metPtPhi.append(float(met_pt))
     metPtPhi.append(float(met_phi))
-    #the very first time, save the tauMass and tauPt as this will be needed for the prong-systematics
-    if len(tauMass) == 0 :
-        #print 'METTTTTTTTTTTTTTTTTTTTTTTTT', met_pt, met_phi, e.event
-	for j in range(e.nTau):
-	    tauMass.append(e.Tau_mass[j])
-	    tauPt.append(e.Tau_pt[j])
-        #print tauMass, tauPt
+
+    if MC : 
+	if len(muMass) == 0 :
+	    for j in range(e.nMuon):
+		muMass.append(e.Muon_mass[j])
+		muPt.append(e.Muon_pt[j])
+
+	if len(eleMass) == 0 :
+	    for j in range(e.nElectron):
+		eleMass.append(e.Electron_mass[j])
+		elePt.append(e.Electron_pt[j])
+
+	if len(tauMass) == 0 :
+	    for j in range(e.nTau):
+		tauMass.append(e.Tau_mass[j])
+		tauPt.append(e.Tau_pt[j])
+
     for isyst, systematic in enumerate(sysT) : 
+	if MC and isyst>0 : #use the default pT/mass for Ele/Muon/Taus before doing any systematic
 
-	#print 'before ---------------------fix-----------------', e.METFixEE2017_pt, e.METFixEE2017_phi, e.event, met_pt
+	    for j in range(e.nMuon): 
+                e.Muon_pt[j] = muPt[j]
+                e.Muon_mass[j] = muMass[j]
+	    for j in range(e.nElectron): 
+                e.Electron_pt[j] = elePt[j]
+                e.Electron_mass[j] = eleMass[j]
+	    for j in range(e.nTau): 
+                e.Tau_pt[j] = tauPt[j]
+                e.Tau_mass[j] = tauMass[j]
+         
+
 	if MC :
-	    met_pt, met_phi = Weights.applyES(e, args.year, systematic, tauMass, tauPt,metPtPhi)
+	    met_pt, met_phi = Weights.applyES(e, args.year, systematic, metPtPhi)
 	    #print 'after fixxxxxxxxxxxx', e.MET_pt, 'nom', e.MET_pt_nom, 'what is fed in', metPtPhi[0], 'tauES corrected', met_pt, systematic
-
+        
 
 	for lepMode in ['ee','mm'] :
 	    if args.category != 'none' and not lepMode in args.category : continue
@@ -422,7 +449,7 @@ for count, e in enumerate(inTree) :
 		 
 		#print 'again--------------->', e.MET_pt, e.MET_phi
                 #print 'will Fill for syst', isyst, sysT[isyst]
-		outTuple.Fill(e,SVFit,cat,jt1,jt2,LepP,LepM,lepList,isMC,era,doJME, met_pt, met_phi, isyst)
+		outTuple.Fill(e,SVFit,cat,jt1,jt2,LepP,LepM,lepList,isMC,era,doJME, met_pt, met_phi,  isyst)
 
 		if maxPrint > 0 :
 		    maxPrint -= 1

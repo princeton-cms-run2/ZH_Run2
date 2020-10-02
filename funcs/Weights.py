@@ -98,7 +98,7 @@ class Weights() :
 	return rvec
         
 
-    def applyES(self,entry, year, systematic, tauMass, tauPt, metPtPhi,printOn=False) :
+    def applyES(self,entry, year, systematic,  metPtPhi,printOn=False) :
 
 
         self.LeptV.SetPtEtaPhiM(0,0,0,0)
@@ -120,25 +120,24 @@ class Weights() :
         if 'Down' in systematic : sign = -1.
 
 
-        #standard correction
-
-        fact_mu = 1.
-        fact_e = 1.
 
         #### muon_energy_scale , in three eta bins
         if 'scale_m' in systematic : 
 
-	    if 'Up' in systematic : fact_mu= 1.
-	    if 'Down' in systematic : fact_mu = 1.
 
 	    #self.weights_muES = {'eta0to1p2' : 0.4, 'eta1p2to2p1' : 0.9, 'etagt2p1' : 2.7 }
 	    for j in range(entry.nMuon):    
 
+                fact = 1.
 		self.LeptV.SetPtEtaPhiM(entry.Muon_pt[j], entry.Muon_eta[j], entry.Muon_phi[j], entry.Muon_mass[j])
-                if  'scale_m_etalt1p2' in systematic and abs(entry.Muon_eta[j]) < 1.2 : self.LeptV *= 1 + sign*self.weights_muES['eta0to1p2']*0.01  * fact_mu
-                if  'scale_m_eta1p2to2p1' in systematic and  abs(entry.Muon_eta[j]) > 1.2 and abs(entry.Muon_eta[j]) < 2.1 : self.LeptV *= 1+ sign * self.weights_muES['eta1p2to2p1']*0.01 * fact_mu
-                if  'scale_m_etagt2p1' in systematic and abs(entry.Muon_eta[j]) > 2.1 : self.LeptV *= 1+ sign * self.weights_muES['etagt2p1']*0.01 * fact_mu
 
+                if  'scale_m_etalt1p2' in systematic and abs(entry.Muon_eta[j]) < 1.2 : fact = 1 + sign*self.weights_muES['eta0to1p2']*0.01  
+                if  'scale_m_eta1p2to2p1' in systematic and  abs(entry.Muon_eta[j]) > 1.2 and abs(entry.Muon_eta[j]) < 2.1 : fact = 1+ sign * self.weights_muES['eta1p2to2p1']*0.01 
+                if  'scale_m_etagt2p1' in systematic and abs(entry.Muon_eta[j]) > 2.1 : fact = 1+ sign * self.weights_muES['etagt2p1']*0.01 
+
+
+                self.MetV += (self.LeptV - self.LeptV*fact)
+                self.LeptV *= fact
                 entry.Muon_pt[j] = self.LeptV.Pt()
                 entry.Muon_mass[j] = self.LeptV.M()
 
@@ -146,26 +145,29 @@ class Weights() :
         #### electron_energy_scale
         if 'scale_e' in systematic : 
 
-	    if 'Up' in systematic : fact_e = 1.
-	    if 'Down' in systematic : fact_e = 1.
 	    #for j in range(entry.nTau):    
                 #print 'taus in electron_e', entry.Tau_pt[j], j, entry.nTau, systematic, entry.event, self.MetV.Pt(), metpt
 
 	    #self.weights_muES = {'eta0to1p2' : 0.4, 'eta1p2to2p1' : 0.9, 'etagt2p1' : 2.7 }
 	    for j in range(entry.nElectron):    
 
+
 		self.LeptV.SetPtEtaPhiM(entry.Electron_pt[j], entry.Electron_eta[j], entry.Electron_phi[j], entry.Electron_mass[j])
 
-                if  abs(entry.Electron_eta[j]) < 1.2 : self.LeptV *= 1 + sign*self.weights_electronES['eta0to1p2']*0.01 * fact_e
-                if  abs(entry.Electron_eta[j]) > 1.2 and abs(entry.Electron_eta[j]) < 2.1 : self.LeptV *= 1+ sign * self.weights_electronES['eta1p2to2p1']*0.01 * fact_e
-                if  abs(entry.Electron_eta[j]) > 2.1 : self.LeptV *= 1+ sign * self.weights_electronES['etagt2p1']*0.01 * fact_e
+                fact=1.
 
+                if  abs(entry.Electron_eta[j]) < 1.2 : fact = 1 + sign*self.weights_electronES['eta0to1p2']*0.01 
+                if  abs(entry.Electron_eta[j]) > 1.2 and abs(entry.Electron_eta[j]) < 2.1 :    fact =   1+ sign * self.weights_electronES['eta1p2to2p1']*0.01 
+                if  abs(entry.Electron_eta[j]) > 2.1 : fact = 1+ sign * self.weights_electronES['etagt2p1']*0.01 
+
+                self.MetV += (self.LeptV - self.LeptV*fact)
+                self.LeptV *= fact
                 entry.Electron_pt[j] = self.LeptV.Pt()
                 entry.Electron_mass[j] = self.LeptV.M()
 
 
         # tauES should be applied by default, except if you plan to apply the tauES +/- systematics - make sure you don't apply the tauES twice...
-        if 'Central' in systematic or 'prong' in systematic: 
+        if 'Central' in systematic and 'scale_e' not in systematic and 'scale_m' not in systematic: 
         #if len(systematic) !=0 : 
 
 	    for j in range(entry.nTau):    
@@ -183,10 +185,6 @@ class Weights() :
 
 		if dm != 0 and dm != 1 and dm!=10 and dm!=11 : continue
 
-		if gen_match == 5 and 'prong' in systematic : #revert the taus to uncorrected pT
-		     entry.Tau_mass[j] = float(tauMass[j])
-		     entry.Tau_pt[j] = float(tauPt[j])
-
                 
 		self.LeptV.SetPtEtaPhiM(entry.Tau_pt[j], entry.Tau_eta[j], entry.Tau_phi[j], entry.Tau_mass[j])
 		tes = self.testool.getTES(pt,dm,gen_match)
@@ -195,37 +193,39 @@ class Weights() :
 		    if 'Up' in systematic : tes = self.testool.getTES(pt,dm,gen_match, unc='Up')
 		    if 'Down' in systematic : tes = self.testool.getTES(pt,dm,gen_match, unc='Down')
 
+
+                    self.MetV +=( self.LeptV - self.LeptV*tes)
                     self.LeptV *= tes          
 
-                    met_uncor= self.MetV.Pt()
-		    self.MetV += self.transverseVEC(self.MetV- self.LeptV)
-                    #print 'taus with gen_match=5', entry.Tau_pt[j], self.LeptV.Pt(),  'tesUp/Down',tes, j, entry.nTau, systematic, entry.event, 'corrected MetV.Pt()', self.MetV.Pt(), 'MEtV.Pt() before this correction', met_uncor, 'fed in', metpt, 'METPx diff', self.MetV.Px(), self.LeptV.Px()
+		    #self.MetV += self.transverseVEC(self.LeptV- self.LeptV*tes)
+                    #print '-----------------------------', tes , met_uncor, metcopy.Pt(), self.MetV.Pt() 
 
+                    #print 'taus with gen_match=5', entry.Tau_pt[j], self.LeptV.Pt(),  'tesUp/Down',tes, j, entry.nTau, systematic, entry.event, 'corrected MetV.Pt()', self.MetV.Pt(), 'MEtV.Pt() before this correction', met_uncor, 'fed in', metpt, 'METPx diff', self.MetV.Px(), self.LeptV.Px()
 
 		    if dm == 0 :
 			entry.Tau_mass[j] = 0.13960
+
 
 		if 'prong' not in systematic :
 		    if gen_match == 2 or gen_match == 4 :
 
 
+                        self.MetV +=( self.LeptV - self.LeptV *(1 + self.weights_muTotauES[dmm]*0.01))
 			self.LeptV *=  (1 + self.weights_muTotauES[dmm]*0.01)
-		        self.MetV += self.transverseVEC(self.MetV- self.LeptV)
-
-
+                    
 			# leptons faking taus // electron->tau
 		    if gen_match == 1 or gen_match == 3 :
 		       
 			fes = self.festool.getFES(eta,dm,gen_match)
-			self.LeptV *=  fes
-		        self.MetV += self.transverseVEC(self.MetV- self.LeptV)
+                        self.MetV +=( self.LeptV - self.LeptV*fes)
+                        self.LeptV *= fes          
 
 		entry.Tau_mass[j] = self.LeptV.M()
 		entry.Tau_pt[j] = self.LeptV.Pt()
 
 		#print 'returnin LeptV ---------------->pt ', self.LeptV.Pt(), 'phi ', self.LeptV.Phi(), 'uncorrected values', pt , phi
 	    #print 'returning---------------->', entry.METFixEE2017_pt, self.MetV.Pt(), self.MetV.Phi(), self.LeptV.M(), entry.Tau_mass[j], self.LeptV.Pt(), 
-	    #print 'returning---------------->pt ', self.MetV.Pt(), 'phi ', self.MetV.Phi(), 'uncorrected values', entry.MET_pt_nom, entry.MET_phi_nom, systematic
+	    #print 'returning---------------->pt ', self.MetV.Pt(), 'phi ', self.MetV.Phi(), 'uncorrected values', entry.MET_pt, entry.MET_phi, entry.MET_T1_pt, entry.MET_T1_phi, systematic
 
 	return self.MetV.Pt(), self.MetV.Phi()
 
