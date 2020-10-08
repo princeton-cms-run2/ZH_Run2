@@ -32,24 +32,6 @@ def numberToCat(number) :
     cat = { 1:'eeet', 2:'eemt', 3:'eett', 4:'eeem', 5:'mmet', 6:'mmmt', 7:'mmtt', 8:'mmem', 9:'et', 10:'mt', 11:'tt' }
     return cat[number]
 
-
-def systToNumber(syst) :
-    varSyst= { 'none':0, 'nom':1, 'jesTotalUp':2, 'jesTotalDown':3, 'jerUp':4, 'jerDown':5, 'UnclUp':6, 'UnclDown':7}
-    return varSyst[str(syst)]
-
-def NumberToSyst(num) :
-    varSyst= { 0:'none', 1:'nom', 2:'jesTotalUp', 3:'jesTotalDown', 4:'jerUp', 5:'jerDown', 6:'UnclUp', 7:'UnclDown'}
-    return varSyst[num]
-
-def systForMET(syst) :
-    varSyst= {'none':'',  'nom':'nom', 'jesTotalUp':'JESUp', 'jesTotalDown':'JESDown', 'jerUp':'JESUp', 'jerDown':'JESDown', 'UnclUp':'UnclUp', 'UnclDown':'UnclDown'}
-
-    return varSyst[str(syst)]
-
-
-
-
-
 def search(values, searchFor):
     for k in values:
         for v in values[k]:
@@ -277,7 +259,56 @@ dataDriven = True
 Pblumi = 1000.
 tauID_w = 1.
 
-'''
+# Tau Decay types
+kUndefinedDecayType, kTauToHadDecay,  kTauToElecDecay, kTauToMuDecay = 0, 1, 2, 3   
+
+gInterpreter.ProcessLine(".include .")
+for baseName in ['./SVFit/MeasuredTauLepton','./SVFit/svFitAuxFunctions','./SVFit/FastMTT', './HTT-utilities/RecoilCorrections/src/MEtSys', './HTT-utilities/RecoilCorrections/src/RecoilCorrector'] : 
+    if os.path.isfile("{0:s}_cc.so".format(baseName)) :
+	gInterpreter.ProcessLine(".L {0:s}_cc.so".format(baseName))
+    else :
+	gInterpreter.ProcessLine(".L {0:s}.cc++".format(baseName))   
+	# .L is not just for .so files, also .cc
+
+print 'compiled it====================================================================='
+
+weights= {''}
+campaign = {2016:'2016Legacy', 2017:'2017ReReco', 2018:'2018ReReco'}
+
+
+scaleSyst = ["Central"]
+
+scale = ['scale_e', 'scale_m_etalt1p2', 'scale_m_eta1p2to2p1', 'scale_m_etagt2p1',
+'scale_t_1prong', 'scale_t_1prong1pizero', 'scale_t_3prong', 'scale_t_3prong1pizero']
+
+for i, sys in enumerate(scale) :
+    scaleSyst.append(sys+'Up')
+    scaleSyst.append(sys+'Down')
+
+
+#listsyst=['njets', 'nbtag', 'jpt', 'jeta', 'jflavour','MET_T1_pt', 'MET_T1_phi', 'MET_pt', 'MET_phi', 'MET_T1Smear_pt', 'MET_T1Smear_phi']
+
+jes=['jesAbsolute', 'jesAbsolute{0:s}'.format(str(era)), 'jesBBEC1', 'jesBBEC1{0:s}'.format(str(era)), 'jesEC2', 'jesEC2{0:s}'.format(str(era)), 'jesFlavorQCD', 'jesHF', 'jesHF{0:s}'.format(str(era)), 'jesRelativeBal', 'jesRelativeSample{0:s}'.format(str(era)), 'jesHEMIssue', 'jesTotal', 'jer', 'PreFire']
+
+jesSyst=[]
+for i, sys in enumerate(jes) :
+    jesSyst.append(sys+'Up')
+    jesSyst.append(sys+'Down')
+
+#jesSyst hold the jes systematic  - we need njets, nbtag, nflavor, jpt
+
+sysall = scaleSyst+jesSyst
+
+print 'systematics', sysall
+
+if str(args.inSystematics) not in sysall : 
+    print 'the input ', args.inSystematics, ' systematic does not exist, choose on from:', sysall
+    exit() 
+
+systematic=str(args.inSystematics)
+#systematic='jerUp'
+
+
 gInterpreter.ProcessLine('.L BTagCalibrationStandalone.cpp+') 
 calib = ROOT.BTagCalibration('csvv1', 'DeepCSV_{0:s}.csv'.format(era))
 # making a std::vector<std::string>> in python is a bit awkward, 
@@ -326,48 +357,14 @@ reader_light.load(
     "iterativefit"      # measurement type
 )
 
-'''
-# Tau Decay types
-kUndefinedDecayType, kTauToHadDecay,  kTauToElecDecay, kTauToMuDecay = 0, 1, 2, 3   
+tt_tau_vse = 4
+tt_tau_vsmu = 1
 
-gInterpreter.ProcessLine(".include .")
-for baseName in ['./SVFit/MeasuredTauLepton','./SVFit/svFitAuxFunctions','./SVFit/FastMTT', './HTT-utilities/RecoilCorrections/src/MEtSys', './HTT-utilities/RecoilCorrections/src/RecoilCorrector'] : 
-    if os.path.isfile("{0:s}_cc.so".format(baseName)) :
-	gInterpreter.ProcessLine(".L {0:s}_cc.so".format(baseName))
-    else :
-	gInterpreter.ProcessLine(".L {0:s}.cc++".format(baseName))   
-	# .L is not just for .so files, also .cc
+et_tau_vse = 32
+et_tau_vsmu = 1
 
-print 'compiled it====================================================================='
-
-weights= {''}
-campaign = {2016:'2016Legacy', 2017:'2017ReReco', 2018:'2018ReReco'}
-
-
-
-
-sysT = ["Central"]
-
-sysall = ['scale_e', 'scale_m_etalt1p2', 'scale_m_eta1p2to2p1', 'scale_m_etagt2p1',
-'scale_t_1prong', 'scale_t_1prong1pizero', 'scale_t_3prong', 'scale_t_3prong1pizero']
-
-upS=sysall
-downS=sysall
-
-for i, sys in enumerate(sysall) :
-    sysT.append(sys+'Up')
-    sysT.append(sys+'Down')
-
-print 'systematics', sysT
-
-
-if str(args.inSystematics) not in sysT : 
-    print 'the input ', args.inSystematics, ' systematic does not exist, choose on from:', sysT
-    exit() 
-
-
-systematic=str(args.inSystematics)
-
+mt_tau_vse = 4
+mt_tau_vsmu = 8
 
 
 
@@ -575,7 +572,15 @@ for line in open(args.inFileName,'r').readlines() :
     if '*' in vals[2] : 
         value1, value2 = map(float, vals[2].split("*"))
         xsec[nickName] = float(value1*value2)
+    elif '+' in vals[2] : 
+        value1, value2 = map(float, vals[2].split("+"))
+        xsec[nickName] = float(value1+value2)
     else : xsec[nickName] = float(str(vals[2]))
+
+
+    if nickName == 'ZHToTauTau' : 
+        xsec[nickName] = float(0.0627)
+
     #totalWeight[nickName] = float(vals[4])
     if islocal :    filein = '../MC/condor/{0:s}//{1:s}_{2:s}/{1:s}_{2:s}.root'.format(args.analysis,vals[0],era)
     else : filein = '{1:s}_{2:s}.root'.format(args.analysis,vals[0],era)
@@ -583,6 +588,7 @@ for line in open(args.inFileName,'r').readlines() :
 	fIn = TFile.Open(filein,"READ")
 	#totalWeight[nickName] = float(fIn.Get("hWeights").GetSumOfWeights())
 	totalWeight[nickName] = float(vals[4])
+        if nickName == 'ZHToTauTau' : totalWeight[nickName] *= float(3*0.033658)
         print '----------------======================================================', totalWeight[nickName]
 	sampleWeight[nickName]= Pblumi*weights['lumi']*xsec[nickName]/totalWeight[nickName]
     else : 
@@ -651,6 +657,9 @@ festool = TauESTool(campaign[args.year],'DeepTau2017v2p1VSjet')
 
 #antiEleSFToolVVL = TauIDSFTool(campaign[args.year],'DeepTau2017v2p1VSe','VVLoose')
 #antiMuSFToolVL  = TauIDSFTool(campaign[args.year],'DeepTau2017v2p1VSmu','VLoose')
+antiEleSFToolVL = TauIDSFTool(campaign[args.year],'DeepTau2017v2p1VSe','VLoose')
+antiMuSFToolVL  = TauIDSFTool(campaign[args.year],'DeepTau2017v2p1VSmu','VLoose')
+
 antiEleSFToolT = TauIDSFTool(campaign[args.year],'DeepTau2017v2p1VSe','Tight')
 antiMuSFToolT  = TauIDSFTool(campaign[args.year],'DeepTau2017v2p1VSmu','Tight')
 
@@ -984,23 +993,15 @@ for ig, group in enumerate(groups) :
             inFile = TFile.Open(inFileName)
             inFile.cd()
 
-	    #if str(args.inSystematics) != 'none': 
-	    if doJME:
-		isys = systToNumber(str(args.inSystematics))
-		#isys = 1
-		if group=='data' : isys=1 #in case we run on data, consider the _nom systematic
-		if 'Uncl' in str(args.inSystematics) : isys = 1 #UnclUp and UnclDown exist only on MET, for everything else use the _nom brach which is after the JEC corrections
-		sysmet = systForMET(str(args.inSystematics))
 
             tree_ = "Events"
 
-            #inTree = inFile.Get("{0:s}".format(str(tree_)))
-            if systematic in sysT and systematic != 'Central' : tree_ = systematic
+            if systematic in scaleSyst and systematic != 'Central' : tree_ = systematic
 	    inTree = inFile.Get(tree_)
 
 	    #inTree = getattr(inFile, tree_, None)
             nentries = inTree.GetEntries()
-            print 'will work with', tree_, ' and ', nentries
+            print 'will work with', tree_, ' and ', nentries, inTree.GetName(), systematic
 
         except AttributeError :
             print("  Failure on file {0:s}".format(inFileName))
@@ -1013,7 +1014,6 @@ for ig, group in enumerate(groups) :
         sWeight = sampleWeight[nickName]
 	print '========================================> start looping on events now',inFileName, inick, nickName, sWeight
 
-	isys=0
 	mu_iso = 0.15
 	el_iso = 0.15
 	mu_eta = 2.4
@@ -1048,13 +1048,25 @@ for ig, group in enumerate(groups) :
             try : 
                 met = e.met
                 metphi = e.metphi
+
+		njets = getattr(e, 'njets_nom', None)
+		jpt = getattr(e, 'jpt_nom', None)
+		jeta = getattr(e, 'jeta_nom', None)
+		jflavour = getattr(e, 'jflavour_nom', None)
+		nbtag = getattr(e, 'nbtag_nom', None)
+
             except AttributeError :
                 met = e.met
                 metphi = e.metphi
-            
-            #print 'ok now', doJME, isys, args.inSystematics, 'njets-->', njets, e.njets[0], e.njets[1], e.njets[2], 'btag-->', nbtag, e.nbtag[0], e.nbtag[1], e.nbtag[2], 'met-->', met, metphi, 'and met_nom', e.metpt_nom, e.metphi_nom, 'for syst', args.inSystematics, 'jetpT--->', jpt_1, e.jpt_1[0], e.jpt_1[1], e.jpt_1[2], group, i, nickName
+                njets = e.njets
+                jpt = e.jpt
+                jeta = e.jeta
+                jflavour = e.jflavour
+                nbtag = e.nbtag
 
-            #print e.isTrig_1, e.q_1*e.q_2, inTreeEvents.isTrig_1
+            #print 'compare', met, e.metNoTauES, njets, e.njets, 'jpt', jpt[0], e.jpt[0]
+
+
             #if e.isTrig_1 == 0 and e.isDoubleTrig==0 : continue  
             if e.isTrig_1 == 0 : continue  
 	    if e.q_1*e.q_2 > 0 : continue
@@ -1077,9 +1089,13 @@ for ig, group in enumerate(groups) :
             if group != 'data' :
 		# the pu weight is the e.weight in the ntuples
 		#print 'weights', group, nickName, e.Generator_weight, e.weight, i
-		weight = e.weightPUtrue * e.Generator_weight *sWeight 
-		#ww = e.weightPUtrue * e.Generator_weight *sWeight 
-		weightFM = e.weightPUtrue * e.Generator_weight *sWeight * e.L1PreFiringWeight_Nom
+                weight_pref = e.L1PreFiringWeight_Nom
+                if 'prefireup' in systematic.lower() :  weight_pref = e.L1PreFiringWeight_Up
+                if 'prefiredown' in systematic.lower() : weight_pref = e.L1PreFiringWeight_Down
+
+		weight = e.weightPUtrue * e.Generator_weight *sWeight * weight_pref
+		weightFM = e.weightPUtrue * e.Generator_weight *sWeight * weight_pref
+
             weightCF = weight
             if i == 1 : print 'sample info ', e.weightPUtrue, e.Generator_weight, sWeight, 'for ', group, nickName, inTree.GetEntries()
 
@@ -1134,12 +1150,31 @@ for ig, group in enumerate(groups) :
                 if abs(e.eta_3) > el_eta : tight1 = False
 
             
-	    if cat[2:] == 'tt' :
-                    tight1 = e.idDeepTau2017v2p1VSjet_3 >  WPSR-1 and e.idDeepTau2017v2p1VSmu_3 >= 0 and  e.idDeepTau2017v2p1VSe_3 >= 0
-                    tight2 = e.idDeepTau2017v2p1VSjet_4 >  WPSR-1 and e.idDeepTau2017v2p1VSmu_4 >= 0 and  e.idDeepTau2017v2p1VSe_4 >= 0
+            ###############################################
+            #               VSjet    VSmu     VSel
+            # et           M (16)   VL (1)   T (32)
+            # mt           M (16)   T (8)    VL (4)
+            # tt           M (16)   VL (1)   VL (4)
+            #
+            # Tau_idDeepTau2017v2p1VSe	UChar_t	byDeepTau2017v2p1VSe  (deepTau2017v2p1): bitmask 1 = VVVLoose, 2 = VVLoose, 4 = VLoose, 8 = Loose, 16 = Medium, 32 = Tight, 64 = VTight, 128 = VVTight
+            #Tau_idDeepTau2017v2p1VSjet	UChar_t	byDeepTau2017v2p1VSjet (deepTau2017v2p1): bitmask 1 = VVVLoose, 2 = VVLoose, 4 = VLoose, 8 = Loose, 16 = Medium, 32 = Tight, 64 = VTight, 128 = VVTight
+            #Tau_idDeepTau2017v2p1VSmu	UChar_t	byDeepTau2017v2p1VSmu  (deepTau2017v2p1): bitmask 1 = VLoose, 2 = Loose, 4 = Medium, 8 = Tight
 
-	    if cat[2:] == 'mt' : tight2 = e.idDeepTau2017v2p1VSjet_4 >  WPSR-1 and e.idDeepTau2017v2p1VSmu_4 >= 0 and  e.idDeepTau2017v2p1VSe_4 >= 0
-	    if cat[2:] == 'et' : tight2  = e.idDeepTau2017v2p1VSjet_4 > WPSR-1 and e.idDeepTau2017v2p1VSmu_4 >= 0 and  e.idDeepTau2017v2p1VSe_4 >= 0
+	    if cat[2:] == 'tt' :
+                    tight1 = e.idDeepTau2017v2p1VSjet_3 >=  WPSR and e.idDeepTau2017v2p1VSmu_3 >= tt_tau_vsmu and  e.idDeepTau2017v2p1VSe_3 >= tt_tau_vse
+                    tight2 = e.idDeepTau2017v2p1VSjet_4 >=  WPSR and e.idDeepTau2017v2p1VSmu_4 >= tt_tau_vsmu and  e.idDeepTau2017v2p1VSe_4 >= tt_tau_vse 
+
+	    if cat[2:] == 'mt' : tight2 = e.idDeepTau2017v2p1VSjet_4 >=  WPSR and e.idDeepTau2017v2p1VSmu_4 >= mt_tau_vsmu and  e.idDeepTau2017v2p1VSe_4 >= mt_tau_vse
+	    if cat[2:] == 'et' : tight2  = e.idDeepTau2017v2p1VSjet_4 >= WPSR and e.idDeepTau2017v2p1VSmu_4 >= et_tau_vsmu and  e.idDeepTau2017v2p1VSe_4 >= et_tau_vse
+
+            '''
+	    if cat[2:] == 'tt' :
+                    tight1 = e.idDeepTau2017v2p1VSjet_3 >  WPSR-1 and e.idDeepTau2017v2p1VSmu_3 > 0 and  e.idDeepTau2017v2p1VSe_3 > 3
+                    tight2 = e.idDeepTau2017v2p1VSjet_4 >  WPSR-1 and e.idDeepTau2017v2p1VSmu_4 > 0 and  e.idDeepTau2017v2p1VSe_4 > 3 
+                    #print  e.idDeepTau2017v2p1VSjet_3 & 16,  e.idDeepTau2017v2p1VSjet_3 & 8 , e.idDeepTau2017v2p1VSjet_3 & 64
+	    if cat[2:] == 'mt' : tight2 = e.idDeepTau2017v2p1VSjet_4 >  WPSR-1 and e.idDeepTau2017v2p1VSmu_4 > 7 and  e.idDeepTau2017v2p1VSe_4 > 3
+	    if cat[2:] == 'et' : tight2  = e.idDeepTau2017v2p1VSjet_4 > WPSR-1 and e.idDeepTau2017v2p1VSmu_4 > 0 and  e.idDeepTau2017v2p1VSe_4 > 31
+            '''
 
 
             
@@ -1168,10 +1203,10 @@ for ig, group in enumerate(groups) :
             '''
             ######### nbtag
 	    #if e.mll > 100 or e.mll<80: continue
-	    try :
-		if e.nbtag[0] > 0 : continue
-	    except TypeError :
-		if e.nbtag > 0 : continue
+	    #try :
+	    if nbtag > 0 : continue
+	    #except TypeError :
+	    #	if e.nbtag > 0 : continue
 
             iCut +=1
             WCounter[iCut-1][icat-1][inick] += weightCF
@@ -1186,10 +1221,17 @@ for ig, group in enumerate(groups) :
                 if DD[cat].checkEvent(e,cat) : continue 
 
             btag=1
+            if systematic in jesSyst and 'prefire' not in systematic.lower(): 
+		met = getattr(e, 'MET_T1_pt_{0:s}'.format(systematic), None)
+		metphi = getattr(e, 'MET_T1_phi_{0:s}'.format(systematic), None)
+		njets = getattr(e, 'njets_{0:s}'.format(systematic), None)
+		jpt = getattr(e, 'jpt_{0:s}'.format(systematic), None)
+		jeta = getattr(e, 'jeta_{0:s}'.format(systematic), None)
+		jflavour = getattr(e, 'jflavour_{0:s}'.format(systematic), None)
+		nbtag = getattr(e, 'nbtag_{0:s}'.format(systematic), None)
             ##### btag
-            '''
             if group != 'data' :
-		nj=e.njets
+		nj= njets
 		if nj > 0 :
 		    #for ib in range(0, int(nj)) :
                     #    print nj, ib, e.jeta[ib], e.jpt[ib], i, cat
@@ -1197,16 +1239,15 @@ for ig, group in enumerate(groups) :
 		    for ib in range(0, int(nj)) :
                         try : 
 			    flv = 0
-			    if abs(e.jflavour[ib]) == 5 : 
-				btag_sf *= reader_b.eval_auto_bounds( 'central',  0,     abs(e.jeta[ib]), e.jpt[ib])
-			    if abs(e.jflavour[ib]) == 4 : 
-				btag_sf *= reader_c.eval_auto_bounds( 'central',  1,     abs(e.jeta[ib]), e.jpt[ib])
-			    if abs(e.jflavour[ib]) < 4 or abs(e.jflavour[ib]) == 21 :
-				btag_sf *= reader_light.eval_auto_bounds( 'central',  2,     abs(e.jeta[ib]), e.jpt[ib])
+			    if abs(jflavour[ib]) == 5 : 
+				btag_sf *= reader_b.eval_auto_bounds( 'central',  0,     abs(jeta[ib]), jpt[ib])
+			    if abs(jflavour[ib]) == 4 : 
+				btag_sf *= reader_c.eval_auto_bounds( 'central',  1,     abs(jeta[ib]), jpt[ib])
+			    if abs(jflavour[ib]) < 4 or abs(jflavour[ib]) == 21 :
+				btag_sf *= reader_light.eval_auto_bounds( 'central',  2,     abs(jeta[ib]), jpt[ib])
                         except IndexError : btag_sf = 1.
 		weight *= btag_sf
 		weightFM *= btag_sf
-            '''
             iCut +=1
             WCounter[iCut-1][icat-1][inick] += weightCF
             hCutFlowN[cat][nickName].SetBinContent(iCut-1, hCutFlowN[cat][nickName].GetBinContent(iCut-1)+weight)
@@ -1486,18 +1527,25 @@ for ig, group in enumerate(groups) :
             if group != 'data' and (cat[2:] == 'et' or cat[2:]  == 'mt' or cat[2:]  == 'tt') :
 
                 # leptons faking taus // muon->tau
-		if e.gen_match_4 == 1 or e.gen_match_4 == 3 :  weightTID *= antiEleSFToolT.getSFvsEta(e.eta_4,e.gen_match_4)
-		if e.gen_match_4 == 2 or e.gen_match_4 == 4 :  weightTID *= antiMuSFToolT.getSFvsEta(e.eta_4,e.gen_match_4)
+                if  cat[2:] == 'et' :
+
+		    if e.gen_match_4 == 1 or e.gen_match_4 == 3 :  weightTID *= antiEleSFToolT.getSFvsEta(e.eta_4,e.gen_match_4)
+		    if e.gen_match_4 == 2 or e.gen_match_4 == 4 :  weightTID *= antiMuSFToolVL.getSFvsEta(e.eta_4,e.gen_match_4)
+
+                if  cat[2:] == 'mt' :
+
+		    if e.gen_match_4 == 1 or e.gen_match_4 == 3 :  weightTID *= antiEleSFToolVL.getSFvsEta(e.eta_4,e.gen_match_4)
+		    if e.gen_match_4 == 2 or e.gen_match_4 == 4 :  weightTID *= antiMuSFToolT.getSFvsEta(e.eta_4,e.gen_match_4)
 
 		
                 if  cat[2:] == 'tt' :
 		    #muon faking _3 tau
 
-		    if e.gen_match_3 == 2 or e.gen_match_3 == 4 : weightTID *= antiMuSFToolT.getSFvsEta(e.eta_3,e.gen_match_3)
-		    if e.gen_match_4 == 2 or e.gen_match_4 == 4 : weightTID *= antiMuSFToolT.getSFvsEta(e.eta_4,e.gen_match_4)
+		    if e.gen_match_3 == 2 or e.gen_match_3 == 4 : weightTID *= antiMuSFToolVL.getSFvsEta(e.eta_3,e.gen_match_3)
+		    if e.gen_match_4 == 2 or e.gen_match_4 == 4 : weightTID *= antiMuSFToolVL.getSFvsEta(e.eta_4,e.gen_match_4)
 
-		    if e.gen_match_3 == 1 or e.gen_match_3 == 3 : weightTID *= antiEleSFToolT.getSFvsEta(e.eta_3,e.gen_match_3)
-		    if e.gen_match_4 == 1 or e.gen_match_4 == 3 : weightTID *= antiEleSFToolT.getSFvsEta(e.eta_4,e.gen_match_4)
+		    if e.gen_match_3 == 1 or e.gen_match_3 == 3 : weightTID *= antiEleSFToolVL.getSFvsEta(e.eta_3,e.gen_match_3)
+		    if e.gen_match_4 == 1 or e.gen_match_4 == 3 : weightTID *= antiEleSFToolVL.getSFvsEta(e.eta_4,e.gen_match_4)
 
 		if cat[2:] == 'tt' :
                     if e.gen_match_3 == 5 : 
@@ -1546,28 +1594,28 @@ for ig, group in enumerate(groups) :
 	    ewkweight = 1.
 	    ewkweightUp = 1.
 	    ewkweightDown = 1.
+            
             aweight, ratio_nlo_up, ratio_nlo_down = 1. ,1., 1.
 
-            '''
 	    if  nickName == 'ZHToTauTau' :  
                 ewkweight = FF.getEWKWeight(ZPt, "central")
                 ewkweightUp = FF.getEWKWeight(ZPt, "up")
                 ewkweightDown = FF.getEWKWeight(ZPt, "down")
 
 
-                aweight = (26.66 * ewkweight +0.31+0.11)
+                aweight = 0.001*3*(26.66 * ewkweight +0.31+0.11)
                 ratio_nlo_up = (26.66 * ewkweightUp +0.31+0.11)/(26.66 * ewkweight +0.31+0.11)
                 ratio_nlo_down = (26.66 * ewkweightDown +0.31+0.11)/(26.66 * ewkweight +0.31+0.11)
 
                 #print 'for signal---------------------->', nickName, ewkweight, ewkweightUp, ewkweightDown , aweight, ratio_nlo_up, ratio_nlo_down
                 if 'nloewkup' not in systematic.lower() and 'nloewkdown' not in  systematic.lower(): 
                     #print 'for signal---------------------->', nickName, ewkweight, ewkweightUp, ewkweightDown , 'aweight', aweight, 'weight nom',  weight,  'weightX0.7612', weight*0.7612, 'weight Xaweight', weight*aweight
-                    weight *= aweight * 0.003
+                    weight *= aweight 
                 if 'nloewkup' in systematic.lower() : 
                     weight *=aweight * ratio_nlo_up
                 if 'nloewkdown' in systematic.lower() : 
                     weight *=aweight * ratio_nlo_down
-            '''
+
 
 	    for plotVar in plotSettings:
 		#print plotVar
@@ -1579,9 +1627,6 @@ for ig, group in enumerate(groups) :
                 #    #print 'for metvs', pl, e.metpt_nom - e.met
                 #    val = e.metpt_nom - e.met
                 #if plotVar =='metvs' and group=='data': val = 0.
-
-                #if plotVar=='njets' or 'nbtag' in plotVar or 'jpt_' in plotVar or 'jeta_' in plotVar or 'bpt_' in plotVar or 'beta_' in plotVar or 'jphi' in plotVar or 'beta_' in plotVar or 'jphi_' in plotVar:  
-                #    val=val[isys]
 
 		if val is not None: 
                     try: 
