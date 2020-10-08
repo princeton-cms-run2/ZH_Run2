@@ -12,12 +12,26 @@ import sys
 
 __author__ = "Alexis Kalogeropoulos"
 
+basedir=os.getenv("CMSSW_BASE")
+print  'THIS IS THE BASEDIR OF CMSSW', basedir
 
-#sys.path.append('../TauPOG')
-sys.path.append('./TauPOG')
+#sys.path.append('./TauPOG')
+sys.path.append(str(basedir)+'/src/TauPOG/')
+#sys.path.append('./TauPOG')
+#sys.path.append('TauPOG')
+
+
 from TauPOG.TauIDSFs.TauIDSFTool import TauIDSFTool
 from TauPOG.TauIDSFs.TauIDSFTool import TauESTool
 from TauPOG.TauIDSFs.TauIDSFTool import TauFESTool
+
+'''
+except ImportError : 
+    sys.path.append('../TauPOG')
+    from TauPOG.TauIDSFs.TauIDSFTool import TauIDSFTool
+    from TauPOG.TauIDSFs.TauIDSFTool import TauESTool
+    from TauPOG.TauIDSFs.TauIDSFTool import TauFESTool
+'''
 
 class Weights() :
     def __init__(self,year):

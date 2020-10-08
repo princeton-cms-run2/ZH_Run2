@@ -13,7 +13,7 @@ electronMass = 0.0005
 muonMass  = 0.105
 class outTuple() :
     
-    def __init__(self,fileName, era, doSyst=False,shift=[]):
+    def __init__(self,fileName, era, doSyst=False,shift=[], isMC=True):
         from array import array
         from ROOT import TFile, TTree
 
@@ -33,6 +33,7 @@ class outTuple() :
 
         #shift are the ES basd systematics
 
+
 	varss=['Up','Down']
         self.n = array('f', [ 0 ])
 
@@ -47,6 +48,12 @@ class outTuple() :
         self.list_of_arraysJetsNjets = []           
         self.list_of_arraysJetsFlavour = []           
 	self.tauMass = 1.7768 
+
+        if not isMC :
+        
+	    self.listsyst=['njets', 'nbtag', 'jpt', 'jeta', 'jflavour', 'MET_pt', 'MET_phi']
+	    self.jessyst=['_nom']
+	    varss=[]
 
         if doSyst : 
 
@@ -291,6 +298,8 @@ class outTuple() :
         self.metphi      = array('f',[0])
         self.metNoTauES      = array('f',[0])
         self.metphiNoTauES      = array('f',[0])
+        self.metNoCor         = array('f',[0])
+        self.metphiNoCor      = array('f',[0])
         #self.puppimet    = array('f',[0])
         #self.puppimetphi = array('f',[0])
         self.metcov00    = array('f',[0])
@@ -575,6 +584,8 @@ class outTuple() :
         # MET variables
         self.t.Branch('met', self.met, 'met/F')
         self.t.Branch('metphi', self.metphi, 'metphi/F')
+        self.t.Branch('metNoCor', self.metNoCor, 'metNoCor/F')
+        self.t.Branch('metphiNoCor', self.metphiNoCor, 'metphiNoCor/F')
         self.t.Branch('metNoTauES', self.metNoTauES, 'metNoTauES/F')
         self.t.Branch('metphiNoTauES', self.metphiNoTauES, 'metphiNoTauES/F')
         #self.t.Branch('puppimet', self.puppimet, 'puppimet/F')
@@ -654,33 +665,28 @@ class outTuple() :
                 self.tN.append(isyst)
                 self.t.SetBranchStatus("*Up",0)
                 self.t.SetBranchStatus("*Down",0)
-                self.t.SetBranchStatus("Gen*",0)
+                self.t.SetBranchStatus("GenPart*",0)
                 self.t.SetBranchStatus("*_tr*",0)
-                self.t.SetBranchStatus("*L1*",0)
                 self.t.SetBranchStatus("*LHE*",0)
-                self.t.SetBranchStatus("*PU*",0)
-                self.t.SetBranchStatus("*Trigger*",0)
                 self.t.SetBranchStatus("dR*",0)
                 self.t.SetBranchStatus("dPhi*",0)
                 self.t.SetBranchStatus("Z_*",0)
-                self.t.SetBranchStatus("*PV*",0)
-                #self.t.SetBranchStatus("*triggerWord*",0)
                 self.t.SetBranchStatus("*ip3d*",0)
                 self.t.SetBranchStatus("nbtagT",0)
-                #self.t.SetBranchStatus("*_T1*",0)
 
-                '''
-                self.tN[i-1].SetBranchStatus("*Up",0)
-                self.tN[i-1].SetBranchStatus("*Down",0)
-                self.tN[i-1].SetBranchStatus("Gen*",0)
-                self.tN[i-1].SetBranchStatus("*_tr*",0)
-                #self.tN[i-1].SetBranchStatus("*HTXS*",0)
-                self.tN[i-1].SetBranchStatus("*L1*",0)
-                self.tN[i-1].SetBranchStatus("*LHE*",0)
-                self.tN[i-1].SetBranchStatus("*PU*",0)
-                self.tN[i-1].SetBranchStatus("*Trigger*",0)
-                '''
                 self.tN[i-1]  = self.t.CloneTree()
+                self.t.SetBranchStatus("*Up",1)
+                self.t.SetBranchStatus("*Down",1)
+                self.t.SetBranchStatus("GenPart*",1)
+                self.t.SetBranchStatus("*_tr*",1)
+                self.t.SetBranchStatus("*LHE*",1)
+                self.t.SetBranchStatus("dR*",1)
+                self.t.SetBranchStatus("dPhi*",1)
+                self.t.SetBranchStatus("Z_*",1)
+                self.t.SetBranchStatus("*ip3d*",1)
+                self.t.SetBranchStatus("nbtagT",1)
+
+
                 self.tN[i-1].SetName(isyst)
                 print '====================>',self.tN[i-1], self.tN[i-1].GetName()
 
@@ -904,21 +910,23 @@ class outTuple() :
 
         
         if SystIndex >0 : doUncertainties=False
-        is_trig_1, is_trig_2, is_Dtrig_1 = 0., 0., 0.
-        TrigListLep = []
-        TrigListTau = []
-        hltListLep  = []
-        hltListLepSubL  = []
 
         #channel_ll = 'mm' or 'ee'
         channel_ll = cat[:-2]
 	channel = cat[-2:]
 
         if SystIndex ==0 : 
+
+	    is_trig_1, is_trig_2, is_Dtrig_1 = 0., 0., 0.
+	    TrigListLep = []
+	    TrigListTau = []
+	    hltListLep  = []
+	    hltListLepSubL  = []
+
 	    TrigListLep, hltListLep, hltListLepSubL  = GF.findSingleLeptTrigger(lepList, entry, channel_ll, era)
 
 	    TrigListLep = list(dict.fromkeys(TrigListLep))
-	    #if len(hltListLep) > 0 or len(hltListLepSubL)>0 :     print GF.printEvent(entry)
+	    #if len(hltListLep) > 0 or len(hltListLepSubL)>0 :     print GF.printEvent(entry), SystIndex
 
 	    #TrigListLepD, hltListLepD  = GF.findDoubleLeptTrigger(lepList, entry, channel_ll, era)
 
@@ -1533,6 +1541,14 @@ class outTuple() :
         
         
         # MET variables  at this point this is the TauES corrected MET
+
+	if str(era) != '2017' : 
+	    self.metNoCor[0]= entry.MET_pt
+	    self.metphiNoCor[0]= entry.MET_phi
+	if str(era) == '2017' : 
+	    self.metNoCor[0]= entry.METFixEE2017_pt
+	    self.metphiNoCor[0]= entry.METFixEE2017_phi
+
         if met_pt != -99 : 
 	    self.met[0]         = met_pt 
 	    self.metphi[0]      = met_phi
@@ -1626,9 +1642,11 @@ class outTuple() :
 		    self.MET_phi_UnclDown[0] = entry.METFixEE2017_phi_unclustEnDown
 
         # trig
-	self.isTrig_1[0]   = is_trig_1
-        self.isTrig_2[0]   = is_trig_2
-	self.isDoubleTrig[0]   = is_Dtrig_1
+        if SystIndex ==0 : 
+	    self.isTrig_1[0]   = is_trig_1
+	    self.isTrig_2[0]   = is_trig_2
+	    self.isDoubleTrig[0]   = is_Dtrig_1
+
         leplist=[]
         leplist.append(LepP)
         leplist.append(LepM)
@@ -1750,7 +1768,8 @@ class outTuple() :
         #if  self.nbtag[0] == 0 : 
 	if SystIndex == 0 : 
             self.t.Fill()
-	else : self.tN[SystIndex-1].Fill()
+	else : 
+            self.tN[SystIndex-1].Fill()
 
 	return
 

@@ -176,17 +176,19 @@ for i, sys in enumerate(sysall) :
 print sysT
 
 #sysT = ["Central"]
-if not MC : sysT = ["Central"]
+isMC = True
+if not MC : 
+    sysT = ["Central"]
+    isMC = False
 
 #sysT = ["Central"]
 doSyst= True
-outTuple = outTuple.outTuple(outFileName, era, doSyst, sysT)
+outTuple = outTuple.outTuple(outFileName, era, doSyst, sysT, isMC)
 
 
 
 tStart = time.time()
 countMod = 1000
-isMC = True
 
 
 Weights=Weights.Weights(args.year)
@@ -204,9 +206,9 @@ for count, e in enumerate(inTree) :
 	if  MC :   cutCounterGenWeight[cat].countGenWeight('All', e.genWeight)
     isInJSON = False
     if not MC : isInJSON = CJ.checkJSON(e.luminosityBlock,e.run)
-    #if not isInJSON and not MC :
-    #    #print("Event not in JSON: Run:{0:d} LS:{1:d}".format(e.run,e.luminosityBlock))
-    #    continue
+    if not isInJSON and not MC :
+        #print("Event not in JSON: Run:{0:d} LS:{1:d}".format(e.run,e.luminosityBlock))
+        continue
 
     for cat in cats: 
         cutCounter[cat].count('InJSON')
@@ -445,7 +447,7 @@ for count, e in enumerate(inTree) :
 		SVFit = True
 		#SVFit = False
 		
-		if not MC : isMC = False
+		#if not MC : isMC = False
 		 
 		#print 'again--------------->', e.MET_pt, e.MET_phi
                 #print 'will Fill for syst', isyst, sysT[isyst]
