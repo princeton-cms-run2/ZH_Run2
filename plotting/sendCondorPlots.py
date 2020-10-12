@@ -26,30 +26,43 @@ eospath='/eos/uscms/store/user/alkaloge/{0:s}/nAODv7/'.format(sel)
 command = "mkdir -p /eos/uscms/store/user/alkaloge/ZH/nAODv7/out_pow_noL/{0:s}/data_{0:s}".format(era)
 os.system(command)
 
-sysT = ["Central"]
+scaleSyst = ["Central"]
 
-sysall = ['scale_e', 'scale_m_etalt1p2', 'scale_m_eta1p2to2p1', 'scale_m_etagt2p1',
+scale = ['scale_e', 'scale_m_etalt1p2', 'scale_m_eta1p2to2p1', 'scale_m_etagt2p1',
 'scale_t_1prong', 'scale_t_1prong1pizero', 'scale_t_3prong', 'scale_t_3prong1pizero']
 
-upS=sysall
-downS=sysall
 
-for i, sys in enumerate(sysall) :
-    sysT.append(sys+'Up')
-    sysT.append(sys+'Down')
+for i, sys in enumerate(scale) :
+    scaleSyst.append(sys+'Up')
+    scaleSyst.append(sys+'Down')
 
+jes=['jesAbsolute', 'jesAbsolute{0:s}'.format(str(era)), 'jesBBEC1', 'jesBBEC1{0:s}'.format(str(era)), 'jesEC2', 'jesEC2{0:s}'.format(str(era)), 'jesFlavorQCD', 'jesHF', 'jesHF{0:s}'.format(str(era)), 'jesRelativeBal', 'jesRelativeSample{0:s}'.format(str(era)), 'jesHEMIssue', 'jesTotal', 'jer']
 
+jesSyst=[]
+for i, sys in enumerate(jes) :
+    jesSyst.append(sys+'Up')
+    jesSyst.append(sys+'Down')
+
+otherS=['NLOEWK','PreFire','tauideff_pt20to25', 'tauideff_pt25to30', 'tauideff_pt30to35', 'tauideff_pt35to40', 'tauideff_ptgt40'] 
+OtherSyst=[]
+for i, sys in enumerate(otherS) :
+    OtherSyst.append(sys+'Up')
+    OtherSyst.append(sys+'Down')
+
+sysall = scaleSyst + jesSyst + OtherSyst
+
+#sysall=['Central']
 
 for line in open(args.inFileName,'r').readlines() :
     vals = line.split(',')
     ds = vals[0]
     nickName=vals[1]
-    if 'Run' in ds or 'data' in ds : sysT = ["Central"]
+    if 'Run' in ds or 'data' in ds : sysall = ["Central"]
     if '#' in ds : continue
 
 
 
-    for ic, sys in enumerate(sysT) :
+    for ic, sys in enumerate(sysall) :
         filejdl = 'condor_{0:s}_{1:s}_{2:s}_{3:s}_sys{4:s}.jdl'.format(ds,era,sel,tag, sys)
         filesh = 'condor_{0:s}_{1:s}_{2:s}_{3:s}_sys{4:s}.sh'.format(ds,era,sel,tag, sys)
 
@@ -57,7 +70,6 @@ for line in open(args.inFileName,'r').readlines() :
 	os.system(command)
 	command = "cp Templates/template.jdl {0:s}".format(filejdl)
 	os.system(command)
-	
 	
        
 	subprocess.call(["sed -i  's/SYSTEMATICHERE/{1:s}/g' {0:s}".format(filesh,sys)], shell=True)
@@ -78,21 +90,6 @@ for line in open(args.inFileName,'r').readlines() :
 
 	subprocess.call(["sed -i  's/TAG/{1:s}/g' {0:s}".format(filesh,tag)], shell=True)
 	subprocess.call(["sed -i  's/TAG/{1:s}/g' {0:s}".format(filejdl,tag)], shell=True)
-
-
-	#subprocess.call(["sed -i  's/YEAR/{1:s}/g' condor_{0:s}_{1:s}_{2:s}_{3:s}.sh".format(ds,era,sel,tag)], shell=True)
-	#subprocess.call(["sed -i  's/YEAR/{1:s}/g' condor_{0:s}_{1:s}_{2:s}_{3:s}.jdl".format(ds,era,sel,tag)], shell=True)
-
-	#subprocess.call(["sed -i  's/CHANNEL/{2:s}/g' condor_{0:s}_{1:s}_{2:s}_{3:s}.sh".format(ds,era,sel,tag)], shell=True)
-	#subprocess.call(["sed -i  's/CHANNEL/{2:s}/g' condor_{0:s}_{1:s}_{2:s}_{3:s}.jdl".format(ds,era,sel,tag)], shell=True)
-
-	#subprocess.call(["sed -i  's/NICKNAME/{4:s}/g' condor_{0:s}_{1:s}_{2:s}_{3:s}.sh".format(ds,era,sel,tag, nickName)], shell=True)
-	#subprocess.call(["sed -i  's/NICKNAME/{4:s}/g' condor_{0:s}_{1:s}_{2:s}_{3:s}.jdl".format(ds,era,sel,tag, nickName)], shell=True)
-
-	#subprocess.call(["sed -i  's/TAG/{3:s}/g' condor_{0:s}_{1:s}_{2:s}_{3:s}.sh".format(ds,era,sel,tag)], shell=True)
-	#subprocess.call(["sed -i  's/TAG/{3:s}/g' condor_{0:s}_{1:s}_{2:s}_{3:s}.jdl".format(ds,era,sel,tag)], shell=True)
-
-	#command = "sed -i "'"s/FILEIN/{0:s}/g"'" condor_{0:s}_{1:s}_{2:s}_{3:s}.sh".format(ds,era,sel,tag)
 
 	#outLines = []
 	#outLines.append("{0:s}\n".format(ds)
@@ -118,15 +115,14 @@ for line in open(args.inFileName,'r').readlines() :
 	cf =os.path.isfile('/eos/uscms/store/user/alkaloge/ZH/nAODv7/out_{4:s}/{2:s}/{3:s}_{2:s}_sys{5:s}.root'.format(eospath,sel,era,ds,tag,sys)) #ZHToTauTau_2016_sysscale_t_3prong1pizeroUp.root
 
 	if cf :   print 'looks like you have it this in eos', ds, era, sel, tag, sys , '/eos/uscms/store/user/alkaloge/ZH/nAODv7/out_{4:s}/{2:s}/{3:s}_{2:s}_sys{5:s}.root'.format(eospath,sel,era,ds,tag,sys)
-	else :   print 'this is missing..... eos', ds, era, sel, tag, sys
-	#print  '{0:s}/out_{4:s}/{2:s}/{3:s}_{2:s}.root'.format(eospath,sel,era,ds,tag)
-	command = "cd Jobs;condor_submit {0:s} ;cd ..".format(filejdl)
-	#if 'ZZTo' in ds or '4L'  in ds: os.system(command)
-	cf = os.path.isfile("{0:s}.submitted".format(filejdl))
-	if not cf : 
-	    #os.system(command)
-	    com="touch {0:}.submitted".format(filejdl)
-	    #os.system(com)
-	#print command
+	else :   
+            print 'this is missing..... eos', ds, era, sel, tag, sys
+	    cf = os.path.isfile("./Jobs/{0:s}.submitted".format(filejdl))
+	    if not cf : 
+	        command = "cd Jobs;condor_submit {0:s} ;cd ..".format(filejdl)
+		os.system(command)
+		com="touch ./Jobs/{0:}.submitted".format(filejdl)
+		os.system(com)
+	        print command
 	    
 

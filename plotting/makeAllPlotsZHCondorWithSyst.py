@@ -263,7 +263,8 @@ tauID_w = 1.
 kUndefinedDecayType, kTauToHadDecay,  kTauToElecDecay, kTauToMuDecay = 0, 1, 2, 3   
 
 gInterpreter.ProcessLine(".include .")
-for baseName in ['./SVFit/MeasuredTauLepton','./SVFit/svFitAuxFunctions','./SVFit/FastMTT', './HTT-utilities/RecoilCorrections/src/MEtSys', './HTT-utilities/RecoilCorrections/src/RecoilCorrector'] : 
+#for baseName in ['./SVFit/MeasuredTauLepton','./SVFit/svFitAuxFunctions','./SVFit/FastMTT', './HTT-utilities/RecoilCorrections/src/MEtSys', './HTT-utilities/RecoilCorrections/src/RecoilCorrector'] : 
+for baseName in ['./SVFit/MeasuredTauLepton','./SVFit/svFitAuxFunctions','./SVFit/FastMTT'] : 
     if os.path.isfile("{0:s}_cc.so".format(baseName)) :
 	gInterpreter.ProcessLine(".L {0:s}_cc.so".format(baseName))
     else :
@@ -288,16 +289,23 @@ for i, sys in enumerate(scale) :
 
 #listsyst=['njets', 'nbtag', 'jpt', 'jeta', 'jflavour','MET_T1_pt', 'MET_T1_phi', 'MET_pt', 'MET_phi', 'MET_T1Smear_pt', 'MET_T1Smear_phi']
 
-jes=['jesAbsolute', 'jesAbsolute{0:s}'.format(str(era)), 'jesBBEC1', 'jesBBEC1{0:s}'.format(str(era)), 'jesEC2', 'jesEC2{0:s}'.format(str(era)), 'jesFlavorQCD', 'jesHF', 'jesHF{0:s}'.format(str(era)), 'jesRelativeBal', 'jesRelativeSample{0:s}'.format(str(era)), 'jesHEMIssue', 'jesTotal', 'jer', 'PreFire']
+jes=['jesAbsolute', 'jesAbsolute{0:s}'.format(str(era)), 'jesBBEC1', 'jesBBEC1{0:s}'.format(str(era)), 'jesEC2', 'jesEC2{0:s}'.format(str(era)), 'jesFlavorQCD', 'jesHF', 'jesHF{0:s}'.format(str(era)), 'jesRelativeBal', 'jesRelativeSample{0:s}'.format(str(era)), 'jesHEMIssue', 'jesTotal', 'jer']
 
 jesSyst=[]
 for i, sys in enumerate(jes) :
     jesSyst.append(sys+'Up')
     jesSyst.append(sys+'Down')
 
+otherS=['NLOEWK','PreFire','tauideff_pt20to25', 'tauideff_pt25to30', 'tauideff_pt30to35', 'tauideff_pt35to40', 'tauideff_ptgt40'] 
+OtherSyst=[]
+for i, sys in enumerate(otherS) :
+    OtherSyst.append(sys+'Up')
+    OtherSyst.append(sys+'Down')
+
+
 #jesSyst hold the jes systematic  - we need njets, nbtag, nflavor, jpt
 
-sysall = scaleSyst+jesSyst
+sysall = scaleSyst+jesSyst+OtherSyst
 
 print 'systematics', sysall
 
@@ -316,6 +324,8 @@ calib = ROOT.BTagCalibration('csvv1', 'DeepCSV_{0:s}.csv'.format(era))
 v_sys = getattr(ROOT, 'vector<string>')()
 #v_sys.push_back('up')
 #v_sys.push_back('down')
+
+
 
 # make a reader instance and load the sf data
 reader_b = ROOT.BTagCalibrationReader(
@@ -390,10 +400,11 @@ if era == '2018' :
     WorkSpace={'dir' : './', 'fileWS' : 'htt_scalefactors_legacy_2018.root'}
 
 
+'''
 if era == '2016' : recoilCorrector  = ROOT.RecoilCorrector("./Type1_PFMET_Run2016BtoH.root");
 if era == '2017' : recoilCorrector  = ROOT.RecoilCorrector("./Type1_PFMET_2017.root");
 if era == '2018' : recoilCorrector  = ROOT.RecoilCorrector("./TypeI-PFMet_Run2018.root");
-
+'''
 
 finWS=("{0:s}{1:s}".format(WorkSpace['dir'],WorkSpace['fileWS']))
 fInws=TFile(finWS, 'read') 
@@ -587,7 +598,12 @@ for line in open(args.inFileName,'r').readlines() :
     if 'data' not in filein : 
 	fIn = TFile.Open(filein,"READ")
 	#totalWeight[nickName] = float(fIn.Get("hWeights").GetSumOfWeights())
-	totalWeight[nickName] = float(vals[4])
+
+        if '+' in vals[4] : 
+	    value1, value2 = map(float, vals[4].split("+"))
+	    totalWeight[nickName] = float(value1+value2)
+	else : totalWeight[nickName] = float(vals[4])
+
         if nickName == 'ZHToTauTau' : totalWeight[nickName] *= float(3*0.033658)
         print '----------------======================================================', totalWeight[nickName]
 	sampleWeight[nickName]= Pblumi*weights['lumi']*xsec[nickName]/totalWeight[nickName]
@@ -1029,8 +1045,6 @@ for ig, group in enumerate(groups) :
             weightCF = 1.
 	    weightFM=1.
             weightTID = 1.
-            weightTIDUp = 1.
-            weightTIDDown = 1.
 	    ww = 1.
             btag_sf = 1.
             lepton_sf = 1.
@@ -1183,8 +1197,6 @@ for ig, group in enumerate(groups) :
 
             if not dataDriven and (not tight1 or not tight2) : continue
 
-            #if group == 'data' :
-            #    if DD[cat].checkEvent(e,cat) : continue 
 
             iCut +=1
             WCounter[iCut-1][icat-1][inick] += weightCF
@@ -1221,7 +1233,7 @@ for ig, group in enumerate(groups) :
                 if DD[cat].checkEvent(e,cat) : continue 
 
             btag=1
-            if systematic in jesSyst and 'prefire' not in systematic.lower(): 
+            if systematic in jesSyst :  
 		met = getattr(e, 'MET_T1_pt_{0:s}'.format(systematic), None)
 		metphi = getattr(e, 'MET_T1_phi_{0:s}'.format(systematic), None)
 		njets = getattr(e, 'njets_{0:s}'.format(systematic), None)
@@ -1248,6 +1260,8 @@ for ig, group in enumerate(groups) :
                         except IndexError : btag_sf = 1.
 		weight *= btag_sf
 		weightFM *= btag_sf
+
+
             iCut +=1
             WCounter[iCut-1][icat-1][inick] += weightCF
             hCutFlowN[cat][nickName].SetBinContent(iCut-1, hCutFlowN[cat][nickName].GetBinContent(iCut-1)+weight)
@@ -1550,8 +1564,19 @@ for ig, group in enumerate(groups) :
 		if cat[2:] == 'tt' :
                     if e.gen_match_3 == 5 : 
 			weightTID *= tauSFTool.getSFvsPT(e.pt_3,e.gen_match_3)
-			weightTIDUp *= tauSFTool.getSFvsPT(e.pt_3,e.gen_match_3, unc='Up')
-			weightTIDDown *= tauSFTool.getSFvsPT(e.pt_3,e.gen_match_3, unc='Down')
+
+                        if 'Up' in systematic :
+                            if 'pt20to25' in systematic and  e.pt_3 > 20 and  e.pt_3 < 25 : 
+			        weightTID *= tauSFTool.getSFvsPT(e.pt_3,e.gen_match_3, unc='Up')
+                            if 'pt25to30' in systematic and  e.pt_3 > 25 and  e.pt_3 < 30 : 
+			        weightTID *= tauSFTool.getSFvsPT(e.pt_3,e.gen_match_3, unc='Up')
+                            if 'pt30to35' in systematic and  e.pt_3 > 30 and  e.pt_3 < 35 : 
+			        weightTID *= tauSFTool.getSFvsPT(e.pt_3,e.gen_match_3, unc='Up')
+                            if 'pt35to40' in systematic and  e.pt_3 > 35 and  e.pt_3 < 40 : 
+			        weightTID *= tauSFTool.getSFvsPT(e.pt_3,e.gen_match_3, unc='Up')
+                            if 'ptgt40' in systematic and  e.pt_3 > 40:
+			        weightTID *= tauSFTool.getSFvsPT(e.pt_3,e.gen_match_3, unc='Up')
+
 
                         #print 'tesSTOOL', testool.getTES(e.pt_3, e.decayMode_3, e.gen_match_3)
 
@@ -1559,8 +1584,29 @@ for ig, group in enumerate(groups) :
                 if  cat[2:] == 'tt'  or cat[2:] == 'mt' or cat[2:] == 'et' :
 		    if e.gen_match_4 == 5 : 
 			weightTID *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4)
-			weightTIDUp *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4, unc='Up')
-			weightTIDDown *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4, unc='Down')
+                        if 'Up' in systematic :
+                            if 'pt20to25' in systematic and  e.pt_4 > 20 and  e.pt_4 < 25 : 
+			        weightTID *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4, unc='Up')
+                            if 'pt25to30' in systematic and  e.pt_4 > 25 and  e.pt_4 < 30 : 
+			        weightTID *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4, unc='Up')
+                            if 'pt30to35' in systematic and  e.pt_4 > 30 and  e.pt_4 < 35 : 
+			        weightTID *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4, unc='Up')
+                            if 'pt35to40' in systematic and  e.pt_4 > 35 and  e.pt_4 < 40 : 
+			        weightTID *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4, unc='Up')
+                            if 'ptgt40' in systematic and  e.pt_4 > 40:
+			        weightTID *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4, unc='Up')
+
+                        if 'Down' in systematic :
+                            if 'pt20to25' in systematic and  e.pt_4 > 20 and  e.pt_4 < 25 : 
+			        weightTID *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4, unc='Down')
+                            if 'pt25to30' in systematic and  e.pt_4 > 25 and  e.pt_4 < 30 : 
+			        weightTID *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4, unc='Down')
+                            if 'pt30to35' in systematic and  e.pt_4 > 30 and  e.pt_4 < 35 : 
+			        weightTID *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4, unc='Down')
+                            if 'pt35to40' in systematic and  e.pt_4 > 35 and  e.pt_4 < 40 : 
+			        weightTID *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4, unc='Down')
+                            if 'ptgt40' in systematic and  e.pt_4 > 40:
+			        weightTID *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4, unc='Down')
 
 
                 weight *= weightTID
@@ -1580,7 +1626,7 @@ for ig, group in enumerate(groups) :
            
             #print 'made thus far', leptons_sf
 	    fastMTTmass, fastMTTtransverseMass = -1, -1
-	    if args.redoFit.lower() == 'yes' or args.redoFit.lower() == 'true' : 
+	    if (args.redoFit.lower() == 'yes' or args.redoFit.lower() == 'true' or systematic in jesSyst) and systematic not in OtherSyst : 
 		fastMTTmass, fastMTTtransverseMass = runSVFit(e,tauV3, tauV4, MetV, cat[2:]) 
             else  : fastMTTmass, fastMTTtransverseMass = e.m_sv, e.mt_sv
 	    #print 'new', fastMTTmass, 'old', e.m_sv, fastMTTtransverseMass, e.mt_sv, cat[2:]
