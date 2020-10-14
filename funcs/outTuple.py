@@ -49,7 +49,8 @@ class outTuple() :
         self.list_of_arraysJetsFlavour = []           
 	self.tauMass = 1.7768 
 
-        if not isMC :
+        #if not isMC or 'ZHTo' in str(fileName):
+        if not isMC  :
         
 	    self.listsyst=['njets', 'nbtag', 'jpt', 'jeta', 'jflavour', 'MET_pt', 'MET_phi']
 	    self.jessyst=['_nom']
@@ -135,7 +136,7 @@ class outTuple() :
 
         self.L1PreFiringWeight_Nom        = array('f',[0])
         self.L1PreFiringWeight_Up        = array('f',[0])
-        self.L1PreFiringWeight_Dn        = array('f',[0])
+        self.L1PreFiringWeight_Down        = array('f',[0])
 
         self.d0_1        = array('f',[0])
         self.dZ_1        = array('f',[0])
@@ -316,6 +317,10 @@ class outTuple() :
         self.MET_phi_UnclDown = array('f',[0])
         self.met_UnclX = array('f',[0])
         self.met_UnclY = array('f',[0])
+        self.MET_T1Smear_pt= array('f',[0])
+        self.MET_T1Smear_phi= array('f',[0])
+        self.MET_pt_nom= array('f',[0])
+        self.MET_pt_nom= array('f',[0])
 
         # trigger info
         self.isTrig_2   = array('f',[0])
@@ -553,7 +558,7 @@ class outTuple() :
         self.t.Branch('q_2',       self.q_2,       'q_2/F')
         self.t.Branch('L1PreFiringWeight_Nom',        self.L1PreFiringWeight_Nom,        'L1PreFiringWeight_Nom/F')
         self.t.Branch('L1PreFiringWeight_Up',        self.L1PreFiringWeight_Up,        'L1PreFiringWeight_Up/F')
-        self.t.Branch('L1PreFiringWeight_Dn',        self.L1PreFiringWeight_Dn,        'L1PreFiringWeight_Dn/F')
+        self.t.Branch('L1PreFiringWeight_Down',        self.L1PreFiringWeight_Down,        'L1PreFiringWeight_Down/F')
         self.t.Branch('d0_1',        self.d0_1,        'd0_1/F')
         self.t.Branch('dZ_1',        self.dZ_1,        'dZ_1/F')
         self.t.Branch('d0_2',        self.d0_2,        'd0_2/F')
@@ -580,6 +585,8 @@ class outTuple() :
         self.t.Branch('MET_phi_UnclDown', self.MET_phi_UnclDown, 'MET_phi_UnclDown/F')
         self.t.Branch('met_UnclX', self.met_UnclX, 'met_UnclX/F')
         self.t.Branch('met_UnclY', self.met_UnclY, 'met_UnclY/F')
+        self.t.Branch('MET_T1Smear_pt', self.MET_T1Smear_pt, 'MET_T1Smear_pt/F')
+        self.t.Branch('MET_T1Smear_phi', self.MET_T1Smear_phi, 'MET_T1Smear_phi/F')
         
         # MET variables
         self.t.Branch('met', self.met, 'met/F')
@@ -858,10 +865,10 @@ class outTuple() :
 
 
 
-    def runSVFit(self, entry, channel, jt1, jt2, tau1, tau2 ) :
+    def runSVFit(self, entry, channel, jt1, jt2, tau1, tau2, metpt, metphi) :
                       
-        measuredMETx = entry.MET_pt*cos(entry.MET_phi)
-        measuredMETy = entry.MET_pt*sin(entry.MET_phi)
+        measuredMETx = metpt*cos(metphi)
+        measuredMETy = metpt*sin(metphi)
 
         #define MET covariance
         covMET = ROOT.TMatrixD(2,2)
@@ -982,11 +989,11 @@ class outTuple() :
 	    try:
 		self.L1PreFiringWeight_Nom[0] = entry.L1PreFiringWeight_Nom
 		self.L1PreFiringWeight_Up[0] = entry.L1PreFiringWeight_Up
-		self.L1PreFiringWeight_Dn[0] = entry.L1PreFiringWeight_Dn
+		self.L1PreFiringWeight_Down[0] = entry.L1PreFiringWeight_Down
 	    except AttributeError : 
 		self.L1PreFiringWeight_Nom[0] = 1
 		self.L1PreFiringWeight_Up[0] = 1
-		self.L1PreFiringWeight_Dn[0] = 1
+		self.L1PreFiringWeight_Down[0] = 1
 
 		
 	    self.tightId_1[0]       = -1 
@@ -1404,7 +1411,7 @@ class outTuple() :
 	    self.m_vis[0]  = self.getM_vis( entry, tau1, tau2)
 		
 	    if SVFit :
-		fastMTTmass, fastMTTtransverseMass = self.runSVFit(entry, channel, jt1, jt2, tau1, tau2) 
+		fastMTTmass, fastMTTtransverseMass = self.runSVFit(entry, channel, jt1, jt2, tau1, tau2,met_pt,met_phi) 
 	    else :
 		fastMTTmass, fastMTTtransverseMass = -999., -999.
 		
@@ -1565,19 +1572,19 @@ class outTuple() :
 
 		if str(era) != '2017' : 
                     try : 
+			self.met[0]= entry.MET_T1Smear_pt
+			self.metphi[0]= entry.MET_T1Smear_phi
+                    except AttributeError : 
 			self.met[0]= entry.MET_T1_pt
 			self.metphi[0]= entry.MET_T1_phi
-                    except AttributeError : 
-			self.met[0]= entry.MET_pt_nom
-			self.metphi[0]= entry.MET_phi_nom
 
 		if str(era) == '2017' : 
                     try : 
+			self.met[0]= entry.METFixEE2017_T1Smear_pt
+			self.metphi[0]= entry.METFixEE2017_T1Smear_phi
+                    except AttributeError : 
 			self.met[0]= entry.METFixEE2017_T1_pt
 			self.metphi[0]= entry.METFixEE2017_T1_phi
-                    except AttributeError : 
-			self.met[0]= entry.METFixEE2017_pt_nom
-			self.metphi[0]= entry.METFixEE2017_phi_nom
 
         #metNoTauES holds the uncorrected TauES MET - if not doUncerta -> holds the default ucorrected MET, if doUncert the T1_corrected
 
@@ -1587,11 +1594,13 @@ class outTuple() :
 
 	    if doUncertainties : 
                 try : 
-		    self.metNoTauES[0]         = entry.MET_T1_pt
+		    self.metNoTauES[0]         = entry.MET_T1_T1_pt
 		    self.metphiNoTauES[0]         = entry.MET_T1_phi
+		    self.MET_T1Smear_pt[0]         = entry.MET_T1Smear_pt
+		    self.MET_T1Smear_phi[0]         = entry.MET_T1Smear_phi
                 except AttributeError : 
-		    self.metNoTauES[0]         = entry.MET_pt_nom
-		    self.metphiNoTauES[0]         = entry.MET_phi_nom
+		    self.metNoTauES[0]         = entry.MET_pt
+		    self.metphiNoTauES[0]         = entry.MET_phi
 
         if str(era) == '2017' : 
 	    self.metNoTauES[0]         = entry.METFixEE2017_pt
@@ -1601,12 +1610,14 @@ class outTuple() :
                 try :
 		    self.metNoTauES[0]         = entry.METFixEE2017_T1_pt
 		    self.metphiNoTauES[0]         = entry.METFixEE2017_T1_phi
+		    self.MET_T1Smear_pt[0]         = entry.METFixEE2017_T1Smear_pt
+		    self.MET_T1Smear_phi[0]         = entry.METFixEE2017_T1Smear_phi
                 except AttributeError : 
 		    self.metNoTauES[0]         = entry.METFixEE2017_pt_nom
 		    self.metphiNoTauES[0]         = entry.METFixEE2017_phi_nom
 
 
-        #print 'met', self.met[0], 'metnoTauES', self.metNoTauES[0], 'met_T1', entry.MET_T1_pt, 'doUncert ?', doUncertainties
+        #print 'in NTUPLE ============================== met_pt', met_pt, 'met', self.met[0], 'metnoTauES', self.metNoTauES[0], 'met_T1', entry.MET_T1_pt, 'met_T1Smear', entry.MET_T1Smear_pt, 'doUncert ?', doUncertainties
 
         if str(era) != '2017' : 
 
@@ -1839,11 +1850,11 @@ class outTuple() :
         try:
 	    self.L1PreFiringWeight_Nom[0] = entry.L1PreFiringWeight_Nom
 	    self.L1PreFiringWeight_Up[0] = entry.L1PreFiringWeight_Up
-	    self.L1PreFiringWeight_Dn[0] = entry.L1PreFiringWeight_Dn
+	    self.L1PreFiringWeight_Down[0] = entry.L1PreFiringWeight_Down
         except AttributeError : 
 	    self.L1PreFiringWeight_Nom[0] = 1
 	    self.L1PreFiringWeight_Up[0] = 1
-	    self.L1PreFiringWeight_Dn[0] = 1
+	    self.L1PreFiringWeight_Down[0] = 1
 
         self.tightId_1[0]       = -1 
         self.mediumId_1[0]       = -1 

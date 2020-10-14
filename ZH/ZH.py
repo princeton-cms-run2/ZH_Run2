@@ -235,6 +235,7 @@ for count, e in enumerate(inTree) :
 	cutCounter[cat].count('Trigger')
 	if  MC :   cutCounterGenWeight[cat].countGenWeight('Trigger', e.genWeight)
 
+
     met_pt = float(e.MET_pt)
     met_phi = float(e.MET_phi)
 
@@ -242,21 +243,23 @@ for count, e in enumerate(inTree) :
 	met_pt = float(e.METFixEE2017_pt)
 	met_phi = float(e.METFixEE2017_phi)
 
-    if doJME : 
+    if doJME :  #default after JME systematics with Smear
         if era!='2017' :
 	    try : 
-		met_pt = float(e.MET_pt_nom)
-		met_phi = float(e.MET_phi_nom)
+		met_pt = float(e.MET_T1Smear_pt)
+		met_phi = float(e.MET_T1Smear_phi)
 	    except AttributeError : 
 		met_pt = float(e.MET_T1_pt)
-		met_phi = float(e.MET_T1_phi)
+		met_phi = float(e.MET_T1_pt)
         if era=='2017' :
             try : 
-		met_pt = float(e.METFixEE2017_pt_nom)
-		met_phi = float(e.METFixEE2017_phi_nom)
+		met_pt = float(e.METFixEE2017_T1Smear_pt)
+		met_phi = float(e.METFixEE2017_T1Smear_phi)
 	    except AttributeError : 
 		met_pt = float(e.METFixEE2017_T1_pt)
 		met_phi = float(e.METFixEE2017_T1_phi)
+
+    #print met_pt, 'smear', e.MET_T1Smear_pt, 'uncorrected?', e.MET_pt
 
     tauMass=[]
     tauPt=[]
@@ -300,7 +303,7 @@ for count, e in enumerate(inTree) :
 
 	if MC :
 	    met_pt, met_phi = Weights.applyES(e, args.year, systematic, metPtPhi)
-	    #print 'after fixxxxxxxxxxxx', e.MET_pt, 'nom', e.MET_pt_nom, 'what is fed in', metPtPhi[0], 'tauES corrected', met_pt, systematic
+	    #if systematic=='Central' : print 'after fixxxxxxxxxxxx', e.MET_pt, 'nom', 'what is fed in', metPtPhi[0], 'tauES corrected', met_pt, e.MET_T1Smear_pt, systematic
         
 
 	for lepMode in ['ee','mm'] :
