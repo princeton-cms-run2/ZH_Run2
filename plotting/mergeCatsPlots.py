@@ -13,19 +13,52 @@ import sys
 
 gROOT.SetBatch(kTRUE) # prevent displaying canvases
 
-plotSettings = { # [nBins,xMin,xMax,units]
+histos = { # [nBins,xMin,xMax,units]
         #"m_sv_new":[10,0,200,"[Gev]","m(#tau#tau)(SV)"],
         #"Z_Pt":[10,0,200,"[Gev]","P_T(l_{1}l_{2})"],
         #"m_sv_new_FM":[10,0,200,"[Gev]","m(#tau#tau)(SV)"],
         #"m_sv_new_FMext":[20,0,200,"[Gev]","m(#tau#tau)(SV)"],
-        "m_sv_new_FMjall":[10,0,200,"[Gev]","m(#tau#tau)(SV)"],
         #"m_sv_new_FMjallv2":[10,0,200,"[Gev]","m(#tau#tau)(SV)"],
+        "m_sv_new_FMjall":[10,0,200,"[Gev]","m(#tau#tau)(SV)"],
+        "lep_FWDH_htt125":[21,0,21,"[Gev]","m(#tau#tau)(SV)"],
+        "lep_PTV_0_75_htt125":[21,0,21,"[Gev]","m(#tau#tau)(SV)"],
+        "lep_PTV_75_150_htt125":[21,0,21,"[Gev]","m(#tau#tau)(SV)"],
+        "lep_PTV_150_250_0J_htt125":[21,0,21,"[Gev]","m(#tau#tau)(SV)"],
+        "lep_PTV_150_250_GE1J_htt125":[21,0,21,"[Gev]","m(#tau#tau)(SV)"],
+        "lep_PTV_GT250_htt125":[21,0,21,"[Gev]","m(#tau#tau)(SV)"],
 }
 
 
 cutflows=['hCutFlowPerGroup', 'hCutFlowPerGroupFM']
 
 cats = { 1:'eeet', 2:'eemt', 3:'eett', 4:'eeem', 5:'mmet', 6:'mmmt', 7:'mmtt', 8:'mmem'}
+
+scaleSyst = ["Central"]
+
+scale = ['scale_e', 'scale_m_etalt1p2', 'scale_m_eta1p2to2p1', 'scale_m_etagt2p1',
+'scale_t_1prong', 'scale_t_1prong1pizero', 'scale_t_3prong', 'scale_t_3prong1pizero']
+
+
+for i, sys in enumerate(scale) :
+    scaleSyst.append(sys+'Up')
+    scaleSyst.append(sys+'Down')
+
+
+jes=['jesAbsolute', 'jesAbsolute_{0:s}'.format(str(era)), 'jesBBEC1', 'jesBBEC1_{0:s}'.format(str(era)), 'jesEC2', 'jesEC2_{0:s}'.format(str(era)), 'jesFlavorQCD', 'jesHF', 'jesHF_{0:s}'.format(str(era)), 'jesRelativeBal', 'jesRelativeSample_{0:s}'.format(str(era)), 'jesHEMIssue', 'jesTotal', 'jer']
+jesSyst=[]
+for i, sys in enumerate(jes) :
+    jesSyst.append(sys+'Up')
+    jesSyst.append(sys+'Down')
+
+otherS=['NLOEWK','PreFire','tauideff_pt20to25', 'tauideff_pt25to30', 'tauideff_pt30to35', 'tauideff_pt35to40', 'tauideff_ptgt40'] 
+OtherSyst=[]
+for i, sys in enumerate(otherS) :
+    OtherSyst.append(sys+'Up')
+    OtherSyst.append(sys+'Down')
+
+sysall = scaleSyst + jesSyst + OtherSyst
+
+
 
 #inFileName="allGroups_"+str(sys.argv[1])+"_OS_LT00_16noSV_16brute_none.root"
 #inFileName="test_nom.root"
@@ -43,12 +76,10 @@ fOut = TFile( outFileName, 'recreate' )
 
 fIn.cd()
 groups=['Signal']
-groups = ['bfl1', 'ljfl1', 'cfl1','jfl1','bfl2', 'ljfl2', 'cfl2','jfl2','jft1', 'jft2','fakes','f1', 'f2', 'Signal','Other','Top','DY','WZ','ZZ','data', 'Reducible']
-groupss = ['Signal','Other','Top','DY','WZ','ZZ','data', 'Reducible']
-
+#groups = ['bfl1', 'ljfl1', 'cfl1','jfl1','bfl2', 'ljfl2', 'cfl2','jfl2','jft1', 'jft2','fakes','f1', 'f2', 'Signal','Other','Top','DY','WZ','ZZ','data', 'Reducible']
+#groupss = ['Signal','Other','Top','DY','WZ','ZZ','data', 'Reducible']
 
 groupss = ['Other','ZZ','data', 'Reducible', 'ggZH', 'ZH', 'WH']
-#groupss = ['ZZ']
 
 groups=groupss
 fgroups = ['fakes', 'f1', 'f2']
@@ -65,6 +96,7 @@ hsignal={}
 htest={}
 h1={}
 for group in groups : 
+    '''
     for icat, cat in cats.items()[0:8] :
 	hname = "hCutFlowPerGroup_"+group+"_"+cat
         hcut[icat-1] = fIn.Get(hname)
@@ -110,10 +142,11 @@ for group in groups :
     except AttributeError : 
         continue
 
+    '''
 
     gg=group
     group='h'+group
-    for plotVar in plotSettings :
+    for plotVar in histos :
         for icat, cat in cats.items()[0:8] :
             h[icat-1]={}
             hsignal[icat-1]={}

@@ -246,18 +246,18 @@ for count, e in enumerate(inTree) :
     if doJME :  #default after JME systematics with Smear
         if era!='2017' :
 	    try : 
-		met_pt = float(e.MET_T1Smear_pt)
-		met_phi = float(e.MET_T1Smear_phi)
-	    except AttributeError : 
 		met_pt = float(e.MET_T1_pt)
-		met_phi = float(e.MET_T1_pt)
+		met_phi = float(e.MET_T1_phi)
+	    except AttributeError : 
+		met_pt = float(e.MET_pt)
+		met_phi = float(e.MET_pt)
         if era=='2017' :
             try : 
-		met_pt = float(e.METFixEE2017_T1Smear_pt)
-		met_phi = float(e.METFixEE2017_T1Smear_phi)
-	    except AttributeError : 
 		met_pt = float(e.METFixEE2017_T1_pt)
 		met_phi = float(e.METFixEE2017_T1_phi)
+	    except AttributeError : 
+		met_pt = float(e.METFixEE2017_pt)
+		met_phi = float(e.METFixEE2017_phi)
 
     #print met_pt, 'smear', e.MET_T1Smear_pt, 'uncorrected?', e.MET_pt
 

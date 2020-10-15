@@ -121,6 +121,7 @@ class Weights() :
         metphi = float(metPtPhi[1])
         self.MetV.SetPx(metpt * cos (metphi))
         self.MetV.SetPy(metpt * sin (metphi))
+        cor=1.
 
         #print 'inside...', systematic, metpt, self.MetV.Pt()
         sign = 1.
@@ -154,6 +155,7 @@ class Weights() :
                 self.LeptV *= fact
                 entry.Muon_pt[j] = self.LeptV.Pt()
                 entry.Muon_mass[j] = self.LeptV.M()
+                cor=fact
 
 
         #### electron_energy_scale
@@ -178,6 +180,7 @@ class Weights() :
                 self.LeptV *= fact
                 entry.Electron_pt[j] = self.LeptV.Pt()
                 entry.Electron_mass[j] = self.LeptV.M()
+                cor=fact
 
 
         # tauES should be applied by default, except if you plan to apply the tauES +/- systematics - make sure you don't apply the tauES twice...
@@ -210,6 +213,7 @@ class Weights() :
 
                     self.MetV +=( self.LeptV - self.LeptV*tes)
                     self.LeptV *= tes          
+                    cor=tes
 
 		    #self.MetV += self.transverseVEC(self.LeptV- self.LeptV*tes)
                     #print '-----------------------------', tes , met_uncor, metcopy.Pt(), self.MetV.Pt() 
@@ -233,6 +237,7 @@ class Weights() :
 			fes = self.festool.getFES(eta,dm,gen_match)
                         self.MetV +=( self.LeptV - self.LeptV*fes)
                         self.LeptV *= fes          
+                        cor=fes
 
 		entry.Tau_mass[j] = self.LeptV.M()
 		entry.Tau_pt[j] = self.LeptV.Pt()
@@ -240,6 +245,7 @@ class Weights() :
 		#print 'returnin LeptV ---------------->pt ', self.LeptV.Pt(), 'phi ', self.LeptV.Phi(), 'uncorrected values', pt , phi
 	    #print 'returning---------------->', entry.METFixEE2017_pt, self.MetV.Pt(), self.MetV.Phi(), self.LeptV.M(), entry.Tau_mass[j], self.LeptV.Pt(), 
 	    #print 'returning---------------->pt ', self.MetV.Pt(), 'phi ', self.MetV.Phi(), 'uncorrected values', entry.MET_pt, entry.MET_phi, entry.MET_T1_pt, entry.MET_T1_phi, systematic
-
+        #if systematic == 'Central' :
+	#print 'returning---------------->pt ', self.MetV.Pt(), 'phi ', self.MetV.Phi(), 'uncorrected values', entry.MET_T1_pt, entry.MET_T1_phi, 'factor', cor, 'is it the same ?', entry.MET_T1_pt*cor, entry.MET_T1_pt/cor, 'and', entry.MET_T1_pt - self.LeptV.Pt()*(cor+1), 'systematic' , systematic
 	return self.MetV.Pt(), self.MetV.Phi()
 

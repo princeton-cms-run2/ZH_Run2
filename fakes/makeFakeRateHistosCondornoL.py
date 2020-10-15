@@ -214,7 +214,7 @@ for i, sys in enumerate(scale) :
 
 #listsyst=['njets', 'nbtag', 'jpt', 'jeta', 'jflavour','MET_T1_pt', 'MET_T1_phi', 'MET_pt', 'MET_phi', 'MET_T1Smear_pt', 'MET_T1Smear_phi']
 
-jes=['jesAbsolute', 'jesAbsolute{0:s}'.format(str(era)), 'jesBBEC1', 'jesBBEC1{0:s}'.format(str(era)), 'jesEC2', 'jesEC2{0:s}'.format(str(era)), 'jesFlavorQCD', 'jesHF', 'jesHF{0:s}'.format(str(era)), 'jesRelativeBal', 'jesRelativeSample{0:s}'.format(str(era)), 'jesHEMIssue', 'jesTotal', 'jer']
+jes=['jesAbsolute', 'jesAbsolute_{0:s}'.format(str(era)), 'jesBBEC1', 'jesBBEC1_{0:s}'.format(str(era)), 'jesEC2', 'jesEC2_{0:s}'.format(str(era)), 'jesFlavorQCD', 'jesHF', 'jesHF_{0:s}'.format(str(era)), 'jesRelativeBal', 'jesRelativeSample_{0:s}'.format(str(era)), 'jesHEMIssue', 'jesTotal', 'jer']
 
 jesSyst=[]
 for i, sys in enumerate(jes) :
@@ -222,7 +222,7 @@ for i, sys in enumerate(jes) :
     jesSyst.append(sys+'Down')
 
 
-otherS=['NLOEWK','PreFire','tauideff_pt20to25', 'tauideff_pt25to30', 'tauideff_pt30to35', 'tauideff_pt35to40', 'tauideff_ptgt40'] 
+otherS=['NLOEWK','PreFire','tauideff_pt20to25', 'tauideff_pt25to30', 'tauideff_pt30to35', 'tauideff_pt35to40', 'tauideff_ptgt40','scale_met_unclustered'] 
 OtherSyst=[]
 for i, sys in enumerate(otherS) :
     OtherSyst.append(sys+'Up')
@@ -304,6 +304,12 @@ hBasePromptMode, hTightPromptMode = {}, {}
 hBasenoPrompt, hTightnoPrompt = {}, {}
 hBasenoPromptMode, hTightnoPromptMode = {}, {}
 
+hMETBase, hMETTight = {}, {}
+
+for icat, cat in cats.items()[0:8] :
+    hMETBase[cat] = TH1D('{0:s}_met_base_{1:s}'.format(str(args.gType), cat),'met_base',20, 0,200)
+    hMETTight[cat] = TH1D('{0:s}_met_tight_{1:s}'.format(str(args.gType), cat),'met_tight',20, 0,200)
+
 '''
 groups = ['ZZ','WJets','Rare','Top','DY', 'WWIncl', 'WZincl']
 groups = ['Other','Top','DY','WZ','ZZ']
@@ -335,6 +341,7 @@ WP=['16','32','64','128']
 
 nBins = 5
 Bins = [0,10,20,30,40,100]
+
 
 for h in hList :
     hName = "{0:s}Base".format(h)
@@ -400,7 +407,7 @@ for line in open(args.inFileName,'r').readlines() :
 	 	        njets = getattr(e, 'njets_nom', None)
 
 		    except AttributeError :
-			met = e.met
+			metpt = e.met
 			metphi = e.metphi
 			njets = e.njets
 			nbtag = e.nbtag
@@ -458,10 +465,12 @@ for line in open(args.inFileName,'r').readlines() :
 		    muMET = mut + ptMiss
 		    preCutt =  muMET.Mt() < 40. 
 
+                    hMETBase[cat].Fill(metpt)
+
 		    if cat[2:] == 'et' :
 
 			if e.iso_3 < iso_el and  e.Electron_mvaFall17V2noIso_WP90_3 > 0 : isTight1 = True
-			if e.idDeepTau2017v2p1VSjet_4 >= wp  and e.idDeepTau2017v2p1VSe_4 >= et_tau_vse  and e.idDeepTau2017v2p1VSmu_4 >= et_tau_vsmu : isTight2= True
+			if e.idDeepTau2017v2p1VSjet_4 >= int(wp)  and e.idDeepTau2017v2p1VSe_4 >= et_tau_vse  and e.idDeepTau2017v2p1VSmu_4 >= et_tau_vsmu : isTight2= True
 
 			# apply transverse mass cut on electron-MET system
                         if tights or  isTight2:
@@ -482,7 +491,7 @@ for line in open(args.inFileName,'r').readlines() :
 				hBaseMode['data']['t_ll'][str(e.decayMode_4)].Fill(e.pt_4)
 
 			for wp in WP : 
-			    if e.idDeepTau2017v2p1VSjet_4 >= wp  and e.idDeepTau2017v2p1VSe_4 >= et_tau_vse  and e.idDeepTau2017v2p1VSmu_4 >= et_tau_vsmu : 
+			    if e.idDeepTau2017v2p1VSjet_4 >= int(wp)  and e.idDeepTau2017v2p1VSe_4 >= et_tau_vse  and e.idDeepTau2017v2p1VSmu_4 >= et_tau_vsmu : 
 				hTight['t_et'][wp].Fill(e.pt_4)
 				hTight['t_ll'][wp].Fill(e.pt_4)
 				if e.decayMode_4 != -1 : 
@@ -492,7 +501,7 @@ for line in open(args.inFileName,'r').readlines() :
 		    if cat[2:] == 'mt' :
 
 			if e.iso_3 < iso_mu and  (e.isGlobal_3 > 0 or e.isTracker_3 > 0) and e.mediumId_3 > 0: isTight1 = True
-			if e.idDeepTau2017v2p1VSjet_4 >= wp and e.idDeepTau2017v2p1VSmu_4 >= mt_tau_vsmu and  e.idDeepTau2017v2p1VSe_4 >= mt_tau_vse : isTight2= True
+			if e.idDeepTau2017v2p1VSjet_4 >= int(wp) and e.idDeepTau2017v2p1VSmu_4 >= mt_tau_vsmu and  e.idDeepTau2017v2p1VSe_4 >= mt_tau_vse : isTight2= True
 
 
 			# apply transverse mass cut on muon-MET system
@@ -516,7 +525,7 @@ for line in open(args.inFileName,'r').readlines() :
 				hBaseMode['data']['t_ll'][str(e.decayMode_4)].Fill(e.pt_4)
 
 			for wp in WP : 
-			    if e.idDeepTau2017v2p1VSjet_4 >= wp and e.idDeepTau2017v2p1VSmu_4 >= mt_tau_vsmu and  e.idDeepTau2017v2p1VSe_4 >= mt_tau_vse:
+			    if e.idDeepTau2017v2p1VSjet_4 >= int(wp) and e.idDeepTau2017v2p1VSmu_4 >= mt_tau_vsmu and  e.idDeepTau2017v2p1VSe_4 >= mt_tau_vse:
 				hTight['t_mt'][wp].Fill(e.pt_4)
 				hTight['t_ll'][wp].Fill(e.pt_4)
 				if e.decayMode_4 != -1 : 
@@ -526,15 +535,15 @@ for line in open(args.inFileName,'r').readlines() :
 		    if cat[2:] == 'tt' :
 			#H_LT = e.pt_3 + e.pt_4
 			#if not preCutOff and H_LT < args.LTcut : continue
-			if e.idDeepTau2017v2p1VSjet_3 >= wp and e.idDeepTau2017v2p1VSmu_3 >= tt_tau_vsmu and  e.idDeepTau2017v2p1VSe_3 >= tt_tau_vse: isTight1= True
-			if e.idDeepTau2017v2p1VSjet_4 >= wp and e.idDeepTau2017v2p1VSmu_4 >= tt_tau_vsmu and  e.idDeepTau2017v2p1VSe_4 >= tt_tau_vse: isTight2= True
+			if e.idDeepTau2017v2p1VSjet_3 >= int(wp) and e.idDeepTau2017v2p1VSmu_3 >= tt_tau_vsmu and  e.idDeepTau2017v2p1VSe_3 >= tt_tau_vse: isTight1= True
+			if e.idDeepTau2017v2p1VSjet_4 >= int(wp) and e.idDeepTau2017v2p1VSmu_4 >= tt_tau_vsmu and  e.idDeepTau2017v2p1VSe_4 >= tt_tau_vse: isTight2= True
 
 			if tights or isTight2 : 
 			    hBase['t1_tt'].Fill(e.pt_3)
 			    if e.decayMode_3 != -1 : 
 				hBaseMode['data']['t1_tt'][str(e.decayMode_3)].Fill(e.pt_3)
 			    for wp in WP : 
-				if e.idDeepTau2017v2p1VSjet_3 >= wp and e.idDeepTau2017v2p1VSmu_3 >= tt_tau_vsmu and  e.idDeepTau2017v2p1VSe_3 >= tt_tau_vse:     
+				if e.idDeepTau2017v2p1VSjet_3 >= int(wp) and e.idDeepTau2017v2p1VSmu_3 >= tt_tau_vsmu and  e.idDeepTau2017v2p1VSe_3 >= tt_tau_vse:     
 				    hTight['t1_tt'][wp].Fill(e.pt_3)
 				    if e.decayMode_3 != -1 : 
 					hTightMode['data']['t1_tt'][str(e.decayMode_3)][wp].Fill(e.pt_3)
@@ -546,7 +555,7 @@ for line in open(args.inFileName,'r').readlines() :
 				hBaseMode['data']['t2_tt'][str(e.decayMode_4)].Fill(e.pt_4)
 
 			    for wp in WP : 
-				if e.idDeepTau2017v2p1VSjet_4 >= wp and e.idDeepTau2017v2p1VSmu_4 >= tt_tau_vsmu and  e.idDeepTau2017v2p1VSe_4 >= tt_tau_vse :
+				if e.idDeepTau2017v2p1VSjet_4 >= int(wp) and e.idDeepTau2017v2p1VSmu_4 >= tt_tau_vsmu and  e.idDeepTau2017v2p1VSe_4 >= tt_tau_vse :
 				    hTight['t2_tt'][wp].Fill(e.pt_4)
 				    if e.decayMode_4 != -1 : 
 					hTightMode['data']['t2_tt'][str(e.decayMode_4)][wp].Fill(e.pt_4)
@@ -580,7 +589,8 @@ for line in open(args.inFileName,'r').readlines() :
 				    hTight['m_em'][wp].Fill(e.pt_4)
 				    hTight['m_ll'][wp].Fill(e.pt_4)
 
-		    
+		    hMETTight[cat].Fill(metpt)
+
 		inFile.Close()
 
 	DD.printSummary()
@@ -737,7 +747,11 @@ for group in groups :
 for group in groups :
 
     for nickName in nickNames[group] :
-	inFileName = '{1:s}_{2:s}.root'.format(args.selection,nickName,str(args.year))
+
+	if islocal :    inFileName = '../MC/condor/{0:s}//{1:s}_{2:s}/{1:s}_{2:s}.root'.format(args.selection,vals[0],era)
+	else : inFileName = '{1:s}_{2:s}.root'.format(args.selection,vals[0],era)
+
+	#inFileName = '{1:s}_{2:s}.root'.format(args.selection,nickName,str(args.year))
 	print("Opening {0:s}".format(inFileName)) 
 	inFile = TFile.Open(inFileName)
 	inFile.cd()
@@ -750,6 +764,7 @@ for group in groups :
 	print ''
         print 'will work with', tree_, ' and ', nentries, inTree.GetName(), systematic
 	if nentries == 0 : continue
+        if i % 5000 ==0: print i, ' from ', nentries
 
 
 	if 'DY' in nickName : isDY = True
@@ -790,6 +805,24 @@ for group in groups :
 		njets = e.njets
 		nbtag = e.nbtag
 
+	    metpt = e.met
+	    metphi = e.metphi
+
+            if systematic in jesSyst :  
+		metpt = getattr(e, 'MET_T1_pt_{0:s}'.format(systematic), None)
+		metphi = getattr(e, 'MET_T1_phi_{0:s}'.format(systematic), None)
+		njets = getattr(e, 'njets_{0:s}'.format(systematic), None)
+		jpt = getattr(e, 'jpt_{0:s}'.format(systematic), None)
+		jeta = getattr(e, 'jeta_{0:s}'.format(systematic), None)
+		jflavour = getattr(e, 'jflavour_{0:s}'.format(systematic), None)
+		nbtag = getattr(e, 'nbtag_{0:s}'.format(systematic), None)
+
+            if 'scale_met_unclusteredUp' in systematic : 
+                met  = e.MET_pt_UnclUp
+                metphi  = e.MET_phi_UnclUp
+            if 'scale_met_unclusteredDown' in systematic : 
+                met  = e.MET_pt_UnclDown
+                metphi  = e.MET_phi_UnclDown
 
 	    if e.isTrig_1 == 0 : continue 
 	    if e.q_1*e.q_2 > 0. : continue
@@ -839,20 +872,10 @@ for group in groups :
                 if 'prefiredown' in systematic.lower() : weight_pref = e.L1PreFiringWeight_Down
 		weight = e.weightPUtrue * e.Generator_weight *sWeight * weight_pref
 
-            if systematic in jesSyst :  
-		met = getattr(e, 'MET_T1_pt_{0:s}'.format(systematic), None)
-		metphi = getattr(e, 'MET_T1_phi_{0:s}'.format(systematic), None)
-		njets = getattr(e, 'njets_{0:s}'.format(systematic), None)
-		jpt = getattr(e, 'jpt_{0:s}'.format(systematic), None)
-		jeta = getattr(e, 'jeta_{0:s}'.format(systematic), None)
-		jflavour = getattr(e, 'jflavour_{0:s}'.format(systematic), None)
-		nbtag = getattr(e, 'nbtag_{0:s}'.format(systematic), None)
 
 
 	    tauV3.SetPtEtaPhiM(e.pt_3, e.eta_3, e.phi_3, e.m_3)
 	    tauV4.SetPtEtaPhiM(e.pt_4, e.eta_4, e.phi_4, e.m_4)
-	    metpt = e.met
-	    metphi = e.metphi
 
 	    MetV.SetPx(metpt * cos (metphi))
 	    MetV.SetPy(metpt * sin (metphi))
@@ -860,6 +883,7 @@ for group in groups :
 	    met_y = metpt * sin(metphi)
 	    metcor = metpt
 
+            #print cat, e.evt, e.pt_3, e.pt_4, metpt
 
 
             '''
@@ -1076,7 +1100,7 @@ for group in groups :
 
 	    if cat[2:] == 'et' :
 		if e.iso_3 < iso_el and  e.Electron_mvaFall17V2noIso_WP90_3 > 0 : isTight1 = True
-		if e.idDeepTau2017v2p1VSjet_4 >= wp and e.idDeepTau2017v2p1VSmu_4 >= et_tau_vsmu and  e.idDeepTau2017v2p1VSe_4 >= et_tau_vse: isTight2= True
+		if e.idDeepTau2017v2p1VSjet_4 >= int(wp) and e.idDeepTau2017v2p1VSmu_4 >= et_tau_vsmu and  e.idDeepTau2017v2p1VSe_4 >= et_tau_vse: isTight2= True
 
                 if tights or  isTight2:
 		    #if e.gen_match_3 == 1 or e.gen_match_3 == 15 :
@@ -1113,7 +1137,7 @@ for group in groups :
 			    hBasePromptMode[group]['t_ll'][str(e.decayMode_4)].Fill(e.pt_4,weight)
 
 			for wp in WP : 
-			    if e.idDeepTau2017v2p1VSjet_4 >= wp and e.idDeepTau2017v2p1VSmu_4 >= et_tau_vsmu and  e.idDeepTau2017v2p1VSe_4 >= et_tau_vse: 
+			    if e.idDeepTau2017v2p1VSjet_4 >= int(wp) and e.idDeepTau2017v2p1VSmu_4 >= et_tau_vsmu and  e.idDeepTau2017v2p1VSe_4 >= et_tau_vse: 
 				hTightPrompt[group]['t_et'][wp].Fill(e.pt_4,weight)
 				hTightPrompt[group]['t_ll'][wp].Fill(e.pt_4,weight)
 				if e.decayMode_4 != -1 : 
@@ -1130,7 +1154,7 @@ for group in groups :
 			    hBasenoPromptMode[group]['t_ll'][str(e.decayMode_4)].Fill(e.pt_4,weight)
 
 			for wp in WP : 
-			    if e.idDeepTau2017v2p1VSjet_4 >= wp and e.idDeepTau2017v2p1VSmu_4 >= et_tau_vsmu and  e.idDeepTau2017v2p1VSe_4 >= et_tau_vse: 
+			    if e.idDeepTau2017v2p1VSjet_4 >= int(wp) and e.idDeepTau2017v2p1VSmu_4 >= et_tau_vsmu and  e.idDeepTau2017v2p1VSe_4 >= et_tau_vse: 
 				hTightnoPrompt[group]['t_et'][wp].Fill(e.pt_4,weight)
 				hTightnoPrompt[group]['t_ll'][wp].Fill(e.pt_4,weight)
 				if e.decayMode_4 != -1 : 
@@ -1140,7 +1164,7 @@ for group in groups :
 
 	    if cat[2:] == 'mt' :
 		if e.iso_3 < iso_mu and  (e.isGlobal_3 > 0 or e.isTracker_3 > 0) and e.mediumId_3 > 0: isTight1 = True
-	        if e.idDeepTau2017v2p1VSjet_4 >= wp and e.idDeepTau2017v2p1VSmu_4 >= mt_tau_vsmu and  e.idDeepTau2017v2p1VSe_4 >= mt_tau_vse : isTight2= True
+	        if e.idDeepTau2017v2p1VSjet_4 >= int(wp) and e.idDeepTau2017v2p1VSmu_4 >= mt_tau_vsmu and  e.idDeepTau2017v2p1VSe_4 >= mt_tau_vse : isTight2= True
 
                 if tights or  isTight2:
 		    #if e.gen_match_3 == 1 or e.gen_match_3 == 15:
@@ -1184,7 +1208,7 @@ for group in groups :
 			    hBasePromptMode[group]['t_mt'][str(e.decayMode_4)].Fill(e.pt_4,weight)
 			    hBasePromptMode[group]['t_ll'][str(e.decayMode_4)].Fill(e.pt_4,weight)
 			for wp in WP : 
-			    if e.idDeepTau2017v2p1VSjet_4 >= wp and e.idDeepTau2017v2p1VSmu_4 >= mt_tau_vsmu and  e.idDeepTau2017v2p1VSe_4 >= mt_tau_vse :
+			    if e.idDeepTau2017v2p1VSjet_4 >= int(wp) and e.idDeepTau2017v2p1VSmu_4 >= mt_tau_vsmu and  e.idDeepTau2017v2p1VSe_4 >= mt_tau_vse :
 				    hTightPrompt[group]['t_mt'][wp].Fill(e.pt_4,weight)
 				    hTightPrompt[group]['t_ll'][wp].Fill(e.pt_4,weight)
 				    if e.decayMode_4 != -1 : 
@@ -1209,15 +1233,15 @@ for group in groups :
 
 
 	    if cat[2:] == 'tt':
-		if e.idDeepTau2017v2p1VSjet_3 >= wp and e.idDeepTau2017v2p1VSmu_3 >= tt_tau_vsmu and  e.idDeepTau2017v2p1VSe_3 >= tt_tau_vse: isTight1= True
-		if e.idDeepTau2017v2p1VSjet_4 >=wp and e.idDeepTau2017v2p1VSmu_4 >= tt_tau_vsmu and  e.idDeepTau2017v2p1VSe_4 >= tt_tau_vse : isTight2= True
+		if e.idDeepTau2017v2p1VSjet_3 >= int(wp) and e.idDeepTau2017v2p1VSmu_3 >= tt_tau_vsmu and  e.idDeepTau2017v2p1VSe_3 >= tt_tau_vse: isTight1= True
+		if e.idDeepTau2017v2p1VSjet_4 >=int(wp) and e.idDeepTau2017v2p1VSmu_4 >= tt_tau_vsmu and  e.idDeepTau2017v2p1VSe_4 >= tt_tau_vse : isTight2= True
 
                 if tights or  isTight2:
 		    if e.gen_match_3 != 0 and e.gen_match_3 != -1:
 			hBasePrompt[group]['t1_tt'].Fill(e.pt_3,weight)
 			if e.decayMode_3 != -1 : hBasePromptMode[group]['t1_tt'][str(e.decayMode_3)].Fill(e.pt_3,weight)
 			for wp in WP : 
-			    if e.idDeepTau2017v2p1VSjet_3 >= wp and e.idDeepTau2017v2p1VSmu_3 >= tt_tau_vsmu and  e.idDeepTau2017v2p1VSe_3 >= tt_tau_vse: 
+			    if e.idDeepTau2017v2p1VSjet_3 >= int(wp) and e.idDeepTau2017v2p1VSmu_3 >= tt_tau_vsmu and  e.idDeepTau2017v2p1VSe_3 >= tt_tau_vse: 
 				hTightPrompt[group]['t1_tt'][wp].Fill(e.pt_3,weight)
 				if e.decayMode_3 != -1 : hTightPromptMode[group]['t1_tt'][str(e.decayMode_3)][wp].Fill(e.pt_3,weight)
 
@@ -1226,7 +1250,7 @@ for group in groups :
 			if e.decayMode_3 != -1 : hBasenoPromptMode[group]['t1_tt'][str(e.decayMode_3)].Fill(e.pt_3,weight)
 
 			for wp in WP : 
-			    if e.idDeepTau2017v2p1VSjet_3 >= wp and e.idDeepTau2017v2p1VSmu_3 >= tt_tau_vsmu and  e.idDeepTau2017v2p1VSe_3 >= tt_tau_vse: 
+			    if e.idDeepTau2017v2p1VSjet_3 >= int(wp) and e.idDeepTau2017v2p1VSmu_3 >= tt_tau_vsmu and  e.idDeepTau2017v2p1VSe_3 >= tt_tau_vse: 
 				hTightnoPrompt[group]['t1_tt'][wp].Fill(e.pt_3,weight)
 				if e.decayMode_3 != -1 : hTightnoPromptMode[group]['t1_tt'][str(e.decayMode_3)][wp].Fill(e.pt_3,weight)
 
@@ -1236,7 +1260,7 @@ for group in groups :
 			hBasePrompt[group]['t2_tt'].Fill(e.pt_4,weight)
 			if e.decayMode_4 != -1 : hBasePromptMode[group]['t2_tt'][str(e.decayMode_4)].Fill(e.pt_4,weight)
 			for wp in WP : 
-		            if e.idDeepTau2017v2p1VSjet_4 >=wp and e.idDeepTau2017v2p1VSmu_4 >= tt_tau_vsmu and  e.idDeepTau2017v2p1VSe_4 >= tt_tau_vse : 
+		            if e.idDeepTau2017v2p1VSjet_4 >= int(wp) and e.idDeepTau2017v2p1VSmu_4 >= tt_tau_vsmu and  e.idDeepTau2017v2p1VSe_4 >= tt_tau_vse : 
 				hTightPrompt[group]['t2_tt'][wp].Fill(e.pt_4,weight)
 				if e.decayMode_4 != -1 : hTightPromptMode[group]['t2_tt'][str(e.decayMode_4)][wp].Fill(e.pt_4,weight)
 
@@ -1245,7 +1269,7 @@ for group in groups :
 			if e.decayMode_4 != -1 : hBasenoPromptMode[group]['t2_tt'][str(e.decayMode_4)].Fill(e.pt_4,weight)
 
 			for wp in WP : 
-		            if e.idDeepTau2017v2p1VSjet_4 >=wp and e.idDeepTau2017v2p1VSmu_4 >= tt_tau_vsmu and  e.idDeepTau2017v2p1VSe_4 >= tt_tau_vse : 
+		            if e.idDeepTau2017v2p1VSjet_4 >= int(wp) and e.idDeepTau2017v2p1VSmu_4 >= tt_tau_vsmu and  e.idDeepTau2017v2p1VSe_4 >= tt_tau_vse : 
 				hTightnoPrompt[group]['t2_tt'][wp].Fill(e.pt_4,weight)
 				if e.decayMode_4 != -1 : hTightnoPromptMode[group]['t2_tt'][str(e.decayMode_4)][wp].Fill(e.pt_4,weight)
 
@@ -1323,6 +1347,13 @@ for h in hList :
     for wp in WP :
         OverFlow(hTight[h][wp])
         hTight[h][wp].Write()
+
+for icat, cat in cats.items()[0:8] :
+    OverFlow(hMETBase[cat])
+    OverFlow(hMETTight[cat])
+    hMETBase[cat].Write()
+    hMETTight[cat].Write()
+
 
 
 

@@ -94,7 +94,7 @@ def getArgs() :
     parser.add_argument("-b", "--bruteworkingPoint",type=int, default=16, help="make working point for fakes 16 (M), 32(T), 64(VT), 128(VVT)")
     parser.add_argument("-j", "--inSystematics",type=str, default='',help='systematic variation')
     parser.add_argument("-e", "--extraTag",type=str, default='',help='extra tag; wL, noL wrt to fakes method')
-    parser.add_argument("-g", "--genTag",type=str, default='v2',help='extra tag for gen, pow or mcnlo')
+    parser.add_argument("-g", "--genTag",type=str, default='v4',help='which fakesFactor scheme will be used')
     parser.add_argument("-i", "--isLocal",type=str, default=0,help='local or condor')
     parser.add_argument("-t", "--gType",type=str, default='',help='type : data, Signal, Other')
     
@@ -188,7 +188,7 @@ def deltaEta(Px1, Py1, Pz1, Px2,  Py2,  Pz2):
   return dEta
 
 
-def getFakeWeightsvspTvsDM(ic, pt1,pt2, WP, DM1, DM2) :
+def getFakeWeightsvspTvsDM(ic, pt1,pt2, WP, DM1, DM2,syst) :
     if ic == 'et' : 
         p1 = 'e_e'
         p2 = 't_et'
@@ -206,7 +206,8 @@ def getFakeWeightsvspTvsDM(ic, pt1,pt2, WP, DM1, DM2) :
         p2 = 't2_tt'
 
     #print 'the name will be', '{0:s}_{1:s}DM_vspT'.format(p1,str(DM1)), '{0:s}_{1:s}DM_vspT'.format(p2,str(DM2))
-    filein = './FakesResult_{0:s}_SS_{1:s}WP.root'.format(str(args.year),str(WP))
+    filein = './FakesResult_{0:s}_SS_{1:s}WP_sys{2:s}.root'.format(str(args.year),str(WP),syst)
+    #print 'filein------------------------->', filein
     fin = TFile.Open(filein,"READ")         
     h1 = fin.Get('{0:s}_vspT'.format(p1))
     h2 = fin.Get('{0:s}_vspT'.format(p2))
@@ -289,14 +290,14 @@ for i, sys in enumerate(scale) :
 
 #listsyst=['njets', 'nbtag', 'jpt', 'jeta', 'jflavour','MET_T1_pt', 'MET_T1_phi', 'MET_pt', 'MET_phi', 'MET_T1Smear_pt', 'MET_T1Smear_phi']
 
-jes=['jesAbsolute', 'jesAbsolute{0:s}'.format(str(era)), 'jesBBEC1', 'jesBBEC1{0:s}'.format(str(era)), 'jesEC2', 'jesEC2{0:s}'.format(str(era)), 'jesFlavorQCD', 'jesHF', 'jesHF{0:s}'.format(str(era)), 'jesRelativeBal', 'jesRelativeSample{0:s}'.format(str(era)), 'jesHEMIssue', 'jesTotal', 'jer']
+jes=['jesAbsolute', 'jesAbsolute_{0:s}'.format(str(era)), 'jesBBEC1', 'jesBBEC1_{0:s}'.format(str(era)), 'jesEC2', 'jesEC2_{0:s}'.format(str(era)), 'jesFlavorQCD', 'jesHF', 'jesHF_{0:s}'.format(str(era)), 'jesRelativeBal', 'jesRelativeSample_{0:s}'.format(str(era)), 'jesHEMIssue', 'jesTotal', 'jer']
 
 jesSyst=[]
 for i, sys in enumerate(jes) :
     jesSyst.append(sys+'Up')
     jesSyst.append(sys+'Down')
 
-otherS=['NLOEWK','PreFire','tauideff_pt20to25', 'tauideff_pt25to30', 'tauideff_pt30to35', 'tauideff_pt35to40', 'tauideff_ptgt40'] 
+otherS=['NLOEWK','PreFire','tauideff_pt20to25', 'tauideff_pt25to30', 'tauideff_pt30to35', 'tauideff_pt35to40', 'tauideff_ptgt40','scale_met_unclustered'] 
 OtherSyst=[]
 for i, sys in enumerate(otherS) :
     OtherSyst.append(sys+'Up')
@@ -316,56 +317,57 @@ if str(args.inSystematics) not in sysall :
 systematic=str(args.inSystematics)
 #systematic='jerUp'
 
+if str(args.gType) !='data' :
 
-gInterpreter.ProcessLine('.L BTagCalibrationStandalone.cpp+') 
-calib = ROOT.BTagCalibration('csvv1', 'DeepCSV_{0:s}.csv'.format(era))
-# making a std::vector<std::string>> in python is a bit awkward, 
-# but works with root (needed to load other sys types):
-v_sys = getattr(ROOT, 'vector<string>')()
-#v_sys.push_back('up')
-#v_sys.push_back('down')
-
-
-
-# make a reader instance and load the sf data
-reader_b = ROOT.BTagCalibrationReader(
-    3,              # 0 is for loose op, 1: medium, 2: tight, 3: discr. reshaping
-    "central",      # central systematic type
-    v_sys,          # vector of other sys. types
-)    
+    gInterpreter.ProcessLine('.L BTagCalibrationStandalone.cpp+') 
+    calib = ROOT.BTagCalibration('csvv1', 'DeepCSV_{0:s}.csv'.format(era))
+    # making a std::vector<std::string>> in python is a bit awkward, 
+    # but works with root (needed to load other sys types):
+    v_sys = getattr(ROOT, 'vector<string>')()
+    #v_sys.push_back('up')
+    #v_sys.push_back('down')
 
 
-reader_b.load(
-    calib, 
-    0,          # 0 is for b flavour, 1: FLAV_C, 2: FLAV_UDSG 
-    "iterativefit"      # measurement type
-)
 
-reader_c = ROOT.BTagCalibrationReader(
-    3,              # 0 is for loose op, 1: medium, 2: tight, 3: discr. reshaping
-    "central",      # central systematic type
-    v_sys,          # vector of other sys. types
-)    
+    # make a reader instance and load the sf data
+    reader_b = ROOT.BTagCalibrationReader(
+	3,              # 0 is for loose op, 1: medium, 2: tight, 3: discr. reshaping
+	"central",      # central systematic type
+	v_sys,          # vector of other sys. types
+    )    
 
 
-reader_c.load(
-    calib, 
-    1,          # 0 is for b flavour, 1: FLAV_C, 2: FLAV_UDSG 
-    "iterativefit"      # measurement type
-)
+    reader_b.load(
+	calib, 
+	0,          # 0 is for b flavour, 1: FLAV_C, 2: FLAV_UDSG 
+	"iterativefit"      # measurement type
+    )
 
-reader_light = ROOT.BTagCalibrationReader(
-    3,              # 0 is for loose op, 1: medium, 2: tight, 3: discr. reshaping
-    "central",      # central systematic type
-    v_sys,          # vector of other sys. types
-)    
+    reader_c = ROOT.BTagCalibrationReader(
+	3,              # 0 is for loose op, 1: medium, 2: tight, 3: discr. reshaping
+	"central",      # central systematic type
+	v_sys,          # vector of other sys. types
+    )    
 
 
-reader_light.load(
-    calib, 
-    2,          # 0 is for b flavour, 1: FLAV_C, 2: FLAV_UDSG 
-    "iterativefit"      # measurement type
-)
+    reader_c.load(
+	calib, 
+	1,          # 0 is for b flavour, 1: FLAV_C, 2: FLAV_UDSG 
+	"iterativefit"      # measurement type
+    )
+
+    reader_light = ROOT.BTagCalibrationReader(
+	3,              # 0 is for loose op, 1: medium, 2: tight, 3: discr. reshaping
+	"central",      # central systematic type
+	v_sys,          # vector of other sys. types
+    )    
+
+
+    reader_light.load(
+	calib, 
+	2,          # 0 is for b flavour, 1: FLAV_C, 2: FLAV_UDSG 
+	"iterativefit"      # measurement type
+    )
 
 tt_tau_vse = 4
 tt_tau_vsmu = 1
@@ -649,12 +651,14 @@ if args.redoFit.lower() == 'no' : outFileName = 'allGroups_{0:d}_{1:s}_LT{2:02d}
 if args.redoFit.lower() != 'no' : outFileName = 'allGroups_{0:d}_{1:s}_LT{2:02d}_{3:s}SV'.format(args.year,args.sign,int(args.LTcut), str(args.workingPoint))
 
 
+#args.redoFit='yes'
+
 WP = args.workingPoint
 vertag = str(args.genTag)
 WPSR= 16
 if args.workingPoint == args.bruteworkingPoint : WPSR = WP
 outFileName = outFileName +"_"+str(args.bruteworkingPoint)+"brute_"+str(args.inSystematics)
-FF = fakeFactor.fakeFactor(args.year,WP,extratag, vertag)
+FF = fakeFactor.fakeFactor(args.year,WP,extratag, vertag,systematic)
 
 
 
@@ -1062,6 +1066,8 @@ for ig, group in enumerate(groups) :
             try : 
                 met = e.met
                 metphi = e.metphi
+		#met = getattr(e, 'MET_T1Smear_pt', None)
+		#metphi = getattr(e, 'MET_T1Smear_phi', None)
 
 		njets = getattr(e, 'njets_nom', None)
 		jpt = getattr(e, 'jpt_nom', None)
@@ -1078,6 +1084,12 @@ for ig, group in enumerate(groups) :
                 jflavour = e.jflavour
                 nbtag = e.nbtag
 
+            if 'scale_met_unclusteredUp' in systematic : 
+                met  = e.MET_pt_UnclUp
+                metphi  = e.MET_phi_UnclUp
+            if 'scale_met_unclusteredDown' in systematic : 
+                met  = e.MET_pt_UnclDown
+                metphi  = e.MET_phi_UnclDown
             #print 'compare', met, e.metNoTauES, njets, e.njets, 'jpt', jpt[0], e.jpt[0]
 
 
@@ -1104,8 +1116,14 @@ for ig, group in enumerate(groups) :
 		# the pu weight is the e.weight in the ntuples
 		#print 'weights', group, nickName, e.Generator_weight, e.weight, i
                 weight_pref = e.L1PreFiringWeight_Nom
-                if 'prefireup' in systematic.lower() :  weight_pref = e.L1PreFiringWeight_Up
-                if 'prefiredown' in systematic.lower() : weight_pref = e.L1PreFiringWeight_Down
+
+                if 'prefireup' in systematic.lower() :  
+                    try : weight_pref = e.L1PreFiringWeight_Up
+                    except AttributeError : weight_pref = 1.
+
+                if 'prefiredown' in systematic.lower() : 
+                    try : weight_pref = e.L1PreFiringWeight_Down ## <------- This will change to _Down
+                    except AttributeError : weight_pref = 1.
 
 		weight = e.weightPUtrue * e.Generator_weight *sWeight * weight_pref
 		weightFM = e.weightPUtrue * e.Generator_weight *sWeight * weight_pref
@@ -1260,7 +1278,6 @@ for ig, group in enumerate(groups) :
                         except IndexError : btag_sf = 1.
 		weight *= btag_sf
 		weightFM *= btag_sf
-
 
             iCut +=1
             WCounter[iCut-1][icat-1][inick] += weightCF
@@ -1626,10 +1643,11 @@ for ig, group in enumerate(groups) :
            
             #print 'made thus far', leptons_sf
 	    fastMTTmass, fastMTTtransverseMass = -1, -1
-	    if (args.redoFit.lower() == 'yes' or args.redoFit.lower() == 'true' or systematic in jesSyst) and systematic not in OtherSyst : 
+	    if args.redoFit.lower() == 'yes' or args.redoFit.lower() == 'true' or systematic in jesSyst or 'scale_met' in systematic : 
 		fastMTTmass, fastMTTtransverseMass = runSVFit(e,tauV3, tauV4, MetV, cat[2:]) 
             else  : fastMTTmass, fastMTTtransverseMass = e.m_sv, e.mt_sv
-	    #print 'new', fastMTTmass, 'old', e.m_sv, fastMTTtransverseMass, e.mt_sv, cat[2:]
+	    #print 'new', fastMTTmass, 'old', e.m_sv, fastMTTtransverseMass, e.mt_sv, cat[2:] , args.redoFit.lower() , met, e.MET_pt_UnclUp , e.met ,'scale_met' in systematic
+
 
             mass = 0.0005
             if cat[:2] == 'mm' : mass = .105

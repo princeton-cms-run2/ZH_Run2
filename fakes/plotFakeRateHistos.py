@@ -4,7 +4,7 @@
 import tdrstyle 
 import CMS_lumi
 from ROOT import TFile, TTree, TH1D, TCanvas, TLorentzVector, TLatex, kRed, kBlue, kBlack, TLegend, TF1, gStyle, gROOT, THStack, TColor, TPad, gPad
-from ROOT import kBlack, kBlue, kMagenta, kOrange, kAzure, kRed, kGreen, TLatex
+from ROOT import kBlack, kBlue, kMagenta, kOrange, kAzure, kRed, kGreen, TLatex, kCyan,kGray, kTeal, kYellow, kFALSE
 gROOT.SetBatch(True) # don't pop up any plots
 from array import array
 def getArgs() :
@@ -15,6 +15,8 @@ def getArgs() :
     parser.add_argument("-y","--year",default=2018,type=int,help="Year for data.")
     parser.add_argument("-r","--region",default='SS',type=str,help="Year for data.")
     parser.add_argument("-w","--workingPoint",default='16',type=str,help="16 = Medium, 32 = Tight, 64 = VTight, 128 = VVTight")
+    parser.add_argument("-e","--extraTag",default='16',type=str,help="16 = Medium, 32 = Tight, 64 = VTight, 128 = VVTight")
+    parser.add_argument("-s","--systematic",default='Central',type=str,help="Systematic ")
     return parser.parse_args()
 
 
@@ -37,7 +39,10 @@ args = getArgs()
 era = str(args.year)
 cats = { 1:'eeet', 2:'eemt', 3:'eett', 4:'mmet', 5:'mmmt', 6:'mmtt', 7:'et', 8:'mt', 9:'tt' }
 hList = ['e_et','t_et','m_mt','t_mt','t1_tt','t2_tt', 'e_em', 'm_em']
-hListMode = ['t_et','t_mt','t1_tt','t2_tt']
+hListll = ['e_et','e_ll','t_ll','m_mt','m_ll','m_em','e_em']
+hListall = hList + hListll
+hListMode = ['t_et','t_mt','t1_tt','t2_tt','t_ll']
+#hListMode = ['t_et','t_mt','t1_tt','t2_tt']
 hModes = ['0','1','10','11']
 
 tdrstyle.setTDRStyle()
@@ -55,11 +60,23 @@ if args.year == 201618 : iPeriod = 3
 
 
 kTop = TColor.GetColor("#ffcc66")
+kTop = TColor.GetColor("#ff8066")
 kDY = TColor.GetColor("#58d885")
 kWZ = TColor.GetColor('#d88558')
 kVVV = TColor.GetColor('#3e80db')
+
+
 colors = {'WJets':kMagenta-10,'Rare':kBlue-8,'ZZ':kAzure-9,'Top':kTop,'DY':kDY}
-colors = {'data':0,'WJets':kMagenta-10,'Other':kBlue-8,'ZZ':kAzure-9,'Top':kTop,'DY':kDY,'Signal':kRed+1, 'ZZincl':kAzure-9, 'Topp':kTop, 'WZincl':kBlue-8, 'WZ':kWZ, 'WWincl':kBlue-8, 'WW':kRed-8, 'VVV':kVVV, 'TTX':kTop}
+colors = {'data':0,'WJets':kMagenta-10,'Other':kOrange,'ZZ':kAzure-9,'Top':kTop,'DY':kDY,'Signal':kRed+1, 'ZZincl':kAzure-9, 'Topp':kTop, 'WZincl':kBlue-8, 'WZ':kWZ, 'WWincl':kBlue-8, 'WW':kRed-8, 'VVV':kVVV, 'TTX':kTop}
+
+
+kfake = TColor.GetColor('#c34bb2')
+kf1 = TColor.GetColor('#d886c9')
+kf2 = TColor.GetColor('#a4c5b4')
+
+colors = {'bfl':kCyan, 'ljfl':kRed+1,  'cfl':kCyan+2,'jfl':kGreen-3 ,  'data':0,'Reducible':kf1,'fakes':kf1,'f1':kf1, 'f2':kf1, 'WJets':kMagenta-10, 'WH':kMagenta, 'ggZH':kTop, 'ZH':kTop, 'Other':kOrange,'ZZ':kAzure-9,'Top':kTop,'DY':kDY,'Signal':kRed+1, 'ZZ4L':kAzure-8, 'Topp':kTop, 'WZincl':kBlue-8, 'WZ':kWZ, 'WWincl':kBlue-8, 'WW':kRed-8, 'VVV':kVVV, 'TTX':kTop, 'jft1':41, 'jft2':38, 'bfl1':7, 'ljfl1':8,  'cfl1':29,'jfl1':50, 'bfl2':93, 'ljfl2':9,  'cfl2':226,'jfl2':207}
+
+#colors = {'bfl':kCyan, 'ljfl':kRed+1,  'cfl':kCyan+2,'jfl':kGreen-3 ,  'VVV':kVVV, 'data':0,'fakes':kMagenta-10,'f1':kMagenta-7, 'f2':kMagenta-5, 'WJets':kMagenta-10,'Other':kOrange,'ZZ':kAzure-9,'Top':kTop,'DY':kDY,'Signal':kRed+1, 'ZZ4L':kAzure-8, 'Topp':kT     op, 'WZincl':kBlue-8, 'WZ':kWZ, 'WWincl':kBlue-8, 'WW':kRed-8, 'VVV':kVVV, 'TTX':kTop, 'jft1':41, 'jft2':38, 'bfl1':7, 'ljfl1':8,  'cfl1':29,'jfl1':50, 'bfl2':93, 'ljfl2':9,  'cfl2':226,'jfl2':207}
 
 
 # size info
@@ -76,57 +93,77 @@ B_ratio_label = 0.3*H_ref
 
 wp = str(args.workingPoint)
 # Read in fake-rate histograms and use them to calculate the fake rate factors
-extratag="_nbtag_precut"
-extratag=''
-fin='FakeRates_{0:s}_{1:s}{2:s}.root'.format(str(args.year),args.region,str(extratag))
+extratag=str(args.extraTag)
+#fin='FakeRates_{0:s}_SS_sys{2:s}.root'.format(str(args.year),args.region,str(args.systematic))
+
+fin = str(args.inFileName)
 #fin='FakeRates_2018_SS_nbtag_precut.root'.format(str(args.year),args.region)
 f = TFile(fin)
 hBase, hTight, hBasePrompt, hTightPrompt, hBaseMode, hTightMode, hBasePromptMode, hTightPromptMode, hBasenoPrompt, hTightnoPrompt, hBasenoPromptMode, hTightnoPromptMode= {}, {}, {}, {}, {}, {}, {} ,{}, {}, {}, {}, {}
 groups = ['Other','Top','DY','WZ','ZZ']
+groups = ['Other','ggZH','ZZ','ZH','WH']
 
-outFileName = 'FakesResult_{0:s}_{1:s}_{2:s}WP.root'.format( str(args.year), str(args.region), wp)
+if 'v1' in extratag : extratag=extratag.replace('v1','wL')
+if 'v0' in extratag : extratag=extratag.replace('v0','noL')
+
+
+outFileName = 'FakesResult_{0:s}_{1:s}_{2:s}WP_sys{3:s}.root'.format( str(args.year), str(args.region), wp, str(args.systematic))
 fOut = TFile( outFileName, 'recreate' )
 
 #WP=['16','32','64','128']
 
-for h in hList :
+hMETBase, hMETTight = {}, {}
+
+
+for h in hListall :
     hName = "{0:s}Base".format(h)
     hBase[h] = f.Get(hName) 
-    hBase[h].Sumw2()
+    #hBase[h].Sumw2()
     hTight[h]= f.Get("{0:s}_{1:s}Tight".format(h,wp))
-    hTight[h].Sumw2()
+    #hTight[h].Sumw2()
     hBaseMode[h]={}
     hTightMode[h]={}
     
     for m in hModes :
         hName = "data_{0:s}_{1:s}Mode_Base".format(h,m)
         hBaseMode[h][m] = f.Get(hName) 
-        hBaseMode[h][m].Sumw2()
+        #hBaseMode[h][m].Sumw2()
 	hName = "data_{0:s}_{1:s}_{2:s}Mode_Tight".format(h,m,wp)
 	hTightMode[h][m] = f.Get(hName) 
-	hTightMode[h][m].Sumw2()
+	#hTightMode[h][m].Sumw2()
+
+
 
 for group in groups :
+
     hBasePrompt[group], hTightPrompt[group] = {}, {}
     hBasePromptMode[group], hTightPromptMode[group] = {}, {}
     hBasenoPromptMode[group], hTightnoPromptMode[group] = {}, {}
     hBasenoPrompt[group], hTightnoPrompt[group] = {}, {}
-    for h in hList :
+
+    hMETBase[group]={}
+    hMETTight[group]={}
+     
+    for icat, cat in cats.items()[0:8] :
+        hName='{0:s}_met_base_{1:s}'.format(group, cat)
+	hMETBase[group][cat] = f.Get(hName)
+        hName='{0:s}_met_tight_{1:s}'.format(group, cat)
+	hMETTight[group][cat] = f.Get(hName)
+
+    for h in hListall :
+        print group, h
 	hName = "{0:s}_{1:s}BasePrompt".format(group,h)
 	hBasePrompt[group][h] = f.Get(hName)
-	hBasePrompt[group][h].Sumw2()
+	#hBasePrompt[group][h].Sumw2()
 
 	hName = "{0:s}_{1:s}_{2:s}TightPrompt".format(group,h,wp)
 	hTightPrompt[group][h] = f.Get(hName)
-	hTightPrompt[group][h].Sumw2()
 
 	hName = "{0:s}_{1:s}BasenoPrompt".format(group,h)
 	hBasenoPrompt[group][h] = f.Get(hName)
-	hBasenoPrompt[group][h].Sumw2()
 
 	hName = "{0:s}_{1:s}_{2:s}TightnoPrompt".format(group,h,wp)
 	hTightnoPrompt[group][h] = f.Get(hName)
-	hTightnoPrompt[group][h].Sumw2()
 
         print hBasePrompt[group][h].GetName(), hBasePrompt[group][h].GetSumOfWeights(), hTightPrompt[group][h].GetName(), hTightPrompt[group][h].GetSumOfWeights()
 
@@ -233,8 +270,8 @@ if True :
         c11.Update()
         CMS_lumi.CMS_lumi(c11, iPeriod, 11)
 
-    c11.SaveAs("Tight_Base_Data_Hist_"+era+"_"+args.region+"_"+str(wp)+".pdf")
-    c11.SaveAs("Tight_Base_Data_Hist_"+era+"_"+args.region+"_"+str(wp)+".png")
+    c11.SaveAs("Tight_Base_Data_Hist_"+era+"_"+args.region+"_"+str(wp)+"_"+str(extratag)+"_sys"+str(args.systematic)+".pdf")
+    c11.SaveAs("Tight_Base_Data_Hist_"+era+"_"+args.region+"_"+str(wp)+"_"+str(extratag)+"_sys"+str(args.systematic)+".png")
 
 
 ######################## Per decay Mode
@@ -329,9 +366,9 @@ if True :
 	    leg[h][m] = TLegend(0.43,0.63,0.96,0.96,h)
 	    leg[h][m].SetTextSize(0.085)
 	    title="Prompt Base DM{0:s}(MC)".format(m)
-	    leg[h][m].AddEntry(hBasePromptMode['ZZ'][h][m],title,"l")
+	    #leg[h][m].AddEntry(hBasePromptMode['ZZ'][h][m],title,"l")
 	    title="Tight Base DM{0:s}(MC)".format(m)
-	    leg[h][m].AddEntry(hTightPromptMode['ZZ'][h][m],title,"L")
+	    #leg[h][m].AddEntry(hTightPromptMode['ZZ'][h][m],title,"L")
 
 	    legDM[h][m] = TLegend(0.60,0.63,0.96,0.9,h+" DM"+m)
 	    legDM[h][m].SetTextSize(0.085)
@@ -349,6 +386,8 @@ if True :
 		hBasePromptMode[group][h][m].GetXaxis().SetTitleSize(0.05)
 		hBasePromptMode[group][h][m].SetMinimum(0.1)
 		hBasePromptMode[group][h][m].SetMaximum(hBasePromptMode[group][h][m].GetMaximum()*700)
+		hBasePromptMode[group][h][m].SetMaximum(0.25)
+		if m =='DM11' : hBasePromptMode[group][h][m].SetMaximum(0.15)
 
 
 		hBasePromptMode[group][h][m].GetYaxis().SetTitle('Counts') 
@@ -378,7 +417,8 @@ if True :
 	    hNum[h][m].Divide(hDenom[h][m])
 	    hNum[h][m].GetXaxis().SetRangeUser(xMin,xMax)
 	    hNum[h][m].SetMinimum(yMin)
-	    hNum[h][m].SetMaximum(yMax)
+	    hNum[h][m].SetMaximum(0.25)
+            if m =='DM11' :hNum[h][m].SetMaximum(0.15)
 	    hNum[h][m].SetLineWidth(1)
 	    hNum[h][m].SetMarkerStyle(20)
 	    hNum[h][m].SetMarkerSize(1.0)
@@ -440,10 +480,10 @@ if True :
 	c4.Update()
         CMS_lumi.CMS_lumi(c12, iPeriod, 11)
 	c12.Update()
-    c12.SaveAs("Tight_Base_MC_Hist_DM_"+era+"_"+args.region+"_"+str(wp)+".pdf")
-    c12.SaveAs("Tight_Base_MC_Hist_DM_"+era+"_"+args.region+"_"+str(wp)+".png")
-    c4.SaveAs("Corrected_Fake_DM_"+era+"_"+args.region+"_"+str(wp)+".pdf")
-    c4.SaveAs("Corrected_Fake_DM_"+era+"_"+args.region+"_"+str(wp)+".png")
+    c12.SaveAs("Tight_Base_MC_Hist_DM_"+era+"_"+args.region+"_"+str(wp)+"_"+str(extratag)+"_sys"+str(args.systematic)+".pdf")
+    c12.SaveAs("Tight_Base_MC_Hist_DM_"+era+"_"+args.region+"_"+str(wp)+"_"+str(extratag)+"_sys"+str(args.systematic)+".png")
+    c4.SaveAs("Corrected_Fake_DM_"+era+"_"+args.region+"_"+str(wp)+"_"+str(extratag)+"_sys"+str(args.systematic)+".pdf")
+    c4.SaveAs("Corrected_Fake_DM_"+era+"_"+args.region+"_"+str(wp)+"_"+str(extratag)+"_sys"+str(args.systematic)+".png")
 #################### no Prompt
 ######################## Per decay Mode
 
@@ -511,9 +551,9 @@ if True :
 	    leg[h][m] = TLegend(0.43,0.63,0.96,0.96,h)
 	    leg[h][m].SetTextSize(0.085)
 	    title="noPrompt Base DM{0:s}(MC)".format(m)
-	    leg[h][m].AddEntry(hBasenoPromptMode['ZZ'][h][m],title,"l")
+	    #leg[h][m].AddEntry(hBasenoPromptMode['ZZ'][h][m],title,"l")
 	    title="noPrompt Tight DM{0:s}(MC)".format(m)
-	    leg[h][m].AddEntry(hTightPromptMode['ZZ'][h][m],title,"L")
+	    #leg[h][m].AddEntry(hTightPromptMode['ZZ'][h][m],title,"L")
             
 	    for group in groups :
             
@@ -564,8 +604,8 @@ if True :
 
 
 	c12.Update()
-    c12.SaveAs("Tight_Base_noPrompt_MC_Hist_DM_"+era+"_"+args.region+"_"+str(wp)+".pdf")
-    c12.SaveAs("Tight_Base_noPrompt_MC_Hist_DM_"+era+"_"+args.region+"_"+str(wp)+".png")
+    c12.SaveAs("Tight_Base_noPrompt_MC_Hist_DM_"+era+"_"+args.region+"_"+str(wp)+"_"+str(extratag)+"_sys"+str(args.systematic)+".pdf")
+    c12.SaveAs("Tight_Base_noPrompt_MC_Hist_DM_"+era+"_"+args.region+"_"+str(wp)+"_"+str(extratag)+"_sys"+str(args.systematic)+".png")
 
 
 
@@ -677,8 +717,8 @@ if True :
 
         CMS_lumi.CMS_lumi(c12, iPeriod, 11)
 	c12.Update()
-    c12.SaveAs("Tight_Base_noPromptMC_Hist_"+era+"_"+args.region+"_"+str(wp)+".pdf")
-    c12.SaveAs("Tight_Base_noPromptMC_Hist_"+era+"_"+args.region+"_"+str(wp)+".png")
+    c12.SaveAs("Tight_Base_noPromptMC_Hist_"+era+"_"+args.region+"_"+str(wp)+"_"+str(extratag)+"_sys"+str(args.systematic)+".pdf")
+    c12.SaveAs("Tight_Base_noPromptMC_Hist_"+era+"_"+args.region+"_"+str(wp)+"_"+str(extratag)+"_sys"+str(args.systematic)+".png")
 
 
 
@@ -801,8 +841,8 @@ if True :
 
         CMS_lumi.CMS_lumi(c12, iPeriod, 11)
 	c12.Update()
-    c12.SaveAs("Tight_Base_MC_Hist_"+era+"_"+args.region+"_"+str(wp)+".pdf")
-    c12.SaveAs("Tight_Base_MC_Hist_"+era+"_"+args.region+"_"+str(wp)+".png")
+    c12.SaveAs("Tight_Base_MC_Hist_"+era+"_"+args.region+"_"+str(wp)+"_"+str(extratag)+"_sys"+str(args.systematic)+".pdf")
+    c12.SaveAs("Tight_Base_MC_Hist_"+era+"_"+args.region+"_"+str(wp)+"_"+str(extratag)+"_sys"+str(args.systematic)+".png")
 ########################## noPrompt
 
 if True :
@@ -910,8 +950,8 @@ if True :
 
         CMS_lumi.CMS_lumi(c12, iPeriod, 11)
 	c12.Update()
-    c12.SaveAs("Tight_Base_noPrompt_MC_Hist_"+era+"_"+args.region+"_"+wp+".pdf")
-    c12.SaveAs("Tight_Base_noPrompt_MC_Hist_"+era+"_"+args.region+"_"+wp+".png")
+    c12.SaveAs("Tight_Base_noPrompt_MC_Hist_"+era+"_"+args.region+"_"+wp+"_"+str(extratag)+"_sys"+str(args.systematic)+".pdf")
+    c12.SaveAs("Tight_Base_noPrompt_MC_Hist_"+era+"_"+args.region+"_"+wp+"_"+str(extratag)+"_sys"+str(args.systematic)+".png")
 
 
 
@@ -983,7 +1023,7 @@ if True :
         CMS_lumi.CMS_lumi(c1, iPeriod, 11)
         c1.Update()
 
-    c1.SaveAs("Tight_Base_Data_ratio_"+era+"_"+args.region+"_"+wp+".png")
+    c1.SaveAs("Tight_Base_Data_ratio_"+era+"_"+args.region+"_"+wp+"_"+str(extratag)+"_sys"+str(args.systematic)+".png")
 
 if True :
     c2 = TCanvas('c2','Prompt Tight/Prompt Base (MC)',50,50,W,H)
@@ -1106,7 +1146,7 @@ if True :
         CMS_lumi.CMS_lumi(c3, iPeriod, 11)
 	c3.Update()
 	
-    c3.SaveAs("Tight_MC_Tight_Data_ratio_"+era+"_"+args.region+"_"+wp+".png")
+    c3.SaveAs("Tight_MC_Tight_Data_ratio_"+era+"_"+args.region+"_"+wp+"_"+str(extratag)+"_sys"+str(args.systematic)+".png")
 #################### Tight - noPromptTight / Base -noPromptBase
 if True :
     c4 = TCanvas('c4','(Tight - noPrompt Tight)/(Base - noPrompt Base)',50,50,W,H)
@@ -1178,17 +1218,13 @@ if True :
 	     
 	
 	c4.Draw()
-	c4.SaveAs("Corrected_noPrompt_Fake_"+era+"_"+args.region+"_"+wp+".pdf")
-	c4.SaveAs("Corrected_noPrompt_Fake_"+era+"_"+args.region+"_"+wp+".png")
+	c4.SaveAs("Corrected_noPrompt_Fake_"+era+"_"+args.region+"_"+wp+"_"+str(extratag)+"_sys"+str(args.systematic)+".pdf")
+	c4.SaveAs("Corrected_noPrompt_Fake_"+era+"_"+args.region+"_"+wp+"_"+str(extratag)+"_sys"+str(args.systematic)+".png")
 
 
 
 
-
-
-
-
-
+###ll correct
 
 if True :
     c4 = TCanvas('c4','(Tight - Prompt Tight)/(Base - Prompt Base)',50,50,W,H)
@@ -1210,11 +1246,11 @@ if True :
     c4.Divide(4,2)
     lTeX, lTex1, lTex2, fit0 = {}, {}, {}, {}
     hNum, hDen = {}, {}
-    xMin, xMax, yMin, yMax = 0., 100., 0, 0.3
+    xMin, xMax, yMin, yMax = 0., 100., 0, 0.25
     histo={}
     htest={}
     if True : 
-	for i, h in enumerate(hList) :
+	for i, h in enumerate(hListll) :
 	    gStyle.SetOptFit(0)
 	    c4.cd(i+1)
             histo[h] = {}
@@ -1268,68 +1304,205 @@ if True :
 	    htest[h].Write()
 
 	#fOut.Close()    
-	c4.SaveAs("Corrected_Fake_"+era+"_"+args.region+"_"+wp+".pdf")
-	c4.SaveAs("Corrected_Fake_"+era+"_"+args.region+"_"+wp+".png")
+	c4.SaveAs("Corrected_Fake_ll_"+era+"_"+args.region+"_"+wp+"_"+str(extratag)+"_sys"+str(args.systematic)+".pdf")
+	c4.SaveAs("Corrected_Fake_ll_"+era+"_"+args.region+"_"+wp+"_"+str(extratag)+"_sys"+str(args.systematic)+".png")
         fOut.cd()
-	for h in hList : 
+	for h in hListll : 
 	    histo[h].Write()
-        fOut.Close()
+        #fOut.Close()
+
+
 
 
 
 
 if True :
-    c12 = TCanvas('c12','Tight composition (MC)',90,90,1200,600)
-    c12.SetFillColor(0)
-    c12.SetBorderMode(0)
-    c12.SetFrameFillStyle(0)
-    c12.SetFrameBorderMode(0)
+    c4 = TCanvas('c4','(Tight - Prompt Tight)/(Base - Prompt Base)',50,50,W,H)
+    c4.SetFillColor(0)
+    c4.SetBorderMode(0)
+    c4.SetFrameFillStyle(0)
+    c4.SetFrameBorderMode(0)
 
-    c12.SetLeftMargin(L/W)
-    c12.SetRightMargin(R/W)
-    c12.SetTopMargin(T/H)
-    c12.SetBottomMargin(B/H)
+    c4.SetLeftMargin(L/W)
+    c4.SetRightMargin(R/W)
+    c4.SetTopMargin(T/H)
+    c4.SetBottomMargin(B/H)
 
-    c12.Divide(4,2)
+    #gStyle.SetStatY(0.95)
+    #gStyle.SetStatX(1.1)
+    #gStyle.SetStatW(0.15)
+    #gStyle.SetStatH(0.7) 
 
-    c12a = TCanvas('c12a','Base composition (MC)',90,90,1200,600)
-    c12a.SetFillColor(0)
-    c12a.SetBorderMode(0)
-    c12a.SetFrameFillStyle(0)
-    c12a.SetFrameBorderMode(0)
+    c4.Divide(4,2)
+    lTeX, lTex1, lTex2, fit0 = {}, {}, {}, {}
+    hNum, hDen = {}, {}
+    xMin, xMax, yMin, yMax = 0., 100., 0, 0.3
+    histo={}
+    htest={}
+    if True : 
+	for i, h in enumerate(hList) :
+	    gStyle.SetOptFit(0)
+	    c4.cd(i+1)
+            histo[h] = {}
+	    hName = '{0:s}'.format(h)
+            histo[h] =  TH1D(hName,hName+'_Fakes',1, -0.5,  0.5)
 
-    c12a.SetLeftMargin(L/W)
-    c12a.SetRightMargin(R/W)
-    c12a.SetTopMargin(T/H)
-    c12a.SetBottomMargin(B/H)
-    c12a.Divide(4,2)
+	    
+	    hNum[h] = hTight[h].Clone()
+	    hNum[h].SetLineColor(kBlack)
+	    hDen[h] = hBase[h].Clone()
+	    
+	    for group in groups:
+		print ''
+		print '---------------------subtracting from Data_Tight ',   hNum[h].GetName(), hNum[h].GetSumOfWeights(), 'new sum', hNum[h].GetSumOfWeights()-hTightPrompt[group][h].GetSumOfWeights(), group, h, '==', hTightPrompt[group][h].GetSumOfWeights(), hTightPrompt[group][h].GetName()
+		print '---------------------subtracting from Data_Base',   hDen[h].GetName(), hDen[h].GetSumOfWeights(), 'new sum', hDen[h].GetSumOfWeights()-hBasePrompt[group][h].GetSumOfWeights(), group, h, '==', hBasePrompt[group][h].GetSumOfWeights(),  hBasePrompt[group][h].GetName()
 
-    c12ab = TCanvas('c12ab','Base composition (MC)',90,90,1200,600)
-    c12ab.SetFillColor(0)
-    c12ab.SetBorderMode(0)
-    c12ab.SetFrameFillStyle(0)
-    c12ab.SetFrameBorderMode(0)
+		hNum[h].Add(hTightPrompt[group][h],-1.)
+		hDen[h].Add(hBasePrompt[group][h],-1.)
+		#print 'channel', h, group, 'base', hNum[h].GetSumOfWeights(), 'Tight', hDen[h].GetSumOfWeights(), hNum[h].GetSumOfWeights()/hDen[h].GetSumOfWeights()
+		for i in range(1,hDen[h].GetNbinsX()) :
+                    if hDen[h].GetBinContent(i) > 0 : print '---------------------rate for bin',  i, hNum[h].GetBinContent(i)/hDen[h].GetBinContent(i), group, h, 'Nom/Den info',  hNum[h].GetName(), hDen[h].GetName()
+	    
+	    hNum[h].Divide(hDen[h])
+	    #hNum[h].SetMaximum(hNum[h].GetMaximum()+0.2)
+	    hNum[h].GetXaxis().SetRangeUser(xMin,xMax)
+	    hNum[h].SetMinimum(yMin)
+	    hNum[h].SetMaximum(yMax)
+	    hNum[h].SetLineWidth(1)
+	    hNum[h].SetMarkerStyle(20)
+	    hNum[h].SetMarkerSize(1.0)
+	    hNum[h].SetMarkerColor(kRed)
+	    hNum[h].GetXaxis().SetTitle('p_{T} [GeV]')
+	    hNum[h].GetXaxis().SetLabelSize(0.05)
+	    hNum[h].GetXaxis().SetTitleSize(0.05)
+	    hNum[h].GetYaxis().SetTitle('(Tight - Prompt Tight)/(Base - Prompt Base)')
+	    hNum[h].GetYaxis().SetLabelSize(0.05)
+	    hNum[h].GetYaxis().SetTitleSize(0.05)
+	    htest[h] = hNum[h].Clone()
+	    hNum[h].Draw()
+	    lTeX[h] = TLatex(0.8*xMax,0.8*yMax,h)
+	    lTeX[h].SetTextSize(0.06) 
+	    lTeX[h].Draw()
+	    fitName = "f{0:s}".format(h)
+	    fit0[h] = TF1(fitName,"pol0",15.,100.)
+	    hNum[h].Fit(fitName,"R")
+	    lTex1[h]= TLatex(0.1*xMax,0.9*yMax,"Avg={0:.4f} +/- {1:.4f}".format(fit0[h].GetParameter(0),fit0[h].GetParError(0)))
+	    lTex1[h].Draw()
+	    lTex2[h]= TLatex(0.1*xMax,0.8*yMax,"chi2/DOF = {0:.2f} / {1:d}".format(fit0[h].GetChisquare(),fit0[h].GetNDF()))
+	    lTex2[h].Draw()
+	    histo[h].Fill(0,fit0[h].GetParameter(0))
+	    c4.Update()
+            fOut.cd()
+	    htest[h].SetName(histo[h].GetName()+"_vspT")
+	    htest[h].Write()
 
-    c12ab.SetLeftMargin(L/W)
-    c12ab.SetRightMargin(R/W)
-    c12ab.SetTopMargin(T/H)
-    c12ab.SetBottomMargin(B/H)
-    c12ab.Divide(4,2)
+	#fOut.Close()    
+	c4.SaveAs("Corrected_Fake_"+era+"_"+args.region+"_"+wp+"_"+str(extratag)+"_sys"+str(args.systematic)+".pdf")
+	c4.SaveAs("Corrected_Fake_"+era+"_"+args.region+"_"+wp+"_"+str(extratag)+"_sys"+str(args.systematic)+".png")
+        fOut.cd()
+	for h in hList : 
+	    histo[h].Write()
+        #fOut.Close()
 
-    c1 = TCanvas('c1','c1',90,90,600,600)
-    c1.SetFillColor(0)
-    c1.SetBorderMode(0)
-    c1.SetFrameFillStyle(0)
-    c1.SetFrameBorderMode(0)
 
-    c1.SetLeftMargin(0.1)
-    c1.SetRightMargin(0.1)
-    c1.SetTopMargin(0.1)
-    c1.SetBottomMargin(0.1)
-    c1.SetLeftMargin(L/W+0.075)
-    c1.SetRightMargin(R/W+0.075)
-    c1.SetTopMargin(T/H+0.1)
-    c1.SetBottomMargin(B/H+0.1)
+
+           
+cms ='CMS                                     {0:d} - 13 TeV'.format(args.year)
+text ='Preliminary'
+latex = TLatex()
+latex.SetTextSize(0.045)
+latex.SetTextAlign(13)
+latex.SetNDC()
+clatex = TLatex()
+clatex.SetTextSize(0.045)
+clatex.SetTextAlign(13)
+clatex.SetNDC()
+
+
+
+if True :
+    cT = TCanvas('cT','Tight composition (MC)',90,90,1200,600)
+    cT.SetFillColor(0)
+    cT.SetBorderMode(0)
+    cT.SetFrameFillStyle(0)
+    cT.SetFrameBorderMode(0)
+
+    cT.SetLeftMargin(L/W)
+    cT.SetRightMargin(R/W)
+    cT.SetTopMargin(T/H)
+    cT.SetBottomMargin(B/H)
+
+    cT.Divide(4,2)
+
+
+    cTN = TCanvas('cTN','Tight Norm composition (MC)',90,90,1200,600)
+    cTN.SetFillColor(0)
+    cTN.SetBorderMode(0)
+    cTN.SetFrameFillStyle(0)
+    cTN.SetFrameBorderMode(0)
+
+    cTN.SetLeftMargin(L/W)
+    cTN.SetRightMargin(R/W)
+    cTN.SetTopMargin(T/H)
+    cTN.SetBottomMargin(B/H)
+
+    cTN.Divide(4,2)
+
+    cTnoP = TCanvas('cTnoP','Tight no Prompt composition (MC)',90,90,1200,600)
+    cTnoP.SetFillColor(0)
+    cTnoP.SetBorderMode(0)
+    cTnoP.SetFrameFillStyle(0)
+    cTnoP.SetFrameBorderMode(0)
+
+    cTnoP.SetLeftMargin(L/W)
+    cTnoP.SetRightMargin(R/W)
+    cTnoP.SetTopMargin(T/H)
+    cTnoP.SetBottomMargin(B/H)
+
+    cTnoP.Divide(4,2)
+
+
+    cB = TCanvas('cB','Base composition (MC)',90,90,1200,600)
+    cB.SetFillColor(0)
+    cB.SetBorderMode(0)
+    cB.SetFrameFillStyle(0)
+    cB.SetFrameBorderMode(0)
+
+    cB.SetLeftMargin(L/W)
+    cB.SetRightMargin(R/W)
+    cB.SetTopMargin(T/H)
+    cB.SetBottomMargin(B/H)
+
+    cB.Divide(4,2)
+
+
+    cBnoP = TCanvas('cBnoP','Base no Prompt composition (MC)',90,90,1200,600)
+    cBnoP.SetFillColor(0)
+    cBnoP.SetBorderMode(0)
+    cBnoP.SetFrameFillStyle(0)
+    cBnoP.SetFrameBorderMode(0)
+
+    cBnoP.SetLeftMargin(L/W)
+    cBnoP.SetRightMargin(R/W)
+    cBnoP.SetTopMargin(T/H)
+    cBnoP.SetBottomMargin(B/H)
+
+    cBnoP.Divide(4,2)
+
+
+    cBN = TCanvas('cBN','Base Norm composition (MC)',90,90,1200,600)
+    cBN.SetFillColor(0)
+    cBN.SetBorderMode(0)
+    cBN.SetFrameFillStyle(0)
+    cBN.SetFrameBorderMode(0)
+
+    cBN.SetLeftMargin(L/W)
+    cBN.SetRightMargin(R/W)
+    cBN.SetTopMargin(T/H)
+    cBN.SetBottomMargin(B/H)
+
+    cBN.Divide(4,2)
+
 
     leg = {}
     xR=0.65   #legend parameters
@@ -1337,266 +1510,202 @@ if True :
     #hsBasePrompt, hsBaseTight = {}, {}
     hsBasePrompt, hsTightPrompt= {}, {}
     hsBasePromptN, hsTightPromptN= {}, {}
+
+    hsBasenoPrompt, hsTightnoPrompt= {}, {}
+    hsBasenoPromptN, hsTightnoPromptN= {}, {}
+    hDataBasenoP, hDataTightnoP = {}, {}
+
+
+
+
     for i, h in enumerate(hList) :
         hsBasePrompt[h] = THStack("hsBasePrompt","")
-        hsBasePromptN[h] = THStack("hsBasePromptN","")
         hsTightPrompt[h] = THStack("hsTightPrompt","")
+
+        hsBasePromptN[h] = THStack("hsBasePromptN","")
+        hsTightPromptN[h] = THStack("hsTightPromptN","")
+
+        hsBasenoPrompt[h] = THStack("hsBasenoPrompt","")
+        hsTightnoPrompt[h] = THStack("hsTightnoPrompt","")
+        hsBasenoPromptN[h] = THStack("hsBasenoPromptN","")
+        hsTightnoPromptN[h] = THStack("hsTightnoPromptN","")
+        hDataBasenoP[h]  = hBase[h].Clone()
+        hDataTightnoP[h]  = hTight[h].Clone()
+
 	#leg[h] = TLegend(0.43,0.63,0.96,0.96,h)
-        leg[h] = TLegend(xR+0.3,0.55,xR+0.7,0.8,h)
+        leg[h] = TLegend(xR+0.2,0.65,xR+0.7,0.9,h)
+        leg[h].SetTextSize(0.06)
         leg[h].SetNColumns(2)
         for ig, group in enumerate(groups) :
 	    applyStyle(hBasePrompt[group][h],colors[group],1,1001)
+	    applyStyle(hBasenoPrompt[group][h],colors[group],1,1001)
 	    hBasePrompt[group][h].GetXaxis().SetTitle('p_{T} [GeV]')
 	    hBasePrompt[group][h].GetXaxis().SetLabelSize(0.05)
 	    hBasePrompt[group][h].GetXaxis().SetTitleSize(0.05)
-	    title="Prompt Base (MC) {0:s}".format(group)
-	    c12a.SetTitle(title)
-	    c12ab.SetTitle(title)
 
 	    hBasePrompt[group][h].GetYaxis().SetTitle('Counts') 
 	    hBasePrompt[group][h].GetYaxis().SetLabelSize(0.05)
 	    hBasePrompt[group][h].GetYaxis().SetTitleSize(0.05)
            
+	    hDataBasenoP[h].Add(hBasePrompt[group][h],-1)
+	    hDataTightnoP[h].Add(hTightPrompt[group][h],-1)
+
 	    hsBasePrompt[h].Add(hBasePrompt[group][h])
+            hsBasenoPrompt[h].Add(hBasenoPrompt[group][h])
 
 	    applyStyle(hTightPrompt[group][h],colors[group],1,1001)
+	    applyStyle(hTightnoPrompt[group][h],colors[group],1,1001)
 
 
 	    hTightPrompt[group][h].GetXaxis().SetTitle('p_{T} [GeV]')
 	    hTightPrompt[group][h].GetXaxis().SetLabelSize(0.05)
 	    hTightPrompt[group][h].GetXaxis().SetTitleSize(0.05)
 	    title="Prompt Tight (MC) {0:s}".format(group)
-	    c12.SetTitle(title)
 
 	    hTightPrompt[group][h].GetYaxis().SetTitle('Counts') 
 	    hTightPrompt[group][h].GetYaxis().SetLabelSize(0.05)
 	    hTightPrompt[group][h].GetYaxis().SetTitleSize(0.05)
 
 	    hsTightPrompt[h].Add(hTightPrompt[group][h])
+	    hsTightnoPrompt[h].Add(hTightnoPrompt[group][h])
+
             hl = '{0:s}'.format(group)
 	    leg[h].AddEntry(hTightPrompt[group][h], hl,"f")
 
        
+	leg[h].AddEntry(hTight[h],'Data', "le")
+	leg[h].AddEntry(hDataTightnoP[h],'Data-MC(prompt)', "le")
 
-	c12a.cd(i+1)
-	hsum=hsBasePrompt[h].GetStack().Last()
-        hsum.SetMaximum(hsum.GetMaximum()*2)
-	hsum.Draw('hist')
-	hsBasePrompt[h].Draw('hist same')
+        #gPad.SetLogy()
+
+	cBnoP.cd(i+1)
+        hBase[h].SetLineColor(kBlack)
+        hDataBasenoP[h].SetLineColor(kRed)
+	hsumBnoP=hsBasenoPrompt[h].GetStack().Last()
+        hsumBnoP.SetMaximum(hsumBnoP.GetMaximum()*2)
+	hsumBnoP.Draw('hist')
+	hsBasenoPrompt[h].Draw('hist same')
+	hBase[h].Draw('same')
+	hDataBasenoP[h].Draw('same')
+       
 	leg[h].Draw('same')
-        #CMS_lumi.CMS_lumi(c12a, iPeriod, 11)
-	c12a.Update()
+        latex.DrawLatex(.2,1,cms, )
+        clatex.DrawLatex(.2,0.92,text, )
+	cBnoP.Update()
 
-        c12ab.cd(i+1)
+
+
+
+	cB.cd(i+1)
+        hBase[h].SetLineColor(kBlack)
+        hBase[h].SetMarkerColor(kBlack)
+	hsumB=hsBasePrompt[h].GetStack().Last()
+        hsumB.SetMaximum(hsumB.GetMaximum()*2)
+        #hBase[h].SetMaximum(hBase[h].GetMaximum()*2)
+	hsumB.Draw('hist')
+	hsBasePrompt[h].Draw('hist same')
+	hBase[h].Draw('same')
+	#hDataBase[h].Draw('same')
+        #print '============================================================================###################################################################', hBase[h].GetName(), h, hBase[h].GetBinContent(2), group
+
+	leg[h].Draw('same')
+        latex.DrawLatex(.2,1,cms, )
+        clatex.DrawLatex(.2,0.92,text, )
+	cB.Update()
+
+
+
+	cTnoP.cd(i+1)
+        hTight[h].SetLineColor(kBlack)
+        hDataTightnoP[h].SetLineColor(kRed)
+	hsumTnoP=hsTightnoPrompt[h].GetStack().Last()
+        hsumTnoP.SetMaximum(hsumTnoP.GetMaximum()*2)
+	hsumTnoP.Draw('hist')
+	hsTightnoPrompt[h].Draw('hist same')
+	hTight[h].Draw('same')
+	hDataTightnoP[h].Draw('same')
+       
+	leg[h].Draw('same')
+        latex.DrawLatex(.2,1,cms, )
+        clatex.DrawLatex(.2,0.92,text, )
+	cTnoP.Update()
+
+
+
+	cT.cd(i+1)
+	hsumT=hsTightPrompt[h].GetStack().Last()
+        hsumT.SetMaximum(hsumT.GetMaximum()*2)
+	hsumT.Draw('hist')
+	hsTightPrompt[h].Draw('hist same')
+	hTight[h].Draw('same')
+	leg[h].Draw('same')
+        latex.DrawLatex(.2,1,cms, )
+        clatex.DrawLatex(.2,0.92,text, )
+	cT.Update()
+
+
         iC= array('f',[0]*10)
-        for i in range(0,hsum.GetNbinsX()+1): iC[i] = hsum.GetBinContent(i)
+        for i in range(0,hsumB.GetNbinsX()+1): iC[i] = hsumB.GetBinContent(i)
         for ig, group in enumerate(groups) :
             htemp = hBasePrompt[group][h].Clone()
             htemp.SetBinContent(1,0)
-            for i in range(0,hsum.GetNbinsX()+1): 
+            for i in range(0,hsumB.GetNbinsX()+1): 
                 if iC[i] > 0 : htemp.SetBinContent(i,htemp.GetBinContent(i)*1/iC[i])
                 #else : htemp.SetBinContent(i,0)
 
             hsBasePromptN[h].Add(htemp)
+
+        for i in range(0,hsumT.GetNbinsX()+1): iC[i] = hsumT.GetBinContent(i)
+        for ig, group in enumerate(groups) :
+            htempp = hTightPrompt[group][h].Clone()
+            htempp.SetBinContent(1,0)
+            for i in range(0,hsumT.GetNbinsX()+1): 
+                if iC[i] > 0 : htempp.SetBinContent(i,htempp.GetBinContent(i)*1/iC[i])
+                #else : htemp.SetBinContent(i,0)
+
+            hsTightPromptN[h].Add(htempp)
             
-	hsumn=hsBasePromptN[h].GetStack().Last()
-        #hsumn.SetMaximum(hsumn.GetMaximum()*2)
-        hsumn.Draw('hist')
-	#hss = hsBasePrompt[h].Clone('hss')
-        #hss.Scale(1/hss.Integral("width"))
-        #hss.Draw('same')
-        #hsBasePromptN[h].Scale(1/len(groups))
-        hsBasePromptN[h].Draw('hist')
+        cBN.cd(i+1)
+	hsumBN=hsBasePromptN[h].GetStack().Last()
+        hsumBN.Draw('hist same')
+        hsBasePromptN[h].Draw('hist same')
         leg[h].Draw('same')
-        c12ab.Update()
-        
+        cBN.Update()
 
-	c12.cd(i+1)
-	hsumm=hsTightPrompt[h].GetStack().Last()
-        hsumm.SetMaximum(hsumm.GetMaximum()*2)
-	hsumm.Draw('hist')
-	hsTightPrompt[h].Draw('hist same')
-	leg[h].Draw('same')
-        #CMS_lumi.CMS_lumi(c12, iPeriod, 11)
-	c12.Update()
+        cTN.cd(i+1)
+	hsumTN=hsTightPromptN[h].GetStack().Last()
+        hsumTN.Draw('hist')
+        hsTightPromptN[h].Draw('hist same')
+        leg[h].Draw('same')
+        cTN.Update()
 
-	leg[h].SetTextSize(0.04)
-	c1.cd()
-	hsum=hsBasePrompt[h].GetStack().Last()
-        #hsum.SetMaximum(hsum.GetMaximum()*1.5)
-	hsum.Draw('hist')
-	hsBasePrompt[h].Draw('hist same')
-	leg[h].Draw('same')
-	c1.Update()
-        c1.SaveAs("Base_MC_composition_"+h+"_"+era+"_"+args.region+"_"+wp+".png")
-        c1.SaveAs("Base_MC_composition_"+h+"_"+era+"_"+args.region+"_"+wp+".pdf")
-
-	c1.cd()
-	hsumm=hsTightPrompt[h].GetStack().Last()
-        #hsumm.SetMaximum(hsumm.GetMaximum()*2.5)
-	hsumm.Draw('hist')
-	hsTightPrompt[h].Draw('hist same')
-	leg[h].Draw('same')
-	c1.Update()
-        
-        c1.SaveAs("Tight_MC_composition_"+h+"_"+era+"_"+args.region+"_"+wp+".png")
-        c1.SaveAs("Tight_MC_composition_"+h+"_"+era+"_"+args.region+"_"+wp+".pdf")
+        ############# no normalized plots
 
 
     #CMS_lumi.CMS_lumi(c12, iPeriod, 11)
     lTex1 = TLatex(120.,0.97,'Preliminary {0:d}'.format(args.year))
     lTex1.SetTextSize(0.04)
-    c12.cd()
+    cT.cd()
     lTex1.Draw("same")
-    #CMS_lumi.CMS_lumi(c12, iPeriod, 11)
-    c12a.cd()
+    cTN.cd()
     lTex1.Draw("same")
-    #CMS_lumi.CMS_lumi(c12a, iPeriod, 11)
+    cB.cd()
+    lTex1.Draw("same")
+    cBN.cd()
+    lTex1.Draw("same")
 
     #CMS_lumi.CMS_lumi(c12a, iPeriod, 11)
-    c12.SaveAs("Tight_MC_composition_"+era+"_"+args.region+"_"+wp+".png")
-    c12.SaveAs("Tight_MC_composition_"+era+"_"+args.region+"_"+wp+".pdf")
-    c12a.SaveAs("Base_MC_composition_"+era+"_"+args.region+"_"+wp+".png")
-    c12a.SaveAs("Base_MC_composition_"+era+"_"+args.region+"_"+wp+".pdf")
-    c12ab.SaveAs("Base_MC_composition_Norm_"+era+"_"+args.region+"_"+wp+".png")
-    c12ab.SaveAs("Base_MC_composition_Norm_"+era+"_"+args.region+"_"+wp+".pdf")
+    cB.SaveAs("Base_MC_composition_"+era+"_"+args.region+"_"+wp+"_"+str(extratag)+"_sys"+str(args.systematic)+".png")
+    cB.SaveAs("Base_MC_composition_"+era+"_"+args.region+"_"+wp+"_"+str(extratag)+"_sys"+str(args.systematic)+".pdf")
+    cT.SaveAs("Tight_MC_composition_"+era+"_"+args.region+"_"+wp+"_"+str(extratag)+"_sys"+str(args.systematic)+".png")
+    cT.SaveAs("Tight_MC_composition_"+era+"_"+args.region+"_"+wp+"_"+str(extratag)+"_sys"+str(args.systematic)+".pdf")
+    cTN.SaveAs("Tight_MC_composition_Norm_"+era+"_"+args.region+"_"+wp+"_"+str(extratag)+"_sys"+str(args.systematic)+".png")
+    cTN.SaveAs("Tight_MC_composition_Norm_"+era+"_"+args.region+"_"+wp+"_"+str(extratag)+"_sys"+str(args.systematic)+".pdf")
+    cBN.SaveAs("Base_MC_composition_Norm_"+era+"_"+args.region+"_"+wp+"_"+str(extratag)+"_sys"+str(args.systematic)+".png")
+    cBN.SaveAs("Base_MC_composition_Norm_"+era+"_"+args.region+"_"+wp+"_"+str(extratag)+"_sys"+str(args.systematic)+".pdf")
+    cBnoP.SaveAs("Base_MC_noPrompt_composition_"+era+"_"+args.region+"_"+wp+"_"+str(extratag)+"_sys"+str(args.systematic)+".png")
+    cBnoP.SaveAs("Base_MC_noPrompt_composition_"+era+"_"+args.region+"_"+wp+"_"+str(extratag)+"_sys"+str(args.systematic)+".pdf")
+    cTnoP.SaveAs("Tight_MC_noPrompt_composition_"+era+"_"+args.region+"_"+wp+"_"+str(extratag)+"_sys"+str(args.systematic)+".png")
+    cTnoP.SaveAs("Tight_MC_noPrompt_composition_"+era+"_"+args.region+"_"+wp+"_"+str(extratag)+"_sys"+str(args.systematic)+".pdf")
 
-
-####################### no Prompt composition
-if True :
-    c12 = TCanvas('c12','Tight composition (MC)',90,90,1400,800)
-    c12.SetFillColor(0)
-    c12.SetBorderMode(0)
-    c12.SetFrameFillStyle(0)
-    c12.SetFrameBorderMode(0)
-
-    c12.SetLeftMargin(L/W)
-    c12.SetRightMargin(R/W)
-    c12.SetTopMargin(T/H)
-    c12.SetBottomMargin(B/H)
-
-    c12.Divide(4,2)
-
-    c12a = TCanvas('c12a','Base composition (MC)',90,90,1400,800)
-    c12a.SetFillColor(0)
-    c12a.SetBorderMode(0)
-    c12a.SetFrameFillStyle(0)
-    c12a.SetFrameBorderMode(0)
-
-    c12a.SetLeftMargin(L/W)
-    c12a.SetRightMargin(R/W)
-    c12a.SetTopMargin(T/H)
-    c12a.SetBottomMargin(B/H)
-    c12a.Divide(4,2)
-
-    legB = {}
-    legT = {}
-    xR=0.65   #legend parameters
-    xR=0.2    #legend parameters
-    #hsBasenoPrompt, hsBaseTight = {}, {}
-    hsBasenoPrompt, hsTightnoPrompt= {}, {}
-    hsBasePrompt, hsTightPrompt= {}, {}
-    hsum, hsumm = {}, {}
-    hTight2, hBase2 = {}, {}
-    cms ='CMS                                     {0:d} - 13 TeV'.format(args.year)
-    text ='Preliminary'
-    latex = TLatex()
-    latex.SetTextSize(0.045)
-    latex.SetTextAlign(13)
-    latex.SetNDC()
-    clatex = TLatex()
-    clatex.SetTextSize(0.045)
-    clatex.SetTextAlign(13)
-    clatex.SetNDC()
-    for i, h in enumerate(hList) :
-        hsBasePrompt[h] = THStack("hsBasePrompt","")
-        hsTightPrompt[h] = THStack("hsTightPrompt","")
-        hsBasenoPrompt[h] = THStack("hsBasenoPrompt","")
-        hsTightnoPrompt[h] = THStack("hsTightnoPrompt","")
-        legT[h] = TLegend(xR+0.1,0.6,xR+0.75,0.9,h)
-        legT[h].SetNColumns(2)
-        legB[h] = TLegend(xR+0.1,0.6,xR+0.75,0.9,h)
-        legB[h].SetNColumns(2)
-        legT[h].SetTextSize(0.045)
-        legB[h].SetTextSize(0.045)
-
-	hsum[h] = hTight[h].Clone()
-	hsumm[h] = hTight[h].Clone()
-	hTight2[h] = hTight[h].Clone()
-	hBase2[h] = hBase[h].Clone()
-	hsum[h].Reset()
-	hsumm[h].Reset()
-        for group in groups :
-	    applyStyle(hBasenoPrompt[group][h],colors[group],1,1001)
-	    hBasenoPrompt[group][h].GetXaxis().SetTitle('p_{T} [GeV]')
-	    hBasenoPrompt[group][h].GetXaxis().SetLabelSize(0.05)
-	    hBasenoPrompt[group][h].GetXaxis().SetTitleSize(0.05)
-	    title="noPrompt Base (MC) {0:s}".format(group)
-	    c12a.SetTitle(title)
-
-	    hBasenoPrompt[group][h].GetYaxis().SetTitle('Counts') 
-	    hBasenoPrompt[group][h].GetYaxis().SetLabelSize(0.05)
-	    hBasenoPrompt[group][h].GetYaxis().SetTitleSize(0.05)
-
-	    hsBasenoPrompt[h].Add(hBasenoPrompt[group][h])
-	    hsBasePrompt[h].Add(hBasePrompt[group][h])
-
-	    applyStyle(hTightnoPrompt[group][h],colors[group],1,1001)
-
-
-	    hTightnoPrompt[group][h].GetXaxis().SetTitle('p_{T} [GeV]')
-	    hTightnoPrompt[group][h].GetXaxis().SetLabelSize(0.05)
-	    hTightnoPrompt[group][h].GetXaxis().SetTitleSize(0.05)
-	    title="noPrompt Tight (MC) {0:s}".format(group)
-	    c12.SetTitle(title)
-
-	    hTightnoPrompt[group][h].GetYaxis().SetTitle('Counts') 
-	    hTightnoPrompt[group][h].GetYaxis().SetLabelSize(0.05)
-	    hTightnoPrompt[group][h].GetYaxis().SetTitleSize(0.05)
-
-	    hsTightnoPrompt[h].Add(hTightnoPrompt[group][h])
-
-	    hsBasePrompt[h].Add(hBasePrompt[group][h])
-	    hsTightPrompt[h].Add(hTightPrompt[group][h])
-            
-	    hl = '{0:s}'.format(group)
-	    legB[h].AddEntry(hTightnoPrompt[group][h], hl,"f")
-	    legT[h].AddEntry(hTightnoPrompt[group][h], hl,"f")
-
-	c12a.cd(i+1)
-	hsum[h]=hsBasenoPrompt[h].GetStack().Last()
-        hsum[h].SetMaximum(hsum[h].GetMaximum()*2.5)
-	hsumm[h]=hsTightnoPrompt[h].GetStack().Last()
-        hsumm[h].SetMaximum(hsumm[h].GetMaximum()*2.5)
-
-	hsum[h].Draw('hist')
-	hsBasenoPrompt[h].Draw('hist same')
-
-	hBase2[h].SetLineColor(kBlack)
-	hBase2[h].Draw('same')
-	hBase[h].Add(hsBasePrompt[h].GetStack().Last(),-1)
-	legB[h].AddEntry(hBase2[h],'Data-MC (prompt)','ple')
-	legB[h].Draw('same')
-        latex.DrawLatex(.2,1,cms, )
-        clatex.DrawLatex(.2,0.92,text, )
-	c12a.Update()
-
-	c12.cd(i+1)
-	hsumm[h].Draw('hist')
-	hsTightnoPrompt[h].Draw('hist same ')
-	hTight2[h].SetLineColor(kBlack)
-	hTight2[h].Add(hsTightPrompt[h].GetStack().Last(),-1)
-	hTight2[h].Draw('same')
-	legT[h].AddEntry(hTight2[h],'Data-MC(prompt)','ple')
-	legT[h].Draw('same')
-        latex.DrawLatex(.2,1,cms, )
-        clatex.DrawLatex(.2,0.92,text, )
-        CMS_lumi.CMS_lumi(c12, iPeriod, 11)
-	c12.Update()
-
-    #CMS_lumi.CMS_lumi(c12, iPeriod, 11)
-
-    #CMS_lumi.CMS_lumi(c12a, iPeriod, 11)
-    c12.SaveAs("Tight_MC_noPrompt_composition_"+era+"_"+args.region+"_"+wp+".png")
-    c12a.SaveAs("Base_MC_noPrompt_composition_"+era+"_"+args.region+"_"+wp+".png")
 

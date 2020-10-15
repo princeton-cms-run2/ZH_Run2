@@ -1572,19 +1572,19 @@ class outTuple() :
 
 		if str(era) != '2017' : 
                     try : 
-			self.met[0]= entry.MET_T1Smear_pt
-			self.metphi[0]= entry.MET_T1Smear_phi
-                    except AttributeError : 
 			self.met[0]= entry.MET_T1_pt
 			self.metphi[0]= entry.MET_T1_phi
+                    except AttributeError : 
+			self.met[0]= entry.MET_pt
+			self.metphi[0]= entry.MET_phi
 
 		if str(era) == '2017' : 
                     try : 
-			self.met[0]= entry.METFixEE2017_T1Smear_pt
-			self.metphi[0]= entry.METFixEE2017_T1Smear_phi
-                    except AttributeError : 
 			self.met[0]= entry.METFixEE2017_T1_pt
 			self.metphi[0]= entry.METFixEE2017_T1_phi
+                    except AttributeError : 
+			self.met[0]= entry.METFixEE2017_pt
+			self.metphi[0]= entry.METFixEE2017_phi
 
         #metNoTauES holds the uncorrected TauES MET - if not doUncerta -> holds the default ucorrected MET, if doUncert the T1_corrected
 
@@ -1594,7 +1594,7 @@ class outTuple() :
 
 	    if doUncertainties : 
                 try : 
-		    self.metNoTauES[0]         = entry.MET_T1_T1_pt
+		    self.metNoTauES[0]         = entry.MET_T1_pt
 		    self.metphiNoTauES[0]         = entry.MET_T1_phi
 		    self.MET_T1Smear_pt[0]         = entry.MET_T1Smear_pt
 		    self.MET_T1Smear_phi[0]         = entry.MET_T1Smear_phi
