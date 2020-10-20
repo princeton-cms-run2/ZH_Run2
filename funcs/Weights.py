@@ -100,10 +100,6 @@ class Weights() :
 	self.testool = TauESTool(self.campaign[year],'DeepTau2017v2p1VSjet',self.TESSF['dir'])
 	self.festool = TauFESTool(self.campaign[year],'DeepTau2017v2p1VSe',self.FESSF['dir'])
 
-	#antiEleSFToolVVL = TauIDSFTool(campaign[args.year],'DeepTau2017v2p1VSe','VVLoose')
-	#antiMuSFToolVL  = TauIDSFTool(campaign[args.year],'DeepTau2017v2p1VSmu','VLoose')
-	#self.antiEleSFToolT = TauIDSFTool(self.campaign[year],'DeepTau2017v2p1VSe','Tight')
-	#self.antiMuSFToolT  = TauIDSFTool(self.campaign[year],'DeepTau2017v2p1VSmu','Tight')
 
 
     def transverseVEC(self,vec):
@@ -111,8 +107,41 @@ class Weights() :
 	rvec.SetPtEtaPhiM(vec.Pt(), 0, vec.Phi(), 0)
 	return rvec
         
+    def correctallMET(self,entry, allmets, leptV, year, corr):
+        
+        list_of_arrays=[]
+        list_of_arraysPhi=[]
+        tryV=TLorentzVector()
+	for i, v in enumerate(allmets) :
 
-    def applyES(self,entry, year, systematic,  metPtPhi,printOn=False) :
+	    if str(year)=='2017' :
+		#i_ should be the righ-hand of the branch and should retain the METFixEE2017 if y=2017
+		#iMET should appear always at the branch name...
+		v = v.replace('MET','METFixEE2017')
+	    iMET= v.replace('METFixEE2017','MET')
+
+	    try : 
+                j = getattr(entry, "{0:s}".format(str(v)))
+                vphi= v.replace('_pt','_phi')
+                jphi = getattr(entry, "{0:s}".format(str(vphi)))
+ 
+                tryV.SetPx(j*cos(jphi))
+                tryV.SetPy(j*sin(jphi))
+               
+                tryV += (leptV-leptV*corr)
+                #setattr(entry, "{0:s}".format(str(v)), tryV.Pt())
+                #setattr(entry, "{0:s}".format(str(jphi)), tryV.Phi())
+                #if entry.event==8904 and 'pt_jerUp' in v : print 'correct pt', tryV.Pt(), entry.event, v, 'from ttree', j
+                list_of_arrays.append(tryV.Pt())
+                list_of_arraysPhi.append(tryV.Phi())
+            
+	    except AttributeError : 
+                setattr(entry, "{0:s}".format(str(v)), j)
+
+        return list_of_arrays, list_of_arraysPhi
+
+    def applyES(self,entry, year, systematic,  metPtPhi, allMETs, printOn=False) :
+    #def applyES(self,entry, year, systematic,  metPtPhi,  printOn=False) :
 
 
         self.LeptV.SetPtEtaPhiM(0,0,0,0)
@@ -123,16 +152,87 @@ class Weights() :
         self.MetV.SetPy(metpt * sin (metphi))
         cor=1.
 
-        #print 'inside...', systematic, metpt, self.MetV.Pt()
         sign = 1.
-        '''
-        if year==2017 : 
 
-            self.MetV.SetPx(entry.METFixEE2017_pt * cos (entry.METFixEE2017_phi))
-            self.MetV.SetPy(entry.METFixEE2017_pt * sin (entry.METFixEE2017_phi))
-        '''
 
+        metlist=[]
+        philist=[]
         if 'Down' in systematic : sign = -1.
+
+
+        # tauES should be applied by default, except if you plan to apply the tauES +/- systematics - make sure you don't apply the tauES twice...
+        #if 'Central' in systematic and 'scale_e' not in systematic and 'scale_m_' not in systematic: 
+        #if systematic =='Central' : 
+        if True : 
+
+
+	    for j in range(entry.nTau):    
+	       
+		dm = entry.Tau_decayMode[j]
+		dmm='DM{0:d}'.format(dm)  
+		pt= entry.Tau_pt[j]
+		eta= entry.Tau_eta[j]
+		gen_match = ord(entry.Tau_genPartFlav[j]) 
+                '''
+                isDM0 =  '1prong' in systematic and 'zero' not in systematic and dm == 0
+                isDM1 =  '1prong' in systematic and 'zero' in systematic and dm == 1
+                isDM10 =  '3prong' in systematic and 'zero' not in systematic and dm == 10
+                isDM11 =  '3prong' in systematic and 'zero' in systematic and dm == 11
+                '''
+
+		if dm != 0 and dm != 1 and dm!=10 and dm!=11 : continue
+
+                
+		self.LeptV.SetPtEtaPhiM(entry.Tau_pt[j], entry.Tau_eta[j], entry.Tau_phi[j], entry.Tau_mass[j])
+
+		if gen_match == 5 :
+
+		    tes = self.testool.getTES(pt,dm,gen_match)
+                    if systematic == 'Central' :
+                        metlist ,philist = self.correctallMET(entry,allMETs, self.LeptV,year,tes)
+
+		    if 'Up' in systematic and 'prong' in systematic : tes = self.testool.getTES(pt,dm,gen_match, unc='Up')
+		    if 'Down' in systematic and 'prong' in systematic : tes = self.testool.getTES(pt,dm,gen_match, unc='Down')
+
+                    self.MetV +=( self.LeptV - self.LeptV*tes)
+                    self.LeptV *= tes          
+
+                    if printOn :print '----------------------------- inside for tau with gen_match=5', tes , self.MetV.Pt(), systematic
+
+                    #print 'taus with gen_match=5', entry.Tau_pt[j], self.LeptV.Pt(),  'tesUp/Down',tes, j, entry.nTau, systematic, entry.event, 'corrected MetV.Pt()', self.MetV.Pt(), 'MEtV.Pt() before this correction', met_uncor, 'fed in', metpt, 'METPx diff', self.MetV.Px(), self.LeptV.Px()
+
+		    if dm == 0 :
+			entry.Tau_mass[j] = 0.13960
+
+		#if 'prong' not in systematic :
+		if gen_match == 2 or gen_match == 4 :
+
+                    cor=1+self.weights_muTotauES[dmm]*0.01
+                    if systematic == 'Central' :
+                        metlist,philist = self.correctallMET(entry,allMETs, self.LeptV,year,cor)
+
+		    self.MetV += ( self.LeptV - self.LeptV *(1 + self.weights_muTotauES[dmm]*0.01))
+		    self.LeptV *=  (1 + self.weights_muTotauES[dmm]*0.01)
+		    if printOn : print 'will correct for  muon_faking_tau ES', self.weights_muTotauES[dmm]*0.01,  metPtPhi[0], '---->', self.MetV.Pt()
+		
+		    # leptons faking taus // electron->tau
+		if gen_match == 1 or gen_match == 3 :
+
+		    fes = self.festool.getFES(eta,dm,gen_match)
+                    if systematic == 'Central' :
+                        metlist,philist = self.correctallMET(entry,allMETs, self.LeptV,year,fes)
+		   
+		    self.MetV +=( self.LeptV - self.LeptV*fes)
+		    self.LeptV *= fes          
+		    if printOn : print 'will correct for  electron_faking_tau ES', cor,  metPtPhi[0], '---->',self.MetV.Pt()
+
+		entry.Tau_mass[j] = self.LeptV.M()
+		entry.Tau_pt[j] = self.LeptV.Pt()
+                #entry.Tau_phi[j] = self.LeptV.Phi()
+
+		#print 'returnin LeptV ---------------->pt ', self.LeptV.Pt(),  'met' , self.MetV.Pt(), systematic
+	    #print 'returning---------------->', entry.METFixEE2017_pt, self.MetV.Pt(), self.MetV.Phi(), self.LeptV.M(), entry.Tau_mass[j], self.LeptV.Pt(), 
+	    #print 'returning---------------->pt ', self.MetV.Pt(), 'phi ', self.MetV.Phi(), 'uncorrected values', entry.MET_pt, entry.MET_phi, entry.MET_T1_pt, entry.MET_T1_phi, systematic
 
 
 
@@ -155,14 +255,16 @@ class Weights() :
                 self.LeptV *= fact
                 entry.Muon_pt[j] = self.LeptV.Pt()
                 entry.Muon_mass[j] = self.LeptV.M()
-                cor=fact
+                #entry.Muon_phi[j] = self.LeptV.Phi()
+                #cor=fact
 
 
         #### electron_energy_scale
         if 'scale_e' in systematic : 
 
-	    #for j in range(entry.nTau):    
-                #print 'taus in electron_e', entry.Tau_pt[j], j, entry.nTau, systematic, entry.event, self.MetV.Pt(), metpt
+            if printOn :
+		for j in range(entry.nTau):    
+		    print 'taus in electron_e tauPt', entry.Tau_pt[j], j, entry.nTau, 'systematic', systematic, entry.event, 'met in applyES', self.MetV.Pt(), 'met fed in', metpt
 
 	    #self.weights_muES = {'eta0to1p2' : 0.4, 'eta1p2to2p1' : 0.9, 'etagt2p1' : 2.7 }
 	    for j in range(entry.nElectron):    
@@ -176,76 +278,14 @@ class Weights() :
                 if  abs(entry.Electron_eta[j]) > 1.2 and abs(entry.Electron_eta[j]) < 2.1 :    fact =   1+ sign * self.weights_electronES['eta1p2to2p1']*0.01 
                 if  abs(entry.Electron_eta[j]) > 2.1 : fact = 1+ sign * self.weights_electronES['etagt2p1']*0.01 
 
+                #uncormet = self.MetV.Pt()
                 self.MetV += (self.LeptV - self.LeptV*fact)
                 self.LeptV *= fact
                 entry.Electron_pt[j] = self.LeptV.Pt()
                 entry.Electron_mass[j] = self.LeptV.M()
-                cor=fact
+                #entry.Electron_phi[j] = self.LeptV.Phi()
+                #if printOn : print 'scale_e systematic ', systematic, entry.event, 'uncorrected met', uncormet, 'corrected met', self.MetV.Pt(),  'met fed in', metpt
 
 
-        # tauES should be applied by default, except if you plan to apply the tauES +/- systematics - make sure you don't apply the tauES twice...
-        if 'Central' in systematic and 'scale_e' not in systematic and 'scale_m' not in systematic: 
-        #if len(systematic) !=0 : 
-
-	    for j in range(entry.nTau):    
-	       
-		dm = entry.Tau_decayMode[j]
-		dmm='DM{0:d}'.format(dm)  
-		pt= entry.Tau_pt[j]
-		eta= entry.Tau_eta[j]
-		gen_match = ord(entry.Tau_genPartFlav[j]) 
-
-                isDM0 =  '1prong' in systematic and 'zero' not in systematic and dm == 0
-                isDM1 =  '1prong' in systematic and 'zero' in systematic and dm == 1
-                isDM10 =  '3prong' in systematic and 'zero' not in systematic and dm == 10
-                isDM11 =  '3prong' in systematic and 'zero' in systematic and dm == 11
-
-		if dm != 0 and dm != 1 and dm!=10 and dm!=11 : continue
-
-                
-		self.LeptV.SetPtEtaPhiM(entry.Tau_pt[j], entry.Tau_eta[j], entry.Tau_phi[j], entry.Tau_mass[j])
-		tes = self.testool.getTES(pt,dm,gen_match)
-		if gen_match == 5 :
-
-		    if 'Up' in systematic : tes = self.testool.getTES(pt,dm,gen_match, unc='Up')
-		    if 'Down' in systematic : tes = self.testool.getTES(pt,dm,gen_match, unc='Down')
-
-
-                    self.MetV +=( self.LeptV - self.LeptV*tes)
-                    self.LeptV *= tes          
-                    cor=tes
-
-		    #self.MetV += self.transverseVEC(self.LeptV- self.LeptV*tes)
-                    #print '-----------------------------', tes , met_uncor, metcopy.Pt(), self.MetV.Pt() 
-
-                    #print 'taus with gen_match=5', entry.Tau_pt[j], self.LeptV.Pt(),  'tesUp/Down',tes, j, entry.nTau, systematic, entry.event, 'corrected MetV.Pt()', self.MetV.Pt(), 'MEtV.Pt() before this correction', met_uncor, 'fed in', metpt, 'METPx diff', self.MetV.Px(), self.LeptV.Px()
-
-		    if dm == 0 :
-			entry.Tau_mass[j] = 0.13960
-
-
-		if 'prong' not in systematic :
-		    if gen_match == 2 or gen_match == 4 :
-
-
-                        self.MetV +=( self.LeptV - self.LeptV *(1 + self.weights_muTotauES[dmm]*0.01))
-			self.LeptV *=  (1 + self.weights_muTotauES[dmm]*0.01)
-                    
-			# leptons faking taus // electron->tau
-		    if gen_match == 1 or gen_match == 3 :
-		       
-			fes = self.festool.getFES(eta,dm,gen_match)
-                        self.MetV +=( self.LeptV - self.LeptV*fes)
-                        self.LeptV *= fes          
-                        cor=fes
-
-		entry.Tau_mass[j] = self.LeptV.M()
-		entry.Tau_pt[j] = self.LeptV.Pt()
-
-		#print 'returnin LeptV ---------------->pt ', self.LeptV.Pt(), 'phi ', self.LeptV.Phi(), 'uncorrected values', pt , phi
-	    #print 'returning---------------->', entry.METFixEE2017_pt, self.MetV.Pt(), self.MetV.Phi(), self.LeptV.M(), entry.Tau_mass[j], self.LeptV.Pt(), 
-	    #print 'returning---------------->pt ', self.MetV.Pt(), 'phi ', self.MetV.Phi(), 'uncorrected values', entry.MET_pt, entry.MET_phi, entry.MET_T1_pt, entry.MET_T1_phi, systematic
-        #if systematic == 'Central' :
-	#print 'returning---------------->pt ', self.MetV.Pt(), 'phi ', self.MetV.Phi(), 'uncorrected values', entry.MET_T1_pt, entry.MET_T1_phi, 'factor', cor, 'is it the same ?', entry.MET_T1_pt*cor, entry.MET_T1_pt/cor, 'and', entry.MET_T1_pt - self.LeptV.Pt()*(cor+1), 'systematic' , systematic
-	return self.MetV.Pt(), self.MetV.Phi()
+	return self.MetV.Pt(), self.MetV.Phi(), metlist , philist
 

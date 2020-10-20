@@ -170,12 +170,10 @@ for i, sys in enumerate(sysall) :
     sysT.append(sys+'Up')
     sysT.append(sys+'Down')
 
-#sysT = sysT  + upS + downS
 
 #sysT=['Central']
 print sysT
 
-#sysT = ["Central"]
 isMC = True
 if not MC : 
     sysT = ["Central"]
@@ -189,6 +187,13 @@ outTuple = outTuple.outTuple(outFileName, era, doSyst, sysT, isMC)
 
 tStart = time.time()
 countMod = 1000
+
+print outTuple.allsystMET
+
+allMET=[]
+for i,j in enumerate(outTuple.allsystMET):
+    if 'MET' in j and 'T1_' in j and 'phi' not in j : allMET.append(j)
+
 
 
 Weights=Weights.Weights(args.year)
@@ -260,7 +265,6 @@ for count, e in enumerate(inTree) :
 		met_phi = float(e.METFixEE2017_phi)
 
     #print met_pt, 'smear', e.MET_T1Smear_pt, 'uncorrected?', e.MET_pt
-
     tauMass=[]
     tauPt=[]
     eleMass=[]
@@ -287,8 +291,12 @@ for count, e in enumerate(inTree) :
 		tauMass.append(e.Tau_mass[j])
 		tauPt.append(e.Tau_pt[j])
 
+
+
+    
     for isyst, systematic in enumerate(sysT) : 
-	if MC and isyst>0 : #use the default pT/mass for Ele/Muon/Taus before doing any systematic
+	if isyst>0 : #use the default pT/mass for Ele/Muon/Taus before doing any systematic
+	#if 'Central' in systematic or 'prong' in systematic : #use the default pT/mass for Ele/Muon/Taus before doing the Central or the tau_scale systematics ; otherwise keep the correction
 
 	    for j in range(e.nMuon): 
                 e.Muon_pt[j] = muPt[j]
@@ -299,12 +307,29 @@ for count, e in enumerate(inTree) :
 	    for j in range(e.nTau): 
                 e.Tau_pt[j] = tauPt[j]
                 e.Tau_mass[j] = tauMass[j]
-         
+             
 
-	if MC :
-	    met_pt, met_phi = Weights.applyES(e, args.year, systematic, metPtPhi)
-	    #if systematic=='Central' : print 'after fixxxxxxxxxxxx', e.MET_pt, 'nom', 'what is fed in', metPtPhi[0], 'tauES corrected', met_pt, e.MET_T1Smear_pt, systematic
         
+        #print ''
+        #print 'systematic', systematic
+        #applyES - do it once for Central and redoit for tau_scale_systematics - otherwise keep the correction
+        #print 'before fixxxxxxxxxxxx e.MET_T1_pt', e.MET_T1_pt, '== met_pt ? ', met_pt, '== what is fed in', metPtPhi[0], e.event, systematic
+	#met_pt, met_phi = Weights.applyES(e, args.year, systematic, metPtPhi)
+	met_pt, met_phi, metlist, philist = Weights.applyES(e, args.year, systematic, metPtPhi, allMET)
+        #print 'after fixxxxxxxxxxxx e.MET_T1_pt', e.MET_T1_pt, ' == what is fed in', metPtPhi[0], ' corrected MET ->', met_pt,  'some jesTotalUp MET', e.MET_T1_pt_jesTotalUp , e.event, systematic
+        
+        if len(metlist) != len(philist) : print 'There is a problem with met/phi systematics list - will not concider this event', e.event
+        if systematic == 'Central' :
+	    for i, j in enumerate (metlist): 
+
+                outTuple.list_of_arrays[i][0] = metlist[i]
+	    for i, j in enumerate (philist): 
+                outTuple.list_of_arrays[i+len(metlist)][0] = philist[i]
+
+		#if systematic == 'Central' and ( e.event==1481 or e.event==17892 or e.event==8904):
+		#    print 'it was', outTuple.list_of_arrays[i][0] , i, j, len(metlist) , metlist[i], e.event
+
+
 
 	for lepMode in ['ee','mm'] :
 	    if args.category != 'none' and not lepMode in args.category : continue

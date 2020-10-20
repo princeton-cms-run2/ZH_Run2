@@ -1557,73 +1557,61 @@ for ig, group in enumerate(groups) :
             '''
             if group != 'data' and (cat[2:] == 'et' or cat[2:]  == 'mt' or cat[2:]  == 'tt') :
 
+                var=''
+                if 'tauid' in systematic and 'Up' in systematic : var='Up'
+                if 'tauid' in systematic and 'Down' in systematic : var='Down'
+
+                tau3pt20, tau3pt25, tau3pt30, tau3pt35,  tau3pthigh = False, False, False, False, False
+		if 'pt20to25' in systematic and  e.pt_3 > 20 and  e.pt_3 < 25 : tau3pt20 = True
+		if 'pt25to30' in systematic and  e.pt_3 > 25 and  e.pt_3 < 30 : tau3pt25 = True
+		if 'pt30to35' in systematic and  e.pt_3 > 30 and  e.pt_3 < 35 : tau3pt30 = True
+		if 'pt35to40' in systematic and  e.pt_3 > 35 and  e.pt_3 < 40 : tau3pt35 = True
+		if 'ptgt40' in systematic and  e.pt_3 > 40:  tau3pthigh = True
+
+                tau4pt20, tau4pt25, tau4pt30, tau4pt35, tau4pthigh = False, False, False, False, False
+		if 'pt20to25' in systematic and  e.pt_4 > 20 and  e.pt_4 < 25 : tau4pt20 = True
+		if 'pt25to30' in systematic and  e.pt_4 > 25 and  e.pt_4 < 30 : tau4pt25 = True
+		if 'pt30to35' in systematic and  e.pt_4 > 30 and  e.pt_4 < 35 : tau4pt30 = True
+		if 'pt35to40' in systematic and  e.pt_4 > 35 and  e.pt_4 < 40 : tau4pt35 = True
+		if 'ptgt40' in systematic and  e.pt_4 > 40:  tau4pthigh = True
+
+
                 # leptons faking taus // muon->tau
                 if  cat[2:] == 'et' :
-
-		    if e.gen_match_4 == 1 or e.gen_match_4 == 3 :  weightTID *= antiEleSFToolT.getSFvsEta(e.eta_4,e.gen_match_4)
-		    if e.gen_match_4 == 2 or e.gen_match_4 == 4 :  weightTID *= antiMuSFToolVL.getSFvsEta(e.eta_4,e.gen_match_4)
+                    
+		    if e.gen_match_4 == 1 or e.gen_match_4 == 3 :  weightTID *= antiEleSFToolT.getSFvsEta(e.eta_4,e.gen_match_4,var)
+		    if e.gen_match_4 == 2 or e.gen_match_4 == 4 :  weightTID *= antiMuSFToolVL.getSFvsEta(e.eta_4,e.gen_match_4,var)
 
                 if  cat[2:] == 'mt' :
 
-		    if e.gen_match_4 == 1 or e.gen_match_4 == 3 :  weightTID *= antiEleSFToolVL.getSFvsEta(e.eta_4,e.gen_match_4)
-		    if e.gen_match_4 == 2 or e.gen_match_4 == 4 :  weightTID *= antiMuSFToolT.getSFvsEta(e.eta_4,e.gen_match_4)
+		    if e.gen_match_4 == 1 or e.gen_match_4 == 3 :  weightTID *= antiEleSFToolVL.getSFvsEta(e.eta_4,e.gen_match_4,var)
+		    if e.gen_match_4 == 2 or e.gen_match_4 == 4 :  weightTID *= antiMuSFToolT.getSFvsEta(e.eta_4,e.gen_match_4,var)
 
 		
                 if  cat[2:] == 'tt' :
 		    #muon faking _3 tau
 
-		    if e.gen_match_3 == 2 or e.gen_match_3 == 4 : weightTID *= antiMuSFToolVL.getSFvsEta(e.eta_3,e.gen_match_3)
-		    if e.gen_match_4 == 2 or e.gen_match_4 == 4 : weightTID *= antiMuSFToolVL.getSFvsEta(e.eta_4,e.gen_match_4)
+		    if e.gen_match_3 == 2 or e.gen_match_3 == 4 : weightTID *= antiMuSFToolVL.getSFvsEta(e.eta_3,e.gen_match_3,var)
+		    if e.gen_match_4 == 2 or e.gen_match_4 == 4 : weightTID *= antiMuSFToolVL.getSFvsEta(e.eta_4,e.gen_match_4,var)
 
-		    if e.gen_match_3 == 1 or e.gen_match_3 == 3 : weightTID *= antiEleSFToolVL.getSFvsEta(e.eta_3,e.gen_match_3)
-		    if e.gen_match_4 == 1 or e.gen_match_4 == 3 : weightTID *= antiEleSFToolVL.getSFvsEta(e.eta_4,e.gen_match_4)
+		    if e.gen_match_3 == 1 or e.gen_match_3 == 3 : weightTID *= antiEleSFToolVL.getSFvsEta(e.eta_3,e.gen_match_3,var)
+		    if e.gen_match_4 == 1 or e.gen_match_4 == 3 : weightTID *= antiEleSFToolVL.getSFvsEta(e.eta_4,e.gen_match_4,var)
 
 		if cat[2:] == 'tt' :
                     if e.gen_match_3 == 5 : 
-			weightTID *= tauSFTool.getSFvsPT(e.pt_3,e.gen_match_3)
+			if 'tauid' not in systematic : weightTID *= tauSFTool.getSFvsPT(e.pt_3,e.gen_match_3)
 
-                        if 'Up' in systematic :
-                            if 'pt20to25' in systematic and  e.pt_3 > 20 and  e.pt_3 < 25 : 
-			        weightTID *= tauSFTool.getSFvsPT(e.pt_3,e.gen_match_3, unc='Up')
-                            if 'pt25to30' in systematic and  e.pt_3 > 25 and  e.pt_3 < 30 : 
-			        weightTID *= tauSFTool.getSFvsPT(e.pt_3,e.gen_match_3, unc='Up')
-                            if 'pt30to35' in systematic and  e.pt_3 > 30 and  e.pt_3 < 35 : 
-			        weightTID *= tauSFTool.getSFvsPT(e.pt_3,e.gen_match_3, unc='Up')
-                            if 'pt35to40' in systematic and  e.pt_3 > 35 and  e.pt_3 < 40 : 
-			        weightTID *= tauSFTool.getSFvsPT(e.pt_3,e.gen_match_3, unc='Up')
-                            if 'ptgt40' in systematic and  e.pt_3 > 40:
-			        weightTID *= tauSFTool.getSFvsPT(e.pt_3,e.gen_match_3, unc='Up')
-
-
-                        #print 'tesSTOOL', testool.getTES(e.pt_3, e.decayMode_3, e.gen_match_3)
-
+                        if 'tauid' in systematic : 
+                            if tau3pt20 or tau3pt25 or tau3pt30 or tau3pt35 or tau3pthigh :  weightTID *= tauSFTool.getSFvsPT(e.pt_3,e.gen_match_3, unc=var)
 
                 if  cat[2:] == 'tt'  or cat[2:] == 'mt' or cat[2:] == 'et' :
 		    if e.gen_match_4 == 5 : 
-			weightTID *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4)
-                        if 'Up' in systematic :
-                            if 'pt20to25' in systematic and  e.pt_4 > 20 and  e.pt_4 < 25 : 
-			        weightTID *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4, unc='Up')
-                            if 'pt25to30' in systematic and  e.pt_4 > 25 and  e.pt_4 < 30 : 
-			        weightTID *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4, unc='Up')
-                            if 'pt30to35' in systematic and  e.pt_4 > 30 and  e.pt_4 < 35 : 
-			        weightTID *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4, unc='Up')
-                            if 'pt35to40' in systematic and  e.pt_4 > 35 and  e.pt_4 < 40 : 
-			        weightTID *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4, unc='Up')
-                            if 'ptgt40' in systematic and  e.pt_4 > 40:
-			        weightTID *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4, unc='Up')
+			if 'tauid' not in systematic : weightTID *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4)
 
-                        if 'Down' in systematic :
-                            if 'pt20to25' in systematic and  e.pt_4 > 20 and  e.pt_4 < 25 : 
-			        weightTID *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4, unc='Down')
-                            if 'pt25to30' in systematic and  e.pt_4 > 25 and  e.pt_4 < 30 : 
-			        weightTID *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4, unc='Down')
-                            if 'pt30to35' in systematic and  e.pt_4 > 30 and  e.pt_4 < 35 : 
-			        weightTID *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4, unc='Down')
-                            if 'pt35to40' in systematic and  e.pt_4 > 35 and  e.pt_4 < 40 : 
-			        weightTID *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4, unc='Down')
-                            if 'ptgt40' in systematic and  e.pt_4 > 40:
-			        weightTID *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4, unc='Down')
+                        if 'tauid' in systematic : 
+                            if tau4pt20 or tau4pt25 or tau4pt30 or tau4pt35 or tau4pthigh :  weightTID *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4, unc=var)
+
+
 
 
                 weight *= weightTID
@@ -1735,13 +1723,29 @@ for ig, group in enumerate(groups) :
 
 			if ZPt>75 and ZPt < 150 : iBin += 7
 			if ZPt>150 : iBin += 14
+                        if group =='ZH' : 
+			    if e.HTXS_Higgs_cat == 400 : hm_sv_new_lep_FWDH_htt125[group][cat].Fill(iBin,weight )
+			    if e.HTXS_Higgs_cat == 401 : hm_sv_new_lep_PTV_0_75_htt125[group][cat].Fill(iBin,weight )
+			    if e.HTXS_Higgs_cat == 402 : hm_sv_new_lep_PTV_75_150_htt125[group][cat].Fill(iBin,weight )
+			    if e.HTXS_Higgs_cat == 403 : hm_sv_new_lep_PTV_150_250_0J_htt125[group][cat].Fill(iBin,weight )
+			    if e.HTXS_Higgs_cat == 404 : hm_sv_new_lep_PTV_150_250_GE1J_htt125[group][cat].Fill(iBin,weight )
+			    if e.HTXS_Higgs_cat == 405 : hm_sv_new_lep_PTV_GT250_htt125[group][cat].Fill(iBin,weight )
 
-                        if e.HTXS_Higgs_cat == 400 : hm_sv_new_lep_FWDH_htt125[group][cat].Fill(iBin,weight )
-                        if e.HTXS_Higgs_cat == 401 : hm_sv_new_lep_PTV_0_75_htt125[group][cat].Fill(iBin,weight )
-                        if e.HTXS_Higgs_cat == 402 : hm_sv_new_lep_PTV_75_150_htt125[group][cat].Fill(iBin,weight )
-                        if e.HTXS_Higgs_cat == 403 : hm_sv_new_lep_PTV_150_250_0J_htt125[group][cat].Fill(iBin,weight )
-                        if e.HTXS_Higgs_cat == 404 : hm_sv_new_lep_PTV_150_250_GE1J_htt125[group][cat].Fill(iBin,weight )
-                        if e.HTXS_Higgs_cat == 405 : hm_sv_new_lep_PTV_GT250_htt125[group][cat].Fill(iBin,weight )
+                        if group =='ggZH' : 
+			    if e.HTXS_Higgs_cat == 500 : hm_sv_new_lep_FWDH_htt125[group][cat].Fill(iBin,weight )
+			    if e.HTXS_Higgs_cat == 501 : hm_sv_new_lep_PTV_0_75_htt125[group][cat].Fill(iBin,weight )
+			    if e.HTXS_Higgs_cat == 502 : hm_sv_new_lep_PTV_75_150_htt125[group][cat].Fill(iBin,weight )
+			    if e.HTXS_Higgs_cat == 503 : hm_sv_new_lep_PTV_150_250_0J_htt125[group][cat].Fill(iBin,weight )
+			    if e.HTXS_Higgs_cat == 504 : hm_sv_new_lep_PTV_150_250_GE1J_htt125[group][cat].Fill(iBin,weight )
+			    if e.HTXS_Higgs_cat == 505 : hm_sv_new_lep_PTV_GT250_htt125[group][cat].Fill(iBin,weight )
+
+                        if group =='WH' : 
+			    if e.HTXS_Higgs_cat == 300 : hm_sv_new_lep_FWDH_htt125[group][cat].Fill(iBin,weight )
+			    if e.HTXS_Higgs_cat == 301 : hm_sv_new_lep_PTV_0_75_htt125[group][cat].Fill(iBin,weight )
+			    if e.HTXS_Higgs_cat == 302 : hm_sv_new_lep_PTV_75_150_htt125[group][cat].Fill(iBin,weight )
+			    if e.HTXS_Higgs_cat == 303 : hm_sv_new_lep_PTV_150_250_0J_htt125[group][cat].Fill(iBin,weight )
+			    if e.HTXS_Higgs_cat == 304 : hm_sv_new_lep_PTV_150_250_GE1J_htt125[group][cat].Fill(iBin,weight )
+			    if e.HTXS_Higgs_cat == 305 : hm_sv_new_lep_PTV_GT250_htt125[group][cat].Fill(iBin,weight )
 
                         #hm_sv_new_FMjall[group][cat].Fill(iBin,weight)
 
