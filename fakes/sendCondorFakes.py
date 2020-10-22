@@ -71,7 +71,7 @@ for line in open(args.inFileName,'r').readlines() :
         filesh = 'condor_{0:s}_{1:s}_Fakes_{3:s}_sys{4:s}.sh'.format(ds,era,sel,tag, sys)
 
 	cf =os.path.isfile('/eos/uscms/store/user/alkaloge/Fakes/nAODv7/out_noL/{2:s}/{3:s}_{2:s}_sys{5:s}.root'.format(eospath,sel,era,ds,tag,sys)) #ZHToTauTau_2016_sysscale_t_3prong1pizeroUp.root
-	cff =os.path.isfile('/eos/uscms/store/user/alkaloge/Fakes/nAODv7/out_noL/{2:s}/NormZZ/{3:s}_{2:s}_sys{5:s}.root'.format(eospath,sel,era,ds,tag,sys)) #ZHToTauTau_2016_sysscale_t_3prong1pizeroUp.root
+	cff =os.path.isfile('/eos/uscms/store/user/alkaloge/Fakes/nAODv7/out_noL/{2:s}/Norm/{3:s}_{2:s}_sys{5:s}.root'.format(eospath,sel,era,ds,tag,sys)) #ZHToTauTau_2016_sysscale_t_3prong1pizeroUp.root
 
 	cfs = os.path.isfile("./Jobs/{0:s}.submitted".format(filejdl))
 

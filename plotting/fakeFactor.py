@@ -52,7 +52,7 @@ class fakeFactor() :
         
         #filein = './FakesResult_{0:s}_SS_{1:s}WP_{2:s}.root'.format(str(year),str(WP),str(tag))
         #filein = './FakesResult_{0:s}_SS_{1:s}WP_pow_noL.root'.format(str(year),str(WP),str(tag))
-        filein = './FakesResult_{0:s}_SS_{1:s}WP_sys{2:s}.root'.format(str(year),str(WP),syst)
+        filein = './FakesResulttttttt_{0:s}_SS_{1:s}WP_sys{2:s}.root'.format(str(year),str(WP),syst)
         print 'Will use ', filein, 'for fakes with vertag', tag, vertag
         print self.p1
         print self.p2
@@ -60,9 +60,9 @@ class fakeFactor() :
             
         self.fin = TFile.Open(filein,"READ")
         #self.fin.ls() 
-        fileEWKin = './Zll_nloEWK_weight_unnormalized.root'
-        self.finEWK = TFile.Open(fileEWKin,"READ")
-        
+        #fileEWKin = './Zll_nloEWK_weight_unnormalized.root'
+        #self.finEWK = TFile.Open(fileEWKin,"READ")
+    '''    
     def getEWKWeight(self, pt, var="central") :
         hCentral  = self.finEWK.Get("SignalWeight_nloEWK_rebin")
         hUp  = self.finEWK.Get("SignalWeight_nloEWK_up_rebin")
@@ -72,7 +72,7 @@ class fakeFactor() :
         if var.lower() == "up" : xB = hUp.GetBinContent(hUp.FindBin(pt))
         if var.lower() == "down" : xB = hDown.GetBinContent(hDown.FindBin(pt))
         return xB
-
+    '''
     def getFakeWeightsvspTvsDM(self, ic, pt1, pt2, WP, DM1, DM2) :
         #print("Entering getFakeWeightsnvsTvsDM() ic={0:s} pt1={1:8.1f} pt2={2:8.1f} WP={3} DM1={4:4d} DM2={5:4d}".format(ic, pt1, pt2, WP, DM1, DM2))
 

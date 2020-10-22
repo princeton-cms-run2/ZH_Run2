@@ -26,18 +26,19 @@ xrdcp root://cmseos.fnal.gov//store/user/alkaloge/CHANNEL/nAODv7/YEAR/FILEIN_YEA
 
 python runLocal.py YEAR FILEIN NICKNAME 0 SYSTEMATICHERE
 
+rm Fakes*root
 
 ls *_sys*.root > files
 cat files
 
-echo "again....."
+echo "done....."
 
 cat files
 
 
-while read line
-do
+#while read line
+#do
 
-xrdcp $line root://cmseos.fnal.gov//store/user/alkaloge/CHANNEL/nAODv7/out_TAG/YEAR/$line
+#xrdcp $line root://cmseos.fnal.gov//store/user/alkaloge/CHANNEL/nAODv7/out_TAG/YEAR/$line
 
-done<files
+#done<files

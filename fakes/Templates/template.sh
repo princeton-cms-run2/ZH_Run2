@@ -24,17 +24,17 @@ xrdcp root://cmseos.fnal.gov//store/user/alkaloge/ZH/nAODv7/YEAR/FILEIN_YEAR/FIL
 python runLocal.py YEAR FILEIN NICKNAME 0 SYSTEMATICHERE
 
 
-ls *_sys*.root > files
-cat files
+#ls *_sys*.root > files
+#cat files
 
-echo "again....."
+#echo "again....."
 
-cat files
+#cat files
 
 
-while read line
-do
+#while read line
+#do
 
-xrdcp $line root://cmseos.fnal.gov//store/user/alkaloge/CHANNEL/nAODv7/out_noL/YEAR/$line
+#xrdcp $line root://cmseos.fnal.gov//store/user/alkaloge/CHANNEL/nAODv7/out_noL/YEAR/$line
 
-done<files
+#done<files

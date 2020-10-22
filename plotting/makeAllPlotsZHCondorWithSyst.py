@@ -16,12 +16,13 @@ from array import array
 import os
 import os.path
 import sys
-import ScaleFactor as SF
+#import ScaleFactor as SF
 sys.path.append('./TauPOG')
 from TauPOG.TauIDSFs.TauIDSFTool import TauIDSFTool
 from TauPOG.TauIDSFs.TauIDSFTool import TauESTool
 from TauPOG.TauIDSFs.TauIDSFTool import TauFESTool
 import fakeFactor 
+import EWKWeights
 
 
 def catToNumber(cat) :
@@ -317,6 +318,7 @@ if str(args.inSystematics) not in sysall :
 systematic=str(args.inSystematics)
 #systematic='jerUp'
 
+
 if str(args.gType) !='data' :
 
     gInterpreter.ProcessLine('.L BTagCalibrationStandalone.cpp+') 
@@ -369,6 +371,8 @@ if str(args.gType) !='data' :
 	"iterativefit"      # measurement type
     )
 
+
+
 tt_tau_vse = 4
 tt_tau_vsmu = 1
 
@@ -408,14 +412,15 @@ if era == '2017' : recoilCorrector  = ROOT.RecoilCorrector("./Type1_PFMET_2017.r
 if era == '2018' : recoilCorrector  = ROOT.RecoilCorrector("./TypeI-PFMet_Run2018.root");
 '''
 
-finWS=("{0:s}{1:s}".format(WorkSpace['dir'],WorkSpace['fileWS']))
-fInws=TFile(finWS, 'read') 
-fInws.cd()
+if 'data' not in str(args.gType) : 
+    finWS=("{0:s}{1:s}".format(WorkSpace['dir'],WorkSpace['fileWS']))
+    fInws=TFile(finWS, 'read') 
+    fInws.cd()
 
 
-#ROOT.gROOT.LoadMacro("CrystalBallEfficiency.cxx+")
-wspace = WS.RooWorkspace("w")
-wspace=fInws.Get("w")
+    #ROOT.gROOT.LoadMacro("CrystalBallEfficiency.cxx+")
+    wspace = WS.RooWorkspace("w")
+    wspace=fInws.Get("w")
 
 
 # use this utility class to screen out duplicate events
@@ -658,7 +663,12 @@ vertag = str(args.genTag)
 WPSR= 16
 if args.workingPoint == args.bruteworkingPoint : WPSR = WP
 outFileName = outFileName +"_"+str(args.bruteworkingPoint)+"brute_"+str(args.inSystematics)
-FF = fakeFactor.fakeFactor(args.year,WP,extratag, vertag,systematic)
+
+if 'data' in str(args.gType) :
+    FF = fakeFactor.fakeFactor(args.year,WP,extratag, vertag,systematic)
+
+if 'ZH'  in str(args.gType) :
+    EWK = EWKWeights.EWKWeights()
 
 
 
@@ -1017,6 +1027,7 @@ for ig, group in enumerate(groups) :
             tree_ = "Events"
 
             if systematic in scaleSyst and systematic != 'Central' : tree_ = systematic
+            if group == 'data' : tree_ = "Events"
 	    inTree = inFile.Get(tree_)
 
 	    #inTree = getattr(inFile, tree_, None)
@@ -1249,9 +1260,9 @@ for ig, group in enumerate(groups) :
        
             if group == 'data' :
                 if DD[cat].checkEvent(e,cat) : continue 
-
             btag=1
-            if systematic in jesSyst :  
+
+            if systematic in jesSyst and group != 'data' :  
 		met = getattr(e, 'MET_T1_pt_{0:s}'.format(systematic), None)
 		metphi = getattr(e, 'MET_T1_phi_{0:s}'.format(systematic), None)
 		njets = getattr(e, 'njets_{0:s}'.format(systematic), None)
@@ -1259,6 +1270,8 @@ for ig, group in enumerate(groups) :
 		jeta = getattr(e, 'jeta_{0:s}'.format(systematic), None)
 		jflavour = getattr(e, 'jflavour_{0:s}'.format(systematic), None)
 		nbtag = getattr(e, 'nbtag_{0:s}'.format(systematic), None)
+
+
             ##### btag
             if group != 'data' :
 		nj= njets
@@ -1277,7 +1290,7 @@ for ig, group in enumerate(groups) :
 				btag_sf *= reader_light.eval_auto_bounds( 'central',  2,     abs(jeta[ib]), jpt[ib])
                         except IndexError : btag_sf = 1.
 		weight *= btag_sf
-		weightFM *= btag_sf
+	   	weightFM *= btag_sf
 
             iCut +=1
             WCounter[iCut-1][icat-1][inick] += weightCF
@@ -1426,12 +1439,12 @@ for ig, group in enumerate(groups) :
                 
 	    if group == 'data' :
 		if dataDriven :
-		    dm1=e.decayMode_3
-		    dm2=e.decayMode_4
-                    #if dm1 < 0 or dm2 < 0 : print 'problem with data ? ', dm1, dm2, e.pt_3, e.pt_4
+		    dm3=e.decayMode_3
+		    dm4=e.decayMode_4
+                    #if dm1 < 0 or dm2 < 0 : print 'problem with data ? ', dm3, dm4, e.pt_3, e.pt_4
 		    #fW1, fW2, fW0 = getFakeWeightsvspT(cat[2:], e.pt_3, e.pt_4, WP)
-		    fW1, fW2, fW0 = FF.getFakeWeightsvspTvsDM(cat[2:], e.pt_3, e.pt_4, WP, dm1, dm2)
-		    #fW1, fW2, fW0 = getFakeWeightsvspT(cat[2:], e.pt_3, e.pt_4, WP, dm1, dm2)
+		    fW1, fW2, fW0 = FF.getFakeWeightsvspTvsDM(cat[2:], e.pt_3, e.pt_4, WP, dm3, dm4)
+		    #fW1, fW2, fW0 = getFakeWeightsvspT(cat[2:], e.pt_3, e.pt_4, WP, dm3, dm4)
 		    if not tight1 and tight2 : 
                         ww = fW1          
                         hGroup = 'f1'
@@ -1650,9 +1663,9 @@ for ig, group in enumerate(groups) :
             aweight, ratio_nlo_up, ratio_nlo_down = 1. ,1., 1.
 
 	    if  nickName == 'ZHToTauTau' :  
-                ewkweight = FF.getEWKWeight(ZPt, "central")
-                ewkweightUp = FF.getEWKWeight(ZPt, "up")
-                ewkweightDown = FF.getEWKWeight(ZPt, "down")
+                ewkweight = EWK.getEWKWeight(ZPt, "central")
+                ewkweightUp = EWK.getEWKWeight(ZPt, "up")
+                ewkweightDown = EWK.getEWKWeight(ZPt, "down")
 
 
                 aweight = 0.001*3*(26.66 * ewkweight +0.31+0.11)

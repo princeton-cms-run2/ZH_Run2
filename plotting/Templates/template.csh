@@ -18,26 +18,24 @@ scram b -j 8
 
 xrdcp root://cmseos.fnal.gov//store/user/alkaloge/CHANNEL/nAODv7/YEAR/FILEIN_YEAR/FILEIN_YEAR.root . 
 
-#python makeAllPlotsCHANNELCondor.py -f FILEIN_YEAR_CHANNEL_TAG.txt  -a CHANNEL -s OS --MConly --looseCuts -y YEAR  -r no -w 16 -b 16 -e TAG -j none
-#python makeAllPlotsCHANNELCondor.py -f FILEIN_YEAR_CHANNEL_TAG.txt  -a CHANNEL -s OS --MConly --looseCuts -y YEAR  -r yes -w 16 -b 16 -e TAG -j none
 
 
 #xrdcp testCHANNEL_TAG.root root://cmseos.fnal.gov//store/user/alkaloge/CHANNEL/nAODv7/out_TAG/YEAR/FILEIN_YEAR.root
 
 python runLocal.py YEAR FILEIN NICKNAME 0
 
+echo done!
 
+#ls NICKNAME*.root > files
+#cat files
+#sed -i 's/NICKNAME_YEAR.root/d' files
 
-ls NICKNAME*.root > files
-cat files
-sed -i 's/NICKNAME_YEAR.root/d' files
+#echo "again....."
 
-echo "again....."
+#cat files
+#while read line
+#do
 
-cat files
-while read line
-do
+#xrdcp $line root://cmseos.fnal.gov//store/user/alkaloge/CHANNEL/nAODv7/out_TAG/YEAR/$line
 
-xrdcp $line root://cmseos.fnal.gov//store/user/alkaloge/CHANNEL/nAODv7/out_TAG/YEAR/$line
-
-done<files
+#done<files
