@@ -7,7 +7,8 @@ class fakeFactor() :
         #self.p2 = {'et':'t_et', 'mt':'t_mt', 'em':'m_em', 'tt':'t2_tt' } 
         #vertag='v6'
         #vertag='v2'
-
+        # the default one must v4
+        vertag='v4'
 	self.p1 = {'et':'e_', 'mt':'m_', 'em':'e_', 'tt':'t1_' }
 	self.p2 = {'et':'t_', 'mt':'t_', 'em':'m_', 'tt':'t2_' } 
         if 'noL' in tag :
@@ -43,36 +44,16 @@ class fakeFactor() :
 		self.p2 = {'et':'t_et', 'mt':'t_mt', 'em':'m_em', 'tt':'t2_tt' } 
 
 
-
-        #print 'the name will be', '{0:s}_{1:s}DM_vspT'.format(p1,str(DM1)), '{0:s}_{1:s}DM_vspT'.format(p2,str(DM2))
-        #if year == 2016 :
-        #    filein = '../fakes/FakesResult_{0:s}_SS_{1:s}WP.root'.format(str(2017),str(WP))
-        #    for i in range(10) :
-        #else :
         
-        #filein = './FakesResult_{0:s}_SS_{1:s}WP_{2:s}.root'.format(str(year),str(WP),str(tag))
-        #filein = './FakesResult_{0:s}_SS_{1:s}WP_pow_noL.root'.format(str(year),str(WP),str(tag))
-        filein = './FakesResulttttttt_{0:s}_SS_{1:s}WP_sys{2:s}.root'.format(str(year),str(WP),syst)
+        filein = './FakesResult_{0:s}_SS_{1:s}WP_sys{2:s}.root'.format(str(year),str(WP),syst)
         print 'Will use ', filein, 'for fakes with vertag', tag, vertag
         print self.p1
         print self.p2
 
             
         self.fin = TFile.Open(filein,"READ")
-        #self.fin.ls() 
-        #fileEWKin = './Zll_nloEWK_weight_unnormalized.root'
-        #self.finEWK = TFile.Open(fileEWKin,"READ")
-    '''    
-    def getEWKWeight(self, pt, var="central") :
-        hCentral  = self.finEWK.Get("SignalWeight_nloEWK_rebin")
-        hUp  = self.finEWK.Get("SignalWeight_nloEWK_up_rebin")
-        hDown  = self.finEWK.Get("SignalWeight_nloEWK_down_rebin")
-        xB = 1.
-        if var.lower() == "central" : xB = hCentral.GetBinContent(hCentral.FindBin(pt))
-        if var.lower() == "up" : xB = hUp.GetBinContent(hUp.FindBin(pt))
-        if var.lower() == "down" : xB = hDown.GetBinContent(hDown.FindBin(pt))
-        return xB
-    '''
+
+
     def getFakeWeightsvspTvsDM(self, ic, pt1, pt2, WP, DM1, DM2) :
         #print("Entering getFakeWeightsnvsTvsDM() ic={0:s} pt1={1:8.1f} pt2={2:8.1f} WP={3} DM1={4:4d} DM2={5:4d}".format(ic, pt1, pt2, WP, DM1, DM2))
 

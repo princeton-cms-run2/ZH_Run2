@@ -62,7 +62,7 @@ class Weights() :
 	    self.weights_elTotauES = {'DM0' :-0.5, 'DM1' : 6, 'DM10' : 0, 'DM11' :0}
 	    self.weights_muTotauES = {'DM0' :0., 'DM1' : -0.5, 'DM10' : 0, 'DM11' :0}
             self.TESSF={'dir' : '../TauPOG/TauIDSFs/data/', 'fileTES' : 'TauES_eta-dm_DeepTau2017v2p1VSe_2016Legacy.root'}
-            self.FESSF={'dir' : '../TauPOG/TauIDSFs/data/', 'fileTES' : 'TauFES_eta-dm_DeepTau2017v2p1VSe_2016Legacy.root'}
+            self.FESSF={'dir' : '../TauPOG/TauIDSFs/data/', 'fileFES' : 'TauFES_eta-dm_DeepTau2017v2p1VSe_2016Legacy.root'}
 
 
 	if year == 2017 : 

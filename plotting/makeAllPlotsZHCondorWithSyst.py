@@ -40,7 +40,7 @@ def search(values, searchFor):
                 return True
     return False
 
-def runSVFit(entry,tau1, tau2,  METV, channel) :
+def runSVFit(entry,tau1, tau2, METV, channel) :
 		  
     measuredMETx = METV.Pt()*cos(METV.Phi())
     measuredMETy = METV.Pt()*sin(METV.Phi())
@@ -53,7 +53,7 @@ def runSVFit(entry,tau1, tau2,  METV, channel) :
     covMET[1][1] = entry.metcov11
 
 
-    #self.kUndefinedDecayType, self.kTauToHadDecay,  self.kTauToElecDecay, self.kTauToMuDecay = 0, 1, 2, 3
+    #self.kUndefinedDecayType, self.kTauToHadDecay, self.kTauToElecDecay, self.kTauToMuDecay = 0, 1, 2, 3
     if channel == 'et' :
 	measTau1 = ROOT.MeasuredTauLepton(kTauToElecDecay, tau1.Pt(), tau1.Eta(), tau1.Phi(), 0.000511) 
     elif channel == 'mt' :
@@ -65,7 +65,7 @@ def runSVFit(entry,tau1, tau2,  METV, channel) :
 	measTau2 = ROOT.MeasuredTauLepton(kTauToHadDecay, tau2.Pt(), tau2.Eta(), tau2.Phi(), tau2.M())
 
     if channel == 'em' :
-	measTau1 = ROOT.MeasuredTauLepton(kTauToElecDecay,  tau1.Pt(), tau1.Eta(), tau1.Phi(), 0.000511)
+	measTau1 = ROOT.MeasuredTauLepton(kTauToElecDecay, tau1.Pt(), tau1.Eta(), tau1.Phi(), 0.000511)
 	measTau2 = ROOT.MeasuredTauLepton(kTauToMuDecay, tau2.Pt(), tau2.Eta(), tau2.Phi(), 0.106)
 
     VectorOfTaus = ROOT.std.vector('MeasuredTauLepton')
@@ -94,7 +94,7 @@ def getArgs() :
     parser.add_argument("-w", "--workingPoint",type=int, default=16, help="working point for fakes 16 (M), 32(T), 64(VT), 128(VVT)")
     parser.add_argument("-b", "--bruteworkingPoint",type=int, default=16, help="make working point for fakes 16 (M), 32(T), 64(VT), 128(VVT)")
     parser.add_argument("-j", "--inSystematics",type=str, default='',help='systematic variation')
-    parser.add_argument("-e", "--extraTag",type=str, default='',help='extra tag; wL, noL wrt to fakes method')
+    parser.add_argument("-e", "--extraTag",type=str, default='noL',help='extra tag; wL, noL wrt to fakes method')
     parser.add_argument("-g", "--genTag",type=str, default='v4',help='which fakesFactor scheme will be used')
     parser.add_argument("-i", "--isLocal",type=str, default=0,help='local or condor')
     parser.add_argument("-t", "--gType",type=str, default='',help='type : data, Signal, Other')
@@ -147,7 +147,7 @@ def OverFlow(htest) :
 
     #return htest
 
-def PtoEta( Px,  Py,  Pz) :
+def PtoEta( Px, Py, Pz) :
 
    P = sqrt(Px*Px+Py*Py+Pz*Pz);
    if P> 0 : 
@@ -157,13 +157,13 @@ def PtoEta( Px,  Py,  Pz) :
        return Eta
    else: return -99
 
-def PtoPhi( Px,  Py) : return atan2(Py,Px)
+def PtoPhi( Px, Py) : return atan2(Py,Px)
 
 
-def PtoPt( Px,  Py) : return sqrt(Px*Px+Py*Py)
+def PtoPt( Px, Py) : return sqrt(Px*Px+Py*Py)
 
 
-def dPhiFrom2P( Px1,  Py1, Px2,  Py2) :
+def dPhiFrom2P( Px1, Py1, Px2, Py2) :
    prod = Px1*Px2 + Py1*Py2;
    mod1 = sqrt(Px1*Px1+Py1*Py1);
    mod2 = sqrt(Px2*Px2+Py2*Py2);
@@ -179,7 +179,7 @@ def DPhiobj(phi1,phi2) :
     dPhi = min(abs(phi2-phi1),2.*pi-abs(phi2-phi1))
     return dPhi
 
-def deltaEta(Px1, Py1, Pz1, Px2,  Py2,  Pz2):
+def deltaEta(Px1, Py1, Pz1, Px2, Py2, Pz2):
 
   eta1 = PtoEta(Px1,Py1,Pz1)
   eta2 = PtoEta(Px2,Py2,Pz2)
@@ -262,7 +262,7 @@ Pblumi = 1000.
 tauID_w = 1.
 
 # Tau Decay types
-kUndefinedDecayType, kTauToHadDecay,  kTauToElecDecay, kTauToMuDecay = 0, 1, 2, 3   
+kUndefinedDecayType, kTauToHadDecay, kTauToElecDecay, kTauToMuDecay = 0, 1, 2, 3   
 
 gInterpreter.ProcessLine(".include .")
 #for baseName in ['./SVFit/MeasuredTauLepton','./SVFit/svFitAuxFunctions','./SVFit/FastMTT', './HTT-utilities/RecoilCorrections/src/MEtSys', './HTT-utilities/RecoilCorrections/src/RecoilCorrector'] : 
@@ -318,7 +318,7 @@ if str(args.inSystematics) not in sysall :
 systematic=str(args.inSystematics)
 #systematic='jerUp'
 
-
+'''
 if str(args.gType) !='data' :
 
     gInterpreter.ProcessLine('.L BTagCalibrationStandalone.cpp+') 
@@ -333,45 +333,45 @@ if str(args.gType) !='data' :
 
     # make a reader instance and load the sf data
     reader_b = ROOT.BTagCalibrationReader(
-	3,              # 0 is for loose op, 1: medium, 2: tight, 3: discr. reshaping
-	"central",      # central systematic type
-	v_sys,          # vector of other sys. types
+	3,             # 0 is for loose op, 1: medium, 2: tight, 3: discr. reshaping
+	"central",     # central systematic type
+	v_sys,         # vector of other sys. types
     )    
 
 
     reader_b.load(
 	calib, 
-	0,          # 0 is for b flavour, 1: FLAV_C, 2: FLAV_UDSG 
+	0,         # 0 is for b flavour, 1: FLAV_C, 2: FLAV_UDSG 
 	"iterativefit"      # measurement type
     )
 
     reader_c = ROOT.BTagCalibrationReader(
-	3,              # 0 is for loose op, 1: medium, 2: tight, 3: discr. reshaping
-	"central",      # central systematic type
-	v_sys,          # vector of other sys. types
+	3,             # 0 is for loose op, 1: medium, 2: tight, 3: discr. reshaping
+	"central",     # central systematic type
+	v_sys,         # vector of other sys. types
     )    
 
 
     reader_c.load(
 	calib, 
-	1,          # 0 is for b flavour, 1: FLAV_C, 2: FLAV_UDSG 
+	1,         # 0 is for b flavour, 1: FLAV_C, 2: FLAV_UDSG 
 	"iterativefit"      # measurement type
     )
 
     reader_light = ROOT.BTagCalibrationReader(
-	3,              # 0 is for loose op, 1: medium, 2: tight, 3: discr. reshaping
-	"central",      # central systematic type
-	v_sys,          # vector of other sys. types
+	3,             # 0 is for loose op, 1: medium, 2: tight, 3: discr. reshaping
+	"central",     # central systematic type
+	v_sys,         # vector of other sys. types
     )    
 
 
     reader_light.load(
 	calib, 
-	2,          # 0 is for b flavour, 1: FLAV_C, 2: FLAV_UDSG 
+	2,         # 0 is for b flavour, 1: FLAV_C, 2: FLAV_UDSG 
 	"iterativefit"      # measurement type
     )
 
-
+'''
 
 tt_tau_vse = 4
 tt_tau_vsmu = 1
@@ -388,6 +388,7 @@ if era == '2016' :
     weights = {'lumi':35.92, 'tauID_w' :0.87, 'tauES_DM0' : -0.6, 'tauES_DM1' : -0.5,'tauES_DM10' : 0.0, 'mutauES_DM0' : -0.2, 'mutauES_DM1' : 1.5, 'eltauES_DM0' : 0.0, 'eltauES_DM1' : 9.5}
 
     TESSF={'dir' : 'TauPOG/TauIDSFs/data/', 'fileTES' : 'TauES_dm_2016Legacy.root'}
+    FESSF={'dir' : 'TauPOG/TauIDSFs/data/', 'fileTES' : 'TauFES_eta-dm_DeepTau2017v2p1VSe_2016Legacy.root'}
     WorkSpace={'dir' : './', 'fileWS' : 'htt_scalefactors_legacy_2016.root'}
 
 
@@ -396,6 +397,7 @@ if era == '2017' :
 
 
     TESSF={'dir' : 'TauPOG/TauIDSFs/data/', 'fileTES' : 'TauES_dm_2017ReReco.root'}
+    FESSF={'dir' : 'TauPOG/TauIDSFs/data/', 'fileTES' : 'TauFES_eta-dm_DeepTau2017v2p1VSe_2017ReReco.root'}
     WorkSpace={'dir' : './', 'fileWS' : 'htt_scalefactors_legacy_2017.root'}
 
 if era == '2018' : 
@@ -403,6 +405,7 @@ if era == '2018' :
 
 
     TESSF={'dir' : 'TauPOG/TauIDSFs/data/', 'fileTES' : 'TauES_dm_2018ReReco.root'}
+    FESSF={'dir' : 'TauPOG/TauIDSFs/data/', 'fileTES' : 'TauFES_eta-dm_DeepTau2017v2p1VSe_2018ReReco.root'}
     WorkSpace={'dir' : './', 'fileWS' : 'htt_scalefactors_legacy_2018.root'}
 
 
@@ -682,8 +685,8 @@ if str(args.bruteworkingPoint=='64') : wpp = 'VTight'
 if str(args.bruteworkingPoint=='128') : wpp = 'VVTight'
 
 tauSFTool = TauIDSFTool(campaign[args.year],'DeepTau2017v2p1VSjet',wpp)
-testool = TauESTool(campaign[args.year],'DeepTau2017v2p1VSjet', TESSF['dir'])
-festool = TauESTool(campaign[args.year],'DeepTau2017v2p1VSjet')
+#testool = TauESTool(campaign[args.year],'DeepTau2017v2p1VSjet', TESSF['dir'])
+#festool = TauFESTool(campaign[args.year],'DeepTau2017v2p1VSe', FESSF['dir'])
 
 #antiEleSFToolVVL = TauIDSFTool(campaign[args.year],'DeepTau2017v2p1VSe','VVLoose')
 #antiMuSFToolVL  = TauIDSFTool(campaign[args.year],'DeepTau2017v2p1VSmu','VLoose')
@@ -877,11 +880,11 @@ for ig, group in enumerate(groups) :
 
 
 	hName = 'h{0:s}_{1:s}_m_sv_new'.format(group,cat)
-	hm_sv_new[group][cat] = TH1D(hName ,hName,  nbins, array('d',Bins))
+	hm_sv_new[group][cat] = TH1D(hName ,hName, nbins, array('d',Bins))
         print '===================================================================', nbins, Bins
 	hm_sv_new[group][cat].SetDefaultSumw2()
 	hName = 'h{0:s}_{1:s}_m_sv_new_FM'.format(group,cat)
-	hm_sv_new_FM[group][cat] = TH1D(hName, hName,  nbins, array('d',Bins))
+	hm_sv_new_FM[group][cat] = TH1D(hName, hName, nbins, array('d',Bins))
 	hm_sv_new_FM[group][cat].SetDefaultSumw2()
         #print 'take this example', hm_sv_new[group][cat].GetName(), 
 
@@ -890,32 +893,32 @@ for ig, group in enumerate(groups) :
 	hm_sv_new_FMext[group][cat].SetDefaultSumw2()
 
 	hName = 'h{0:s}_{1:s}_m_sv_new_jA'.format(group,cat)
-	hm_sv_new_jA[group][cat] = TH1D(hName ,hName,  nbins, array('d',Bins))
+	hm_sv_new_jA[group][cat] = TH1D(hName ,hName, nbins, array('d',Bins))
 	hm_sv_new_jA[group][cat].SetDefaultSumw2()
 	hName = 'h{0:s}_{1:s}_m_sv_new_jB'.format(group,cat)
-	hm_sv_new_jB[group][cat] = TH1D(hName ,hName,  nbins, array('d',Bins))
+	hm_sv_new_jB[group][cat] = TH1D(hName ,hName, nbins, array('d',Bins))
 	hm_sv_new_jB[group][cat].SetDefaultSumw2()
 	hName = 'h{0:s}_{1:s}_m_sv_new_jC'.format(group,cat)
-	hm_sv_new_jC[group][cat] = TH1D(hName ,hName,  nbins, array('d',Bins))
+	hm_sv_new_jC[group][cat] = TH1D(hName ,hName, nbins, array('d',Bins))
 	hm_sv_new_jC[group][cat].SetDefaultSumw2()
 
 	hName = 'h{0:s}_{1:s}_m_sv_new_jBC'.format(group,cat)
-	hm_sv_new_jBC[group][cat] = TH1D(hName ,hName,  nbins, array('d',Bins))
+	hm_sv_new_jBC[group][cat] = TH1D(hName ,hName, nbins, array('d',Bins))
 	hm_sv_new_jBC[group][cat].SetDefaultSumw2()
 
 
 	hName = 'h{0:s}_{1:s}_m_sv_new_FMjA'.format(group,cat)
-	hm_sv_new_FMjA[group][cat] = TH1D(hName ,hName,  nbins, array('d',Bins))
+	hm_sv_new_FMjA[group][cat] = TH1D(hName ,hName, nbins, array('d',Bins))
 	hm_sv_new_FMjA[group][cat].SetDefaultSumw2()
 	hName = 'h{0:s}_{1:s}_m_sv_new_FMjB'.format(group,cat)
-	hm_sv_new_FMjB[group][cat] = TH1D(hName ,hName,  nbins, array('d',Bins))
+	hm_sv_new_FMjB[group][cat] = TH1D(hName ,hName, nbins, array('d',Bins))
 	hm_sv_new_FMjB[group][cat].SetDefaultSumw2()
 	hName = 'h{0:s}_{1:s}_m_sv_new_FMjC'.format(group,cat)
-	hm_sv_new_FMjC[group][cat] = TH1D(hName ,hName,  nbins, array('d',Bins))
+	hm_sv_new_FMjC[group][cat] = TH1D(hName ,hName, nbins, array('d',Bins))
 	hm_sv_new_FMjC[group][cat].SetDefaultSumw2()
 
 	hName = 'h{0:s}_{1:s}_m_sv_new_FMjBC'.format(group,cat)
-	hm_sv_new_FMjBC[group][cat] = TH1D(hName ,hName,  nbins, array('d',Bins))
+	hm_sv_new_FMjBC[group][cat] = TH1D(hName ,hName, nbins, array('d',Bins))
 	hm_sv_new_FMjBC[group][cat].SetDefaultSumw2()
 
 
@@ -933,10 +936,10 @@ for ig, group in enumerate(groups) :
 	hm_sv_new_jall[group][cat].SetDefaultSumw2()
 
 	hName = 'h{0:s}_{1:s}_mt_sv_new'.format(group,cat)
-	hmt_sv_new[group][cat] = TH1D(hName, hName,  nbins, array('d',Bins))
+	hmt_sv_new[group][cat] = TH1D(hName, hName, nbins, array('d',Bins))
 	hmt_sv_new[group][cat].SetDefaultSumw2()
 	hName = 'h{0:s}_{1:s}_mt_sv_new_FM'.format(group,cat)
-	hmt_sv_new_FM[group][cat] = TH1D(hName,hName,  nbins, array('d',Bins))
+	hmt_sv_new_FM[group][cat] = TH1D(hName,hName, nbins, array('d',Bins))
 	hmt_sv_new_FM[group][cat].SetDefaultSumw2()
 
 
@@ -1214,7 +1217,7 @@ for ig, group in enumerate(groups) :
 	    if cat[2:] == 'tt' :
                     tight1 = e.idDeepTau2017v2p1VSjet_3 >  WPSR-1 and e.idDeepTau2017v2p1VSmu_3 > 0 and  e.idDeepTau2017v2p1VSe_3 > 3
                     tight2 = e.idDeepTau2017v2p1VSjet_4 >  WPSR-1 and e.idDeepTau2017v2p1VSmu_4 > 0 and  e.idDeepTau2017v2p1VSe_4 > 3 
-                    #print  e.idDeepTau2017v2p1VSjet_3 & 16,  e.idDeepTau2017v2p1VSjet_3 & 8 , e.idDeepTau2017v2p1VSjet_3 & 64
+                    #print  e.idDeepTau2017v2p1VSjet_3 & 16, e.idDeepTau2017v2p1VSjet_3 & 8 , e.idDeepTau2017v2p1VSjet_3 & 64
 	    if cat[2:] == 'mt' : tight2 = e.idDeepTau2017v2p1VSjet_4 >  WPSR-1 and e.idDeepTau2017v2p1VSmu_4 > 7 and  e.idDeepTau2017v2p1VSe_4 > 3
 	    if cat[2:] == 'et' : tight2  = e.idDeepTau2017v2p1VSjet_4 > WPSR-1 and e.idDeepTau2017v2p1VSmu_4 > 0 and  e.idDeepTau2017v2p1VSe_4 > 31
             '''
@@ -1271,7 +1274,7 @@ for ig, group in enumerate(groups) :
 		jflavour = getattr(e, 'jflavour_{0:s}'.format(systematic), None)
 		nbtag = getattr(e, 'nbtag_{0:s}'.format(systematic), None)
 
-
+            '''
             ##### btag
             if group != 'data' :
 		nj= njets
@@ -1283,15 +1286,15 @@ for ig, group in enumerate(groups) :
                         try : 
 			    flv = 0
 			    if abs(jflavour[ib]) == 5 : 
-				btag_sf *= reader_b.eval_auto_bounds( 'central',  0,     abs(jeta[ib]), jpt[ib])
+				btag_sf *= reader_b.eval_auto_bounds( 'central', 0,    abs(jeta[ib]), jpt[ib])
 			    if abs(jflavour[ib]) == 4 : 
-				btag_sf *= reader_c.eval_auto_bounds( 'central',  1,     abs(jeta[ib]), jpt[ib])
+				btag_sf *= reader_c.eval_auto_bounds( 'central', 1,    abs(jeta[ib]), jpt[ib])
 			    if abs(jflavour[ib]) < 4 or abs(jflavour[ib]) == 21 :
-				btag_sf *= reader_light.eval_auto_bounds( 'central',  2,     abs(jeta[ib]), jpt[ib])
+				btag_sf *= reader_light.eval_auto_bounds( 'central', 2,    abs(jeta[ib]), jpt[ib])
                         except IndexError : btag_sf = 1.
 		weight *= btag_sf
 	   	weightFM *= btag_sf
-
+            '''
             iCut +=1
             WCounter[iCut-1][icat-1][inick] += weightCF
             hCutFlowN[cat][nickName].SetBinContent(iCut-1, hCutFlowN[cat][nickName].GetBinContent(iCut-1)+weight)
@@ -1465,53 +1468,58 @@ for ig, group in enumerate(groups) :
 		    #print("group = data  cat={0:s} tight1={1} tight2={2} ww={3:f}".format(cat,tight1,tight2,ww))
 		    if not (tight1 and tight2) : continue 
 	
-            '''
 	    else : 
 		#print("Good MC event: group={0:s} nickName={1:s} cat={2:s} gen_match_1={3:d} gen_match_2={4:d}".format(
 		#    group,nickName,cat,e.gen_match_1,e.gen_match_2))
 		if dataDriven :   # include only events with MC matching
+                    extratag='noL'
 		    if cat[2:] == 'em'  :
 			if e.gen_match_3 != 15 and 'noL' in extratag : isfakemc1 = True
 			if e.gen_match_3 != 15 and e.gen_match_3 !=1 and 'wL' in extratag : isfakemc1 = True
+                        '''
 			if  e.gen_match_3 == 0 : hGroup = 'jfl1'
 			if  e.gen_match_3 == 1 : hGroup = 'lfl1'
 			if  e.gen_match_3 == 3 : hGroup = 'ljfl1'
 			if  e.gen_match_3 == 4 : hGroup = 'cfl1'
 			if  e.gen_match_3 == 5 : hGroup = 'bfl1'
 			if  e.gen_match_3 == 22 : hGroup = 'gfl1'
+                        '''
 
 			if e.gen_match_4 != 15  and 'noL' in extratag: isfakemc2 = True
 			if not e.gen_match_4 != 15 and e.gen_match_4 !=1  and 'wL' in extratag: isfakemc2 = True
+                        '''
 			if  e.gen_match_4 == 0 : hGroup = 'jfl2'
 			if  e.gen_match_3 == 1 : hGroup = 'lfl2'
 			if  e.gen_match_4 == 3 : hGroup = 'ljfl2'
 			if  e.gen_match_4 == 4 : hGroup = 'cfl2'
 			if  e.gen_match_4 == 5 : hGroup = 'bfl2'
+                        '''
 			
 		    if cat[2:] == 'et' or cat[2:] == 'mt' :
 			if e.gen_match_3 != 15  and 'noL' in extratag: isfakemc1 = True
 			if e.gen_match_3 != 15 and e.gen_match_3 !=1  and 'wL' in extratag: isfakemc1 = True
 
+                        '''
 			if  e.gen_match_3 == 0 : hGroup = 'jfl1'
 			if  e.gen_match_3 == 1 : hGroup = 'lfl1'
 			if  e.gen_match_3 == 3 : hGroup = 'ljfl1'
 			if  e.gen_match_3 == 4 : hGroup = 'cfl1'
 			if  e.gen_match_3 == 5 : hGroup = 'bfl1'
 			if  e.gen_match_3 == 22 : hGroup = 'gfl1'
+                        '''
 
 			if e.gen_match_4 == 0  :
                             isfakemc2 = True
-                            hGroup = 'jft2'
+                            #hGroup = 'jft2'
 
 			
 		    if cat[2:] == 'tt' :
 			if e.gen_match_3 == 0  :
                             isfakemc1 = True
-                            hGroup = 'jft1'
+                            #hGroup = 'jft1'
 			if e.gen_match_4 == 0  :
                             isfakemc2 = True
-                            hGroup = 'jft2'
-            '''
+                            #hGroup = 'jft2'
 		    
             weightFM=ww
            
@@ -1570,11 +1578,11 @@ for ig, group in enumerate(groups) :
             '''
             if group != 'data' and (cat[2:] == 'et' or cat[2:]  == 'mt' or cat[2:]  == 'tt') :
 
-                var=''
-                if 'tauid' in systematic and 'Up' in systematic : var='Up'
-                if 'tauid' in systematic and 'Down' in systematic : var='Down'
+                varTID =''
+                if 'tauid' in systematic  and 'Up' in systematic : varTID = 'Up'
+                if 'tauid' in systematic  and 'Down' in systematic : varTID = 'Down'
 
-                tau3pt20, tau3pt25, tau3pt30, tau3pt35,  tau3pthigh = False, False, False, False, False
+                tau3pt20, tau3pt25, tau3pt30, tau3pt35, tau3pthigh = False, False, False, False, False
 		if 'pt20to25' in systematic and  e.pt_3 > 20 and  e.pt_3 < 25 : tau3pt20 = True
 		if 'pt25to30' in systematic and  e.pt_3 > 25 and  e.pt_3 < 30 : tau3pt25 = True
 		if 'pt30to35' in systematic and  e.pt_3 > 30 and  e.pt_3 < 35 : tau3pt30 = True
@@ -1587,42 +1595,83 @@ for ig, group in enumerate(groups) :
 		if 'pt30to35' in systematic and  e.pt_4 > 30 and  e.pt_4 < 35 : tau4pt30 = True
 		if 'pt35to40' in systematic and  e.pt_4 > 35 and  e.pt_4 < 40 : tau4pt35 = True
 		if 'ptgt40' in systematic and  e.pt_4 > 40:  tau4pthigh = True
+                
+
+		# leptons faking taus // muon->tau
+		if  cat[2:] == 'et' :
+			
+		    if e.gen_match_4 == 1 or e.gen_match_4 == 3 :  
+			if  (tau4pt20 or tau4pt25 or tau4pt30 or tau4pt35 or tau4pthigh) :  
+			    weightTID *= antiEleSFToolT.getSFvsEta(e.eta_4,e.gen_match_4, unc=varTID)
+                        else : 
+			    weightTID *= antiEleSFToolT.getSFvsEta(e.eta_4,e.gen_match_4)
+
+		    if e.gen_match_4 == 2 or e.gen_match_4 == 4 :  
+			if  (tau4pt20 or tau4pt25 or tau4pt30 or tau4pt35 or tau4pthigh) :  
+                            weightTID *= antiMuSFToolVL.getSFvsEta(e.eta_4,e.gen_match_4, unc=varTID)
+                        else : 
+                            weightTID *= antiMuSFToolVL.getSFvsEta(e.eta_4,e.gen_match_4)
+
+		if  cat[2:] == 'mt' :
 
 
-                # leptons faking taus // muon->tau
-                if  cat[2:] == 'et' :
-                    
-		    if e.gen_match_4 == 1 or e.gen_match_4 == 3 :  weightTID *= antiEleSFToolT.getSFvsEta(e.eta_4,e.gen_match_4,var)
-		    if e.gen_match_4 == 2 or e.gen_match_4 == 4 :  weightTID *= antiMuSFToolVL.getSFvsEta(e.eta_4,e.gen_match_4,var)
+		    if e.gen_match_4 == 1 or e.gen_match_4 == 3 :  
+			if  (tau4pt20 or tau4pt25 or tau4pt30 or tau4pt35 or tau4pthigh) :  
+                            weightTID *= antiEleSFToolVL.getSFvsEta(e.eta_4,e.gen_match_4, unc=varTID)
+                        else : 
+                            weightTID *= antiEleSFToolVL.getSFvsEta(e.eta_4,e.gen_match_4)
 
-                if  cat[2:] == 'mt' :
+		    if e.gen_match_4 == 2 or e.gen_match_4 == 4 :  
+			if  (tau4pt20 or tau4pt25 or tau4pt30 or tau4pt35 or tau4pthigh) : 
+                            weightTID *= antiMuSFToolT.getSFvsEta(e.eta_4,e.gen_match_4, unc=varTID)
+			else : 
+                            weightTID *= antiMuSFToolT.getSFvsEta(e.eta_4,e.gen_match_4)
 
-		    if e.gen_match_4 == 1 or e.gen_match_4 == 3 :  weightTID *= antiEleSFToolVL.getSFvsEta(e.eta_4,e.gen_match_4,var)
-		    if e.gen_match_4 == 2 or e.gen_match_4 == 4 :  weightTID *= antiMuSFToolT.getSFvsEta(e.eta_4,e.gen_match_4,var)
 
-		
-                if  cat[2:] == 'tt' :
+		if  cat[2:] == 'tt' :
+
 		    #muon faking _3 tau
+		    if e.gen_match_3 == 2 or e.gen_match_3 == 4 : 
+			if  (tau3pt20 or tau3pt25 or tau3pt30 or tau3pt35 or tau3pthigh) :  
+                            weightTID *= antiMuSFToolVL.getSFvsEta(e.eta_3,e.gen_match_3, unc=varTID)
+                        else: 
+                            weightTID *= antiMuSFToolVL.getSFvsEta(e.eta_3,e.gen_match_3)
 
-		    if e.gen_match_3 == 2 or e.gen_match_3 == 4 : weightTID *= antiMuSFToolVL.getSFvsEta(e.eta_3,e.gen_match_3,var)
-		    if e.gen_match_4 == 2 or e.gen_match_4 == 4 : weightTID *= antiMuSFToolVL.getSFvsEta(e.eta_4,e.gen_match_4,var)
+		    if e.gen_match_4 == 2 or e.gen_match_4 == 4 : 
+	                if  (tau4pt20 or tau4pt25 or tau4pt30 or tau4pt35 or tau4pthigh) : 
+                            weightTID *= antiMuSFToolVL.getSFvsEta(e.eta_4,e.gen_match_4, unc=varTID)
+                        else : 
+                            weightTID *= antiMuSFToolVL.getSFvsEta(e.eta_4,e.gen_match_4)
 
-		    if e.gen_match_3 == 1 or e.gen_match_3 == 3 : weightTID *= antiEleSFToolVL.getSFvsEta(e.eta_3,e.gen_match_3,var)
-		    if e.gen_match_4 == 1 or e.gen_match_4 == 3 : weightTID *= antiEleSFToolVL.getSFvsEta(e.eta_4,e.gen_match_4,var)
+		    if e.gen_match_3 == 1 or e.gen_match_3 == 3 : 
+			if  (tau3pt20 or tau3pt25 or tau3pt30 or tau3pt35 or tau3pthigh) :  
+			    weightTID *= antiEleSFToolVL.getSFvsEta(e.eta_3,e.gen_match_3, unc=varTID)
+                        else : 
+			    weightTID *= antiEleSFToolVL.getSFvsEta(e.eta_3,e.gen_match_3)
 
-		if cat[2:] == 'tt' :
-                    if e.gen_match_3 == 5 : 
-			if 'tauid' not in systematic : weightTID *= tauSFTool.getSFvsPT(e.pt_3,e.gen_match_3)
+		    if e.gen_match_4 == 1 or e.gen_match_4 == 3 : 
+	                if  (tau4pt20 or tau4pt25 or tau4pt30 or tau4pt35 or tau4pthigh) : 
+		            weightTID *= antiEleSFToolVL.getSFvsEta(e.eta_4,e.gen_match_4, unc=varTID)
+                        else : 
+		            weightTID *= antiEleSFToolVL.getSFvsEta(e.eta_4,e.gen_match_4)
 
-                        if 'tauid' in systematic : 
-                            if tau3pt20 or tau3pt25 or tau3pt30 or tau3pt35 or tau3pthigh :  weightTID *= tauSFTool.getSFvsPT(e.pt_3,e.gen_match_3, unc=var)
+		    if e.gen_match_3 == 5 : 
+			if  (tau3pt20 or tau3pt25 or tau3pt30 or tau3pt35 or tau3pthigh) :  
+			    weightTID *= tauSFTool.getSFvsPT(e.pt_3,e.gen_match_3, unc=varTID)
+                        else : 
+			    weightTID *= tauSFTool.getSFvsPT(e.pt_3,e.gen_match_3)
 
-                if  cat[2:] == 'tt'  or cat[2:] == 'mt' or cat[2:] == 'et' :
+
+		if  cat[2:] == 'tt'  or cat[2:] == 'mt' or cat[2:] == 'et' :
+
 		    if e.gen_match_4 == 5 : 
-			if 'tauid' not in systematic : weightTID *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4)
+	                if  (tau4pt20 or tau4pt25 or tau4pt30 or tau4pt35 or tau4pthigh) : 
+			    weightTID *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4, unc=varTID)
+                        else : 
+			    weightTID *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4)
 
-                        if 'tauid' in systematic : 
-                            if tau4pt20 or tau4pt25 or tau4pt30 or tau4pt35 or tau4pthigh :  weightTID *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4, unc=var)
+		#if  cat[2:] and (e.gen_match_4 == 5 or e.gen_match_3 == 5 ) and (e.decayMode_3 ==11 or e.decayMode_4==1): 
+		#    print e.evt, 'varTID:', varTID,  'w:', weight, 'wTID:', weightTID, 'pT_3:', e.pt_3, e.gen_match_3, 'pt_4', e.pt_4, e.gen_match_4
 
 
 
@@ -1674,7 +1723,7 @@ for ig, group in enumerate(groups) :
 
                 #print 'for signal---------------------->', nickName, ewkweight, ewkweightUp, ewkweightDown , aweight, ratio_nlo_up, ratio_nlo_down
                 if 'nloewkup' not in systematic.lower() and 'nloewkdown' not in  systematic.lower(): 
-                    #print 'for signal---------------------->', nickName, ewkweight, ewkweightUp, ewkweightDown , 'aweight', aweight, 'weight nom',  weight,  'weightX0.7612', weight*0.7612, 'weight Xaweight', weight*aweight
+                    #print 'for signal---------------------->', nickName, ewkweight, ewkweightUp, ewkweightDown , 'aweight', aweight, 'weight nom', weight, 'weightX0.7612', weight*0.7612, 'weight Xaweight', weight*aweight
                     weight *= aweight 
                 if 'nloewkup' in systematic.lower() : 
                     weight *=aweight * ratio_nlo_up
@@ -1863,7 +1912,7 @@ for ig, group in enumerate(groups) :
 			    hm_sv_new_FMjBC[hGroup][cat].Fill(fastMTTmass,1 )
 
 	    nEvents += 1
-            #print '{0:s} \t {1:d} \t  {2:d}  {3:d}  {4:.3f} \t {5:.3f} \t {6:.3f} \t {7:.3f} \t {8:.6f} \t {9:.6f} \t {10:.6f} \t {11:.6f} \t {12:.6f}'.format(cat,  e.lumi,  e.run, e.evt,  e.pt_1, e.pt_2, e.pt_3, e.pt_4, metcor, btag, e.L1PreFiringWeight_Nom, e.HTXS_Higgs_cat, e.mll ), weight
+            #print '{0:s} \t {1:d} \t  {2:d}  {3:d}  {4:.3f} \t {5:.3f} \t {6:.3f} \t {7:.3f} \t {8:.6f} \t {9:.6f} \t {10:.6f} \t {11:.6f} \t {12:.6f}'.format(cat, e.lumi, e.run, e.evt, e.pt_1, e.pt_2, e.pt_3, e.pt_4, metcor, btag, e.L1PreFiringWeight_Nom, e.HTXS_Higgs_cat, e.mll ), weight
 
         
 	print("{0:30s} {1:7d} {2:10.6f} {3:5d}".format(nickName,nentries,sampleWeight[nickName],nEvents))
@@ -1886,7 +1935,7 @@ for group in ngroups:
 	    hCutFlowPerGroupFM[group][cat].GetXaxis().SetBinLabel(i+1, hLabels[i])
 
 	for inick,nickName in enumerate(nickNames[group]) :
-	    #for i in range(1,  hCutFlowN[cat][nickName].GetNbinsX()) : 
+	    #for i in range(1, hCutFlowN[cat][nickName].GetNbinsX()) : 
 		#hCutFlowN[cat][nickName].SetBinContent(i, WCounter[i-1][icat-1][inick])
 
 		#if 'DY' in nickName : print 'content now', i, hCutFlowN[cat][nickName].GetBinContent(i), 'for cat and nickName', cat, nickName, hCutFlowPerGroup[group][cat].GetXaxis().GetBinLabel(i), 'weight is ', weight 
