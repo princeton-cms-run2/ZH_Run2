@@ -25,7 +25,7 @@ tag= str(args.extraTag)
 
 eospath='/eos/uscms/store/user/alkaloge/{0:s}/nAODv7/'.format(sel)
 
-
+args.inFileName='MCsamples_{0:s}_paper.csv'.format(era)
 
 command = "mkdir -p /eos/uscms/store/user/alkaloge/ZH/nAODv7/out_pow_noL/{0:s}/data_{0:s}".format(era)
 os.system(command)
@@ -66,6 +66,7 @@ for line in open(args.inFileName,'r').readlines() :
     nickName=vals[1]
     #if 'Run' in ds or 'data' in ds : sysall = ["Central"]
     if '#' in ds : continue
+    #if 'data' in ds : continue
 
 
 
@@ -76,18 +77,22 @@ for line in open(args.inFileName,'r').readlines() :
 	cf = os.path.isfile('/eos/uscms/store/user/alkaloge/ZH/nAODv7/out_{4:s}/{2:s}/{3:s}_{2:s}_sys{5:s}.root'.format(eospath,sel,era,ds,tag,sys)) #ZHToTauTau_2016_sysscale_t_3prong1pizeroUp.root
 	cff = os.path.isfile('/eos/uscms/store/user/alkaloge/ZH/nAODv7/out_{4:s}/{2:s}/NormZZ/{3:s}_{2:s}_sys{5:s}.root'.format(eospath,sel,era,ds,tag,sys)) #ZHToTauTau_2016_sysscale_t_3prong1pizeroUp.root
 	cfs = os.path.isfile("./Jobs/{0:s}.submitted".format(filejdl))
+	datacf = os.path.isfile('/eos/uscms/store/user/alkaloge/ZH/nAODv7/out_{4:s}/{2:s}/data/{3:s}_{2:s}_sys{5:s}.root'.format(eospath,sel,era,ds,tag,sys)) #ZHToTauTau_2016_sysscale_t_3prong1pizeroUp.root
 
-	if cf or cff :   
+	if cf or cff or datacf:   
             print BC.bcolors.WARNING+'looks like you have it this in eos', ds, era, sel, tag, sys , '/eos/uscms/store/user/alkaloge/ZH/nAODv7/out_{4:s}/{2:s}/{3:s}_{2:s}_sys{5:s}.root'.format(eospath,sel,era,ds,tag,sys)
             continue
-        if not cf and not cff and cfs : 
+        if (not cf and not cff and not datacf) and cfs : 
             print 'probably this is still running {0:s}.submitted? '.format(filejdl)
             continue
-        if not cf and not cff and not cfs :
+        if not cf and not cff and not cfs and not datacf:
 
 	    command = "cp Templates/template.sh {0:s}".format(filesh)
 	    os.system(command)
-	    command = "cp Templates/template.jdl {0:s}".format(filejdl)
+            if 'data' not in ds and 'Run' not in ds : 
+	        command = "cp Templates/template.jdl {0:s}".format(filejdl)
+            else :
+	        command = "cp Templates/template_data.jdl {0:s}".format(filejdl)
 	    os.system(command)
 	    
 	   
