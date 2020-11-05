@@ -317,8 +317,6 @@ if str(args.inSystematics) not in sysall :
 
 systematic=str(args.inSystematics)
 #systematic='jerUp'
-
-'''
 if str(args.gType) !='data' :
 
     gInterpreter.ProcessLine('.L BTagCalibrationStandalone.cpp+') 
@@ -370,8 +368,6 @@ if str(args.gType) !='data' :
 	2,         # 0 is for b flavour, 1: FLAV_C, 2: FLAV_UDSG 
 	"iterativefit"      # measurement type
     )
-
-'''
 
 tt_tau_vse = 4
 tt_tau_vsmu = 1
@@ -1138,12 +1134,12 @@ for ig, group in enumerate(groups) :
                 if 'prefiredown' in systematic.lower() : 
                     try : weight_pref = e.L1PreFiringWeight_Down ## <------- This will change to _Down
                     except AttributeError : weight_pref = 1.
-
+                #if e.evt == 2496649 : print 'first', e.weightPUtrue ,  e.Generator_weight , sWeight,  weight_pref
 		weight = e.weightPUtrue * e.Generator_weight *sWeight * weight_pref
 		weightFM = e.weightPUtrue * e.Generator_weight *sWeight * weight_pref
 
             weightCF = weight
-            if i == 1 : print 'sample info ', e.weightPUtrue, e.Generator_weight, sWeight, 'for ', group, nickName, inTree.GetEntries()
+            if i == 0 : print 'sample info ', e.weightPUtrue, e.Generator_weight, sWeight, 'for ', group, nickName, inTree.GetEntries()
 
             #weight=1.
 
@@ -1273,8 +1269,6 @@ for ig, group in enumerate(groups) :
 		jeta = getattr(e, 'jeta_{0:s}'.format(systematic), None)
 		jflavour = getattr(e, 'jflavour_{0:s}'.format(systematic), None)
 		nbtag = getattr(e, 'nbtag_{0:s}'.format(systematic), None)
-
-            '''
             ##### btag
             if group != 'data' :
 		nj= njets
@@ -1294,7 +1288,7 @@ for ig, group in enumerate(groups) :
                         except IndexError : btag_sf = 1.
 		weight *= btag_sf
 	   	weightFM *= btag_sf
-            '''
+
             iCut +=1
             WCounter[iCut-1][icat-1][inick] += weightCF
             hCutFlowN[cat][nickName].SetBinContent(iCut-1, hCutFlowN[cat][nickName].GetBinContent(iCut-1)+weight)
@@ -1350,11 +1344,13 @@ for ig, group in enumerate(groups) :
 			wspace.var("e_pt").setVal(e.pt_1)
 			wspace.var("e_eta").setVal(e.eta_1)
 			trigw *=  wspace.function("e_trg_ic_ratio").getVal()
+                        #if e.evt == 2496649 : print 'it was trig', e.isTrig_1, e.pt_1, e.eta_1
 
 		    if e.isTrig_1==-1 : 
 			wspace.var("e_pt").setVal(e.pt_2)
 			wspace.var("e_eta").setVal(e.eta_2)
 			trigw *=  wspace.function("e_trg_ic_ratio").getVal()
+                        #if e.evt == 2496649 : print 'it was trig', e.isTrig_1, e.pt_2, e.eta_2
 
 		    if e.isTrig_1==2 : 
 			wspace.var("e_pt").setVal(e.pt_1)
@@ -1366,6 +1362,7 @@ for ig, group in enumerate(groups) :
 			trigw2 =  wspace.function("e_trg_ic_ratio").getVal()
 
 			trigw = float( 1-(1-trigw1) * (1-trigw2))
+                        #if e.evt == 2496649 : print 'it was trig', e.isTrig_1, e.pt_1, e.eta_1, e.pt_2, e.eta_2, trigw, (1-trigw1), (1-trigw2) ,  float( 1-(1-trigw1) * (1-trigw2))
 
 		    wspace.var("e_pt").setVal(e.pt_1)
 		    wspace.var("e_eta").setVal(e.eta_1)
@@ -1404,8 +1401,12 @@ for ig, group in enumerate(groups) :
 
 
 		#if e.isDoubleTrig!=0 and e.isTrig_1 == 0 : trigw = 1
+                if abs(trigw) > 2 : trigw = 1
+                if abs(lepton_sf) > 2 : lepton_sf = 1
+                if abs(tracking_sf) > 2 : tracking_sf = 1
 		weight *= trigw 
 		weightFM *= trigw 
+                #if e.evt == 2496649 : print 'second', weight, trigw, lepton_sf, tracking_sf, cat, e.pt_1, e.pt_2, e.pt_3, e.pt_4
            
 
 
@@ -1675,6 +1676,7 @@ for ig, group in enumerate(groups) :
 
 
 
+                #if e.evt == 2496649 : print 'third', weight, weightTID
 
                 weight *= weightTID
                 weightFM *= weightTID * ww
@@ -1692,12 +1694,13 @@ for ig, group in enumerate(groups) :
             #if group!='data' and group!='fakes' and group !='f1' and group !='f2' and (not tight1 or not tight2) : print weightFM , hGroup, cat, tight1, tight2, i, e.evt, nickName, fW1, fW2, fW0, e.gen_match_3, e.gen_match_4
            
             #print 'made thus far', leptons_sf
+            args.redoFit.lower() == 'yes'
 	    fastMTTmass, fastMTTtransverseMass = -1, -1
 	    if args.redoFit.lower() == 'yes' or args.redoFit.lower() == 'true' or systematic in jesSyst or 'scale_met' in systematic : 
 		fastMTTmass, fastMTTtransverseMass = runSVFit(e,tauV3, tauV4, MetV, cat[2:]) 
             else  : fastMTTmass, fastMTTtransverseMass = e.m_sv, e.mt_sv
-	    #print 'new', fastMTTmass, 'old', e.m_sv, fastMTTtransverseMass, e.mt_sv, cat[2:] , args.redoFit.lower() , met, e.MET_pt_UnclUp , e.met ,'scale_met' in systematic
-
+            #if e.m_sv >50 and e.m_sv < 70 and cat=='eemt':    print 'new', fastMTTmass, 'old', e.m_sv, fastMTTtransverseMass, e.mt_sv, cat, cat[2:] , args.redoFit.lower() , 'met', met,  e.met, 'evt', e.evt, 'weight', weight, e.weightPUtrue ,' gen',  e.Generator_weight, 'pref', weight_pref
+            #if e.evt ==2496649 : print 'met', met,  e.met, 'evt', e.evt, 'weight', weight, e.weightPUtrue ,' gen', e.Generator_weight, 'pref', weight_pref
 
             mass = 0.0005
             if cat[:2] == 'mm' : mass = .105
@@ -1729,7 +1732,6 @@ for ig, group in enumerate(groups) :
                     weight *=aweight * ratio_nlo_up
                 if 'nloewkdown' in systematic.lower() : 
                     weight *=aweight * ratio_nlo_down
-
 
 	    for plotVar in plotSettings:
 		#print plotVar
