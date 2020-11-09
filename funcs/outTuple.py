@@ -135,6 +135,7 @@ class outTuple() :
         self.muonTriggerWord  = array('l',[0])         
         self.whichTriggerWord  = array('l',[0])         
         self.whichTriggerWordSubL  = array('l',[0])         
+        self.LHEScaleWeights        = array('f',[1]*9)
         
         self.nGoodElectron    = array('l',[0])
         self.nGoodMuon        = array('l',[0])
@@ -150,6 +151,15 @@ class outTuple() :
         
         self.pt_3        = array('f',[0])
         self.pt_3_tr     = array('f',[0])
+        self.pt_uncor_1        = array('f',[0])
+        self.pt_uncor_2        = array('f',[0])
+        self.pt_uncor_3        = array('f',[0])
+        self.pt_uncor_4        = array('f',[0])
+        self.m_uncor_1        = array('f',[0])
+        self.m_uncor_2        = array('f',[0])
+        self.m_uncor_3        = array('f',[0])
+        self.m_uncor_4        = array('f',[0])
+
         self.GenPart_statusFlags_3     = array('l',[0])
         self.GenPart_status_3     = array('l',[0])
         self.phi_3       = array('f',[0])
@@ -409,6 +419,7 @@ class outTuple() :
         self.t.Branch('weightPUtrue',           self.weightPUtrue,            'weightPUtrue/F' )
         self.t.Branch('LHEweight',        self.LHEweight,         'LHEweight/F' )
         self.t.Branch('LHE_Njets',        self.LHE_Njets,         'LHE_Njets/I' )
+        self.t.Branch('LHEScaleWeights',        self.LHEScaleWeights,         'LHEScaleWeights[9]/F' )
         self.t.Branch('Generator_weight', self.Generator_weight,  'Generator_weight/F' )
         self.t.Branch('electronTriggerWord',  self.electronTriggerWord, 'electronTriggerWord/I' )
         self.t.Branch('muonTriggerWord',      self.muonTriggerWord,  'muonTriggerWord/I' )
@@ -426,6 +437,14 @@ class outTuple() :
         self.t.Branch('GenPart_status_2',     self.GenPart_status_2,     'GenPart_status_2/I')
         self.t.Branch('GenPart_status_3',     self.GenPart_status_3,     'GenPart_status_3/I')
         self.t.Branch('GenPart_status_4',     self.GenPart_status_4,     'GenPart_status_4/I')
+        self.t.Branch('pt_uncor_1',        self.pt_uncor_1,        'pt_uncor_1/F')
+        self.t.Branch('pt_uncor_2',        self.pt_uncor_2,        'pt_uncor_2/F')
+        self.t.Branch('pt_uncor_3',        self.pt_uncor_3,        'pt_uncor_3/F')
+        self.t.Branch('pt_uncor_4',        self.pt_uncor_4,        'pt_uncor_4/F')
+        self.t.Branch('m_uncor_1',        self.m_uncor_1,        'm_uncor_1/F')
+        self.t.Branch('m_uncor_2',        self.m_uncor_2,        'm_uncor_2/F')
+        self.t.Branch('m_uncor_3',        self.m_uncor_3,        'm_uncor_3/F')
+        self.t.Branch('m_uncor_4',        self.m_uncor_4,        'm_uncor_4/F')
         self.t.Branch('pt_3',        self.pt_3,        'pt_3/F')
         self.t.Branch('pt_3_tr',     self.pt_3_tr,     'pt_3_tr/F')
         self.t.Branch('phi_3',       self.phi_3,       'phi_3/F')
@@ -670,39 +689,43 @@ class outTuple() :
         #self.MET_pt_jesEC2Up  = array('f',[0])
         #self.t.Branch('MET_pt_jesEC2Up', self.MET_pt_jesEC2Up, 'MET_pt_jesEC2Up/F' )
         self.tN=[]
+
+	self.t.SetBranchStatus("*Up",0)
+	self.t.SetBranchStatus("*Down",0)
+	self.t.SetBranchStatus("GenPart*",0)
+	self.t.SetBranchStatus("*_tr*",0)
+	self.t.SetBranchStatus("*LHE*",0)
+	#self.t.SetBranchStatus("*LHEScaleWeight",1)
+	self.t.SetBranchStatus("dR*",0)
+	self.t.SetBranchStatus("dPhi*",0)
+	self.t.SetBranchStatus("Z_*",0)
+	self.t.SetBranchStatus("*ip3d*",0)
+	self.t.SetBranchStatus("nbtagT",0)
+	#self.t.SetBranchStatus("Smear",0)
         for i, isyst in enumerate(shift) : 
+	    self.tN.append(isyst)
+
             #if isyst == "Events" : continue
             #else  : 
             if i > 0 : 
-                self.tN.append(isyst)
-                self.t.SetBranchStatus("*Up",0)
-                self.t.SetBranchStatus("*Down",0)
-                self.t.SetBranchStatus("GenPart*",0)
-                self.t.SetBranchStatus("*_tr*",0)
-                self.t.SetBranchStatus("*LHE*",0)
-                self.t.SetBranchStatus("dR*",0)
-                self.t.SetBranchStatus("dPhi*",0)
-                self.t.SetBranchStatus("Z_*",0)
-                self.t.SetBranchStatus("*ip3d*",0)
-                self.t.SetBranchStatus("nbtagT",0)
-                #self.t.SetBranchStatus("Smear",0)
-
                 self.tN[i-1]  = self.t.CloneTree()
-                self.t.SetBranchStatus("*Up",1)
-                self.t.SetBranchStatus("*Down",1)
-                self.t.SetBranchStatus("GenPart*",1)
-                self.t.SetBranchStatus("*_tr*",1)
-                self.t.SetBranchStatus("*LHE*",1)
-                self.t.SetBranchStatus("dR*",1)
-                self.t.SetBranchStatus("dPhi*",1)
-                self.t.SetBranchStatus("Z_*",1)
-                self.t.SetBranchStatus("*ip3d*",1)
-                self.t.SetBranchStatus("nbtagT",1)
                 #self.t.SetBranchStatus("Smear",1)
-
-
                 self.tN[i-1].SetName(isyst)
                 print '====================>',self.tN[i-1], self.tN[i-1].GetName()
+
+	self.t.SetBranchStatus("*Up",1)
+	self.t.SetBranchStatus("*Down",1)
+	self.t.SetBranchStatus("GenPart*",1)
+	self.t.SetBranchStatus("*_tr*",1)
+	#self.t.SetBranchStatus("*LHE*",1)
+	self.t.SetBranchStatus("*LHEScaleWeight*",1)
+	self.t.SetBranchStatus("dR*",1)
+	self.t.SetBranchStatus("dPhi*",1)
+	self.t.SetBranchStatus("Z_*",1)
+	self.t.SetBranchStatus("*ip3d*",1)
+	self.t.SetBranchStatus("nbtagT",1)
+
+
 
         if doSyst : 
                 #Book the branches and the arrays needed to store variables
@@ -914,7 +937,8 @@ class outTuple() :
         ttP4 = FMTT.getBestP4()
         return ttP4.M(), ttP4.Mt() 
     
-    def Fill(self, entry, SVFit, cat, jt1, jt2, LepP, LepM, lepList, isMC, era, doUncertainties=False ,  met_pt=-99, met_phi=-99, systIndex=0) : 
+    def Fill(self, entry, SVFit, cat, jt1, jt2, LepP, LepM, lepList, isMC, era, doUncertainties=False ,  met_pt=-99, met_phi=-99, systIndex=0, tMass=[], tPt=[], eMass=[], ePt=[], mMass=[], mPt=[]) : 
+    #def Fill(self, entry, SVFit, cat, jt1, jt2, LepP, LepM, lepList, isMC, era, doUncertainties=False ,  met_pt=-99, met_phi=-99, systIndex=0) : 
     #def Fill(self, entry, SVFit, cat, jt1, jt2, LepP, LepM, lepList, isMC, era,  doUncertainties=False , sysVariations=[]) :
         ''' - jt1 and jt2 point to the selected tau candidates according to the table below.
             - if e.g., channel = 'et', the jt1 points to the electron list and jt2 points to the tau list.
@@ -1063,7 +1087,11 @@ class outTuple() :
 		self.weight[0]           = entry.genWeight
 		self.LHEweight[0]        = entry.LHEWeight_originalXWGTUP
 		self.Generator_weight[0] = entry.Generator_weight
-		self.LHE_Njets[0]        = ord(entry.LHE_Njets) 
+		self.LHE_Njets[0]        = ord(entry.LHE_Njets)
+                if SystIndex == 0 : 
+		    for i in range(0, int(entry.nLHEScaleWeight)) : 
+			self.LHEScaleWeights[i] = entry.LHEScaleWeight[i]
+
 		self.nPU[0]  = entry.Pileup_nPU
 		self.nPUEOOT[0]  = entry.Pileup_sumEOOT
 		self.nPULOOT[0]  = entry.Pileup_sumLOOT
@@ -1180,6 +1208,12 @@ class outTuple() :
 		self.dZ_3[0]   = entry.Electron_dz[jt1]
 		self.iso_3[0]  = entry.Electron_pfRelIso03_all[jt1]
 		self.Electron_mvaFall17V2noIso_WP90_3[0]  = entry.Electron_mvaFall17V2noIso_WP90[jt1]
+
+		if SystIndex ==0 : 
+		    self.pt_uncor_3[0] = ePt[jt1]
+		    self.m_uncor_3[0] = eMass[jt1]
+		    self.pt_uncor_4[0] = tPt[jt2]
+		    self.m_uncor_4[0] = tMass[jt2]
 		
 		# Fill genMatch variables for tau(ele)
 		if isMC:
@@ -1197,6 +1231,7 @@ class outTuple() :
 		    try: self.gen_match_3[0] = ord(entry.Electron_genPartFlav[jt1])
 		    except AttributeError: self.gen_match_3[0] = -1
 		
+                #print '---------------------------->', self.pt_3[0], ePt[jt1], entry.Tau_pt[jt2], tPt[jt2] , jt1, jt2, cat, entry.event, SystIndex
 		tau1.SetPtEtaPhiM(entry.Electron_pt[jt1],entry.Electron_eta[jt1], entry.Electron_phi[jt1], self.tauMass)
                 tmass= self.tauMass
                 if entry.Tau_decayMode[jt2] == 0 : tmass= 0.13960
@@ -1216,6 +1251,12 @@ class outTuple() :
 		self.dZ_3[0]   = entry.Electron_dz[jt1]
 		self.iso_3[0]  = entry.Electron_pfRelIso03_all[jt1]
 		self.Electron_mvaFall17V2noIso_WP90_3[0]  = entry.Electron_mvaFall17V2noIso_WP90[jt1]
+
+		if SystIndex ==0 : 
+		    self.pt_uncor_3[0] = ePt[jt1]
+		    self.m_uncor_3[0] = eMass[jt1]
+		    self.pt_uncor_4[0] = mPt[jt2]
+		    self.m_uncor_4[0] = mMass[jt2]
 		
 		if isMC:
 		    try : self.gen_match_3[0] = ord(entry.Electron_genPartFlav[jt1])
@@ -1288,6 +1329,11 @@ class outTuple() :
 		self.isGlobal_3[0]      = entry.Muon_isGlobal[jt1]
 		self.isTracker_3[0]     = entry.Muon_isTracker[jt1]
 		self.ip3d_3[0]       = entry.Muon_ip3d[jt1]
+		if SystIndex ==0 : 
+		    self.pt_uncor_3[0] = mPt[jt1]
+		    self.m_uncor_3[0] = mMass[jt1]
+		    self.pt_uncor_4[0] = tPt[jt2]
+		    self.m_uncor_4[0] = tMass[jt2]
 		
 		if isMC:
 		    try : self.gen_match_3[0] = ord(entry.Muon_genPartFlav[jt1])
@@ -1320,6 +1366,11 @@ class outTuple() :
 		self.q_3[0]      = entry.Tau_charge[jt1]
 		self.d0_3[0]     = entry.Tau_dxy[jt1]
 		self.dZ_3[0]     = entry.Tau_dz[jt1]
+		if SystIndex ==0 : 
+		    self.pt_uncor_3[0] = tPt[jt1]
+		    self.m_uncor_3[0] = tMass[jt1]
+		    self.pt_uncor_4[0] = tPt[jt2]
+		    self.m_uncor_4[0] = tMass[jt2]
                 #print '=========================================--------------------------------> inside', entry.Tau_mass[jt1] , entry.Tau_pt[jt1], jt1, int(entry.Tau_decayMode[jt1])
 
 		self.idDecayModeNewDMs_3[0] = entry.Tau_idDecayModeNewDMs[jt1]
@@ -1477,6 +1528,12 @@ class outTuple() :
             self.dZ_2[0]   = entry.Electron_dz[lep_index_2]
             self.Electron_mvaFall17V2noIso_WP90_1[0]  = entry.Electron_mvaFall17V2noIso_WP90[lep_index_1]
             self.Electron_mvaFall17V2noIso_WP90_2[0]  = entry.Electron_mvaFall17V2noIso_WP90[lep_index_2]
+	    if SystIndex ==0 : 
+		self.pt_uncor_1[0] = ePt[lep_index_1]
+		self.m_uncor_1[0] = eMass[lep_index_1]
+		self.pt_uncor_2[0] = ePt[lep_index_2]
+		self.m_uncor_2[0] = eMass[lep_index_2]
+
             if isMC :
 		self.gen_match_1[0] = ord(entry.Electron_genPartFlav[lep_index_1])
 		self.gen_match_2[0] = ord(entry.Electron_genPartFlav[lep_index_2])
@@ -1503,6 +1560,11 @@ class outTuple() :
 	    self.isGlobal_2[0]   = entry.Muon_isGlobal[lep_index_2] 
 	    self.isTracker_1[0]   = entry.Muon_isTracker[lep_index_1] 
 	    self.isTracker_2[0]   = entry.Muon_isTracker[lep_index_2] 
+	    if SystIndex ==0 : 
+		self.pt_uncor_1[0] = mPt[lep_index_1]
+		self.m_uncor_1[0] = mMass[lep_index_1]
+		self.pt_uncor_2[0] = mPt[lep_index_2]
+		self.m_uncor_2[0] = mMass[lep_index_2]
             if isMC :
 		self.gen_match_1[0] = ord(entry.Muon_genPartFlav[lep_index_1])
 		self.gen_match_2[0] = ord(entry.Muon_genPartFlav[lep_index_2])
@@ -1555,6 +1617,9 @@ class outTuple() :
         
         
         # MET variables  at this point this is the TauES corrected MET
+
+        #if channel == 'tt' : 
+        #print 'let see', channel, self.pt_uncor_3[0], self.pt_3[0], self.pt_uncor_4[0], self.pt_4[0], entry.event, SystIndex
 
 	if str(era) != '2017' : 
 	    self.metNoCor[0]= entry.MET_pt

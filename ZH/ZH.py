@@ -479,7 +479,8 @@ for count, e in enumerate(inTree) :
 		 
 		#print 'again--------------->', e.MET_pt, e.MET_phi
                 #print 'will Fill for syst', isyst, sysT[isyst]
-		outTuple.Fill(e,SVFit,cat,jt1,jt2,LepP,LepM,lepList,isMC,era,doJME, met_pt, met_phi,  isyst)
+		outTuple.Fill(e,SVFit,cat,jt1,jt2,LepP,LepM,lepList,isMC,era,doJME, met_pt, met_phi,  isyst, tauMass, tauPt, eleMass, elePt, muMass, muPt)
+		#outTuple.Fill(e,SVFit,cat,jt1,jt2,LepP,LepM,lepList,isMC,era,doJME, met_pt, met_phi,  isyst)
 
 		if maxPrint > 0 :
 		    maxPrint -= 1
