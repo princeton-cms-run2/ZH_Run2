@@ -297,8 +297,11 @@ jesSyst=[]
 for i, sys in enumerate(jes) :
     jesSyst.append(sys+'Up')
     jesSyst.append(sys+'Down')
-
-otherS=['NLOEWK','PreFire','tauideff_pt20to25', 'tauideff_pt25to30', 'tauideff_pt30to35', 'tauideff_pt35to40', 'tauideff_ptgt40','scale_met_unclustered'] 
+#LHEScaleWeight :                                                   *
+#*         | Float_t LHE scale variation weights (w_var / w_nominal); [0] is muR=0.5 muF=0.5 ; [1] is muR=0.5 muF=1 ; [2] is muR=0.5 muF=2 ; [3] is muR=1 muF=0.5 ; [4] is muR=1 muF=1 ; [5] is muR=1 muF=2 ; [6] is muR=2 muF=0.5 ; [7] is muR=2 muF=1 ; [8] is muR=2 muF=2 *
+#low_pt -> LHEScaleWeights[]
+#high_pt -> LHEScaleWeights[]
+otherS=['NLOEWK','PreFire','tauideff_pt20to25', 'tauideff_pt25to30', 'tauideff_pt30to35', 'tauideff_pt35to40', 'tauideff_ptgt40','scale_met_unclustered', 'scale_lowpt', 'scale_highpt'] 
 OtherSyst=[]
 for i, sys in enumerate(otherS) :
     OtherSyst.append(sys+'Up')
@@ -1137,6 +1140,10 @@ for ig, group in enumerate(groups) :
                 #if e.evt == 2496649 : print 'first', e.weightPUtrue ,  e.Generator_weight , sWeight,  weight_pref
 		weight = e.weightPUtrue * e.Generator_weight *sWeight * weight_pref
 		weightFM = e.weightPUtrue * e.Generator_weight *sWeight * weight_pref
+
+                if 'ZH' in group or group =='WH' : 
+                    if 'lowptUp' in sys or 'highptUp' in sys : weight *= e.LHEScaleWeights[8]
+                    if 'lowptDown' in sys or 'highptDown' in sys : weight *= e.LHEScaleWeights[0]
 
             weightCF = weight
             if i == 0 : print 'sample info ', e.weightPUtrue, e.Generator_weight, sWeight, 'for ', group, nickName, inTree.GetEntries()

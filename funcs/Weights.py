@@ -165,7 +165,6 @@ class Weights() :
         #if systematic =='Central' : 
         if True : 
 
-
 	    for j in range(entry.nTau):    
 	       
 		dm = entry.Tau_decayMode[j]
@@ -193,9 +192,10 @@ class Weights() :
 
 		    if 'Up' in systematic and 'prong' in systematic : tes = self.testool.getTES(pt,dm,gen_match, unc='Up')
 		    if 'Down' in systematic and 'prong' in systematic : tes = self.testool.getTES(pt,dm,gen_match, unc='Down')
-
+                    oldMET = self.MetV.Pt()
                     self.MetV +=( self.LeptV - self.LeptV*tes)
                     self.LeptV *= tes          
+                    #if 'prong' in systematic : print '----------------------------- inside for tau with gen_match=5', j, tes , oldMET, self.MetV.Pt(), systematic, entry.event
 
                     if printOn :print '----------------------------- inside for tau with gen_match=5', tes , self.MetV.Pt(), systematic
 

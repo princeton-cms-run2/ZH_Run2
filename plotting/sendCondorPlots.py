@@ -47,7 +47,7 @@ for i, sys in enumerate(jes) :
     jesSyst.append(sys+'Up')
     jesSyst.append(sys+'Down')
 
-otherS=['NLOEWK','PreFire','tauideff_pt20to25', 'tauideff_pt25to30', 'tauideff_pt30to35', 'tauideff_pt35to40', 'tauideff_ptgt40','scale_met_unclustered'] 
+otherS=['NLOEWK','PreFire','tauideff_pt20to25', 'tauideff_pt25to30', 'tauideff_pt30to35', 'tauideff_pt35to40', 'tauideff_ptgt40','scale_met_unclustered', 'scale_lowpt', 'scale_highpt'] 
 OtherSyst=[]
 for i, sys in enumerate(otherS) :
     OtherSyst.append(sys+'Up')
@@ -69,6 +69,8 @@ for line in open(args.inFileName,'r').readlines() :
     #if 'data' in ds : continue
 
 
+    if 'scale_lowpt' in sys or 'scale_highpt' in sys :
+        if 'ZH' not in nickName and 'WH' not in nickName : continue
 
     for ic, sys in enumerate(sysall) :
         filejdl = 'condor_{0:s}_{1:s}_{2:s}_{3:s}_sys{4:s}.jdl'.format(ds,era,sel,tag, sys)
@@ -80,7 +82,7 @@ for line in open(args.inFileName,'r').readlines() :
 	datacf = os.path.isfile('/eos/uscms/store/user/alkaloge/ZH/nAODv7/out_{4:s}/{2:s}/data/{3:s}_{2:s}_sys{5:s}.root'.format(eospath,sel,era,ds,tag,sys)) #ZHToTauTau_2016_sysscale_t_3prong1pizeroUp.root
 
 	if cf or cff or datacf:   
-            print BC.bcolors.WARNING+'looks like you have it this in eos', ds, era, sel, tag, sys , '/eos/uscms/store/user/alkaloge/ZH/nAODv7/out_{4:s}/{2:s}/{3:s}_{2:s}_sys{5:s}.root'.format(eospath,sel,era,ds,tag,sys)
+            print BC.bcolors.OKBLUE+'looks like you have it this in eos', ds, era, sel, tag, sys , '/eos/uscms/store/user/alkaloge/ZH/nAODv7/out_{4:s}/{2:s}/{3:s}_{2:s}_sys{5:s}.root'.format(eospath,sel,era,ds,tag,sys)
             continue
         if (not cf and not cff and not datacf) and cfs : 
             print 'probably this is still running {0:s}.submitted? '.format(filejdl)
