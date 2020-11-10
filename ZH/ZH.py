@@ -315,10 +315,13 @@ for count, e in enumerate(inTree) :
         #applyES - do it once for Central and redoit for tau_scale_systematics - otherwise keep the correction
         #print 'before fixxxxxxxxxxxx e.MET_T1_pt', e.MET_T1_pt, '== met_pt ? ', met_pt, '== what is fed in', metPtPhi[0], e.event, systematic
 	#met_pt, met_phi = Weights.applyES(e, args.year, systematic, metPtPhi)
-	met_pt, met_phi, metlist, philist = Weights.applyES(e, args.year, systematic, metPtPhi, allMET)
+	#met_pt, met_phi, metlist, philist = Weights.applyES(e, args.year, systematic, metPtPhi, allMET)
+	met_pt, met_phi = Weights.applyES(e, args.year, systematic, metPtPhi, allMET)
         #print 'after fixxxxxxxxxxxx e.MET_T1_pt', e.MET_T1_pt, ' == what is fed in', metPtPhi[0], ' corrected MET ->', met_pt,  'some jesTotalUp MET', e.MET_T1_pt_jesTotalUp , e.event, systematic
         
-        if len(metlist) != len(philist) : print 'There is a problem with met/phi systematics list - will not concider this event', e.event
+        #if len(metlist) != len(philist) : print 'There is a problem with met/phi systematics list - will not concider this event', e.event
+        '''
+        # uncomment the following if you need to pass the corrected MET for systematics to account for the ES corrections. In principle you should not do it
         if systematic == 'Central' :
 	    for i, j in enumerate (metlist): 
 
@@ -328,7 +331,7 @@ for count, e in enumerate(inTree) :
 
 		#if systematic == 'Central' and ( e.event==1481 or e.event==17892 or e.event==8904):
 		#    print 'it was', outTuple.list_of_arrays[i][0] , i, j, len(metlist) , metlist[i], e.event
-
+        '''
 
 
 	for lepMode in ['ee','mm'] :
