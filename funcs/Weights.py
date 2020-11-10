@@ -274,9 +274,9 @@ class Weights() :
 
                 fact=1.
 
-                if  'eta0to1p2' in systematic and abs(entry.Electron_eta[j]) < 1.2 : fact = 1 + sign*self.weights_electronES['eta0to1p2']*0.01 
-                if  'eta1p2to2p1' in systematic and abs(entry.Electron_eta[j]) > 1.2 and abs(entry.Electron_eta[j]) < 2.1 :    fact =   1+ sign * self.weights_electronES['eta1p2to2p1']*0.01 
-                if  'etagt2p1' in systematic and abs(entry.Electron_eta[j]) > 2.1 : fact = 1+ sign * self.weights_electronES['etagt2p1']*0.01 
+                if  abs(entry.Electron_eta[j]) < 1.2 : fact = 1 + sign*self.weights_electronES['eta0to1p2']*0.01 
+                if  abs(entry.Electron_eta[j]) > 1.2 and abs(entry.Electron_eta[j]) < 2.1 :    fact =   1+ sign * self.weights_electronES['eta1p2to2p1']*0.01 
+                if  abs(entry.Electron_eta[j]) > 2.1 : fact = 1+ sign * self.weights_electronES['etagt2p1']*0.01 
 
                 #uncormet = self.MetV.Pt()
                 self.MetV += (self.LeptV - self.LeptV*fact)
