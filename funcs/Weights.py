@@ -172,12 +172,12 @@ class Weights() :
 		pt= entry.Tau_pt[j]
 		eta= entry.Tau_eta[j]
 		gen_match = ord(entry.Tau_genPartFlav[j]) 
-                '''
+
+
                 isDM0 =  '1prong' in systematic and 'zero' not in systematic and dm == 0
                 isDM1 =  '1prong' in systematic and 'zero' in systematic and dm == 1
                 isDM10 =  '3prong' in systematic and 'zero' not in systematic and dm == 10
                 isDM11 =  '3prong' in systematic and 'zero' in systematic and dm == 11
-                '''
 
 		if dm != 0 and dm != 1 and dm!=10 and dm!=11 : continue
 
@@ -187,11 +187,16 @@ class Weights() :
 		if gen_match == 5 :
 
 		    tes = self.testool.getTES(pt,dm,gen_match)
-                    #if systematic == 'Central' :
-                    #    metlist ,philist = self.correctallMET(entry,allMETs, self.LeptV,year,tes)
 
-		    if 'Up' in systematic and 'prong' in systematic : tes = self.testool.getTES(pt,dm,gen_match, unc='Up')
-		    if 'Down' in systematic and 'prong' in systematic : tes = self.testool.getTES(pt,dm,gen_match, unc='Down')
+                    if systematic == 'Central' :
+                        metlist ,philist = self.correctallMET(entry,allMETs, self.LeptV,year,tes)
+
+                    dirr=''
+		    if 'Up'  in systematic : dirr = 'Up'
+		    if 'Down' in systematic : dirr = 'Down'
+
+                    if isDM0 or isDM1 or isDM10 or isDM11 : tes = self.testool.getTES(pt,dm,gen_match, unc=dirr)
+
                     #oldMET = self.MetV.Pt()
                     self.MetV +=( self.LeptV - self.LeptV*tes)
                     self.LeptV *= tes          
@@ -208,8 +213,8 @@ class Weights() :
 		if gen_match == 2 or gen_match == 4 :
 
                     cor=1+self.weights_muTotauES[dmm]*0.01
-                    #if systematic == 'Central' :
-                    #    metlist,philist = self.correctallMET(entry,allMETs, self.LeptV,year,cor)
+                    if systematic == 'Central' :
+                        metlist,philist = self.correctallMET(entry,allMETs, self.LeptV,year,cor)
 
 		    self.MetV += ( self.LeptV - self.LeptV *(1 + self.weights_muTotauES[dmm]*0.01))
 		    self.LeptV *=  (1 + self.weights_muTotauES[dmm]*0.01)
@@ -219,8 +224,8 @@ class Weights() :
 		if gen_match == 1 or gen_match == 3 :
 
 		    fes = self.festool.getFES(eta,dm,gen_match)
-                    #if systematic == 'Central' :
-                    #    metlist,philist = self.correctallMET(entry,allMETs, self.LeptV,year,fes)
+                    if systematic == 'Central' :
+                        metlist,philist = self.correctallMET(entry,allMETs, self.LeptV,year,fes)
 		   
 		    self.MetV +=( self.LeptV - self.LeptV*fes)
 		    self.LeptV *= fes          
@@ -261,7 +266,7 @@ class Weights() :
 
         #### electron_energy_scale
         if 'scale_e' in systematic : 
-
+            
             if printOn :
 		for j in range(entry.nTau):    
 		    print 'taus in electron_e tauPt', entry.Tau_pt[j], j, entry.nTau, 'systematic', systematic, entry.event, 'met in applyES', self.MetV.Pt(), 'met fed in', metpt
@@ -270,9 +275,8 @@ class Weights() :
 	    for j in range(entry.nElectron):    
 
 
-		self.LeptV.SetPtEtaPhiM(entry.Electron_pt[j], entry.Electron_eta[j], entry.Electron_phi[j], entry.Electron_mass[j])
-
                 fact=1.
+		self.LeptV.SetPtEtaPhiM(entry.Electron_pt[j], entry.Electron_eta[j], entry.Electron_phi[j], entry.Electron_mass[j])
 
                 if  abs(entry.Electron_eta[j]) < 1.2 : fact = 1 + sign*self.weights_electronES['eta0to1p2']*0.01 
                 if  abs(entry.Electron_eta[j]) > 1.2 and abs(entry.Electron_eta[j]) < 2.1 :    fact =   1+ sign * self.weights_electronES['eta1p2to2p1']*0.01 
@@ -287,6 +291,6 @@ class Weights() :
                 #if printOn : print 'scale_e systematic ', systematic, entry.event, 'uncorrected met', uncormet, 'corrected met', self.MetV.Pt(),  'met fed in', metpt
 
 
-	#return self.MetV.Pt(), self.MetV.Phi(), metlist , philist
-	return self.MetV.Pt(), self.MetV.Phi()
+	return self.MetV.Pt(), self.MetV.Phi(), metlist , philist
+	#return self.MetV.Pt(), self.MetV.Phi()
 

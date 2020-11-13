@@ -44,6 +44,7 @@ class outTuple() :
         self.allsystJets = []
         self.jetsVariations=[]
         self.list_of_arrays = []           
+        self.list_of_arrays_noES = []           
         self.list_of_arraysJetsPt = []           
         self.list_of_arraysJetsEta = []           
         self.list_of_arraysJetsFlavour = []           
@@ -73,6 +74,8 @@ class outTuple() :
 			    if 'MET' in i_ and 'T1' in i_: 
 				self.allsystMET.append(i_+jes+var)
 				self.list_of_arrays.append(array('f', [ 0 ]))
+				self.list_of_arrays_noES.append(array('f', [ 0 ]))
+ 
                     '''
 		    if 'nom' in jes :
 			if 'MET' in i_ : continue
@@ -690,8 +693,8 @@ class outTuple() :
         #self.t.Branch('MET_pt_jesEC2Up', self.MET_pt_jesEC2Up, 'MET_pt_jesEC2Up/F' )
         self.tN=[]
 
-	self.t.SetBranchStatus("*Up",0)
-	self.t.SetBranchStatus("*Down",0)
+	#self.t.SetBranchStatus("*Up",0)
+	#self.t.SetBranchStatus("*Down",0)
 	self.t.SetBranchStatus("GenPart*",0)
 	self.t.SetBranchStatus("*_tr*",0)
 	self.t.SetBranchStatus("*LHE*",0)
@@ -713,8 +716,8 @@ class outTuple() :
                 self.tN[i-1].SetName(isyst)
                 print '====================>',self.tN[i-1], self.tN[i-1].GetName()
 
-	self.t.SetBranchStatus("*Up",1)
-	self.t.SetBranchStatus("*Down",1)
+	#self.t.SetBranchStatus("*Up",1)
+	#self.t.SetBranchStatus("*Down",1)
 	self.t.SetBranchStatus("GenPart*",1)
 	self.t.SetBranchStatus("*_tr*",1)
 	#self.t.SetBranchStatus("*LHE*",1)
@@ -734,8 +737,9 @@ class outTuple() :
                     if str(era)=='2017' : 
                         v = v.replace('MET','METFixEE2017')
                     iMET= v.replace('METFixEE2017','MET')
-
+                    iiMET=iMET+'_noES'
 	            self.t.Branch(iMET, self.list_of_arrays[i], '{0:s}/F'.format(iMET))
+	            self.t.Branch(iiMET, self.list_of_arrays_noES[i], '{0:s}/F'.format(iiMET))
 
 		for i, v in enumerate(self.allsystJets):
 		    self.t.Branch('njets{0:s}'.format(v), self.list_of_arraysJetsNjets[i], 'njets{0:s}/F'.format(v))
@@ -947,7 +951,7 @@ class outTuple() :
         SystIndex = int(systIndex)
 
         
-        if SystIndex >0 : doUncertainties=False
+        #if SystIndex >0 : doUncertainties=False
 
         #channel_ll = 'mm' or 'ee'
         channel_ll = cat[:-2]
@@ -1671,6 +1675,7 @@ class outTuple() :
 		    self.MET_T1Smear_pt[0]         = entry.MET_T1Smear_pt
 		    self.MET_T1Smear_phi[0]         = entry.MET_T1Smear_phi
                 except AttributeError : 
+                    print 'problem setting MET values..storing T1uncorrected'
 		    self.metNoTauES[0]         = entry.MET_pt
 		    self.metphiNoTauES[0]         = entry.MET_phi
 
@@ -1738,7 +1743,6 @@ class outTuple() :
 	    leplist.append(tau2)
 
         if doUncertainties: 
-                '''
                 ## this is not done from within ZH and the correctallMET function
                 for i, v in enumerate(self.allsystMET) : 
 
@@ -1748,11 +1752,10 @@ class outTuple() :
                         v = v.replace('MET','METFixEE2017')
                     iMET= v.replace('METFixEE2017','MET')
 
-                    #try : j = getattr(entry, "{0:s}".format(str(v)))
-                    #except AttributeError : j = -9.99
-		    #self.list_of_arrays[i][0] = j
+                    try : j = getattr(entry, "{0:s}".format(str(v)))
+                    except AttributeError : j = -9.99
+		    self.list_of_arrays_noES[i][0] = j
                     #if '_pt_jerUp' in v  : print '=====================================while filling-----------------',j, self.list_of_arrays[i][0], i, v, entry.event 
-                '''
 
                 for i, v in enumerate(self.allsystJets) : 
                 #njets_sys, nbtag_sys
@@ -2356,6 +2359,8 @@ class outTuple() :
 
 		    j = getattr(entry, "{0:s}".format(str(v)))
 		    self.list_of_arrays[i][0] = j
+		    #jnES = getattr(entry, "{0:s}".format(str(v)))
+		    #self.list_of_arrays_noES[i][0] = 100
 
                 for i, v in enumerate(self.allsystJets) : 
                 #njets_sys, nbtag_sys

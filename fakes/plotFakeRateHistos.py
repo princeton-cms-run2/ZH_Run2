@@ -102,6 +102,7 @@ f = TFile(fin)
 hBase, hTight, hBasePrompt, hTightPrompt, hBaseMode, hTightMode, hBasePromptMode, hTightPromptMode, hBasenoPrompt, hTightnoPrompt, hBasenoPromptMode, hTightnoPromptMode= {}, {}, {}, {}, {}, {}, {} ,{}, {}, {}, {}, {}
 groups = ['Other','Top','DY','WZ','ZZ']
 groups = ['Other','ggZH','ZZ','ZH','WH']
+groups = ['Other','ZZ']
 
 if 'v1' in extratag : extratag=extratag.replace('v1','wL')
 if 'v0' in extratag : extratag=extratag.replace('v0','noL')

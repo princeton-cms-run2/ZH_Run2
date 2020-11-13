@@ -270,8 +270,8 @@ if str(args.bruteworkingPoint=='128') : wpp = 'VVTight'
 
 
 tauSFTool = TauIDSFTool(campaign[args.year],'DeepTau2017v2p1VSjet',wpp)
-testool = TauESTool(campaign[args.year],'DeepTau2017v2p1VSjet', TESSF['dir'])
-festool = TauESTool(campaign[args.year],'DeepTau2017v2p1VSjet')
+#testool = TauESTool(campaign[args.year],'DeepTau2017v2p1VSjet', TESSF['dir'])
+#festool = TauESTool(campaign[args.year],'DeepTau2017v2p1VSjet')
 
 #antiEleSFToolVVL = TauIDSFTool(campaign[args.year],'DeepTau2017v2p1VSe','VVLoose')
 #antiMuSFToolVL  = TauIDSFTool(campaign[args.year],'DeepTau2017v2p1VSmu','VLoose')
@@ -1023,7 +1023,9 @@ for group in groups :
 	    preCutt =  muMET.Mt() < 40.  
 
             weightTID =1.
+            '''
             if group != 'data' and (cat[2:] == 'et' or cat[2:]  == 'mt' or cat[2:]  == 'tt') :
+
 
                 # leptons faking taus // muon->tau
                 if  cat[2:] == 'et' :
@@ -1092,6 +1094,106 @@ for group in groups :
 			        weightTID *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4, unc='Down')
                             if 'ptgt40' in systematic and  e.pt_4 > 40:
 			        weightTID *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4, unc='Down')
+            '''
+
+            if group != 'data' and (cat[2:] == 'et' or cat[2:]  == 'mt' or cat[2:]  == 'tt') :
+
+                varTID =''
+                if 'tauid' in systematic  and 'Up' in systematic : varTID = 'Up'
+                if 'tauid' in systematic  and 'Down' in systematic : varTID = 'Down'
+
+                tau3pt20, tau3pt25, tau3pt30, tau3pt35, tau3pthigh = False, False, False, False, False
+		if 'pt20to25' in systematic and  e.pt_3 > 20 and  e.pt_3 < 25 : tau3pt20 = True
+		if 'pt25to30' in systematic and  e.pt_3 > 25 and  e.pt_3 < 30 : tau3pt25 = True
+		if 'pt30to35' in systematic and  e.pt_3 > 30 and  e.pt_3 < 35 : tau3pt30 = True
+		if 'pt35to40' in systematic and  e.pt_3 > 35 and  e.pt_3 < 40 : tau3pt35 = True
+		if 'ptgt40' in systematic and  e.pt_3 > 40:  tau3pthigh = True
+
+                tau4pt20, tau4pt25, tau4pt30, tau4pt35, tau4pthigh = False, False, False, False, False
+		if 'pt20to25' in systematic and  e.pt_4 > 20 and  e.pt_4 < 25 : tau4pt20 = True
+		if 'pt25to30' in systematic and  e.pt_4 > 25 and  e.pt_4 < 30 : tau4pt25 = True
+		if 'pt30to35' in systematic and  e.pt_4 > 30 and  e.pt_4 < 35 : tau4pt30 = True
+		if 'pt35to40' in systematic and  e.pt_4 > 35 and  e.pt_4 < 40 : tau4pt35 = True
+		if 'ptgt40' in systematic and  e.pt_4 > 40:  tau4pthigh = True
+                
+
+		# leptons faking taus // muon->tau
+		if  cat[2:] == 'et' :
+			
+		    if e.gen_match_4 == 1 or e.gen_match_4 == 3 :  
+			if  (tau4pt20 or tau4pt25 or tau4pt30 or tau4pt35 or tau4pthigh) :  
+			    weightTID *= antiEleSFToolT.getSFvsEta(e.eta_4,e.gen_match_4, unc=varTID)
+                        else : 
+			    weightTID *= antiEleSFToolT.getSFvsEta(e.eta_4,e.gen_match_4)
+
+		    if e.gen_match_4 == 2 or e.gen_match_4 == 4 :  
+			if  (tau4pt20 or tau4pt25 or tau4pt30 or tau4pt35 or tau4pthigh) :  
+                            weightTID *= antiMuSFToolVL.getSFvsEta(e.eta_4,e.gen_match_4, unc=varTID)
+                        else : 
+                            weightTID *= antiMuSFToolVL.getSFvsEta(e.eta_4,e.gen_match_4)
+
+		if  cat[2:] == 'mt' :
+
+
+		    if e.gen_match_4 == 1 or e.gen_match_4 == 3 :  
+			if  (tau4pt20 or tau4pt25 or tau4pt30 or tau4pt35 or tau4pthigh) :  
+                            weightTID *= antiEleSFToolVL.getSFvsEta(e.eta_4,e.gen_match_4, unc=varTID)
+                        else : 
+                            weightTID *= antiEleSFToolVL.getSFvsEta(e.eta_4,e.gen_match_4)
+
+		    if e.gen_match_4 == 2 or e.gen_match_4 == 4 :  
+			if  (tau4pt20 or tau4pt25 or tau4pt30 or tau4pt35 or tau4pthigh) : 
+                            weightTID *= antiMuSFToolT.getSFvsEta(e.eta_4,e.gen_match_4, unc=varTID)
+			else : 
+                            weightTID *= antiMuSFToolT.getSFvsEta(e.eta_4,e.gen_match_4)
+
+
+		if  cat[2:] == 'tt' :
+
+		    #muon faking _3 tau
+		    if e.gen_match_3 == 2 or e.gen_match_3 == 4 : 
+			if  (tau3pt20 or tau3pt25 or tau3pt30 or tau3pt35 or tau3pthigh) :  
+                            weightTID *= antiMuSFToolVL.getSFvsEta(e.eta_3,e.gen_match_3, unc=varTID)
+                        else: 
+                            weightTID *= antiMuSFToolVL.getSFvsEta(e.eta_3,e.gen_match_3)
+
+		    if e.gen_match_4 == 2 or e.gen_match_4 == 4 : 
+	                if  (tau4pt20 or tau4pt25 or tau4pt30 or tau4pt35 or tau4pthigh) : 
+                            weightTID *= antiMuSFToolVL.getSFvsEta(e.eta_4,e.gen_match_4, unc=varTID)
+                        else : 
+                            weightTID *= antiMuSFToolVL.getSFvsEta(e.eta_4,e.gen_match_4)
+
+		    if e.gen_match_3 == 1 or e.gen_match_3 == 3 : 
+			if  (tau3pt20 or tau3pt25 or tau3pt30 or tau3pt35 or tau3pthigh) :  
+			    weightTID *= antiEleSFToolVL.getSFvsEta(e.eta_3,e.gen_match_3, unc=varTID)
+                        else : 
+			    weightTID *= antiEleSFToolVL.getSFvsEta(e.eta_3,e.gen_match_3)
+
+		    if e.gen_match_4 == 1 or e.gen_match_4 == 3 : 
+	                if  (tau4pt20 or tau4pt25 or tau4pt30 or tau4pt35 or tau4pthigh) : 
+		            weightTID *= antiEleSFToolVL.getSFvsEta(e.eta_4,e.gen_match_4, unc=varTID)
+                        else : 
+		            weightTID *= antiEleSFToolVL.getSFvsEta(e.eta_4,e.gen_match_4)
+
+		    if e.gen_match_3 == 5 : 
+			if  (tau3pt20 or tau3pt25 or tau3pt30 or tau3pt35 or tau3pthigh) :  
+			    weightTID *= tauSFTool.getSFvsPT(e.pt_3,e.gen_match_3, unc=varTID)
+                        else : 
+			    weightTID *= tauSFTool.getSFvsPT(e.pt_3,e.gen_match_3)
+
+
+		if  cat[2:] == 'tt'  or cat[2:] == 'mt' or cat[2:] == 'et' :
+
+		    if e.gen_match_4 == 5 : 
+	                if  (tau4pt20 or tau4pt25 or tau4pt30 or tau4pt35 or tau4pthigh) : 
+			    weightTID *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4, unc=varTID)
+                        else : 
+			    weightTID *= tauSFTool.getSFvsPT(e.pt_4,e.gen_match_4)
+
+		#if  cat[2:] and (e.gen_match_4 == 5 or e.gen_match_3 == 5 ) and (e.decayMode_3 ==11 or e.decayMode_4==1): 
+		#    print e.evt, 'varTID:', varTID,  'w:', weight, 'wTID:', weightTID, 'pT_3:', e.pt_3, e.gen_match_3, 'pt_4', e.pt_4, e.gen_match_4
+
+
 
 
                 weight *= weightTID
