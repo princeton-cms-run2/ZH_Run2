@@ -164,6 +164,7 @@ class Weights() :
         #if 'Central' in systematic and 'scale_e' not in systematic and 'scale_m_' not in systematic: 
         #if systematic =='Central' : 
         if True : 
+            metcopy = self.MetV
 
 	    for j in range(entry.nTau):    
 	       
@@ -198,9 +199,12 @@ class Weights() :
                     if isDM0 or isDM1 or isDM10 or isDM11 : tes = self.testool.getTES(pt,dm,gen_match, unc=dirr)
 
                     #oldMET = self.MetV.Pt()
+                    #oldphi = self.MetV.Phi()
+                    #oldpt = self.LeptV.Pt()
+                    #oldphii = self.LeptV.Phi()
                     self.MetV +=( self.LeptV - self.LeptV*tes)
                     self.LeptV *= tes          
-                    #if 'prong' in systematic : print '----------------------------- inside for tau with gen_match=5', j, tes , oldMET, self.MetV.Pt(), systematic, entry.event
+                    #if 'prong' in systematic : print '----------------------------- inside for tau with gen_match=5', j, tes , oldMET, self.MetV.Pt(), oldphi, self.MetV.Phi(), systematic, entry.event, oldpt, self.LeptV.Pt(), oldphii, self.LeptV.Phi()
 
                     if printOn :print '----------------------------- inside for tau with gen_match=5', tes , self.MetV.Pt(), systematic
 
@@ -233,6 +237,7 @@ class Weights() :
 
 		entry.Tau_mass[j] = self.LeptV.M()
 		entry.Tau_pt[j] = self.LeptV.Pt()
+		entry.Tau_phi[j] = self.LeptV.Phi()
                 #entry.Tau_phi[j] = self.LeptV.Phi()
 
 		#print 'returnin LeptV ---------------->pt ', self.LeptV.Pt(),  'met' , self.MetV.Pt(), systematic
@@ -259,6 +264,7 @@ class Weights() :
                 self.MetV += (self.LeptV - self.LeptV*fact)
                 self.LeptV *= fact
                 entry.Muon_pt[j] = self.LeptV.Pt()
+                entry.Muon_phi[j] = self.LeptV.Phi()
                 entry.Muon_mass[j] = self.LeptV.M()
                 #entry.Muon_phi[j] = self.LeptV.Phi()
                 #cor=fact
@@ -286,6 +292,7 @@ class Weights() :
                 self.MetV += (self.LeptV - self.LeptV*fact)
                 self.LeptV *= fact
                 entry.Electron_pt[j] = self.LeptV.Pt()
+                entry.Electron_phi[j] = self.LeptV.Phi()
                 entry.Electron_mass[j] = self.LeptV.M()
                 #entry.Electron_phi[j] = self.LeptV.Phi()
                 #if printOn : print 'scale_e systematic ', systematic, entry.event, 'uncorrected met', uncormet, 'corrected met', self.MetV.Pt(),  'met fed in', metpt

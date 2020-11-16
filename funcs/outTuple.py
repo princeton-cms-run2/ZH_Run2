@@ -687,49 +687,6 @@ class outTuple() :
         self.t.Branch('bcsv_2',    self.bcsv_2,    'bcsv_2/F' )
         self.t.Branch('bcsvfv_2', self.bcsvfv_2, 'bcsvfv_2/F' )
         '''
-
-
-        #self.MET_pt_jesEC2Up  = array('f',[0])
-        #self.t.Branch('MET_pt_jesEC2Up', self.MET_pt_jesEC2Up, 'MET_pt_jesEC2Up/F' )
-        self.tN=[]
-
-	#self.t.SetBranchStatus("*Up",0)
-	#self.t.SetBranchStatus("*Down",0)
-	self.t.SetBranchStatus("GenPart*",0)
-	self.t.SetBranchStatus("*_tr*",0)
-	self.t.SetBranchStatus("*LHE*",0)
-	#self.t.SetBranchStatus("*LHEScaleWeight",1)
-	self.t.SetBranchStatus("dR*",0)
-	self.t.SetBranchStatus("dPhi*",0)
-	self.t.SetBranchStatus("Z_*",0)
-	self.t.SetBranchStatus("*ip3d*",0)
-	self.t.SetBranchStatus("nbtagT",0)
-	#self.t.SetBranchStatus("Smear",0)
-        for i, isyst in enumerate(shift) : 
-	    self.tN.append(isyst)
-
-            #if isyst == "Events" : continue
-            #else  : 
-            if i > 0 : 
-                self.tN[i-1]  = self.t.CloneTree()
-                #self.t.SetBranchStatus("Smear",1)
-                self.tN[i-1].SetName(isyst)
-                print '====================>',self.tN[i-1], self.tN[i-1].GetName()
-
-	#self.t.SetBranchStatus("*Up",1)
-	#self.t.SetBranchStatus("*Down",1)
-	self.t.SetBranchStatus("GenPart*",1)
-	self.t.SetBranchStatus("*_tr*",1)
-	#self.t.SetBranchStatus("*LHE*",1)
-	self.t.SetBranchStatus("*LHEScaleWeight*",1)
-	self.t.SetBranchStatus("dR*",1)
-	self.t.SetBranchStatus("dPhi*",1)
-	self.t.SetBranchStatus("Z_*",1)
-	self.t.SetBranchStatus("*ip3d*",1)
-	self.t.SetBranchStatus("nbtagT",1)
-
-
-
         if doSyst : 
                 #Book the branches and the arrays needed to store variables
 		for i, v in enumerate(self.allsystMET):
@@ -749,6 +706,50 @@ class outTuple() :
 		    self.t.Branch('jeta{0:s}'.format(v), self.list_of_arraysJetsEta[i], 'jeta{0:s}[15]/F'.format(v))
 
 
+
+        #self.MET_pt_jesEC2Up  = array('f',[0])
+        #self.t.Branch('MET_pt_jesEC2Up', self.MET_pt_jesEC2Up, 'MET_pt_jesEC2Up/F' )
+        self.tN=[]
+
+	#self.t.SetBranchStatus("*Up",0)
+	#self.t.SetBranchStatus("*Down",0)
+	self.t.SetBranchStatus("GenPart*",0)
+	self.t.SetBranchStatus("*_tr*",0)
+	self.t.SetBranchStatus("*LHE*",0)
+	#self.t.SetBranchStatus("*LHEScaleWeight",1)
+	self.t.SetBranchStatus("dR*",0)
+	self.t.SetBranchStatus("dPhi*",0)
+	self.t.SetBranchStatus("Z_*",0)
+	self.t.SetBranchStatus("*ip3d*",0)
+	self.t.SetBranchStatus("nbtagT",0)
+	self.t.SetBranchStatus("*Up*",0)
+	self.t.SetBranchStatus("*Down*",0)
+	#self.t.SetBranchStatus("Smear",0)
+        for i, isyst in enumerate(shift) : 
+	    self.tN.append(isyst)
+
+            #if isyst == "Events" : continue
+            #else  : 
+            if i > 0 : 
+                self.tN[i-1]  = self.t.CloneTree()
+                #self.t.SetBranchStatus("Smear",1)
+                self.tN[i-1].SetName(isyst)
+
+                print '====================>',self.tN[i-1], self.tN[i-1].GetName()
+
+	#self.t.SetBranchStatus("*Up",1)
+	#self.t.SetBranchStatus("*Down",1)
+	self.t.SetBranchStatus("GenPart*",1)
+	self.t.SetBranchStatus("*_tr*",1)
+	#self.t.SetBranchStatus("*LHE*",1)
+	self.t.SetBranchStatus("*LHEScaleWeight*",1)
+	self.t.SetBranchStatus("dR*",1)
+	self.t.SetBranchStatus("dPhi*",1)
+	self.t.SetBranchStatus("Z_*",1)
+	self.t.SetBranchStatus("*ip3d*",1)
+	self.t.SetBranchStatus("nbtagT",1)
+	self.t.SetBranchStatus("*Up*",1)
+	self.t.SetBranchStatus("*Down*",1)
 
     def get_mt(self,METtype,entry,tau) :
         if METtype == 'MVAMet' :
@@ -1213,7 +1214,7 @@ class outTuple() :
 		self.iso_3[0]  = entry.Electron_pfRelIso03_all[jt1]
 		self.Electron_mvaFall17V2noIso_WP90_3[0]  = entry.Electron_mvaFall17V2noIso_WP90[jt1]
 
-		if SystIndex ==0 : 
+		if SystIndex ==0 and  isMC: 
 		    self.pt_uncor_3[0] = ePt[jt1]
 		    self.m_uncor_3[0] = eMass[jt1]
 		    self.pt_uncor_4[0] = tPt[jt2]
@@ -1256,7 +1257,7 @@ class outTuple() :
 		self.iso_3[0]  = entry.Electron_pfRelIso03_all[jt1]
 		self.Electron_mvaFall17V2noIso_WP90_3[0]  = entry.Electron_mvaFall17V2noIso_WP90[jt1]
 
-		if SystIndex ==0 : 
+		if SystIndex ==0 and  isMC: 
 		    self.pt_uncor_3[0] = ePt[jt1]
 		    self.m_uncor_3[0] = eMass[jt1]
 		    self.pt_uncor_4[0] = mPt[jt2]
@@ -1333,7 +1334,7 @@ class outTuple() :
 		self.isGlobal_3[0]      = entry.Muon_isGlobal[jt1]
 		self.isTracker_3[0]     = entry.Muon_isTracker[jt1]
 		self.ip3d_3[0]       = entry.Muon_ip3d[jt1]
-		if SystIndex ==0 : 
+		if SystIndex ==0 and isMC : 
 		    self.pt_uncor_3[0] = mPt[jt1]
 		    self.m_uncor_3[0] = mMass[jt1]
 		    self.pt_uncor_4[0] = tPt[jt2]
@@ -1370,7 +1371,7 @@ class outTuple() :
 		self.q_3[0]      = entry.Tau_charge[jt1]
 		self.d0_3[0]     = entry.Tau_dxy[jt1]
 		self.dZ_3[0]     = entry.Tau_dz[jt1]
-		if SystIndex ==0 : 
+		if SystIndex ==0 and isMC: 
 		    self.pt_uncor_3[0] = tPt[jt1]
 		    self.m_uncor_3[0] = tMass[jt1]
 		    self.pt_uncor_4[0] = tPt[jt2]
@@ -1532,7 +1533,7 @@ class outTuple() :
             self.dZ_2[0]   = entry.Electron_dz[lep_index_2]
             self.Electron_mvaFall17V2noIso_WP90_1[0]  = entry.Electron_mvaFall17V2noIso_WP90[lep_index_1]
             self.Electron_mvaFall17V2noIso_WP90_2[0]  = entry.Electron_mvaFall17V2noIso_WP90[lep_index_2]
-	    if SystIndex ==0 : 
+	    if SystIndex ==0 and  isMC : 
 		self.pt_uncor_1[0] = ePt[lep_index_1]
 		self.m_uncor_1[0] = eMass[lep_index_1]
 		self.pt_uncor_2[0] = ePt[lep_index_2]
@@ -1564,7 +1565,7 @@ class outTuple() :
 	    self.isGlobal_2[0]   = entry.Muon_isGlobal[lep_index_2] 
 	    self.isTracker_1[0]   = entry.Muon_isTracker[lep_index_1] 
 	    self.isTracker_2[0]   = entry.Muon_isTracker[lep_index_2] 
-	    if SystIndex ==0 : 
+	    if SystIndex ==0 and isMC: 
 		self.pt_uncor_1[0] = mPt[lep_index_1]
 		self.m_uncor_1[0] = mMass[lep_index_1]
 		self.pt_uncor_2[0] = mPt[lep_index_2]
@@ -1632,10 +1633,12 @@ class outTuple() :
 	    self.metNoCor[0]= entry.METFixEE2017_pt
 	    self.metphiNoCor[0]= entry.METFixEE2017_phi
 
+        #print 'inside', met_pt, entry.MET_pt, entry.MET_T1_pt, entry.event, entry.luminosityBlock, entry.run
+
         if met_pt != -99 : 
 	    self.met[0]         = met_pt 
 	    self.metphi[0]      = met_phi
-
+          
         else : 
 	    if not doUncertainties : 
 		if str(era) != '2017' : 
@@ -1672,12 +1675,17 @@ class outTuple() :
                 try : 
 		    self.metNoTauES[0]         = entry.MET_T1_pt
 		    self.metphiNoTauES[0]         = entry.MET_T1_phi
-		    self.MET_T1Smear_pt[0]         = entry.MET_T1Smear_pt
-		    self.MET_T1Smear_phi[0]         = entry.MET_T1Smear_phi
                 except AttributeError : 
-                    print 'problem setting MET values..storing T1uncorrected'
 		    self.metNoTauES[0]         = entry.MET_pt
 		    self.metphiNoTauES[0]         = entry.MET_phi
+
+                if isMC :
+		    try : 
+			self.MET_T1Smear_pt[0]         = entry.MET_T1Smear_pt
+			self.MET_T1Smear_phi[0]         = entry.MET_T1Smear_phi
+		    except AttributeError : 
+			self.MET_T1Smear_pt[0]         = -99
+			self.MET_T1Smear_phi[0]         = -99
 
         if str(era) == '2017' : 
 	    self.metNoTauES[0]         = entry.METFixEE2017_pt
@@ -1687,11 +1695,16 @@ class outTuple() :
                 try :
 		    self.metNoTauES[0]         = entry.METFixEE2017_T1_pt
 		    self.metphiNoTauES[0]         = entry.METFixEE2017_T1_phi
-		    self.MET_T1Smear_pt[0]         = entry.METFixEE2017_T1Smear_pt
-		    self.MET_T1Smear_phi[0]         = entry.METFixEE2017_T1Smear_phi
                 except AttributeError : 
 		    self.metNoTauES[0]         = entry.METFixEE2017_pt_nom
 		    self.metphiNoTauES[0]         = entry.METFixEE2017_phi_nom
+                if isMC :
+		    try :
+			self.MET_T1Smear_pt[0]         = entry.METFixEE2017_T1Smear_pt
+			self.MET_T1Smear_phi[0]         = entry.METFixEE2017_T1Smear_phi
+		    except AttributeError : 
+			self.MET_T1Smear_pt[0]         = -1
+			self.MET_T1Smear_phi[0]         = -1
 
 
         #print 'in NTUPLE ============================== met_pt', met_pt, 'met', self.met[0], 'metnoTauES', self.metNoTauES[0], 'met_T1', entry.MET_T1_pt, 'met_T1Smear', entry.MET_T1Smear_pt, 'doUncert ?', doUncertainties
@@ -1760,6 +1773,7 @@ class outTuple() :
                 for i, v in enumerate(self.allsystJets) : 
                 #njets_sys, nbtag_sys
 		    jetList, jetListFlav, jetListEta, jetListPt,bJetList, bJetListT, bJetListFlav = self.getJetsJMEMV(entry,leplist,era,v) 
+                    #print 'jessyst', systematic, len(jetList), cat
 
 	            self.list_of_arraysJetsNjets[i][0] = len(jetList)
 	            self.list_of_arraysJetsNbtag[i][0] = len(bJetList)

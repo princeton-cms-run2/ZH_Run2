@@ -68,15 +68,27 @@ for i, sys in enumerate(jes) :
     jesSyst.append(sys+'Up')
     jesSyst.append(sys+'Down')
 
-otherS=['NLOEWK','PreFire','tauideff_pt20to25', 'tauideff_pt25to30', 'tauideff_pt30to35', 'tauideff_pt35to40', 'tauideff_ptgt40','scale_met_unclustered'] 
+otherS=['PreFire','tauideff_pt20to25', 'tauideff_pt25to30', 'tauideff_pt30to35', 'tauideff_pt35to40', 'tauideff_ptgt40','scale_met_unclustered'] 
 OtherSyst=[]
 for i, sys in enumerate(otherS) :
     OtherSyst.append(sys+'Up')
     OtherSyst.append(sys+'Down')
 
+
+signalS=['NLOEWK', 'scale_lowpt', 'scale_highpt', 'lep_scale'] 
+SignalSyst=[]
+for i, sys in enumerate(signalS) :
+    SignalSyst.append(sys+'Up')
+    SignalSyst.append(sys+'Down')
+
+sysall = scaleSyst + jesSyst + OtherSyst + SignalSyst
+#sysall = scaleSyst 
+
+sysall =['Central']
 sysall = scaleSyst + jesSyst + OtherSyst
 
-print '--------------->', len(sysall)
+sysall = SignalSyst
+print '--------------->', len(sysall), sysall
 
 #sysall=['Central']
 if str(args.overideSyst) != '' : sysall=[str(args.overideSyst)]
@@ -88,27 +100,32 @@ groups=['Signal']
 #groupss = ['Signal','Other','Top','DY','WZ','ZZ','data', 'Reducible']
 
 groups = ['Other','ZZ','data', 'Reducible', 'ggZH', 'ZH', 'WH']
+groups = ['Other','ZZ','data', 'Reducible', 'ggZH', 'ZH', 'HWW', 'ggHWW']
+Sgroups = [ 'ggZH', 'ZH', 'HWW', 'ggHWW']
 
 
 h={}
 
 cats = { 1:'eeet', 2:'eemt', 3:'eett', 4:'eeem', 5:'mmet', 6:'mmmt', 7:'mmtt', 8:'mmem'}
+cats = { 1:'eeet', 2:'eemt', 3:'eett', 4:'mmet', 5:'mmmt', 6:'mmtt' }
+cats = [ 'eeet', 'eemt', 'eett', 'mmet', 'mmmt', 'mmtt' ]
 
 dirs=['llet','llmt','lltt','llem','all']
 dirs=['llet','llmt','lltt','llem', 'eeet', 'eemt', 'eett', 'eeem', 'mmet', 'mmmt', 'mmtt', 'mmem']
 dirs=['eeet', 'eemt', 'eett', 'eeem', 'mmet', 'mmmt', 'mmtt', 'mmem']
+dirs=['eeet', 'eemt', 'eett',  'mmet', 'mmmt', 'mmtt']
 
+dirs=cats
 tag='pow_noL'
 
 #allGroups_2016_OS_LT00_16noSV_pow_noL_sysscale_m_etalt1p2Up.root
-
 
 for sys in sysall : 
 
     print 'working on', sys
     #step 1 : merge all the .root files for a given systematic
     haddFile='allGroups_{0:s}_OS_LT00_{1:s}_sys{2:s}.root'.format(era, tag, sys)
-    haddFile='allGroups_{0:s}_OS_LT00_16noSV_{1:s}_sys{2:s}.root'.format(era, tag, sys)
+    haddFile='allGroups_{0:s}_OS_LT00_16noSVll_{1:s}_sys{2:s}.root'.format(era, tag, sys)
 
     command='mkdir -p   /eos/uscms/store/user/alkaloge/ZH/nAODv7/out_{2:s}/{1:s}/data ; mv  /eos/uscms/store/user/alkaloge/ZH/nAODv7/out_{2:s}/{1:s}/data*root  /eos/uscms/store/user/alkaloge/ZH/nAODv7/out_{2:s}/{1:s}data/. '.format(haddFile,era, tag, sys)
     #os.system(command)
@@ -116,10 +133,15 @@ for sys in sysall :
     #    command='hadd -f {0:s} /eos/uscms/store/user/alkaloge/ZH/nAODv7/out_{2:s}/{1:s}/*_sys{3:s}*root'.format(haddFile,era, tag, sys)
     #else : 
     #    command='hadd -f {0:s} /eos/uscms/store/user/alkaloge/ZH/nAODv7/out_{2:s}/{1:s}/*_sys{3:s}*root  /eos/uscms/store/user/alkaloge/ZH/nAODv7/out_{2:s}/{1:s}/data_{1:s}_sysCentral.root'.format(haddFile,era, tag, sys)
-    command='hadd -f {0:s} /eos/uscms/store/user/alkaloge/ZH/nAODv7/out_{2:s}/{1:s}/*_sys{3:s}*root  /eos/uscms/store/user/alkaloge/ZH/nAODv7/out_{2:s}/{1:s}/data/data_{1:s}_sys{3:s}.root'.format(haddFile,era, tag, sys)
+    command='hadd -f {0:s} /eos/uscms/store/user/alkaloge/ZH/nAODv7/out_{2:s}/{1:s}/*_sys{3:s}.root  /eos/uscms/store/user/alkaloge/ZH/nAODv7/out_{2:s}/{1:s}/data/data_{1:s}_sys{3:s}.root'.format(haddFile,era, tag, sys)
+    if sys in SignalSyst : 
+        command='hadd -f {0:s} /eos/uscms/store/user/alkaloge/ZH/nAODv7/out_{2:s}/{1:s}/*_sys{3:s}.root '.format(haddFile,era, tag, sys)
 
-    hfile= os.path.isfile('allGroups_{0:s}_OS_LT00_16noSV_{1:s}_sys{2:s}.root'.format(era, tag, sys))
-    if not hfile :   os.system(command)
+    hfile= os.path.isfile('allGroups_{0:s}_OS_LT00_16noSVll_{1:s}_sys{2:s}.root'.format(era, tag, sys))
+    if not hfile :   
+        print command
+        os.system(command)
+
 
     inFileName=haddFile
 
@@ -138,26 +160,25 @@ for sys in sysall :
 
     for group in groups : 
 
-        
-	for plotVar in histos :
-	    for icat, cat in cats.items()[0:8] :
-		h[icat-1]={}
-		hname='h'+group+"_"+cat+"_"+plotVar
-		h[icat-1] = fIn.Get(hname)
 
-		if group == 'Reducible':
+        if sys in SignalSyst and group not in Sgroups : continue
+
+	for plotVar in histos :
+	    for icat, cat in enumerate(cats) :
+		h[icat]={}
+		hname='h'+group+"_"+cat+"_"+plotVar
+		h[icat] = fIn.Get(hname)
+
+		#if group == 'Reducible':
+                if True:
+		    print group, sys, cat, hname
 		    for i in range(1,22) : 
-			#if h[icat-1].GetBinContent(i) < 0 : print 'Reducible neg', i, h[icat-1].GetBinContent(i), plotVar, sys, cat
-			if h[icat-1].GetBinContent(i) < 0 : 
-                            h[icat-1].SetBinContent(i,0)
-                            h[icat-1].SetBinError(i,0)
+			#if h[icat].GetBinContent(i) < 0 : print 'Reducible neg', i, h[icat].GetBinContent(i), plotVar, sys, cat
+			if h[icat].GetBinContent(i) < 0 : 
+                            print 'warning, process', group, 'has a negative bin', i, h[icat].GetBinContent(i), icat, cat, sys
+                            h[icat].SetBinContent(i,0.001)
+                            h[icat].SetBinError(i,sqrt(0.001))
 	    try : 
-                '''	
-		h[0].Add(h[4])
-		h[1].Add(h[5])
-		h[2].Add(h[6])
-		h[3].Add(h[7])
-                '''
 
 
 		if sys == 'Central' : plotVar =''
@@ -167,49 +188,58 @@ for sys in sysall :
                     plotVar = plotVar.replace('Up','_{0:s}Up'.format(era))
                     plotVar = plotVar.replace('Down','_{0:s}Down'.format(era))
 
+                if 'lep_scale' in sys:
+                    plotVar = plotVar.replace('lep_scale', 'ZHlep_scale')
+
                 if 'NLOEWK' in sys : 
                     plotVar = plotVar.replace('NLOEWK', 'qqVH_NLOEWK')
                     plotVar = plotVar.replace('_CMS', '')
                                     
                 if 'PreFire' in sys : plotVar = plotVar.replace('PreFire', 'prefiring')
-                if 'jes' in sys : plotVar = plotVar.replace('jes', 'Jet')
-                if 'jer' in sys : plotVar = plotVar.replace('jer', 'JER_{0:s}'.format(era))
+                if 'jes'in sys  : #or 'BBEC1' in sys or 'EC2' in sys or 'FlavorQCD' in sys or 'HF' in sys or 'Relative' in sys :
+                    plotVar = plotVar.replace('jes', 'scale_j_')
+                if 'jer' in sys :
+                    plotVar = plotVar.replace('jer', 'res_j_{0:s}'.format(era))
+
 
                 if group=='data' : ogroup = 'data_obs'
                 if group =='ZH' : ogroup='ZH_lep_htt125'
                 if group =='ggZH' : ogroup='ggZH_lep_htt125'
-                if group =='WH' : ogroup='ZH_hww125'
+                if group =='HWW' : ogroup='ZH_lep_hww125'
+                if group =='ggHWW' : ogroup='ggZH_lep_hww125'
+                #if group =='WH' : ogroup='ZH_hww125'
                 if group =='Other' : ogroup='Triboson'
                 if group =='ZZ' : ogroup='ZZ'
                 if group =='Reducible' : ogroup='Reducible'
 
-                #if group =='ZH' : ogroup='ZH_lep_htt'
-                #if group =='ggZH' : ogroup='ggZH_lep_htt'
 
                 for i, idir in enumerate(dirs) :
                     #print 'trying this now', fOut.GetFileName()
                     fOut.cd()
 
 		    fOut.cd('{0:s}'.format(str(dirs[i])))
-                    
+                    #print '--->', i, cat, idir, h[i].GetTitle()
                     ht = h[i].GetTitle()
                     hplus=''
-                    if 'FWDH' in ht : hplus = '_FWDH_htt125'
-                    if 'PTV_150_250_GE1J' in ht : hplus = '_PTV_150_250_GE1J_htt125'
-                    if 'PTV_150_250_0J' in ht : hplus = '_PTV_150_250_0J_htt125'
-                    if 'PTV_GT250' in ht : hplus = '_PTV_GT250_htt125'
-                    if 'PTV_0_75' in ht : hplus = '_PTV_0_75_htt125'
-                    if 'PTV_75_150' in ht : hplus = '_PTV_75_150_htt125'
+                    etag='htt125'
+                    if 'HWW' in group : etag='hww125'
+                    if 'FWDH' in ht : hplus = '_FWDH_'+etag
+                    if 'PTV_150_250_GE1J' in ht : hplus = '_PTV_150_250_GE1J_'+etag
+                    if 'PTV_150_250_0J' in ht : hplus = '_PTV_150_250_0J_'+etag
+                    if 'PTV_GT250' in ht : hplus = '_PTV_GT250_'+etag
+                    if 'PTV_0_75' in ht : hplus = '_PTV_0_75_'+etag
+                    if 'PTV_75_150' in ht : hplus = '_PTV_75_150_'+etag
                  
 		    #hname=ogroup+plotVar
 
-                    # ggZH_lep_PTV_0_75_htt125_CMS_JER_2016Down Cecile 
-                    # ggZH_lep_CMS_JER_2016Up_PTV_0_75_htt125   mine
-                    # ggZH_lep_htt125_PTV_0_75_htt125_CMS_JER_2016Up
-                    # ggZH_lep_PTV_0_75_htt125_CMS_JER_2016Up
 
                     #iaf len(hplus) > 0 and 'ZH' in group : hname = hname.replace('_htt125','')
-                    if len(hplus) > 0 and 'ZH' in group : ogroup = ogroup.replace('lep_htt125','lep')
+                    if len(hplus) ==0 and 'ZH' in group : ogroup = ogroup.replace('lep_','')
+                    if len(hplus) ==0 and 'HWW' in group : ogroup = ogroup.replace('lep_','')
+                    if len(hplus) >0 and 'ZH' in group : ogroup = ogroup.replace('lep_htt125','lep')
+                    if len(hplus) >0 and 'HWW' in group : ogroup = ogroup.replace('lep_hww125','lep')
+                    #f len(hplus) > 0 and 'ggZH' in group : ogroup = ogroup.replace('htt125','hww125')
+
 		    h[i].SetName(ogroup+hplus+plotVar)
 		    h[i].SetTitle('h1')
 
@@ -217,8 +247,15 @@ for sys in sysall :
 
 		    #h[i].SetTitle(hname)
                     #if ( ('PTV' in hplus or 'FWDH' in hplus ) and 'ZH' in group ) or ('PTV' not in hplus and 'FWDH' not in hplus and 'ZH' not in group ): 
-                    if ( 'PTV' in hplus or 'FWDH' in hplus )and 'ZH' not in group  and 'WH' not in group: continue
-		    else:     h[i].Write()
+                    if ( 'PTV' in hplus or 'FWDH' in hplus ) and 'ZH' not in group  and 'WH' not in group and 'HWW' not in group: continue
+		    else:     
+                        #print i, group, h[i].GetName(), cat
+                        h[i].Write()
+                        '''if 'ZH' in h[i].GetName() : 
+			    name= ogroup.replace('ZH_lep_htt125','ZH_lep_htt')
+			    h[i].SetName(name)
+			    h[i].Write()
+                        '''
                     #print 'name should be', hname, i
                     #fOut.ls()
 
