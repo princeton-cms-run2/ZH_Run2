@@ -24,7 +24,7 @@ xrdcp root://cmseos.fnal.gov//store/user/alkaloge/CHANNEL/nAODv7/YEAR/FILEIN_YEA
 
 #xrdcp testCHANNEL_TAG.root root://cmseos.fnal.gov//store/user/alkaloge/CHANNEL/nAODv7/out_TAG/YEAR/FILEIN_YEAR.root
 
-python runLocal.py YEAR FILEIN NICKNAME 0 SYSTEMATICHERE
+python runLocal.py YEAR FILEIN NICKNAME 0 SYSTEMATICHERE yes RANGEHERE SINGHERE 
 
 rm Fakes*root
 

@@ -1,12 +1,19 @@
 universe = vanilla
-Executable = condor_FILEIN_YEAR_CHANNEL_TAG_sysSYSTEMATICHERE.sh
-Output = FILEIN_YEAR_CHANNEL_TAG_sysSYSTEMATICHERE.out
-Error = FILEIN_YEAR_CHANNEL_TAG_sysSYSTEMATICHERE.err
-Log = FILEIN_YEAR_CHANNEL_TAG_sysSYSTEMATICHERE.log
+#Executable = condor_FILEIN_YEAR_CHANNEL_TAG_sysSYSTEMATICHERE_PARTHERE.sh
+#Output = FILEIN_YEAR_CHANNEL_TAG_sysSYSTEMATICHERE_PARTHERE.out
+#Error = FILEIN_YEAR_CHANNEL_TAG_sysSYSTEMATICHERE_PARTHERE.err
+#Log = FILEIN_YEAR_CHANNEL_TAG_sysSYSTEMATICHERE_PARTHERE.log
+
+Executable = condor_FILEIN_YEAR_CHANNEL_TAG_sysSYSTEMATICHERE_PARTHEREofPARTSHERE_SINGHERE.sh
+Output = FILEIN_YEAR_CHANNEL_TAG_sysSYSTEMATICHERE_PARTHEREofPARTSHERE_SINGHERE.out
+Error = FILEIN_YEAR_CHANNEL_TAG_sysSYSTEMATICHERE_PARTHEREofPARTSHERE_SINGHERE.err
+Log = FILEIN_YEAR_CHANNEL_TAG_sysSYSTEMATICHERE_PARTHEREofPARTSHERE_SINGHERE.log
+
+
 priority = 3
 
 
-transfer_input_files=/uscms_data/d3/alkaloge/ZH/CMSSW_10_6_4/src/plotting/makeAllPlotsZHCondorWithSyst.py, FILEIN_YEAR_CHANNEL_TAG.txt, /uscms_data/d3/alkaloge/ZH/CMSSW_10_6_4/src/plotting/tools.tar.gz, /uscms_data/d3/alkaloge/ZH/CMSSW_10_6_4/src/plotting/TypeI-PFMet_Run2018.root,/uscms_data/d3/alkaloge/ZH/CMSSW_10_6_4/src/plotting/Type1_PFMET_2017.root,/uscms_data/d3/alkaloge/ZH/CMSSW_10_6_4/src/plotting/Type1_PFMET_Run2016BtoH.root , /uscms_data/d3/alkaloge/ZH/CMSSW_10_6_4/src/plotting/EWKWeights.py, Zll_nloEWK_weight_unnormalized.root, BTagCalibrationStandalone.cpp, BTagCalibrationStandalone.h, DeepCSV_YEAR.csv, /uscms_data/d3/alkaloge/ZH/CMSSW_10_6_4/src/plotting/htt_scalefactors_legacy_YEAR.root, /uscms_data/d3/alkaloge/ZH/CMSSW_10_6_4/src/plotting/runLocal.py
+transfer_input_files=/uscms_data/d3/alkaloge/ZH/CMSSW_10_6_4/src/plotting/makeAllPlotsZHCondorWithSyst.py, FILEIN_YEAR_CHANNEL_TAG.txt, /uscms_data/d3/alkaloge/ZH/CMSSW_10_6_4/src/plotting/tools.tar.gz, /uscms_data/d3/alkaloge/ZH/CMSSW_10_6_4/src/plotting/TypeI-PFMet_Run2018.root,/uscms_data/d3/alkaloge/ZH/CMSSW_10_6_4/src/plotting/Type1_PFMET_2017.root,/uscms_data/d3/alkaloge/ZH/CMSSW_10_6_4/src/plotting/Type1_PFMET_Run2016BtoH.root , /uscms_data/d3/alkaloge/ZH/CMSSW_10_6_4/src/plotting/EWKWeights.py, /uscms_data/d3/alkaloge/ZH/CMSSW_10_6_4/src/plotting/fakeFactor.py, Zll_nloEWK_weight_unnormalized.root, BTagCalibrationStandalone.cpp, BTagCalibrationStandalone.h, DeepCSV_YEAR.csv, /uscms_data/d3/alkaloge/ZH/CMSSW_10_6_4/src/plotting/htt_scalefactors_legacy_YEAR.root, /uscms_data/d3/alkaloge/ZH/CMSSW_10_6_4/src/plotting/runLocal.py
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
 x509userproxy = $ENV(X509_USER_PROXY)

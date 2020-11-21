@@ -1283,10 +1283,18 @@ for ig, group in enumerate(groups) :
 	    if cat[2:] == 'mt' : tight2 = e.idDeepTau2017v2p1VSjet_4 >  WPSR-1 and e.idDeepTau2017v2p1VSmu_4 > 7 and  e.idDeepTau2017v2p1VSe_4 > 3
 	    if cat[2:] == 'et' : tight2  = e.idDeepTau2017v2p1VSjet_4 > WPSR-1 and e.idDeepTau2017v2p1VSmu_4 > 0 and  e.idDeepTau2017v2p1VSe_4 > 31
             '''
+            #added this
+	    #tight1  = nbtag == 0 
+	    #tight2  = nbtag == 0 
 
+            isVR = nbtag>-1 and str(args.sign) == 'SS'
+            isSR = nbtag==0 and str(args.sign) == 'OS'
 
+            
             if group != 'data' :
-                if not tight1 or not tight2 : continue
+                if not isVR and not isSR : continue
+                if  not tight1 or not tight2 : continue
+
 
             if not dataDriven and (not tight1 or not tight2) : continue
 
@@ -1309,7 +1317,7 @@ for ig, group in enumerate(groups) :
             ######### nbtag
 	    #if e.mll > 100 or e.mll<80: continue
 	    #try :
-	    if nbtag > 0 : continue
+	    #if nbtag > 0 : continue #commented this
 	    #except TypeError :
 	    #	if e.nbtag > 0 : continue
 
@@ -1324,7 +1332,9 @@ for ig, group in enumerate(groups) :
             
 
             if group == 'data' :
-                if DD[cat].checkEvent(e,cat) : continue 
+                if isSR:
+                    if DD[cat].checkEvent(e,cat) : continue 
+
             btag=1
 
             ##### btag
@@ -1728,6 +1738,12 @@ for ig, group in enumerate(groups) :
 		    #fW1, fW2, fW0 = getFakeWeightsvspT(cat[2:], e.pt_3, e.pt_4, WP)
 		    fW1, fW2, fW0 = FF.getFakeWeightsvspTvsDM(cat[2:], e.pt_3, e.pt_4, WP, dm3, dm4)
 		    #fW1, fW2, fW0 = getFakeWeightsvspT(cat[2:], e.pt_3, e.pt_4, WP, dm3, dm4)
+
+                    ## in VR we allow loose data only of btag>0, as the SS, btag==0 is the estimation region
+                    if not tight1 or not tight2 and (str(args.sign) == 'SS' and  nbtag==0) : continue  
+
+         
+
 		    if not tight1 and tight2 : 
                         ww = fW1          
                         hGroup = 'f1'
@@ -1742,11 +1758,17 @@ for ig, group in enumerate(groups) :
                         hGroup = 'fakes'
                         hGroup = 'Reducible'
 		    else :
+                        if str(args.sign) == 'OS' and not isSR : continue
 			hGroup = 'data'
+
+
+                    #print 'some info', 'isSR', isSR, 'nbtag', nbtag, 't1', tight1, 't2', tight2, hGroup
 		else :
 		    hGroup = 'data'
 		    #print("group = data  cat={0:s} tight1={1} tight2={2} ww={3:f}".format(cat,tight1,tight2,ww))
-		    if not (tight1 and tight2) : continue 
+                    if not (tight1 and tight2) or nbtag > 0 : continue
+
+                    #if DD[cat].checkEvent(e,cat) : continue 
 	
 	    else : 
 		#print("Good MC event: group={0:s} nickName={1:s} cat={2:s} gen_match_1={3:d} gen_match_2={4:d}".format(
@@ -2046,19 +2068,39 @@ for ig, group in enumerate(groups) :
             if fastMTTmass <290 : 
 		if hGroup != 'data' : 
 
+                    if weight < 0 : print 'WARNING!!!!!!!!!!!!!!!!!!!!1', group, e.evt, weight, e.Generator_weight, fastMTTmass
+
 		    if 'ZH' in group or 'HWW' in group: 
-			if 'lowptUp' in systematic or 'highptUp' in systematic or 'lep_scaleUp' in systematic: 
+
+                        if 'lowpt' in systematic : 
+                            if (e.HTXS_Higgs_cat >= 400 and e.HTXS_Higgs_cat< 405) or (e.HTXS_Higgs_cat >= 500 and e.HTXS_Higgs_cat< 505) :
+                                if 'Up' in systematic : weight *= e.LHEScaleWeights[8]
+                                if 'Down' in systematic : weight *= e.LHEScaleWeights[0]
+
+                        if 'highpt' in systematic : 
+                            if (e.HTXS_Higgs_cat == 405) or (e.HTXS_Higgs_cat == 505 ) :
+                                if 'Up' in systematic : weight *= e.LHEScaleWeights[8]
+                                if 'Down' in systematic : weight *= e.LHEScaleWeights[0]
+
+                        '''
+			if 'lowptUp' in systematic or 'highptUp' in systematic: 
 
 			    if e.HTXS_Higgs_cat == 405  :weight *= e.LHEScaleWeights[8]
 			    if e.HTXS_Higgs_cat == 505  :weight *= e.LHEScaleWeights[8]
 
-			if 'lowptDown' in systematic or 'highptDown' in systematic or 'lep_scaleDown' in systematic: 
+			if 'lowptDown' in systematic or 'highptDown' in systematic : 
 
 			    if e.HTXS_Higgs_cat >= 400 and e.HTXS_Higgs_cat< 405 :weight *= e.LHEScaleWeights[0]
 			    if e.HTXS_Higgs_cat >= 500 and e.HTXS_Higgs_cat< 505 :weight *= e.LHEScaleWeights[0]
 
+                        '''
 
 		    if hGroup !='fakes' and hGroup !='f1' and hGroup != 'f2' and hGroup !='Reducible': 
+
+                        if 'ZH' in group or ' HWW' in group : 
+
+			    if 'lep_scaleDown' in systematic : weight *= e.LHEScaleWeights[0]
+			    if 'lep_scaleUp' in systematic : weight *= e.LHEScaleWeights[8]
 
                            
 			hm_sv_new[hGroup][cat].Fill(fastMTTmass,weight )
@@ -2073,6 +2115,9 @@ for ig, group in enumerate(groups) :
                         ## gg ->WH 
 			if ZPt>75 and ZPt < 150 : iBin += 7
 			if ZPt>150 : iBin += 14
+
+
+
                         if group =='ZH' or group =='HWW' : 
 			    if e.HTXS_Higgs_cat == 400 : hm_sv_new_lep_FWDH_htt125[group][cat].Fill(iBin,weight )
 			    if e.HTXS_Higgs_cat == 401 : hm_sv_new_lep_PTV_0_75_htt125[group][cat].Fill(iBin,weight )

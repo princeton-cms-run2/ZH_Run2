@@ -14,6 +14,7 @@ def getArgs() :
     parser.add_argument("-s","--selection",default='ZH',type=str,help="Data taking period, 2016, 2017 or 2018")
     parser.add_argument("-o","--overideSyst",default='',type=str,help="overide systematics list")
     parser.add_argument("-m","--merge",default='1',type=str,help="merge")
+    parser.add_argument("-r","--region",default='OS',type=str,help="OS SS")
     return parser.parse_args()
 
 
@@ -92,7 +93,7 @@ if str(args.overideSyst) != '' : sysall=[str(args.overideSyst)]
 for sys in sysall : 
 
     #command='. makeFinalPlots.sh {0:s} 16 {1:s} {2:s}'.format(era,sys, args.merge)
-    subprocess.call(['./makeFinalPlots.sh {0:s} 16 {1:s} {2:s}'.format(era,sys, args.merge)], shell=True)
+    subprocess.call(['./makeFinalPlots.sh {0:s} 16 {1:s} {2:s} {3:s}'.format(era,sys, args.merge, args.region)], shell=True)
     #os.system(command)
     #print command
 
