@@ -206,10 +206,10 @@ for count, e in enumerate(inTree) :
         if count >= 10000 : countMod = 10000
     if count == nMax : break    
 
-
     for cat in cats : 
         cutCounter[cat].count('All')
 	if  MC :   cutCounterGenWeight[cat].countGenWeight('All', e.genWeight)
+ 
     isInJSON = False
     if not MC : isInJSON = CJ.checkJSON(e.luminosityBlock,e.run)
     if not isInJSON and not MC :
@@ -226,7 +226,6 @@ for count, e in enumerate(inTree) :
     for cat in cats: 
         cutCounter[cat].count('METfilter') 
 	if  MC :   cutCounterGenWeight[cat].countGenWeight('METfilter', e.genWeight)
-
 
 
     if unique :

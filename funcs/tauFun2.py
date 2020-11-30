@@ -57,7 +57,7 @@ def goodTrigger(e, year):
 
     
 
-def getTauList(channel, entry, pairList=[],printOn=False) :
+def getTauList(channel, entry, pairList=[],printOn=False, isTight=True) :
     """ tauFun.getTauList(): return a list of taus that 
                              pass the basic selection cuts               
     """
@@ -110,16 +110,56 @@ def getTauList(channel, entry, pairList=[],printOn=False) :
 
         eta, phi = entry.Tau_eta[j], entry.Tau_phi[j]
         DR0, DR1 =  lTauDR(eta,phi, pairList[0]), lTauDR(eta,phi,pairList[1]) 
-        if DR0 < tt['tt_DR'] or DR1 < tt['tt_DR']: 
-              
-            if printOn : print("        fail DR0={0:f} or DR1={1:f}". format(DR0, DR1))
-            continue
+        if isTight :
+	    if DR0 < tt['tt_DR'] or DR1 < tt['tt_DR']: 
+		  
+		if printOn : print("        fail DR0={0:f} or DR1={1:f}". format(DR0, DR1))
+		continue
         tauList.append(j)
         #print ord(entry.Tau_idDeepTau2017v2p1VSmu[j]), ord(entry.Tau_idDeepTau2017v2p1VSe[j]), ord(entry.Tau_idDeepTau2017v2p1VSjet[j])
     
     if printOn  : print 'returning with tauList from getTauList', tauList
     return tauList
 
+
+
+def getGoodTauList(channel, entry, printOn=False) :
+    """ tauFun.getTauList(): return a list of taus that 
+                             pass the basic selection cuts               
+    """
+
+    if entry.nTau == 0: return []
+
+    tauList = []
+    tt = selections['tt'] # selections for H->tau(h)+tau(h)
+
+    #for j in range(entry.nTau):   
+    '''
+    for reco tauh matched to electrons at gen level in the format (dm0, dm1): for 2016 (-0.5%, +6.0%), for 2017 (+0.3%, +3.6%), for 2018 (-3.2%, +2.6%)
+    for reco tauh matched to muons at gen level in the format (dm0, dm1): for 2016 (+0.0%, -0.5%), for 2017 (+0.0%, +0.0%), for 2018 (-0.2%, -1.0%)
+    '''
+    for j in range(entry.nTau):    
+        # apply tau(h) selections 
+        if entry.Tau_pt[j] < tt['tau_pt']: continue
+        if abs(entry.Tau_eta[j]) > tt['tau_eta']: continue
+        if abs(entry.Tau_dz[j]) > tt['tau_dz']: continue
+        if not entry.Tau_idDecayModeNewDMs[j]: continue
+	if  entry.Tau_decayMode[j] == 5 or entry.Tau_decayMode[j] == 6 : continue
+        if abs(entry.Tau_charge[j]) != 1: continue
+
+        if tt['tau_vJet'] > 0  and not ord(entry.Tau_idDeepTau2017v2p1VSjet[j]) & tt['tau_vJet'] > 0 :
+            if printOn : print("        fail DeepTau vs. Jet={0:d}".format(ord(entry.Tau_idDeepTau2017v2p1VSjet[j])))
+            continue
+	if tt['tau_vEle'] > 0 and not ord(entry.Tau_idDeepTau2017v2p1VSe[j]) & tt['tau_vEle'] > 0 :
+            if printOn : print("        fail DeepTau vs. ele={0:d}".format(ord(entry.Tau_idDeepTau2017v2p1VSe[j])))
+            continue
+        if tt['tau_vMu'] > 0 and not ord(entry.Tau_idDeepTau2017v2p1VSmu[j]) & tt['tau_vMu'] > 0 :
+            if printOn : print("        fail DeepTau vs.  mu={0:d}".format(ord(entry.Tau_idDeepTau2017v2p1VSmu[j])))
+            continue
+
+        tauList.append(j)
+    
+    return tauList
 
 
 
@@ -1357,13 +1397,13 @@ def numberToCat(number) :
 def catToNumber3L(cat) :
     #number = { 'eee':1, 'eem':2, 'eet':3, 'mme':4, 'mmm':5, 'mmt':6}
     #number = { 'ee':1, 'mm':2}
-    number = { 'eeee':1, 'eemm':2 , 'mmee':3, 'mmmm':4, 'eee':5, 'eem':6, 'mme':7, 'mmm':8,'ee':9, 'mm':10 }
+    number = { 'eeee':1, 'eemm':2 , 'mmee':3, 'mmmm':4, 'eee':5, 'eem':6, 'mme':7, 'mmm':8,'ee':9, 'mm':10 , 'eet':11,'eett':12, 'mmt':13, 'mmtt':14}
     return number[cat]
 
 def numberToCat3L(number) :
     #cat = { 1:'eee', 2:'eem', 3:'eet', 4:'mme', 5:'mmm', 6:'mmt' }
     #cat = { 1:'ee', 2:'mm' }
-    cat= { 1:'eeee', 2:'eemm' , 3:'mmee', 4:'mmmm', 5:'eee', 6:'eem', 7:'mme', 8:'mmm', 9:'ee', 10:'mm'}
+    cat= { 1:'eeee', 2:'eemm' , 3:'mmee', 4:'mmmm', 5:'eee', 6:'eem', 7:'mme', 8:'mmm', 9:'ee', 10:'mm', 11:'eet', 12:'eett', 13:'mmt', 14:'mmtt'}
     return cat[number]
 
 
