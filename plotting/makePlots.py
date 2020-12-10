@@ -1,8 +1,8 @@
 import os
 import os.path
 import sys
-import fileinput
-import colors as BC
+#import fileinput
+#import colors as BC
 import subprocess
 
 

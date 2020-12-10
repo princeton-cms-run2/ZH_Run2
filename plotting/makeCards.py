@@ -1,6 +1,6 @@
-from ROOT import gSystem, gStyle, gROOT, kTRUE, gDirectory, gPad
-from ROOT import TCanvas, TH1D, TH1F, THStack, TFile, TPad, TLegend, TLatex, TLine, TAttMarker, TMarker, TColor
-from ROOT import kBlack, kBlue, kMagenta, kOrange, kAzure, kRed, kGreen
+from ROOT import gSystem, gStyle, gROOT, kTRUE, kFALSE, gDirectory, gPad
+from ROOT import TCanvas, TH1D, TH1F,  TH1, TFile
+#from ROOT import kBlack, kBlue, kMagenta, kOrange, kAzure, kRed, kGreen, kFALSE
 from math import sqrt
 import os
 import sys
@@ -54,6 +54,8 @@ cutflows=['hCutFlowPerGroup', 'hCutFlowPerGroupFM']
 
 scaleSyst = ["Central"]
 
+#scaleSyst=[]
+
 scale = ['scale_e', 'scale_m_etalt1p2', 'scale_m_eta1p2to2p1', 'scale_m_etagt2p1',
 'scale_t_1prong', 'scale_t_1prong1pizero', 'scale_t_3prong', 'scale_t_3prong1pizero']
 
@@ -82,16 +84,15 @@ for i, sys in enumerate(signalS) :
     SignalSyst.append(sys+'Up')
     SignalSyst.append(sys+'Down')
 
-sysall = scaleSyst + jesSyst + OtherSyst + SignalSyst
-#sysall = scaleSyst 
 
 sysall =['Central']
 sysall = scaleSyst + jesSyst + OtherSyst + SignalSyst
+#sysall = scaleSyst + jesSyst + OtherSyst 
 
 #sysall =['Central']
 print '--------------->', len(sysall), sysall
 
-sysall=['Central']
+#sysall=['Central']
 if str(args.overideSyst) != '' : sysall=[str(args.overideSyst)]
 
 
@@ -101,13 +102,15 @@ groups=['Signal']
 #groupss = ['Signal','Other','Top','DY','WZ','ZZ','data', 'Reducible']
 
 groups = ['Other','ZZ','data', 'Reducible', 'ggZH', 'ZH', 'WH']
-groups = ['Other','ZZ','data', 'Reducible', 'ggZH', 'ZH', 'HWW', 'ggHWW']
-groups = [ 'ggZH','ZH']
+#groups = ['Other','ZZ','data', 'Reducible', 'ggZH', 'ZH', 'HWW', 'ggHWW']
+groups = ['Other','ZZ','data', 'SSR', 'ggZH', 'ZH', 'HWW', 'ggHWW']
 Sgroups = [ 'ggZH', 'ZH', 'HWW', 'ggHWW']
 #Sgroups = [ 'ggZH']
 
 
 h={}
+
+#ascaleXsec={'
 
 #cats = { 1:'eeet', 2:'eemt', 3:'eett', 4:'eeem', 5:'mmet', 6:'mmmt', 7:'mmtt', 8:'mmem'}
 #cats = { 1:'eeet', 2:'eemt', 3:'eett', 4:'mmet', 5:'mmmt', 6:'mmtt' }
@@ -122,6 +125,7 @@ dirs=['eeet', 'eemt', 'eett',  'mmet', 'mmmt', 'mmtt']
 dirs=cats
 
 tag='pow_noL'
+gSSR=['SSR', 'Reducible']
 
 #allGroups_2016_OS_LT00_16noSV_pow_noL_sysscale_m_etalt1p2Up.root
 sign=str(args.region)
@@ -137,10 +141,12 @@ for sys in sysall :
     #if sys =='Central' : 
     #    command='hadd -f {0:s} /eos/uscms/store/user/alkaloge/ZH/nAODv7/out_{2:s}/{1:s}/*_sys{3:s}*root'.format(haddFile,era, tag, sys)
     #else : 
-    #    command='hadd -f {0:s} /eos/uscms/store/user/alkaloge/ZH/nAODv7/out_{2:s}/{1:s}/*_sys{3:s}*root  /eos/uscms/store/user/alkaloge/ZH/nAODv7/out_{2:s}/{1:s}/data_{1:s}_sysCentral.root'.format(haddFile,era, tag, sys)
-    command='hadd -f {0:s} /eos/uscms/store/user/alkaloge/ZH/nAODv7/out_{2:s}/{1:s}_{4:s}/*_sys{3:s}*.root  /eos/uscms/store/user/alkaloge/ZH/nAODv7/out_{2:s}/{1:s}_{4:s}/data/data_{1:s}_sys{3:s}.root'.format(haddFile,era, tag, sys,sign)
+    #command='hadd -f {0:s} /eos/uscms/store/user/alkaloge/ZH/nAODv7/out_{2:s}/{1:s}/*_sys{3:s}*root  /eos/uscms/store/user/alkaloge/ZH/nAODv7/out_{2:s}/{1:s}/data_{1:s}_sysCentral.root'.format(haddFile,era, tag, sys)
+    command='hadd -f {0:s} /eos/uscms/store/user/alkaloge/ZH/nAODv7/out_{2:s}/{1:s}_{4:s}/*_sys{3:s}*.root  /eos/uscms/store/user/alkaloge/ZH/nAODv7/out_{2:s}/{1:s}_{4:s}/data/data_{1:s}_sys{3:s}.root  /eos/uscms/store/user/alkaloge/ZH/nAODv7/out_{2:s}/{1:s}_SS/*_sys{3:s}.root   '.format(haddFile,era, tag, sys,sign)
+    #command='hadd -f {0:s} /eos/uscms/store/user/alkaloge/ZH/nAODv7/out_{2:s}/{1:s}_{4:s}/*_sys{3:s}*.root  /eos/uscms/store/user/alkaloge/ZH/nAODv7/out_{2:s}/{1:s}_{4:s}/data/data_{1:s}_sys{3:s}.root  /eos/uscms/store/user/alkaloge/ZH/nAODv7/out_{2:s}/{1:s}_SS/*_sysCentral.root   /eos/uscms/store/user/alkaloge/ZH/nAODv7/out_pow_noL/{1:s}_OSS/*.root'.format(haddFile,era, tag, sys,sign)
+
     if sys in SignalSyst : 
-        command='hadd -f {0:s} /eos/uscms/store/user/alkaloge/ZH/nAODv7/out_{2:s}/{1:s}_{4:s}/*_sys{3:s}*.root '.format(haddFile,era, tag, sys,sign)
+        command='hadd -f {0:s} /eos/uscms/store/user/alkaloge/ZH/nAODv7/out_{2:s}/{1:s}_{4:s}/*_sys{3:s}*.root'.format(haddFile,era, tag, sys,sign)
 
     hfile= os.path.isfile('allGroups_{0:s}_{3:s}_LT00_16noSVll_{1:s}_sys{2:s}.root'.format(era, tag, sys,sign))
     if not hfile :   
@@ -163,8 +169,42 @@ for sys in sysall :
 
     fIn.cd()
 
+
+    SSRSumOfW={}
+    RedSumOfW={}
+    for ig in gSSR : 
+	for icat, cat in enumerate(dirs) :
+            SSRSumOfW[icat]={}
+            RedSumOfW[icat]={}
+	    for plotVar in histos :
+                if 'FMjall' not in plotVar : continue
+		SSRSumOfW[icat][plotVar] = {}
+		RedSumOfW[icat][plotVar] = {}
+
+    for ig in gSSR :
+	for icat, cat in enumerate(dirs) :
+	    for plotVar in histos :
+		if 'FMjall' not in plotVar : continue
+		hname='h'+ig+"_"+cat+"_"+plotVar
+		if sys in SignalSyst : 
+		    SSRSumOfW[icat][plotVar] = 0
+		    RedSumOfW[icat][plotVar] = 0
+		else  :
+		    try : 
+			h1 = fIn.Get(hname)
+			if 'SSR' in ig :
+			    SSRSumOfW[icat][plotVar] = h1.GetSumOfWeights()
+			    #SSRSumOfW[icat][plotVar] = 100.
+			if 'Reducible' in ig :
+			    RedSumOfW[icat][plotVar] = h1.GetSumOfWeights()
+		    except KeyError : continue
+
+    print 'Reducible SumOfWegights from AR*FF', RedSumOfW
+    print 'SS SumOfWegights from data- prompt MC', SSRSumOfW
     for igroup, group in enumerate(groups) : 
 
+
+	if group =='Reducible' : continue
 
 	h[igroup]={}
         if sys in SignalSyst and group not in Sgroups : continue
@@ -175,19 +215,42 @@ for sys in sysall :
 		hname='h'+group+"_"+cat+"_"+plotVar
 		h[igroup][icat] = fIn.Get(hname)
 
-             
+                 
+		#if group in Sgroups : h[igroup][icat].Scale(1.1)
+
+		if group=='data' : 
+                    for i in range(1,22) : 
+                        xi = h[igroup][icat].GetBinContent(i)
+                        if xi <1  : 
+                            h[igroup][icat].SetBinContent(i,0)
+                            h[igroup][icat].SetBinError(i,0)
+
+                if 'SSR' in group and 'FMjall' in plotVar: 
+                    try : 
+                        #print 'see ? ', plotVar, hname, h[igroup][icat].GetName(), h[igroup][icat].GetSum()
+                        h[igroup][icat].Scale( RedSumOfW[icat][plotVar]/SSRSumOfW[icat][plotVar])
+                    except KeyError : continue
+
+
                 try : h[igroup][icat].GetName()
 		except ReferenceError : continue
                 #print icat, cat, cats, h[igroup][icat].GetName()
+
+
+
+		#if 'Reducible' in group : 
+                #    for ij in range(1,22) :
+                #        ir = h[igroup][icat].GetBinError(ij)
+		#	h[igroup][icat].SetBinError(ij,0.5*ir)
 
 		#print group, sys, cat, hname
 		for ij in range(1,22) : 
 
 		    #if h[icat].GetBinContent(i) < 0 : print 'Reducible neg', i, h[icat].GetBinContent(i), plotVar, sys, cat
 		    if h[igroup][icat].GetBinContent(ij) < 0 : 
-			print 'warning, process', group, 'has a negative bin', ij, h[igroup][icat].GetBinContent(ij), icat, cat, sys
-			h[igroup][icat].SetBinContent(ij,0.001)
-			h[igroup][icat].SetBinError(ij,sqrt(0.001))
+			print 'warning, process', group, 'has a negative bin', ij, h[igroup][icat].GetBinContent(ij), icat, cat, sys, h[igroup][icat].GetName()
+			h[igroup][icat].SetBinContent(ij,0.01)
+			h[igroup][icat].SetBinError(ij,0.001)
 
 
 		if sys == 'Central' : plotVar =''
@@ -228,8 +291,12 @@ for sys in sysall :
 		#if group =='WH' : ogroup='ZH_hww125'
 		if group =='Other' : ogroup='Triboson'
 		if group =='ZZ' : ogroup='ZZ'
-		if group =='Reducible' : ogroup='Reducible'
+		#if group =='Reducible' : ogroup='Reducible'
+		if group =='SSR' : ogroup='Reducible'
 
+		if group=='data' : 
+                    h[igroup][icat].Sumw2(kFALSE)
+                    h[igroup][icat].SetBinErrorOption(TH1.kPoisson)
 
 		#for i, idir in enumerate(dirs) :
 		#print 'trying this now', fOut.GetFileName()

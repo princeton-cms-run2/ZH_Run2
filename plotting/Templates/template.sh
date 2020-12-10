@@ -8,6 +8,10 @@ echo ${_CONDOR_SCRATCH_DIR}
 #cd ${_CONDOR_SCRATCH_DIR}
 
 tar -xvf ${_CONDOR_SCRATCH_DIR}/tools.tar.gz 
+
+cp -r fakes ../.
+
+
 cp ${_CONDOR_SCRATCH_DIR}/* .
 
 rm -fr TauPOG
@@ -22,8 +26,6 @@ xrdcp root://cmseos.fnal.gov//store/user/alkaloge/CHANNEL/nAODv7/YEAR/FILEIN_YEA
 #python makeAllPlotsCHANNELCondor.py -f FILEIN_YEAR_CHANNEL_TAG.txt  -a CHANNEL -s OS --MConly --looseCuts -y YEAR  -r yes -w 16 -b 16 -e TAG -j none
 
 
-#xrdcp testCHANNEL_TAG.root root://cmseos.fnal.gov//store/user/alkaloge/CHANNEL/nAODv7/out_TAG/YEAR/FILEIN_YEAR.root
-
 python runLocal.py YEAR FILEIN NICKNAME 0 SYSTEMATICHERE yes RANGEHERE SINGHERE 
 
 rm Fakes*root
@@ -35,10 +37,3 @@ echo "done....."
 
 cat files
 
-
-#while read line
-#do
-
-#xrdcp $line root://cmseos.fnal.gov//store/user/alkaloge/CHANNEL/nAODv7/out_TAG/YEAR/$line
-
-#done<files

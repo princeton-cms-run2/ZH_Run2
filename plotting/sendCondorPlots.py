@@ -30,6 +30,8 @@ eospath='/eos/uscms/store/user/alkaloge/{0:s}/nAODv7/'.format(sel)
 
 args.inFileName='MCsamples_{0:s}_paper.csv'.format(era)
 
+if args.region !='OS'  :  args.inFileName='MCsamples_{0:s}_paper_{1:s}.csv'.format(era,str(args.region))
+
 command = "mkdir -p /eos/uscms/store/user/alkaloge/ZH/nAODv7/out_pow_noL/{0:s}/data_{0:s}".format(era)
 os.system(command)
 
@@ -53,7 +55,7 @@ for i, sys in enumerate(jes) :
 otherS=['PreFire','tauideff_pt20to25', 'tauideff_pt25to30', 'tauideff_pt30to35', 'tauideff_pt35to40', 'tauideff_ptgt40','scale_met_unclustered'] 
 
 signalS=['NLOEWK', 'scale_lowpt', 'scale_highpt', 'lep_scale'] 
-signalS=['scale_lowpt', 'scale_highpt'] 
+#signalS=['scale_lowpt', 'scale_highpt'] 
 
 OtherSyst=[]
 for i, sys in enumerate(otherS) :
@@ -66,6 +68,7 @@ for i, sys in enumerate(signalS) :
     SignalSyst.append(sys+'Down')
 
 sysall = scaleSyst + jesSyst + OtherSyst + SignalSyst
+#sysall = scaleSyst + jesSyst + OtherSyst 
 #sysall = SignalSyst
 
 signalGroup=['ZH', 'ggZH', 'HWW', 'ggHWW']
@@ -81,6 +84,7 @@ for line in open(args.inFileName,'r').readlines() :
     nickName=vals[1]
     #if 'Run' in ds or 'data' in ds : sysall = ["Central"]
     if '#' in ds : continue
+    #if 'data' in ds : continue
     #if 'ToWW' not in ds : continue
 
 
@@ -94,13 +98,23 @@ for line in open(args.inFileName,'r').readlines() :
 	ff = TFile(fin,'read')
 	ttree = ff.Get("Events")
 	ev = ttree.GetEntries()
-	parts = ev/10000 +1
+	parts = ev/25000 +1
 	print 'for ds', ds,' will make ', parts, ev
 
     for ic, sys in enumerate(sysall) :
 
         if sys in SignalSyst and nickName not in signalGroup : continue
 
+
+        if sign == 'SS' and nickName in signalGroup  : continue
+        
+        if sign == 'SS' and sys in SignalSyst  : continue
+        #if sign == 'SS' and 'Central' not in sys : continue
+
+        #if sys in OtherSyst and 'data' in ds and sys !='Central' : continue
+        if sys in SignalSyst and 'data' in ds and sys !='Central': continue
+        #if sys in scaleSyst and  'data' in ds and sys !='Central': continue
+        if sys not in jesSyst and sys not in OtherSyst and sys not in scaleSyst and 'data' in ds and sys !='Central' : continue
             
             #aparts=11
         
