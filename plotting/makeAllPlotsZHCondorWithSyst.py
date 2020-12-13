@@ -642,10 +642,10 @@ WPSR= 16
 SubRedMC=False
 if ( 'ZZ' in str(args.gType) or 'Other' in str(args.gType)) and 'OSS' in str(args.sign): SubRedMC = True
 if 'data' in str(args.gType) or   SubRedMC:
-    import fakeFactor2
-    FF = fakeFactor2.fakeFactor2(args.year,WP)
-    #import fakeFactor
-    #FF = fakeFactor.fakeFactor(args.year,WP,extratag, vertag,systematic)
+    #import fakeFactor2
+    #FF = fakeFactor2.fakeFactor2(args.year,WP)
+    import fakeFactor
+    FF = fakeFactor.fakeFactor(args.year,WP,extratag, vertag,systematic)
 
 import EWKWeights
 if  str(args.gType) == 'ZH' or  str(args.gType) == 'HWW':
@@ -968,8 +968,8 @@ for ig, group in enumerate(groups) :
             hMCFM[group][cat][plotVar] = TH1D(hName,hName,nBins,xMin,xMax)
             hMCFM[group][cat][plotVar].SetDefaultSumw2()
             hMCFM[group][cat][plotVar].GetXaxis().SetTitle(lTitle + ' ' + units)
-            if 'GeV' in units : hMCFM[group][cat][plotVar].GetYaxis().SetTitle("Events / "+str(binwidth)+" {0:s}".format(units))
-            if 'GeV' not in units : hMCFM[group][cat][plotVar].GetYaxis().SetTitle("Events / "+str(binwidth))
+            #if 'GeV' in units : hMCFM[group][cat][plotVar].GetYaxis().SetTitle("Events / "+str(binwidth)+" {0:s}".format(units))
+            #if 'GeV' not in units : hMCFM[group][cat][plotVar].GetYaxis().SetTitle("Events / "+str(binwidth))
 
             #print '=======', nBins, xMin, xMax, hMC[group][cat][plotVar].GetName(), hMC[group][cat][plotVar].GetTitle()
 
@@ -1351,8 +1351,8 @@ for ig, group in enumerate(groups) :
  
             
 
-            if group == 'data' :
-                if DD[cat].checkEvent(e,cat) : continue 
+            #if group == 'data' :
+            if DD[cat].checkEvent(e,cat) : continue 
 
             if isSS : hGroup = 'SSR'
 
@@ -1417,8 +1417,8 @@ for ig, group in enumerate(groups) :
             L2.SetPtEtaPhiM(e.pt_2, e.eta_2,e.phi_2,mass)
 	    L1uncor.SetPtEtaPhiM(e.pt_1, e.eta_1,e.phi_1,mass)
 	    L2uncor.SetPtEtaPhiM(e.pt_2, e.eta_2,e.phi_2,mass)
-	    L1uncorMC.SetPtEtaPhiM(e.pt_1_tr, e.eta_1_tr,e.phi_1_tr,e.m_1_tr)
-	    L2uncorMC.SetPtEtaPhiM(e.pt_2_tr, e.eta_2_tr,e.phi_2_tr,e.m_2_tr)
+	    #L1uncorMC.SetPtEtaPhiM(e.pt_1_tr, e.eta_1_tr,e.phi_1_tr,e.m_1_tr)
+	    #L2uncorMC.SetPtEtaPhiM(e.pt_2_tr, e.eta_2_tr,e.phi_2_tr,e.m_2_tr)
 
             if group !='data' and doCorrectTES:
 		L1uncor.SetPtEtaPhiM(e.pt_uncor_1, e.eta_1,e.phi_1,mass)
@@ -1606,6 +1606,8 @@ for ig, group in enumerate(groups) :
                 met = MetV.Pt()
                 metphi = MetV.Phi()
                 
+            H_LT = tauV3uncor.Pt() + tauV4uncor.Pt()
+            if cat[2:] == 'tt' and H_LT < 60 : continue
 
             trigw=1
             trigw1=1
@@ -2038,7 +2040,7 @@ for ig, group in enumerate(groups) :
             #if e.evt ==2496649 : print 'met', met,  e.met, 'evt', e.evt, 'weight', weight, e.weightPUtrue ,' gen', e.Generator_weight, 'pref', weight_pref
 
             ZPt = (L1uncor+L2uncor).Pt()
-            ZPtMC = (L1uncorMC+L2uncorMC).Pt()
+            #ZPtMC = (L1uncorMC+L2uncorMC).Pt()
             #ZPt = ZPtMC
 	    ewkweight = 1.
 	    ewkweightUp = 1.
@@ -2111,7 +2113,7 @@ for ig, group in enumerate(groups) :
             #new_jA,jB,jC : hold the ZpT<75, 75<ZpT<150, ZpT>150
             # jBC is filled for ZpT >75
 
-            H_LT = tauV3uncor.Pt() + tauV4uncor.Pt()
+
             if fastMTTmass <290 : 
 		if hGroup != 'data' : 
 
