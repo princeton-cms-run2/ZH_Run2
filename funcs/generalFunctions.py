@@ -103,10 +103,15 @@ def printEvent(entry) :
         for j in range(entry.nMuon) :
             muSign = '+'
             if entry.Muon_charge[j] < 0 : muSign = '-'
-            print("{0:2d} {1:2s}{2:5.1f}{3:6.2f}{4:6.2f}{5:7.3f} {6:5s} {7:5s} {8:5s}{9:7.3f}{10:7.3f}{11:s}".format(
-                j,muSign,entry.Muon_pt[j],entry.Muon_eta[j],entry.Muon_phi[j],entry.Muon_pfRelIso04_all[j],str(entry.Muon_mediumId[j]),str(entry.Muon_tightId[j]),
-                str(entry.Muon_softId[j]),entry.Muon_dxy[j],entry.Muon_dz[j],
-                getMCmatchString(entry.Muon_eta[j],entry.Muon_phi[j],entry))), ord(entry.Muon_genPartFlav[j])
+            try : 
+		print("{0:2d} {1:2s}{2:5.1f}{3:6.2f}{4:6.2f}{5:7.3f} {6:5s} {7:5s} {8:5s}{9:7.3f}{10:7.3f}{11:s}".format(
+		    j,muSign,entry.Muon_pt[j],entry.Muon_eta[j],entry.Muon_phi[j],entry.Muon_pfRelIso04_all[j],str(entry.Muon_mediumId[j]),str(entry.Muon_tightId[j]),
+		    str(entry.Muon_softId[j]),entry.Muon_dxy[j],entry.Muon_dz[j],
+		    getMCmatchString(entry.Muon_eta[j],entry.Muon_phi[j],entry))), ord(entry.Muon_genPartFlav[j])
+            except AttributeError :  
+		print("{0:2d} {1:2s}{2:5.1f}{3:6.2f}{4:6.2f}{5:7.3f} {6:5s} {7:5s} {8:5s}".format(
+		    j,muSign,entry.Muon_pt[j],entry.Muon_eta[j],entry.Muon_phi[j],entry.Muon_pfRelIso04_all[j],str(entry.Muon_mediumId[j]),str(entry.Muon_tightId[j]),
+		    str(entry.Muon_softId[j]),entry.Muon_dxy[j],entry.Muon_dz[j]))
 
     if entry.nElectron > 0 :
         print("Electrons                           Lost  \n # Q    Pt   Eta   Phi   Iso   Qual Hits  MVA  WP90    dxy     dz   MC     dR     Pt   eta   phi genMatch")
@@ -114,11 +119,17 @@ def printEvent(entry) :
         for j in range(entry.nElectron) :
             eSign = '+'
             if entry.Electron_charge[j] < 0 : eSign = '-'
-            print("{0:2d} {1:2s}{2:5.1f}{3:6.2f}{4:6.2f}{5:7.3f}{6:6d}{7:5d}{8:7.3f} {9} {10:7.3f}{11:7.3f}{12:s}".format(j,eSign,
-              entry.Electron_pt[j],entry.Electron_eta[j],entry.Electron_phi[j],entry.Electron_miniPFRelIso_all[j],
-              entry.Electron_cutBased[j],ord(entry.Electron_lostHits[j]),entry.Electron_mvaFall17V2noIso[j],entry.Electron_mvaFall17V2noIso_WP90[j],
-              entry.Electron_dxy[j],entry.Electron_dz[j],                                             
-              getMCmatchString(entry.Electron_eta[j],entry.Electron_phi[j],entry))), ord(entry.Electron_genPartFlav[j])
+            try :
+		print("{0:2d} {1:2s}{2:5.1f}{3:6.2f}{4:6.2f}{5:7.3f}{6:6d}{7:5d}{8:7.3f} {9} {10:7.3f}{11:7.3f}{12:s}".format(j,eSign,
+		  entry.Electron_pt[j],entry.Electron_eta[j],entry.Electron_phi[j],entry.Electron_miniPFRelIso_all[j],
+		  entry.Electron_cutBased[j],ord(entry.Electron_lostHits[j]),entry.Electron_mvaFall17V2noIso[j],entry.Electron_mvaFall17V2noIso_WP90[j],
+		  entry.Electron_dxy[j],entry.Electron_dz[j],                                             
+		  getMCmatchString(entry.Electron_eta[j],entry.Electron_phi[j],entry))), ord(entry.Electron_genPartFlav[j])
+            except AttributeError :  
+		print("{0:2d} {1:2s}{2:5.1f}{3:6.2f}{4:6.2f}{5:7.3f}{6:6d}{7:5d}{8:7.3f} {9} ".format(j,eSign,
+		  entry.Electron_pt[j],entry.Electron_eta[j],entry.Electron_phi[j],entry.Electron_miniPFRelIso_all[j],
+		  entry.Electron_cutBased[j],ord(entry.Electron_lostHits[j]),entry.Electron_mvaFall17V2noIso[j],entry.Electron_mvaFall17V2noIso_WP90[j],
+		  entry.Electron_dxy[j],entry.Electron_dz[j]))
 
 
     #print("Lepton List\n    Pt    Eta    Phi ")
@@ -146,14 +157,24 @@ def printEvent(entry) :
         print("Taus                                    |-Deep Tau-||-------Iso------|")
         print(" #    Pt   Eta   Phi   Mode ID   DMID    vJ  vM  vE  Raw   Chg   Neu  jetIdx antiEl antiMu  dxy     dz  idMVA   rawIso  MC, genMatch")
         for j in range(entry.nTau) :
-            print("{0:2d} {1:5.1f}{2:6.2f}{3:6.2f}{4:5d}  {5:5s} {6:5s}{18:4d}{19:4d}{20:4d} {7:6.2f}{8:6.2f}{9:6.2f}{10:6d}{11:6d}{12:6d}  {13:7.3f}{14:7.3f} {15:5d} {16:8.4f} {17:6s}".format(
-                j,entry.Tau_pt[j],entry.Tau_eta[j],entry.Tau_phi[j],entry.Tau_decayMode[j],
-                str(entry.Tau_idDecayMode[j]),str(entry.Tau_idDecayModeNewDMs[j]),
-                entry.Tau_rawIso[j],entry.Tau_chargedIso[j],entry.Tau_neutralIso[j],
-                entry.Tau_jetIdx[j],ord(entry.Tau_idAntiEle[j]),ord(entry.Tau_idAntiMu[j]),
-                entry.Tau_dxy[j],entry.Tau_dz[j],ord(entry.Tau_idMVAoldDM2017v2[j]),entry.Tau_rawMVAoldDM2017v2[j],
-                getMCmatchString(entry.Tau_eta[j],entry.Tau_phi[j],entry)[0:6],
-                ord(entry.Tau_idDeepTau2017v2p1VSjet[j]),ord(entry.Tau_idDeepTau2017v2p1VSmu[j]),ord(entry.Tau_idDeepTau2017v2p1VSe[j]))), ord(entry.Tau_genPartFlav[j])
+            try:
+		print("{0:2d} {1:5.1f}{2:6.2f}{3:6.2f}{4:5d}  {5:5s} {6:5s}{18:4d}{19:4d}{20:4d} {7:6.2f}{8:6.2f}{9:6.2f}{10:6d}{11:6d}{12:6d}  {13:7.3f}{14:7.3f} {15:5d} {16:8.4f} {17:6s}".format(
+		    j,entry.Tau_pt[j],entry.Tau_eta[j],entry.Tau_phi[j],entry.Tau_decayMode[j],
+		    str(entry.Tau_idDecayMode[j]),str(entry.Tau_idDecayModeNewDMs[j]),
+		    entry.Tau_rawIso[j],entry.Tau_chargedIso[j],entry.Tau_neutralIso[j],
+		    entry.Tau_jetIdx[j],ord(entry.Tau_idAntiEle[j]),ord(entry.Tau_idAntiMu[j]),
+		    entry.Tau_dxy[j],entry.Tau_dz[j],ord(entry.Tau_idMVAoldDM2017v2[j]),entry.Tau_rawMVAoldDM2017v2[j],
+		    getMCmatchString(entry.Tau_eta[j],entry.Tau_phi[j],entry)[0:6],
+		    ord(entry.Tau_idDeepTau2017v2p1VSjet[j]),ord(entry.Tau_idDeepTau2017v2p1VSmu[j]),ord(entry.Tau_idDeepTau2017v2p1VSe[j]))), ord(entry.Tau_genPartFlav[j])
+            except AttributeError :  
+		print("{0:2d} {1:5.1f}{2:6.2f}{3:6.2f}{4:5d}  {5:5s} {6:5s}{18:4d}{19:4d}{20:4d} {7:6.2f}{8:6.2f}{9:6.2f}{10:6d}{11:6d}{12:6d}  {13:7.3f}{14:7.3f} {15:5d} {16:8.4f}".format(
+		    j,entry.Tau_pt[j],entry.Tau_eta[j],entry.Tau_phi[j],entry.Tau_decayMode[j],
+		    str(entry.Tau_idDecayMode[j]),str(entry.Tau_idDecayModeNewDMs[j]),
+		    entry.Tau_rawIso[j],entry.Tau_chargedIso[j],entry.Tau_neutralIso[j],
+		    entry.Tau_jetIdx[j],ord(entry.Tau_idAntiEle[j]),ord(entry.Tau_idAntiMu[j]),
+		    entry.Tau_dxy[j],entry.Tau_dz[j],ord(entry.Tau_idMVAoldDM2017v2[j]),entry.Tau_rawMVAoldDM2017v2[j],
+		    getMCmatchString(entry.Tau_eta[j],entry.Tau_phi[j],entry)[0:6],
+		    ord(entry.Tau_idDeepTau2017v2p1VSjet[j]),ord(entry.Tau_idDeepTau2017v2p1VSmu[j]),ord(entry.Tau_idDeepTau2017v2p1VSe[j])))
 
     if True and entry.nTrigObj > 0 :
         trigID = { 11:"Electr", 22:"Photon", 13:"  Muon",15:"   Tau", 1:"   Jet", 6:"FatJet", 2:"   MET", 3:"    HT" , 4:"   MHT" }
@@ -777,9 +798,9 @@ class pileUpWeight() :
         xSec = 1.
         # get MC cross section values
         #for line in open('MCsamples.csv','r').readlines() :
-        for line in open('MCsamples_{0:d}.csv'.format(year),'r').readlines() :
-            if nickName == line.split(',')[0].strip() :
-                xSec = 1000.*float(line.split(',')[2])
+        #for line in open('MCsamples_{0:d}.csv'.format(year),'r').readlines() :
+        #    if nickName == line.split(',')[0].strip() :
+        #        xSec = 1000.*float(line.split(',')[2])
                  
         # get MC pileup histograms
         MCfile = "MC_{0:d}.root".format(year)
@@ -812,9 +833,9 @@ class pileUpWeight() :
         xMin = hData.GetBinLowEdge(1)
         xMax = xMin + hData.GetNbinsX()*hData.GetBinWidth(1) 
         bins = np.linspace(xMin+0.5*binWidth,xMax-0.5*binWidth,nBins)
-        self.sampleWeight = xSec*lumi[year]/nMC
+        #self.sampleWeight = xSec*lumi[year]/nMC
         print("In generalFunctions.pileUpWeight.calculateWeights() :")
-        print(" nickName={0:s} year={1:d} lumi={2:.1f} /fb xSec={3:.3f} fb nMC={4:.1f} weight={5:f}".format(nickName,year,lumi[year],xSec,nMC,self.sampleWeight))
+        #print(" nickName={0:s} year={1:d} lumi={2:.1f} /fb xSec={3:.3f} fb nMC={4:.1f} weight={5:f}".format(nickName,year,lumi[year],xSec,nMC,self.sampleWeight))
         
         if False :
             gData = TGraph(len(bins),bins,pData)

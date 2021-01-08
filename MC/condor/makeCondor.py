@@ -10,10 +10,11 @@ def getArgs() :
     parser.add_argument("--nickName",default='MCpileup',help="Data set nick name.") 
     parser.add_argument("-m","--mode",default='anaXRD',help="Mode (script to run).")
     parser.add_argument("-y","--year",default=2017,type=str,help="Data taking period, 2016, 2017 or 2018")
-    parser.add_argument("-c","--concatenate",default=1,type=int,help="On how many files to run on each job")
+    parser.add_argument("-c","--concatenate",default=5,type=int,help="On how many files to run on each job")
     parser.add_argument("-s","--selection",default='ZH',type=str,help="select ZH or AZH")
     parser.add_argument("-j","--doSystematics",default='yes',type=str,help="do JME systematics")
     parser.add_argument("-l","--islocal",default='no',type=str,help="get list from /eos/ not DAS")
+    parser.add_argument("-w","--weightsOnly",default='no',type=str,help="get list from /eos/ not DAS")
     return parser.parse_args()
 
 def beginBatchScript(baseFileName, Systematics) :
@@ -50,6 +51,8 @@ args = getArgs()
 era = str(args.year)
 doJME  = args.doSystematics.lower() == 'true' or args.doSystematics.lower() == 'yes' or args.doSystematics == '1'
 
+doWeightsOnly = args.weightsOnly.lower() =='yes' or args.weightsOnly.lower()=='1' or  args.weightsOnly.lower() == 'true'
+
 period="B"
 if 'Run2016' in args.dataSet or 'Run2017' in args.dataSet or 'Run2018' in args.dataSet: 
     poss = args.dataSet.find("Run")
@@ -67,8 +70,8 @@ if "USER" in str(args.dataSet) : query = '"file dataset={0:s}"'.format(args.data
 command = "dasgoclient --query={0:s} --limit=0  > fileList.txt".format(query)
 
 
-#if str(args.islocal.lower())=='yes' : command ='ls  /eos/uscms/store/group/lpcsusyhiggs/ntuples/nAODv7/ZH_JECs_{0:s}/CRAB_PrivateMC/{1:s}_{0:s}/*/*/*root   > fileList.txt'.format(str(args.year), args.nickName) 
-if str(args.islocal.lower())=='yes' or str(args.islocal.lower())=='1': command ='ls  /eos/uscms/store/group/lpcsusyhiggs/ntuples/nAODv7/JEC_{0:s}/*/{1:s}_{0:s}/*/*/*root   > fileList.txt'.format(str(args.year), args.nickName)
+if str(args.islocal.lower())=='yes' : command ='ls  /eos/uscms/store/group/lpcsusyhiggs/ntuples/nAODv7/ZH_JECs_{0:s}/CRAB_PrivateMC/{1:s}_{0:s}/*/*/*root   > fileList.txt'.format(str(args.year), args.nickName) 
+#if str(args.islocal.lower())=='yes' or str(args.islocal.lower())=='1': command ='ls  /eos/uscms/store/group/lpcsusyhiggs/ntuples/nAODv7/JEC_{0:s}/*/{1:s}_{0:s}/*/*/*root   > fileList.txt'.format(str(args.year), args.nickName)
 
 print("Running in {0:s} mode.  Command={1:s}".format(args.mode,command))
 os.system(command)
@@ -101,7 +104,7 @@ ptBins=[10,50,100,150,200,5000]
 if not doJME : ptBins=[1000]
 
 
-doWeights=2
+#doWeights=2
 
 
 if str(args.islocal.lower())=='yes': 
@@ -144,7 +147,7 @@ if str(args.islocal.lower())=='yes':
 	    if 'lpcsusyhiggs' not in fileName : outLines.append("xrdcp root://cms-xrd-global.cern.ch/{0:s} inFile.root\n".format(fileloop)) 
 	    else : outLines.append("xrdcp root://cmsxrootd.fnal.gov/{0:s} inFile.root\n".format(fileloop)) 
 
-	    outFileName = "{0:s}_{1:03d}.root".format(args.nickName,nFile+j)
+	    outFileName = "{0:s}_{1:03d}.root".format(args.nickName,nFile+j+1)
 	    infile = "inFile.root"
 
 
@@ -153,20 +156,31 @@ if str(args.islocal.lower())=='yes':
 		infile = "inFile.root"
 
 
-		if str(args.islocal.lower())=='yes' :  
-                    outLines.append("python {6:s}.py -f {4:s} -o {0:s} --nickName {1:s} -y {2:s} -s {3:s} -w 0 -j {5:s}\n".format(outFileName,args.nickName, args.year, args.selection,infile, args.doSystematics, executable))
+		#if str(args.islocal.lower())=='yes' :  
+                #    outLines.append("python {6:s}.py -f {4:s} -o {0:s} --nickName {1:s} -y {2:s} -s {3:s} -w 0 -j {5:s}\n".format(outFileName,args.nickName, args.year, args.selection,infile, args.doSystematics, executable))
 
+		if doWeightsOnly : 
+		    outLines.append("python {6:s}.py -f {4:s} -o {0:s} --nickName {1:s} -y {2:s} -s {3:s} -w 2 -j {5:s}\n".format(outFileName,args.nickName, args.year, args.selection,infile, args.doSystematics, executable))
 		else : 
 		    outLines.append("python {6:s}.py -f {4:s} -o {0:s} --nickName {1:s} -y {2:s} -s {3:s} -w 1 -j {5:s}\n".format(outFileName,args.nickName, args.year, args.selection,infile, args.doSystematics, executable))
 	
 	    outLines.append("rm inFile*.root\n")
 
 
-	if str(args.islocal.lower())=='no' : outLines.append("hadd -f -k all_{0:s}_{1:03d}.root *ntup *weights\n".format(args.nickName,nFile+1))
-	else : outLines.append("hadd -f -k all_{0:s}_{1:03d}.root *ntup \n".format(args.nickName,nFile))
+        if not doWeightsOnly:
+	    outLines.append("hadd -f -k all_{0:s}_{1:03d}.root *ntup *weights\n".format(args.nickName,nFile+j+1))
+
+	#if str(args.islocal.lower())=='no' : outLines.append("hadd -f -k all_{0:s}_{1:03d}.root *ntup *weights\n".format(args.nickName,nFile+1))
+	#else : outLines.append("hadd -f -k all_{0:s}_{1:03d}.root *ntup \n".format(args.nickName,nFile))
 	outLines.append("rm *.pyc\nrm *.so\nrm *.pcm\nrm *cc.d\n")
-	outLines.append("rm *.ntup *.weights *.so\nrm *.pcm\nrm *cc.d\n")
-	outLines.append("cp  all*root ${_CONDOR_SCRATCH_DIR}/.\n")
+        if doWeightsOnly : 
+	    outLines.append("rm *.ntup  *.so\nrm *.pcm\nrm *cc.d\n")
+	    outLines.append("cp *weights ${_CONDOR_SCRATCH_DIR}/.\n")
+        else : 
+	    outLines.append("rm *.ntup *.weights *.so\nrm *.pcm\nrm *cc.d\n")
+	    outLines.append("cp  all*root  ${_CONDOR_SCRATCH_DIR}/.\n")
+	    outLines.append("cp  *weights ${_CONDOR_SCRATCH_DIR}/.\n")
+
 	print("Writing out file = {0:s}".format(scriptName))
 	open(scriptName,'w').writelines(outLines)
 	scriptList.append(scriptName)
@@ -243,7 +257,7 @@ if str(args.islocal.lower())=='no':
 		outLines.append("rm inFile*.root\n")
 
 
-	    outLines.append("hadd -f -k all_{0:s}_{1:03d}_{2:s}of{3:s}.root *ntup* *weights*\n".format(args.nickName,nFile+1,str(ipT+1), str(len(ptBins)-1)))
+	    outLines.append("hadd -f -k all_{0:s}_{1:03d}_{2:s}of{3:s}.root *ntup* *weights*\n".format(args.nickName,nFile+j,str(ipT+1), str(len(ptBins)-1)))
 	    outLines.append("rm *.pyc\nrm *.so\nrm *.pcm\nrm *cc.d\n")
 	    #outLines.append("rm *.ntup *.weights *.so\nrm *.pcm\nrm *cc.d\n")
 	    outLines.append("rm *ntup* *.so\nrm *.pcm\nrm *cc.d\n")
