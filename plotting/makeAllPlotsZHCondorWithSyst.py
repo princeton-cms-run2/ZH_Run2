@@ -642,10 +642,10 @@ WPSR= 16
 SubRedMC=False
 if ( 'ZZ' in str(args.gType) or 'Other' in str(args.gType)) and 'OSS' in str(args.sign): SubRedMC = True
 if 'data' in str(args.gType) or   SubRedMC:
-    #import fakeFactor2
-    #FF = fakeFactor2.fakeFactor2(args.year,WP)
-    import fakeFactor
-    FF = fakeFactor.fakeFactor(args.year,WP,extratag, vertag,systematic)
+    import fakeFactor2
+    FF = fakeFactor2.fakeFactor2(args.year,WP)
+    #import fakeFactor
+    #FF = fakeFactor.fakeFactor(args.year,WP,extratag, vertag,systematic)
 
 import EWKWeights
 if  str(args.gType) == 'ZH' or  str(args.gType) == 'HWW':
@@ -1036,6 +1036,9 @@ for ig, group in enumerate(groups) :
         if chunck > 0 :
             print 'Will run for',  (chunck-1)*step,'---> to ', (chunck)*step,' events now....'
         else :     print 'Will run for 0',  '---> to ', inTree.GetEntries(), ' events now....'
+        printOn=False
+        if printOn : 
+            print 'cat \t lumi \t run \t  event  \t pt_1 \t pt_2 \t pt_3 \t pt_4 \t  met  \t  nbtag \t  btag_w \t pu_w \t gen_w \t prefire_w \t HTXS \t mll'
 
         for i, e in enumerate(inTree) :
 
@@ -1157,8 +1160,9 @@ for ig, group in enumerate(groups) :
 
             weightCF = weight
             if i == 0 : print 'sample info ', e.weightPUtrue, e.Generator_weight, sWeight, 'for ', group, nickName, inTree.GetEntries()
-
+       
             #weight=1.
+            #if e.weightPUtrue ==-1 : e.weightPUtrue==1 
 
             #####sign
             iCut +=1
@@ -1186,9 +1190,6 @@ for ig, group in enumerate(groups) :
                 if (abs(e.eta_1) > el_eta or abs(e.eta_2) > el_eta) : continue
 	        if e.Electron_mvaFall17V2noIso_WP90_1 < 1 or e.Electron_mvaFall17V2noIso_WP90_2 < 1 : continue
 
-                
-            #if e.q_2 * e.q_3 > 0 : tight1 = False
-            #if e.q_2 * e.q_4> 0 : tight2 = False
 
             # and now tauWP cuts
 	    if cat[2:] == 'em'  :
@@ -1279,15 +1280,24 @@ for ig, group in enumerate(groups) :
                     
 		    dm3=e.decayMode_3
 		    dm4=e.decayMode_4
+                    #Flavour of genParticle for MC matching to status==1 electrons or photons: 1 = prompt electron (including gamma*->mu mu), 15 = electron from prompt tau, 22 = prompt photon (likely conversion), 5 = electron from b, 4 = electron from c, 3 = electron from light or unknown, 0 = unmatched
+                    if cat[2:]=='mt' :
+                        #if tight3 and (e.gen_match_3 == 15  or e.gen_match_3 ==1)  : isL3L = True
+                        if tight3 and (e.gen_match_3 != 15  )  : isL3L = True
+                        #if tight3 and (e.gen_match_3 != 15 and e.gen_match_3 !=1 )  : isL3L = True
 
-                    if cat[2:]=='et' or cat[2:]=='mt':
-                        if tight3 and (e.gen_match_3 == 15  or e.gen_match_3 ==1)  : isL3L = True
+                    if cat[2:]=='et' :
+                        #if tight3 and (e.gen_match_3 == 15  or e.gen_match_3 ==1)  : isL3L = True
+                        if tight3 and (e.gen_match_3 == 15  )  : isL3L = True
+                        #if tight3 and (e.gen_match_3 != 15 and e.gen_match_3 !=1 )  : isL3L = True
 
                     if cat[2:]=='tt' :
                         if tight3 and e.gen_match_3 != 0  : isL3L = True
+                        #if tight3 and e.gen_match_3 == 0  : isL3L = True
 
                     if cat[2:]=='tt' or cat[2:]=='mt' or cat[2:]=='et':
                         if tight4 and e.gen_match_4 != 0  : isL4L = True
+                        #if tight4 and e.gen_match_4 ==0   : isL4L = True
 
 		    #print cat, tight3, e.gen_match_3, tight4, e.gen_match_4
 		    if isL3L or isL4L : 
@@ -1303,9 +1313,12 @@ for ig, group in enumerate(groups) :
 			if isL3L and  isL4L :
 			    weight *=fW0
                         #print group, hGroup, isL3L, isL4L, fW1, fW2, fW0, nbtag
-
+                    
 
             #if not isSS and not isSR : continue
+
+            if group!='data' and hGroup!='Reducible' and  isLSR : continue
+ 
             if group != 'data' :
                 if  isSR :
                     if not tight1 or not tight2 : continue
@@ -1333,7 +1346,7 @@ for ig, group in enumerate(groups) :
 
 
             ######### nbtag
-	    #if e.mll > 100 or e.mll<80: continue
+	    if e.mll > 106 or e.mll<76: continue
 	    #try :
 	    #if nbtag > 0 and str(args.sign) == 'OS': continue #commented this
 	    if nbtag > 0 : continue #commented this
@@ -1356,7 +1369,6 @@ for ig, group in enumerate(groups) :
 
             if isSS : hGroup = 'SSR'
 
-            btag=1.
 
             ##### btag
             if group != 'data' and dobtag:
@@ -1826,7 +1838,8 @@ for ig, group in enumerate(groups) :
                         '''
 
 			if e.gen_match_4 != 15  and 'noL' in extratag: isfakemc2 = True
-			if not e.gen_match_4 != 15 and e.gen_match_4 !=1  and 'wL' in extratag: isfakemc2 = True
+			#if not e.gen_match_4 != 15 and e.gen_match_4 !=1  and 'wL' in extratag: isfakemc2 = True
+			if not e.gen_match_4 != 15  and 'wL' in extratag: isfakemc2 = True
                         '''
 			if  e.gen_match_4 == 0 : hGroup = 'jfl2'
 			if  e.gen_match_3 == 1 : hGroup = 'lfl2'
@@ -1837,7 +1850,8 @@ for ig, group in enumerate(groups) :
 			
 		    if cat[2:] == 'et' or cat[2:] == 'mt' :
 			if e.gen_match_3 != 15  and e.gen_match_3 !=1 and 'noL' in extratag: isfakemc1 = True
-			if e.gen_match_3 != 15 and e.gen_match_3 !=1  and 'wL' in extratag: isfakemc1 = True
+			#if e.gen_match_3 != 15 and e.gen_match_3 !=1  and 'wL' in extratag: isfakemc1 = True
+			if e.gen_match_3 != 15   and 'wL' in extratag: isfakemc1 = True
 
                         '''
 			if  e.gen_match_3 == 0 : hGroup = 'jfl1'
@@ -2040,6 +2054,8 @@ for ig, group in enumerate(groups) :
             #if e.evt ==2496649 : print 'met', met,  e.met, 'evt', e.evt, 'weight', weight, e.weightPUtrue ,' gen', e.Generator_weight, 'pref', weight_pref
 
             ZPt = (L1uncor+L2uncor).Pt()
+            #mll = (L1uncor+L2uncor).M()
+            #print cat, mll, e.mll
             #ZPtMC = (L1uncorMC+L2uncorMC).Pt()
             #ZPt = ZPtMC
 	    ewkweight = 1.
@@ -2267,7 +2283,11 @@ for ig, group in enumerate(groups) :
 
 		else :  ##this is data
 		    if tight3 and tight4 :
- 
+
+			if printOn : 
+			    print '{0:s} \t {1:d} \t  {2:d}  \t {3:d}  \t {4:.3f} \t {5:.3f} \t {6:.3f} \t {7:.3f} \t {8:.3f} \t {9:.3f} \t {10:.3f}'.format(cat, e.lumi, e.run, e.evt, e.pt_1, e.pt_2, e.pt_3, e.pt_4, MetV.Pt(),  e.mll, fastMTTmass)
+			    #if 'data' not in nickName : print '{0:s} \t {1:d} \t  {2:d}  \t {3:d}  \t {4:.3f} \t {5:.3f} \t {6:.3f} \t {7:.3f} \t {8:.3f} \t {9:.3f} \t {10:.3f} \t {11:.3f} \t {12:.3f}  \t {13:.3f}  \t {14:.3f} \t {15:.3f} \t{16:.3f}'.format(cat, e.lumi, e.run, e.evt, e.pt_1, e.pt_2, e.pt_3, e.pt_4, MetV.Pt(), nbtag, btag_sf, e.weightPUtrue, e.Generator_weight,  e.L1PreFiringWeight_Nom, e.HTXS_Higgs_cat, e.mll, weight)
+	     
 			hmt_sv_new[hGroup][cat].Fill(fastMTTtransverseMass,1)
 			hmt_sv_new_FM[hGroup][cat].Fill(fastMTTtransverseMass,1)
 
@@ -2310,7 +2330,6 @@ for ig, group in enumerate(groups) :
 			    hm_sv_new_FMjBC[hGroup][cat].Fill(fastMTTmass,1 )
 
 	    nEvents += 1
-            #print '{0:s} \t {1:d} \t  {2:d}  {3:d}  {4:.3f} \t {5:.3f} \t {6:.3f} \t {7:.3f} \t {8:.6f} \t {9:.6f} \t {10:.6f} \t {11:.6f} \t {12:.6f}'.format(cat, e.lumi, e.run, e.evt, e.pt_1, e.pt_2, e.pt_3, e.pt_4, metcor, btag, e.L1PreFiringWeight_Nom, e.HTXS_Higgs_cat, e.mll ), weight
 
         
 	print("{0:30s} {1:7d} {2:10.6f} {3:5d}".format(nickName,nentries,sampleWeight[nickName],nEvents))
