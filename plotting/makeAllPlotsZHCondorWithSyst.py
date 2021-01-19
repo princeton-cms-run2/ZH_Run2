@@ -1247,7 +1247,7 @@ for ig, group in enumerate(groups) :
 
 	    if cat[2:] == 'mt' : 
                 if isSR : tight4 = e.idDeepTau2017v2p1VSjet_4 >=  WPSR and e.idDeepTau2017v2p1VSmu_4 >= mt_tau_vsmu and  e.idDeepTau2017v2p1VSe_4 >= mt_tau_vse
-                if isSS : tight4 = e.idDeepTau2017v2p1VSjet_4 >0 and e.idDeepTau2017v2p1VSmu_4 >= mt_tau_vsmu and  e.idDeepTau2017v2p1VSe_4 >= mt_tau_vse
+                if isSS : tight4 = e.idDeepTau2017v2p1VSjet_4 >0 and  e.idDeepTau2017v2p1VSmu_4 >= mt_tau_vsmu and  e.idDeepTau2017v2p1VSe_4 >= mt_tau_vse
 
                 #if isSS : tight4 = e.idDeepTau2017v2p1VSjet_4 ==1 
 	    if cat[2:] == 'et' : 
@@ -1282,25 +1282,27 @@ for ig, group in enumerate(groups) :
 		    dm4=e.decayMode_4
                     #Flavour of genParticle for MC matching to status==1 electrons or photons: 1 = prompt electron (including gamma*->mu mu), 15 = electron from prompt tau, 22 = prompt photon (likely conversion), 5 = electron from b, 4 = electron from c, 3 = electron from light or unknown, 0 = unmatched
                     if cat[2:]=='mt' :
-                        #if tight3 and (e.gen_match_3 == 15  or e.gen_match_3 ==1)  : isL3L = True
-                        if tight3 and (e.gen_match_3 != 15  )  : isL3L = True
+                        if tight3 and (e.gen_match_3 == 15  or e.gen_match_3 ==1)  : isL3L = True
+                        #if tight3 and (e.gen_match_3 != 15  )  : isL3L = True
+                        #if tight3 and (e.gen_match_3 == 15  )  : isL3L = True
+                        if tight4 and e.gen_match_4 != 0  : isL4L = True
                         #if tight3 and (e.gen_match_3 != 15 and e.gen_match_3 !=1 )  : isL3L = True
 
                     if cat[2:]=='et' :
-                        #if tight3 and (e.gen_match_3 == 15  or e.gen_match_3 ==1)  : isL3L = True
-                        if tight3 and (e.gen_match_3 == 15  )  : isL3L = True
+                        if tight3 and (e.gen_match_3 == 15  or e.gen_match_3 ==1)  : isL3L = True
+                        #if tight3 and (e.gen_match_3 == 15  )  : isL3L = True
+                        if tight4 and e.gen_match_4 != 0  : isL4L = True
                         #if tight3 and (e.gen_match_3 != 15 and e.gen_match_3 !=1 )  : isL3L = True
 
                     if cat[2:]=='tt' :
                         if tight3 and e.gen_match_3 != 0  : isL3L = True
+                        if tight4 and e.gen_match_4 != 0  : isL4L = True
                         #if tight3 and e.gen_match_3 == 0  : isL3L = True
 
-                    if cat[2:]=='tt' or cat[2:]=='mt' or cat[2:]=='et':
-                        if tight4 and e.gen_match_4 != 0  : isL4L = True
-                        #if tight4 and e.gen_match_4 ==0   : isL4L = True
 
 		    #print cat, tight3, e.gen_match_3, tight4, e.gen_match_4
-		    if isL3L or isL4L : 
+		    if isL3L or isL4L :
+                        if weight< 0. : weight=0
 			hGroup='Reducible'
                         fW1, fW2, fW0 = FF.getFakeWeightsvspTvsDM(cat[2:], e.pt_3, e.pt_4, WP, dm3, dm4)
 
@@ -1320,12 +1322,12 @@ for ig, group in enumerate(groups) :
             if group!='data' and hGroup!='Reducible' and  isLSR : continue
  
             if group != 'data' :
-                if  isSR :
+                if  isSR or isLSR :
                     if not tight1 or not tight2 : continue
                     if  not tight3 or not tight4 : continue
 
-                if  isLSR :
-                    if not tight1 or not tight2 : continue
+                #if  isLSR :
+                #    if not tight1 or not tight2 : continue
 
 
             if isSS : 

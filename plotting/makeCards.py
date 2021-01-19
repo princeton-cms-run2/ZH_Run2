@@ -141,9 +141,9 @@ for sys in sysall :
     #if sys =='Central' : 
     #    command='hadd -f {0:s} /eos/uscms/store/user/alkaloge/ZH/nAODv7/out_{2:s}/{1:s}/*_sys{3:s}*root'.format(haddFile,era, tag, sys)
     #else : 
-    #command='hadd -f {0:s} /eos/uscms/store/user/alkaloge/ZH/nAODv7/out_{2:s}/{1:s}/*_sys{3:s}*root  /eos/uscms/store/user/alkaloge/ZH/nAODv7/out_{2:s}/{1:s}/data_{1:s}_sysCentral.root'.format(haddFile,era, tag, sys)
+    command='hadd -f {0:s} /eos/uscms/store/user/alkaloge/ZH/nAODv7/out_{2:s}/{1:s}/*_sys{3:s}*root  /eos/uscms/store/user/alkaloge/ZH/nAODv7/out_{2:s}/{1:s}/data_{1:s}_sysCentral.root'.format(haddFile,era, tag, sys)
     command='hadd -f {0:s} /eos/uscms/store/user/alkaloge/ZH/nAODv7/out_{2:s}/{1:s}_{4:s}/*_sys{3:s}*.root  /eos/uscms/store/user/alkaloge/ZH/nAODv7/out_{2:s}/{1:s}_{4:s}/data/data_{1:s}_sys{3:s}.root  /eos/uscms/store/user/alkaloge/ZH/nAODv7/out_{2:s}/{1:s}_SS/*_sys{3:s}.root   '.format(haddFile,era, tag, sys,sign)
-    #command='hadd -f {0:s} /eos/uscms/store/user/alkaloge/ZH/nAODv7/out_{2:s}/{1:s}_{4:s}/*_sys{3:s}*.root  /eos/uscms/store/user/alkaloge/ZH/nAODv7/out_{2:s}/{1:s}_{4:s}/data/data_{1:s}_sys{3:s}.root  /eos/uscms/store/user/alkaloge/ZH/nAODv7/out_{2:s}/{1:s}_SS/*_sysCentral.root   /eos/uscms/store/user/alkaloge/ZH/nAODv7/out_pow_noL/{1:s}_OSS/*.root'.format(haddFile,era, tag, sys,sign)
+    command='hadd -f {0:s} /eos/uscms/store/user/alkaloge/ZH/nAODv7/out_{2:s}/{1:s}_{4:s}/*_sys{3:s}*.root  /eos/uscms/store/user/alkaloge/ZH/nAODv7/out_{2:s}/{1:s}_{4:s}/data/data_{1:s}_sys{3:s}.root  /eos/uscms/store/user/alkaloge/ZH/nAODv7/out_{2:s}/{1:s}_SS/*_sysCentral.root   /eos/uscms/store/user/alkaloge/ZH/nAODv7/out_pow_noL/{1:s}_OSS/*.root'.format(haddFile,era, tag, sys,sign)
 
     if sys in SignalSyst : 
         command='hadd -f {0:s} /eos/uscms/store/user/alkaloge/ZH/nAODv7/out_{2:s}/{1:s}_{4:s}/*_sys{3:s}*.root'.format(haddFile,era, tag, sys,sign)
@@ -229,6 +229,7 @@ for sys in sysall :
                     try : 
                         #print 'see ? ', plotVar, hname, h[igroup][icat].GetName(), h[igroup][icat].GetSum()
                         h[igroup][icat].Scale( RedSumOfW[icat][plotVar]/SSRSumOfW[icat][plotVar])
+                        #if  cat[2:]=='mt'  or cat[2:]=='et' :  h[igroup][icat].Scale(0.9)
                     except KeyError : continue
 
 
