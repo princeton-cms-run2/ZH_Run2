@@ -199,12 +199,23 @@ for i,j in enumerate(outTuple.allsystMET):
 
 Weights=Weights.Weights(args.year)
 
+lumiss=['509','1315','779','248','63','69']
+lumiss=['313','62', '159','1139']
+lumiss=['101']
 
-for count, e in enumerate(inTree) :
+for count, e in enumerate( inTree) :
+    
     if count % countMod == 0 :
         print("Count={0:d}".format(count))
         if count >= 10000 : countMod = 10000
     if count == nMax : break    
+    
+    #if count<320000 : continue
+    #if count>370000 : break
+
+    #if str(e.luminosityBlock) not in lumiss : continue
+    #if str(e.luminosityBlock) in lumiss : printOn = True
+    #if entry.run==325170 and entry.luminosityBlock==313 and entry.event==578438770 : printOn = True
 
     for cat in cats : 
         cutCounter[cat].count('All')

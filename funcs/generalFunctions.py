@@ -1,5 +1,4 @@
 # functions for H->tautau analysis 
-
 from ROOT import TLorentzVector
 from ROOT import TFile, TH1D, TCanvas, TGraph, kRed, kBlue, TLegend
 from math import sqrt, sin, cos, pi
@@ -84,13 +83,15 @@ def checkMETFlags(entry, year, isMC=False) :
     '''
 
 
-    if year== 2016 and (entry.Flag_goodVertices  == False or entry.Flag_HBHENoiseFilter == False or entry.Flag_HBHENoiseIsoFilter  == False or entry.Flag_EcalDeadCellTriggerPrimitiveFilter  == False or  entry.Flag_BadPFMuonFilter  == False or entry.Flag_ecalBadCalibFilter == False) : METfilter = True
+    #if year== 2016 and (entry.Flag_goodVertices  == False or entry.Flag_HBHENoiseFilter == False or entry.Flag_HBHENoiseIsoFilter  == False or entry.Flag_EcalDeadCellTriggerPrimitiveFilter  == False or  entry.Flag_BadPFMuonFilter  == False or entry.Flag_ecalBadCalibFilter == False) : METfilter = True
+    if year== 2016 and (entry.Flag_goodVertices  == False or entry.Flag_globalSuperTightHalo2016Filter == False or entry.Flag_HBHENoiseFilter == False or entry.Flag_HBHENoiseIsoFilter  == False or entry.Flag_EcalDeadCellTriggerPrimitiveFilter  == False or  entry.Flag_BadPFMuonFilter  == False) : METfilter = True
 
-    if year== 2017 and (entry.Flag_goodVertices  == False or entry.Flag_HBHENoiseFilter  == False or entry.Flag_HBHENoiseIsoFilter  == False or entry.Flag_EcalDeadCellTriggerPrimitiveFilter  == False or  entry.Flag_BadPFMuonFilter   == False or entry.Flag_ecalBadCalibFilter == False) : METfilter = True
+    if year== 2017 and (entry.Flag_goodVertices  == False or entry.Flag_globalSuperTightHalo2016Filter == False or entry.Flag_HBHENoiseFilter  == False or entry.Flag_HBHENoiseIsoFilter  == False or entry.Flag_EcalDeadCellTriggerPrimitiveFilter  == False or  entry.Flag_BadPFMuonFilter   == False or entry.Flag_ecalBadCalibFilterV2 == False) : METfilter = True
 
-    if year== 2018 and (entry.Flag_goodVertices  == False or entry.Flag_HBHENoiseFilter  == False or entry.Flag_HBHENoiseIsoFilter  == False or entry.Flag_EcalDeadCellTriggerPrimitiveFilter  == False or  entry.Flag_BadPFMuonFilter == False  or  entry.Flag_ecalBadCalibFilter == False) : METfilter = True
+    if year== 2018 and (entry.Flag_goodVertices  == False or entry.Flag_globalSuperTightHalo2016Filter == False or entry.Flag_HBHENoiseFilter  == False or entry.Flag_HBHENoiseIsoFilter  == False or entry.Flag_EcalDeadCellTriggerPrimitiveFilter  == False or  entry.Flag_BadPFMuonFilter == False  or  entry.Flag_ecalBadCalibFilterV2 == False) : METfilter = True
 
-    if not isMC and entry.Flag_globalSuperTightHalo2016Filter == False: METfilter = True
+
+    if not isMC and entry.Flag_eeBadScFilter == False : METfilter = True
 
     return METfilter
 
@@ -495,6 +496,10 @@ def findSingleLeptTrigger(goodLeptonList,entry,flavour,era, printOn=False):
     dRr=100.
     hltList=[]
     hltListSubL=[]
+
+    #lumiss=['509','1315','779','248','63','69']
+    #if str(entry.luminosityBlock) in lumiss :  printOn=True
+
     for iobj in range(0,entry.nTrigObj) :
 	dR=100.
 	dRr=100.
@@ -531,13 +536,19 @@ def findSingleLeptTrigger(goodLeptonList,entry,flavour,era, printOn=False):
 	    if entry.TrigObj_filterBits[iobj] &2 > 0:  isbit2 = True
 	    if entry.TrigObj_filterBits[iobj] &8 > 0 :  isbit8 = True
 
+        
+	    if printOn : 
+		print ''
+		print entry.luminosityBlock, entry.run, entry.event
+	    print("mm, iobj={7:d}, nTrigObj_id={0:d}, filter_bit={1:x}, dR_leading={2:f}, dR_subleading={3:f}, Muon_pT={4:f}, Muon_eta={5:f},  Muon_phi={6:f}, isbit2={8:b} isbit8={9:b}".format(entry.TrigObj_id[iobj], entry.TrigObj_filterBits[iobj], dR, dRr, entry.Muon_pt[leadL], abs(entry.Muon_eta[leadL]), entry.Muon_phi[leadL], iobj, isbit2, isbit8))
+	    print 'HLT_? ', HLT_IsoMu24, HLT_IsoMu27, entry.Muon_pt[leadL], abs(entry.Muon_eta[leadL]), isbit2
 
 	if dR < 0.5 : 
 
 
 	    if str(era)=='2016' and flavour == 'mm': 
 
-                if entry.Muon_pt[leadL] > 23 and abs(entry.Muon_eta[leadL]) < 2.1:
+                if entry.Muon_pt[leadL] > 23 and abs(entry.Muon_eta[leadL]) < 2.4:
                     if printOn : 
 			print ''
 			print entry.luminosityBlock, entry.run, entry.event
@@ -549,7 +560,7 @@ def findSingleLeptTrigger(goodLeptonList,entry,flavour,era, printOn=False):
 			hltList.append(True)
                         if printOn: print 'HLT_IsoMu22:', HLT_IsoMu22
 
-		    if (HLT_IsoMu22_eta2p1 and isbit2 )  :
+		    if (HLT_IsoMu22_eta2p1 and isbit2 and abs(entry.Muon_eta[leadL]) < 2.1)  :
 			hltList.append(True)
                         if printOn: print 'HLT_IsoMu22_eta2p1:', HLT_IsoMu22_eta2p1
 
@@ -557,16 +568,23 @@ def findSingleLeptTrigger(goodLeptonList,entry,flavour,era, printOn=False):
 			hltList.append(True)
                         if printOn: print 'HLT_IsoTkMu22:', HLT_IsoTkMu22
 
-		    if  (HLT_IsoTkMu22_eta2p1 and isbit8) :
+		    if  (HLT_IsoTkMu22_eta2p1 and isbit8 and abs(entry.Muon_eta[leadL]) < 2.1) :
 			hltList.append(True)
                         if printOn: print 'HLT_IsoTkMu22_eta2p1:', HLT_IsoTkMu22_eta2p1
 
 
 	    if era!='2016' and flavour == 'mm': 
-		if  HLT_IsoMu24  and entry.Muon_pt[leadL] > 25 and abs(entry.Muon_eta[leadL]) < 2.1 and isbit2 :
+
+		if printOn : 
+		    print ''
+		    print entry.luminosityBlock, entry.run, entry.event
+		    print("mm, iobj={7:d}, nTrigObj_id={0:d}, filter_bit={1:x}, dR_leading={2:f}, dR_subleading={3:f}, Muon_pT={4:f}, Muon_eta={5:f},  Muon_phi={6:f}, isbit2={8:b} isbit8={9:b}".format(entry.TrigObj_id[iobj], entry.TrigObj_filterBits[iobj], dR, dRr, entry.Muon_pt[leadL], abs(entry.Muon_eta[leadL]), entry.Muon_phi[leadL], iobj, isbit2, isbit8))
+                    print 'HLT_? ', HLT_IsoMu24, HLT_IsoMu27, entry.Muon_pt[leadL], abs(entry.Muon_eta[leadL]), isbit2
+
+		if  HLT_IsoMu24  and entry.Muon_pt[leadL] > 25 and abs(entry.Muon_eta[leadL]) < 2.4 and isbit2 :
 		    hltList.append(True)
 
-		if  HLT_IsoMu27 and entry.Muon_pt[leadL] > 25 and abs(entry.Muon_eta[leadL]) < 2.1 and isbit2 :
+		if  HLT_IsoMu27 and entry.Muon_pt[leadL] > 25 and abs(entry.Muon_eta[leadL]) < 2.4 and isbit2 :
 		    hltList.append(True)
 
 
@@ -603,7 +621,7 @@ def findSingleLeptTrigger(goodLeptonList,entry,flavour,era, printOn=False):
 
 
 	    if str(era)=='2016' and flavour == 'mm': 
-                if entry.Muon_pt[subleadL] > 23 and abs(entry.Muon_eta[subleadL])<2.1:
+                if entry.Muon_pt[subleadL] > 23 and abs(entry.Muon_eta[subleadL])<2.4:
                     #print("mm, subL nTrigObj_id={0:d}, filter_bit={1:x}, dR_leading={2:f}, dR_subleading={3:f}, Muon_pT={4:f}, Muon_eta={5:f},  Muon_phi={9:f}, iobj={6:d}, obj_pt={10:f}, obj_eta={7:f}, obj_phi={8:f}".format(entry.TrigObj_id[iobj], entry.TrigObj_filterBits[iobj], dR, dRr, entry.Muon_pt[subleadL], abs(entry.Muon_eta[subleadL]), iobj, entry.TrigObj_eta[iobj], entry.TrigObj_phi[iobj], entry.Muon_phi[subleadL], entry.TrigObj_pt[iobj])) 
                     if printOn: 
                         print("mm, subL iobj={7:d}, nTrigObj_id={0:d}, filter_bit={1:x}, dR_leading={2:f}, dR_subleading={3:f}, Muon_pT={4:f}, Muon_eta={5:f},  Muon_phi={6:f}, isbit2={8:b} isbit8={9:b}".format(entry.TrigObj_id[iobj], entry.TrigObj_filterBits[iobj], dR, dRr, entry.Muon_pt[subleadL], abs(entry.Muon_eta[subleadL]), entry.Muon_phi[subleadL], iobj, isbit2, isbit8)) 
@@ -612,7 +630,7 @@ def findSingleLeptTrigger(goodLeptonList,entry,flavour,era, printOn=False):
 			hltListSubL.append(True)
                         if printOn: print 'subL HLT_IsoMu22:', HLT_IsoMu22, 'dR', dRr
 
-		    if (HLT_IsoMu22_eta2p1 and isbit2)  :
+		    if (HLT_IsoMu22_eta2p1 and isbit2 and abs(entry.Muon_eta[subleadL])<2.1)  :
 			hltListSubL.append(True)
                         if printOn: print 'subL HLT_IsoMu22_eta2p1:', HLT_IsoMu22_eta2p1, 'dR', dRr
 
@@ -620,16 +638,23 @@ def findSingleLeptTrigger(goodLeptonList,entry,flavour,era, printOn=False):
 			hltListSubL.append(True)
                         if printOn: print 'subL HLT_IsoTkMu22:', HLT_IsoTkMu22, 'dR', dRr
 
-		    if  (HLT_IsoTkMu22_eta2p1 and isbit8) :
+		    if  (HLT_IsoTkMu22_eta2p1 and isbit8 and abs(entry.Muon_eta[subleadL])<2.1) :
 			hltListSubL.append(True)
                         if printOn: print 'subL HLT_IsoTkMu22_eta2p1:', HLT_IsoTkMu22_eta2p1, 'dR', dRr
 
 
-	    if era!='2016' and flavour == 'mm': 
-		if  HLT_IsoMu24  and entry.Muon_pt[subleadL] > 25 and abs(entry.Muon_eta[subleadL]) < 2.1 and isbit2 :
+	    if era!='2016' and flavour == 'mm':
+		if printOn : 
+		    print ''
+		    print entry.luminosityBlock, entry.run, entry.event
+		    print("mm sub, iobj={7:d}, nTrigObj_id={0:d}, filter_bit={1:x}, dR_leading={2:f}, dR_subleading={3:f}, Muon_pT={4:f}, Muon_eta={5:f},  Muon_phi={6:f}, isbit2={8:b} isbit8={9:b}".format(entry.TrigObj_id[iobj], entry.TrigObj_filterBits[iobj], dR, dRr, entry.Muon_pt[subleadL], abs(entry.Muon_eta[subleadL]), entry.Muon_phi[subleadL], iobj, isbit2, isbit8))
+                    print 'HLT_? sub', HLT_IsoMu24, HLT_IsoMu27, entry.Muon_pt[subleadL], abs(entry.Muon_eta[subleadL]), isbit2
+
+
+		if  HLT_IsoMu24  and entry.Muon_pt[subleadL] > 25 and abs(entry.Muon_eta[subleadL]) < 2.4 and isbit2 :
 		    hltListSubL.append(True)
 
-		if  HLT_IsoMu27 and entry.Muon_pt[subleadL] > 25 and abs(entry.Muon_eta[subleadL]) < 2.1 and isbit2 :
+		if  HLT_IsoMu27 and entry.Muon_pt[subleadL] > 25 and abs(entry.Muon_eta[subleadL]) < 2.4 and isbit2 :
 		    hltListSubL.append(True)
 
 

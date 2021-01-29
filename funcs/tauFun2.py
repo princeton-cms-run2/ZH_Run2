@@ -320,22 +320,75 @@ def getBestTauPair(channel, entry, tauList,printOn=False) :
     if printOn : print 'returning tt tauPairList', tauPairList
     return tauPairList
 
+def checkOverlapMuon(entry,i,j,checkDR=False,printOn=False) :
+
+    overlapM = False
+    
+    mt = selections['mmoverlap'] 
+    if mt['mu_type'] and (entry.Muon_isGlobal[i] or entry.Muon_isTracker[i]) : 
+	if mt['mu_ID'] and entry.Muon_mediumId[i] : 
+	    if abs(entry.Muon_dxy[i]) < mt['mu_dxy'] :
+		if abs(entry.Muon_dz[i]) < mt['mu_dz']:
+		    if entry.Muon_pt[i] > mt['mu_pt']:
+			if abs(entry.Muon_eta[i]) < mt['mu_eta']:
+			    if  mt['mu_iso_f'] and entry.Muon_pfRelIso04_all[i] < mt['mu_iso']:
+
+				if mt['mu_type'] and (entry.Muon_isGlobal[j] or entry.Muon_isTracker[j]) : 
+				    if mt['mu_ID'] and  entry.Muon_mediumId[j] : 
+					if abs(entry.Muon_dxy[j]) < mt['mu_dxy'] :
+					    if abs(entry.Muon_dz[j]) < mt['mu_dz']:
+						if entry.Muon_pt[j] > mt['mu_pt']:
+						    if abs(entry.Muon_eta[j]) < mt['mu_eta']:
+							if  mt['mu_iso_f'] and entry.Muon_pfRelIso04_all[j] < mt['mu_iso']:
+							    if printOn: print 'checking overlap....', i, j, DRobj(entry.Muon_eta[i],entry.Muon_phi[i], entry.Muon_eta[j],entry.Muon_phi[j]), entry.Muon_pt[i], entry.Muon_eta[i],entry.Muon_phi[i], 'j-->', entry.Muon_pt[j], entry.Muon_eta[j],entry.Muon_phi[j]
+							    if checkDR  :
+                                                                if DRobj(entry.Muon_eta[i],entry.Muon_phi[i], entry.Muon_eta[j],entry.Muon_phi[j])  < mt['ll_DR'] : overlapM = True
+                                                            else : overlapM = True
+                                                            
+    return overlapM
 
 def getMuTauPairs(entry,cat='mt',pairList=[],printOn=False) :
     """  tauFun.getMuTauPairs.py: return list of acceptable pairs
                                  of muons and taus 
     """
+    #if entry.luminosityBlock==313 and entry.run==325170: printOn = True
+    #if entry.luminosityBlock==62 and entry.run==321834: printOn = True
+    #if entry.luminosityBlock==636 and entry.run==323755 and entry.event==1159740274: printOn = True
+    #if entry.luminosityBlock==101 and entry.run==317340 and entry.event==131265718: printOn = True
+   
 
     if entry.nMuon < 1 or entry.nTau < 1:
-        if printOn : print("Entering getMuTauPairs failing nMuon={0:d} nTau={1:d}".format(entry.nMuon,entry.nTau))
+        #if printOn : print("Entering getMuTauPairs failing nMuon={0:d} nTau={1:d} lumi={2:s} run={3:s} event={4:s}".format(entry.nMuon,entry.nTau, str(entry.luminosityBlock), str(entry.run), str(entry.event)))
         return []
     if cat == 'mmmt' and entry.nMuon < 3: return []
 
     muTauPairs = []
     mt = selections['mt'] # H->tau(mu)+tau(h) selections
-    if printOn : print("Entering tauFun.getMuTauPairs() nMuon={0:d} nTau={1:d}".format(entry.nMuon,entry.nTau))
+    #if printOn : print("Entering tauFun.getMuTauPairs() nMuon={0:d} nTau={1:d}".format(entry.nMuon,entry.nTau))
+    #printOn=True
+    if printOn : print("Entering getMuTauPairs some info nMuon={0:d} nTau={1:d} lumi={2:s} run={3:s} event={4:s}".format(entry.nMuon,entry.nTau, str(entry.luminosityBlock), str(entry.run), str(entry.event)))
+    leptOverlap = False
+    if (cat =='mmmt' and entry.nMuon>3) or (cat=='eemt' and entry.nMuon>1):
+	for i in range(entry.nMuon):
+	
+	    if printOn : print 'checking pT with findZ nMuon', entry.nMuon, 'i', i, entry.run, entry.luminosityBlock, entry.event, 'ZpT', pairList[0].Pt(), pairList[1].Pt(), 'vs', entry.Muon_pt[i] ,  pairList[0].Pt()-entry.Muon_pt[i], pairList[1].Pt()-entry.Muon_pt[i], DRobj(entry.Muon_eta[i],entry.Muon_phi[i], pairList[0].Eta(), pairList[0].Phi()), DRobj(entry.Muon_eta[i],entry.Muon_phi[i], pairList[1].Eta(), pairList[1].Phi())
+
+	    if DRobj(entry.Muon_eta[i],entry.Muon_phi[i], pairList[0].Eta(), pairList[0].Phi())<0.1 or DRobj(entry.Muon_eta[i],entry.Muon_phi[i], pairList[1].Eta(), pairList[1].Phi())<0.1 :
+                print 'found a match on findZ', i, entry.Muon_pt[i]
+
+                continue# make sure that you don't consider the findZ leptons
+	    for j in range(i+1, entry.nMuon):
+	        #if printOn : print 'checking in loop pT with findZ nMuon', entry.nMuon, 'j', j, entry.run, entry.luminosityBlock, entry.event, pairList[0].Pt(), pairList[1].Pt(), 'vs', entry.Muon_pt[j] 
+	        if DRobj(entry.Muon_eta[j],entry.Muon_phi[j], pairList[0].Eta(), pairList[0].Phi())<0.1 or DRobj(entry.Muon_eta[j],entry.Muon_phi[j], pairList[1].Eta(), pairList[1].Phi())<0.1 :
+                    print 'found a match on findZ j now ', j, entry.Muon_pt[i]
+                    continue
+
+		if checkOverlapMuon(entry,i,j) : 
+		    if printOn : print 'Muons ', i, j, 'overlaping ---->', entry.Muon_pt[i], entry.Muon_pt[j], DRobj(entry.Muon_eta[i],entry.Muon_phi[i], entry.Muon_eta[j],entry.Muon_phi[j]), entry.run, entry.luminosityBlock, entry.event
+		    return []
+
     for i in range(entry.nMuon):
-        
+
         # apply tau(mu) selections
         if mt['mu_type']:
             if not (entry.Muon_isGlobal[i] or entry.Muon_isTracker[i]) :
@@ -364,10 +417,13 @@ def getMuTauPairs(entry,cat='mt',pairList=[],printOn=False) :
 
         DR0 = lTauDR(mu_eta,mu_phi,pairList[0]) # l1 vs. tau(mu)
         DR1 = lTauDR(mu_eta,mu_phi,pairList[1]) # l2 vs. tau(mu)
+
+        if printOn : print 'some info----------------', i, entry.Muon_pt[i], entry.Muon_eta[i], entry.Muon_dxy[i], entry.Muon_dz[i], entry.Muon_mediumId[i], entry.Muon_isGlobal[i], entry.Muon_isTracker[i], entry.Muon_pfRelIso04_all[i], DR0, DR1
+
         if DR0 < mt['ll_DR'] or DR1 < mt['ll_DR']:
             if printOn : print("    fail muon DR  DR0={0:f} DR1={1:f} for muon={2:s} vs 0.pT={3:f} vs 1.pT={4:f}".format(DR0,DR1, str(i), pairList[0].Pt(), pairList[1].Pt()))
             continue
-        if printOn : print("    Good muon i={0:d}".format(i))
+        if printOn : print("    Good muon i={0:d} lumi={1:s} run={2:s} event={3:s}".format(i, str(entry.luminosityBlock), str(entry.run), str(entry.event)), entry.Muon_pt[i], entry.Muon_mediumId[i], entry.Muon_pfRelIso04_all[i])
                         
         for j in range(entry.nTau):
 
@@ -416,7 +472,7 @@ def getMuTauPairs(entry,cat='mt',pairList=[],printOn=False) :
             DR0 = lTauDR(tau_eta, tau_phi, pairList[0]) #l1 vs. tau(h)
             DR1 = lTauDR(tau_eta, tau_phi, pairList[1]) #l2 vs. tau(h)
             if DR0 < mt['mt_DR'] or DR1 < mt['mt_DR']:
-                if printOn : print("        fail DR  DR0={0:f} DR1={1:f} for tau={2:i}, mu={3:d}".format(DR0,DR1, j ))
+                if printOn : print("        fail DR  DR0={0:f} DR1={1:f} for tau={2:i}, mu={3:i}".format(DR0,DR1, j ))
                 continue
             if printOn: print("        Tau j={0:d} passes all cuts.".format(j))
             muTauPairs.append([i,j])
@@ -627,6 +683,39 @@ def getBestEMuTauPair(entry,cat,pairList=[],printOn=False) :
 
     return tauPairList
 
+def checkOverlapElectron(entry,i,j, checkDR=False, printOn=False) :
+
+    overlapEl = False
+
+    et = selections['eeoverlap'] # selections for H->tau(ele)+tau(h)
+  
+    if printOn : print("Electron i={0:d}".format(i))
+
+    if abs(entry.Electron_dxy[i]) < et['ele_dxy']:
+        if abs(entry.Electron_dz[i]) < et['ele_dz']:
+            if et['ele_ID'] and entry.Electron_mvaFall17V2noIso_WP90[i]:
+                if ord(entry.Electron_lostHits[i]) < et['ele_lostHits']:
+                    if et['ele_convVeto'] and  entry.Electron_convVeto[i]:
+                        if et['ele_iso_f'] and  entry.Electron_pfRelIso03_all[i] < et['ele_iso']:
+                            if entry.Electron_pt[i] > et['ele_pt']:
+                                if abs(entry.Electron_eta[i]) < et['ele_eta']:
+
+				    if abs(entry.Electron_dxy[j]) < et['ele_dxy']:
+					if abs(entry.Electron_dz[j]) < et['ele_dz']:
+					    if et['ele_ID'] and entry.Electron_mvaFall17V2noIso_WP90[j]:
+						if ord(entry.Electron_lostHits[j]) < et['ele_lostHits']:
+						    if et['ele_convVeto'] and  entry.Electron_convVeto[j]:
+							if et['ele_iso_f'] and  entry.Electron_pfRelIso03_all[j] < et['ele_iso']:
+							    if entry.Electron_pt[j] > et['ele_pt']:
+								if abs(entry.Electron_eta[j]) < et['ele_eta']:
+
+								    if printOn: print 'checking overlap....', i, j, DRobj(entry.Electron_eta[i],entry.Electron_phi[i], entry.Electron_eta[j],entry.Electron_phi[j])
+								    if checkDR : 
+                                                                        if DRobj(entry.Electron_eta[i],entry.Electron_phi[i], entry.Electron_eta[j],entry.Electron_phi[j])  < et['ll_DR'] : overlapEl = True
+                                                                    else : overlapEl = True
+    return overlapEl
+
+
 def getETauPairs(entry,cat='et',pairList=[],printOn=False) :
     """ tauFun.getETauPairs(): get suitable pairs of 
                                H -> tau(ele) + tau(h) 
@@ -637,7 +726,18 @@ def getETauPairs(entry,cat='et',pairList=[],printOn=False) :
     if cat == 'eeet' and entry.nElectron < 3: return []
     
     eTauPairs = []
+    leptOverlap = False
     et = selections['et'] # selections for H->tau(ele)+tau(h)
+    if (cat =='eeet' and entry.nElectron>3) or (cat=='mmet' and entry.nElectron>1):
+	for i in range(entry.nElectron) :
+	    #if entry.Electron_pt[i]==pairList[0].Pt() or entry.Electron_pt[i]==pairList[1].Pt() : continue # make sure that you don't consider the findZ leptons
+	    if DRobj(entry.Electron_eta[i],entry.Electron_phi[i], pairList[0].Eta(), pairList[0].Phi())<0.1 or DRobj(entry.Electron_eta[i],entry.Electron_phi[i], pairList[1].Eta(), pairList[1].Phi())<0.1 : continue
+	    for j in range(i+1,entry.nElectron) :
+		#if entry.Electron_pt[j]==pairList[0].Pt() or entry.Electron_pt[j]==pairList[1].Pt() : continue# make sure that you don't consider the findZ leptons
+	        if DRobj(entry.Electron_eta[j],entry.Electron_phi[j], pairList[0].Eta(), pairList[0].Phi())<0.1 or DRobj(entry.Electron_eta[j],entry.Electron_phi[j], pairList[1].Eta(), pairList[1].Phi())<0.1 : continue
+		if checkOverlapElectron(entry,i,j): return []
+
+
     for i in range(entry.nElectron) :
 
         # selections for tau(ele)
@@ -801,8 +901,8 @@ def getEEPairs(entry, cat='ee', pairList=[], printOn=False):
     
     # get a list of suitable electrons
     for i in range(entry.nElectron):
-        
-        if printOn: print("Electron i={0:d}".format(i))
+
+        if printOn: print("Electron i={0:d}".format(i),entry.luminosityBlock,  entry.run, entry.event)
         
         if abs(entry.Electron_dxy[i]) > ee['ele_dxy']:
             if printOn: print("\t failed dxy={0:f}".format(entry.Electron_dxy[i]))
@@ -1017,6 +1117,7 @@ def goodMuon(entry, j ):
     if mm['mu_iso_f'] and entry.Muon_pfRelIso04_all[j] >  mm['mu_iso']: return False
     if mm['mu_ID'] :
         if not (entry.Muon_mediumId[j] or entry.Muon_tightId[j]): return False
+        #if not (entry.Muon_mediumId[j]): return False
     if mm['mu_ID'] and not entry.Muon_looseId[j] : return False
     if abs(entry.Muon_dxy[j]) > mm['mu_dxy']: return False 
     if abs(entry.Muon_dz[j]) > mm['mu_dz']: return False
@@ -1042,6 +1143,9 @@ def goodElectron(entry, j) :
     if abs(entry.Electron_eta[j]) > ee['ele_eta']: return False
     if abs(entry.Electron_dxy[j]) > ee['ele_dxy']: return False
     if abs(entry.Electron_dz[j]) > ee['ele_dz']: return False
+
+    #if entry.luminosityBlock==159 and entry.run==320853 and entry.event==197659973: print entry.nElectron, j, 'pt: ', entry.Electron_pt[j], 'eta :', abs(entry.Electron_eta[j]), 'hits: ', ord(entry.Electron_lostHits[j]), 'iso :', entry.Electron_pfRelIso03_all[j], 'veto: ',entry.Electron_convVeto[j], 'iD: ', entry.Electron_mvaFall17V2noIso_WP90[j], entry.event
+
     if ord(entry.Electron_lostHits[j]) > ee['ele_lostHits']: return False
     if ee['ele_iso_f'] and entry.Electron_pfRelIso03_all[j] >  ee['ele_iso']: return False
     if ee['ele_convVeto']:
