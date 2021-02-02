@@ -374,13 +374,13 @@ def getMuTauPairs(entry,cat='mt',pairList=[],printOn=False) :
 	    if printOn : print 'checking pT with findZ nMuon', entry.nMuon, 'i', i, entry.run, entry.luminosityBlock, entry.event, 'ZpT', pairList[0].Pt(), pairList[1].Pt(), 'vs', entry.Muon_pt[i] ,  pairList[0].Pt()-entry.Muon_pt[i], pairList[1].Pt()-entry.Muon_pt[i], DRobj(entry.Muon_eta[i],entry.Muon_phi[i], pairList[0].Eta(), pairList[0].Phi()), DRobj(entry.Muon_eta[i],entry.Muon_phi[i], pairList[1].Eta(), pairList[1].Phi())
 
 	    if DRobj(entry.Muon_eta[i],entry.Muon_phi[i], pairList[0].Eta(), pairList[0].Phi())<0.1 or DRobj(entry.Muon_eta[i],entry.Muon_phi[i], pairList[1].Eta(), pairList[1].Phi())<0.1 :
-                print 'found a match on findZ', i, entry.Muon_pt[i]
+                #print 'found a match on findZ', i, entry.Muon_pt[i]
 
                 continue# make sure that you don't consider the findZ leptons
 	    for j in range(i+1, entry.nMuon):
 	        #if printOn : print 'checking in loop pT with findZ nMuon', entry.nMuon, 'j', j, entry.run, entry.luminosityBlock, entry.event, pairList[0].Pt(), pairList[1].Pt(), 'vs', entry.Muon_pt[j] 
 	        if DRobj(entry.Muon_eta[j],entry.Muon_phi[j], pairList[0].Eta(), pairList[0].Phi())<0.1 or DRobj(entry.Muon_eta[j],entry.Muon_phi[j], pairList[1].Eta(), pairList[1].Phi())<0.1 :
-                    print 'found a match on findZ j now ', j, entry.Muon_pt[i]
+                    #print 'found a match on findZ j now ', j, entry.Muon_pt[i]
                     continue
 
 		if checkOverlapMuon(entry,i,j) : 
