@@ -289,7 +289,7 @@ dobtag = str(args.doBTAG.lower()) == 'yes' or str(args.doBTAG) == '1'
 if str(args.gType) !='data' and dobtag :
 
     gInterpreter.ProcessLine('.L BTagCalibrationStandalone.cpp+') 
-    calib = ROOT.BTagCalibration('csvv1', 'DeepCSV_{0:s}_full2.csv'.format(era))
+    calib = ROOT.BTagCalibration('csvv1', 'DeepCSV_{0:s}.csv'.format(era))
     # making a std::vector<std::string>> in python is a bit awkward, 
     # but works with root (needed to load other sys types):
     v_sys = getattr(ROOT, 'vector<string>')()
@@ -299,7 +299,7 @@ if str(args.gType) !='data' and dobtag :
 
     # make a reader instance and load the sf data
     reader_b = ROOT.BTagCalibrationReader(
-        3,             # 0 is for loose op, 1: medium, 2: tight, 3: discr. reshaping
+        1,             # 0 is for loose op, 1: medium, 2: tight, 3: discr. reshaping
 	"central",     # central systematic type
 	v_sys,         # vector of other sys. types
     )    
@@ -308,19 +308,22 @@ if str(args.gType) !='data' and dobtag :
     reader_b.load(
 	calib, 
 	0,         # 0 is for b flavour, 1: FLAV_C, 2: FLAV_UDSG 
-	"iterativefit"      # measurement type
+	#"iterativefit"      # measurement type
+	"incl"      # measurement type
     )
 
     reader_b.load(
 	calib, 
 	1,         # 0 is for b flavour, 1: FLAV_C, 2: FLAV_UDSG 
-	"iterativefit"      # measurement type
+	#"iterativefit"      # measurement type
+	"incl"      # measurement type
     )
 
     reader_b.load(
 	calib, 
 	2,         # 0 is for b flavour, 1: FLAV_C, 2: FLAV_UDSG 
-	"iterativefit"      # measurement type
+	#"iterativefit"      # measurement type
+	"incl"      # measurement type
     )
 
 tt_tau_vse = 4
@@ -1095,6 +1098,7 @@ for ig, group in enumerate(groups) :
 		nbtagM = getattr(e, 'nbtagM_nom', None)
 		nbtagL = getattr(e, 'nbtagL_nom', None)
 		jCSV = getattr(e, 'btagDeep_nom', None)
+		jCSV = getattr(e, 'btagDeep', None)
                 
 
 
@@ -1425,7 +1429,6 @@ for ig, group in enumerate(groups) :
             
             if DD[cat].checkEvent(e,cat) : 
 		if printDebug: print 'failed DD check', cat, e.lumi, e.run, e.evt, e.mll
-		print 'failed DD check', cat, e.lumi, e.run, e.evt, e.mll
                 continue 
 
             if isSS : hGroup = 'SSR'
@@ -1437,9 +1440,9 @@ for ig, group in enumerate(groups) :
 		if nj > 0 :
 		    #for ib in range(0, int(nj)) :
                     #    print nj, ib, e.jeta[ib], e.jpt[ib], i, cat
-
-		    for ib in range(0, int(nj+1)) :
+		    for ib in range(0, int(nj)) :
                         try : 
+                            #print 'njets', nj, ib, reader_b.eval_auto_bounds( 'central', 0,    abs(jeta[ib]), jpt[ib], jCSV[ib]),  reader_b.eval_auto_bounds( 'central', 1,    abs(jeta[ib]), jpt[ib], jCSV[ib]), reader_b.eval_auto_bounds( 'central', 2,    abs(jeta[ib]), jpt[ib], jCSV[ib]), 'eta:', abs(jeta[ib]), 'pt:', jpt[ib], 'dCSV:', jCSV[ib], 'flavour:', abs(jflavour[ib]), e.lumi, e.run, e.evt
 			    if abs(jflavour[ib]) == 5 : 
 				btag_sf *= reader_b.eval_auto_bounds( 'central', 0,    abs(jeta[ib]), jpt[ib], jCSV[ib])
 			    elif abs(jflavour[ib]) == 4 : 
@@ -1448,7 +1451,8 @@ for ig, group in enumerate(groups) :
 			    #if abs(jflavour[ib]) < 4 or abs(jflavour[ib]) == 21 :
 			    else:
 				#btag_sf *= reader_light.eval_auto_bounds( 'central', 2,    abs(jeta[ib]), jpt[ib])
-				if abs(jflavour[ib]) != 0 : btag_sf *= reader_b.eval_auto_bounds( 'central', 2,    abs(jeta[ib]), jpt[ib], jCSV[ib])
+				if abs(jflavour[ib]) != 0 and  abs(jflavour[ib]) != 5 and  abs(jflavour[ib]) != 4 : btag_sf *= reader_b.eval_auto_bounds( 'central', 2,    abs(jeta[ib]), jpt[ib], jCSV[ib])
+                                
                             #print '---------------------', ib, nj, btag_sf
 
                         except IndexError : btag_sf *= 1.

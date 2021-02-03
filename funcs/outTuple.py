@@ -92,24 +92,24 @@ class outTuple() :
 		    if 'nom' in jes :   
 			self.allsystJets.append(jes)
 			self.list_of_arraysJetsNjets.append( array('f',[0]))
-			self.list_of_arraysJetsNbtagDeep.append( array('f',[0]))
 			self.list_of_arraysJetsNbtagL.append( array('f',[0]))
 			self.list_of_arraysJetsNbtagM.append( array('f',[0]))
 			self.list_of_arraysJetsNbtagT.append( array('f',[0]))
-			self.list_of_arraysJetsFlavour.append( array('f',[-9.99]*15))
-			self.list_of_arraysJetsEta.append( array('f',[-9.99]*15))
-			self.list_of_arraysJetsPt.append( array('f',[-9.99]*15))
+			self.list_of_arraysJetsFlavour.append( array('f',[-9.99]*12))
+			self.list_of_arraysJetsEta.append( array('f',[-9.99]*12))
+			self.list_of_arraysJetsPt.append( array('f',[-9.99]*12))
+			self.list_of_arraysJetsNbtagDeep.append( array('f',[-9.99]*12))
 		    else :   
 		        for var in varss :
 			    self.allsystJets.append(jes+var)
 			    self.list_of_arraysJetsNjets.append( array('f',[0]))
-			    self.list_of_arraysJetsNbtagDeep.append( array('f',[0]))
 			    self.list_of_arraysJetsNbtagL.append( array('f',[0]))
 			    self.list_of_arraysJetsNbtagM.append( array('f',[0]))
 			    self.list_of_arraysJetsNbtagT.append( array('f',[0]))
-			    self.list_of_arraysJetsFlavour.append( array('f',[-9.99]*15))
-			    self.list_of_arraysJetsEta.append( array('f',[-9.99]*15))
-			    self.list_of_arraysJetsPt.append( array('f',[-9.99]*15))
+			    self.list_of_arraysJetsFlavour.append( array('f',[-9.99]*12))
+			    self.list_of_arraysJetsEta.append( array('f',[-9.99]*12))
+			    self.list_of_arraysJetsPt.append( array('f',[-9.99]*12))
+			    self.list_of_arraysJetsNbtagDeep.append( array('f',[-9.99]*12))
                      
                 
 	    #for i_ in self.allsystMET :  self.list_of_arrays.append(array('f', [ 0 ]))
@@ -364,7 +364,6 @@ class outTuple() :
         self.nbtagM     = array('f',[0])
         self.nbtagT     = array('f',[0])
 
-        self.btagWeightDeepCSVB     = array('f',[0])
         self.HTXS_Higgs_cat     = array('l',[0])
         self.HTXS_Higgs_pt     = array('f',[0])
 
@@ -392,10 +391,10 @@ class outTuple() :
         self.mediumId_2       = array('f',[0])
         self.mediumPromptId_2       = array('f',[0])
         self.looseId_2       = array('f',[0])
-        self.jflavour     = array('f',[-9.99]*15)
-        self.jeta     = array('f',[-9.99]*15)
-        self.jpt     = array('f',[-9.99]*15)
-        self.btagDeep     = array('f',[-9.99]*15)
+        self.jflavour     = array('f',[-9.99]*12)
+        self.jeta     = array('f',[-9.99]*12)
+        self.jpt     = array('f',[-9.99]*12)
+        self.btagDeep     = array('f',[-9.99]*12)
 
         self.bpt_1     = array('f',[0]*8)
         self.bpt_1_tr  = array('f',[0]*8)
@@ -654,15 +653,14 @@ class outTuple() :
         self.t.Branch('nbtagL', self.nbtagL, 'nbtagL/F')
         self.t.Branch('nbtagM', self.nbtagM, 'nbtagM/F')
         self.t.Branch('nbtagT', self.nbtagT, 'nbtagT/F')
-        self.t.Branch('btagWeightDeepCSVB', self.btagWeightDeepCSVB, 'btagWeightDeepCSVB/F')
         self.t.Branch('HTXS_Higgs_cat', self.HTXS_Higgs_cat, 'HTXS_Higgs_cat/l')
         self.t.Branch('HTXS_Higgs_pt', self.HTXS_Higgs_pt, 'HTXS_Higgs_pt/F')
 
 
-        self.t.Branch('jflavour',     self.jflavour,     'jflavour[15]/F' )
-        self.t.Branch('jeta',     self.jeta,     'jeta[15]/F' )
-        self.t.Branch('jpt',     self.jpt,     'jpt[15]/F' )
-        self.t.Branch('btagDeep', self.btagDeep, 'btagDeep[15]/F')
+        self.t.Branch('jflavour',     self.jflavour,     'jflavour[12]/F' )
+        self.t.Branch('jeta',     self.jeta,     'jeta[12]/F' )
+        self.t.Branch('jpt',     self.jpt,     'jpt[12]/F' )
+        self.t.Branch('btagDeep', self.btagDeep, 'btagDeep[12]/F')
 
         '''
         self.t.Branch('jpt_1',     self.jpt_1,     'jpt_1/F' )
@@ -714,13 +712,13 @@ class outTuple() :
 
 		for i, v in enumerate(self.allsystJets):
 		    self.t.Branch('njets{0:s}'.format(v), self.list_of_arraysJetsNjets[i], 'njets{0:s}/F'.format(v))
-		    self.t.Branch('btagDeep{0:s}'.format(v), self.list_of_arraysJetsNbtagDeep[i], 'btagDeep{0:s}[15]/F'.format(v))
 		    self.t.Branch('nbtagL{0:s}'.format(v), self.list_of_arraysJetsNbtagL[i], 'nbtagL{0:s}/F'.format(v))
 		    self.t.Branch('nbtagM{0:s}'.format(v), self.list_of_arraysJetsNbtagM[i], 'nbtagM{0:s}/F'.format(v))
 		    self.t.Branch('nbtagT{0:s}'.format(v), self.list_of_arraysJetsNbtagT[i], 'nbtagT{0:s}/F'.format(v))
-		    self.t.Branch('jflavour{0:s}'.format(v), self.list_of_arraysJetsFlavour[i], 'jflavour{0:s}[15]/F'.format(v))
-		    self.t.Branch('jpt{0:s}'.format(v), self.list_of_arraysJetsPt[i], 'jpt{0:s}[15]/F'.format(v))
-		    self.t.Branch('jeta{0:s}'.format(v), self.list_of_arraysJetsEta[i], 'jeta{0:s}[15]/F'.format(v))
+		    self.t.Branch('jflavour{0:s}'.format(v), self.list_of_arraysJetsFlavour[i], 'jflavour{0:s}[12]/F'.format(v))
+		    self.t.Branch('jpt{0:s}'.format(v), self.list_of_arraysJetsPt[i], 'jpt{0:s}[12]/F'.format(v))
+		    self.t.Branch('jeta{0:s}'.format(v), self.list_of_arraysJetsEta[i], 'jeta{0:s}[12]/F'.format(v))
+		    self.t.Branch('btagDeep{0:s}'.format(v), self.list_of_arraysJetsNbtagDeep[i], 'btagDeep{0:s}[12]/F'.format(v))
 
 
 
@@ -1804,7 +1802,6 @@ class outTuple() :
                     #print 'jessyst', systematic, len(jetList), cat
 
 	            self.list_of_arraysJetsNjets[i][0] = len(jetList)
-	            self.list_of_arraysJetsNbtagDeep[i][0] = len(bTagListDeep)
 	            self.list_of_arraysJetsNbtagL[i][0] = len(bJetListL)
 	            self.list_of_arraysJetsNbtagM[i][0] = len(bJetListM)
 	            self.list_of_arraysJetsNbtagT[i][0] = len(bJetListT)
@@ -1812,6 +1809,7 @@ class outTuple() :
 			self.list_of_arraysJetsPt[i][ifl] = jetListPt[ifl]
 			self.list_of_arraysJetsEta[i][ifl] = jetListEta[ifl]
 			self.list_of_arraysJetsFlavour[i][ifl] = jetListFlav[ifl]
+	                self.list_of_arraysJetsNbtagDeep[i][ifl] = bTagListDeep[ifl]
 
 
         #fill the un-corrected or just in the case you dont care to doUncertainties       
