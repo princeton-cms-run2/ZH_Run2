@@ -281,7 +281,10 @@ if str(args.inSystematics) not in sysall :
     exit() 
 
 systematic=str(args.inSystematics)
-#systematic='jerUp'a
+varTID =''
+if 'tauid' in systematic  and 'Up' in systematic : varTID = 'Up'
+if 'tauid' in systematic  and 'Down' in systematic : varTID = 'Down'
+
 
 dobtag = str(args.doBTAG.lower()) == 'yes' or str(args.doBTAG) == '1' 
 #if 'ZH' in str(args.gType) or 'HWW' in str(args.gType) :  dobtag=False
@@ -299,7 +302,7 @@ if str(args.gType) !='data' and dobtag :
 
     # make a reader instance and load the sf data
     reader_b = ROOT.BTagCalibrationReader(
-        1,             # 0 is for loose op, 1: medium, 2: tight, 3: discr. reshaping
+        3,             # 0 is for loose op, 1: medium, 2: tight, 3: discr. reshaping
 	"central",     # central systematic type
 	v_sys,         # vector of other sys. types
     )    
@@ -308,22 +311,22 @@ if str(args.gType) !='data' and dobtag :
     reader_b.load(
 	calib, 
 	0,         # 0 is for b flavour, 1: FLAV_C, 2: FLAV_UDSG 
-	#"iterativefit"      # measurement type
-	"incl"      # measurement type
+	"iterativefit"      # measurement type
+	#"incl"      # measurement type
     )
 
     reader_b.load(
 	calib, 
 	1,         # 0 is for b flavour, 1: FLAV_C, 2: FLAV_UDSG 
-	#"iterativefit"      # measurement type
-	"incl"      # measurement type
+	"iterativefit"      # measurement type
+	#"incl"      # measurement type
     )
 
     reader_b.load(
 	calib, 
 	2,         # 0 is for b flavour, 1: FLAV_C, 2: FLAV_UDSG 
-	#"iterativefit"      # measurement type
-	"incl"      # measurement type
+	"iterativefit"      # measurement type
+	#"incl"      # measurement type
     )
 
 tt_tau_vse = 4
@@ -677,6 +680,7 @@ festool = TauFESTool(campaign[args.year],'DeepTau2017v2p1VSe', FESSF['dir'])
 
 #antiEleSFToolVVL = TauIDSFTool(campaign[args.year],'DeepTau2017v2p1VSe','VVLoose')
 #antiMuSFToolVL  = TauIDSFTool(campaign[args.year],'DeepTau2017v2p1VSmu','VLoose')
+
 antiEleSFToolVL = TauIDSFTool(campaign[args.year],'DeepTau2017v2p1VSe','VLoose')
 antiMuSFToolVL  = TauIDSFTool(campaign[args.year],'DeepTau2017v2p1VSmu','VLoose')
 
@@ -1041,7 +1045,7 @@ for ig, group in enumerate(groups) :
         else :     print 'Will run for 0',  '---> to ', inTree.GetEntries(), ' events now....'
         printOn=False
         printDebug=False
-        lumiss=['509','1315','779','248','63','69']
+        lumiss=['509','1315','779','248','63','69','35']
         if printOn : 
             print 'cat \t lumi \t run \t  event  \t pt_1 \t pt_2 \t pt_3 \t pt_4 \t  met  \t  nbtag \t  btag_w \t pu_w \t gen_w \t prefire_w \t HTXS \t mll'
 
@@ -1063,7 +1067,9 @@ for ig, group in enumerate(groups) :
 	    weightFM=1.
             weightTID = 1.
 	    ww = 1.
-            btag_sf = 1.
+            btag_sfB = 1.
+            btag_sfHF = 1.
+            btag_sfLF = 1.
             lepton_sf = 1.
             cat = cats[e.cat]
             icat = catToNumber(cat)
@@ -1073,8 +1079,8 @@ for ig, group in enumerate(groups) :
             tight4 = True
             isfakemc1 = False
             isfakemc2 = False
-	    p3 = e.pt_3
-	    p4 = e.pt_4
+	    #p3 = e.pt_3
+	    #p4 = e.pt_4
 
 	    if cat[2:] == 'em'  : continue
         
@@ -1444,21 +1450,28 @@ for ig, group in enumerate(groups) :
                         try : 
                             #print 'njets', nj, ib, reader_b.eval_auto_bounds( 'central', 0,    abs(jeta[ib]), jpt[ib], jCSV[ib]),  reader_b.eval_auto_bounds( 'central', 1,    abs(jeta[ib]), jpt[ib], jCSV[ib]), reader_b.eval_auto_bounds( 'central', 2,    abs(jeta[ib]), jpt[ib], jCSV[ib]), 'eta:', abs(jeta[ib]), 'pt:', jpt[ib], 'dCSV:', jCSV[ib], 'flavour:', abs(jflavour[ib]), e.lumi, e.run, e.evt
 			    if abs(jflavour[ib]) == 5 : 
-				btag_sf *= reader_b.eval_auto_bounds( 'central', 0,    abs(jeta[ib]), jpt[ib], jCSV[ib])
-			    elif abs(jflavour[ib]) == 4 : 
-				#btag_sf *= reader_c.eval_auto_bounds( 'central', 1,    abs(jeta[ib]), jpt[ib])
-				btag_sf *= reader_b.eval_auto_bounds( 'central', 1,    abs(jeta[ib]), jpt[ib], jCSV[ib])
-			    #if abs(jflavour[ib]) < 4 or abs(jflavour[ib]) == 21 :
-			    else:
-				#btag_sf *= reader_light.eval_auto_bounds( 'central', 2,    abs(jeta[ib]), jpt[ib])
-				if abs(jflavour[ib]) != 0 and  abs(jflavour[ib]) != 5 and  abs(jflavour[ib]) != 4 : btag_sf *= reader_b.eval_auto_bounds( 'central', 2,    abs(jeta[ib]), jpt[ib], jCSV[ib])
-                                
-                            #print '---------------------', ib, nj, btag_sf
+				btag_sfB = reader_b.eval_auto_bounds( 'central', 0,    abs(jeta[ib]), jpt[ib], jCSV[ib])  
+                                if btag_sfB !=0 : 
+                                    weight *=btag_sfB 
+                                    weightFM *=btag_sfB 
 
-                        except IndexError : btag_sf *= 1.
+				#if reader_b.eval_auto_bounds( 'central', 0,    abs(jeta[ib]), jpt[ib], jCSV[ib]) !=0 : btag_sfB = reader_b.eval_auto_bounds( 'central', 0,    abs(jeta[ib]), jpt[ib], jCSV[ib])
+
+			    elif abs(jflavour[ib]) == 4 : 
+				btag_sfHF = reader_b.eval_auto_bounds( 'central', 1,    abs(jeta[ib]), jpt[ib], jCSV[ib])  
+                                if btag_sfHF !=0 : 
+                                    weight *=btag_sfHF
+                                    weightFM *=btag_sfHF
+			    else:
+				if abs(jflavour[ib]) != 0 and  abs(jflavour[ib]) != 5 and  abs(jflavour[ib]) != 4 and  jflavour[ib] > -9 : 
+				    btag_sfLF = reader_b.eval_auto_bounds( 'central', 2,    abs(jeta[ib]), jpt[ib], jCSV[ib])  
+				    if btag_sfLF !=0 : 
+                                        weight *= btag_sfLF
+                                        weightFM *= btag_sfLF
+                                
+
+                        except IndexError : print 'something wrong with btag...'
               
-		weight *= btag_sf
-	   	weightFM *= btag_sf
 
 
             iCut +=1
@@ -1994,33 +2007,94 @@ for ig, group in enumerate(groups) :
 
             '''
 
+            if group != 'data' and (cat[2:]  != 'tt') : continue
+
+            if e.gen_match_3 !=5 or e.gen_match_4!=5 : continue
+
 		# leptons faking taus // muon->tau
             if group != 'data' and (cat[2:] == 'et' or cat[2:]  == 'mt' or cat[2:]  == 'tt') :
-                varTID =''
-                if 'tauid' in systematic  and 'Up' in systematic : varTID = 'Up'
-                if 'tauid' in systematic  and 'Down' in systematic : varTID = 'Down'
 
                 tau3pt20, tau3pt25, tau3pt30, tau3pt35, tau3pthigh = False, False, False, False, False
-		if 'pt20to25' in systematic and  tauV3uncor.Pt() > 20 and  tauV3uncor.Pt() < 25 : tau3pt20 = True
-		if 'pt25to30' in systematic and  tauV3uncor.Pt() > 25 and  tauV3uncor.Pt() < 30 : tau3pt25 = True
-		if 'pt30to35' in systematic and  tauV3uncor.Pt() > 30 and  tauV3uncor.Pt() < 35 : tau3pt30 = True
-		if 'pt35to40' in systematic and tauV3uncor.Pt() > 35 and  tauV3uncor.Pt() < 40 : tau3pt35 = True
-		if 'ptgt40' in systematic and  tauV3uncor.Pt() > 40:  tau3pthigh = True
+		if 'pt20to25' in systematic and  tauV3uncor.Pt() > 20. and  tauV3uncor.Pt() < 25. : tau3pt20 = True
+		if 'pt25to30' in systematic and  tauV3uncor.Pt() > 25. and  tauV3uncor.Pt() < 30. : tau3pt25 = True
+		if 'pt30to35' in systematic and  tauV3uncor.Pt() > 30. and  tauV3uncor.Pt() < 35. : tau3pt30 = True
+		if 'pt35to40' in systematic and tauV3uncor.Pt() > 35. and  tauV3uncor.Pt() < 40. : tau3pt35 = True
+		if 'ptgt40' in systematic and  tauV3uncor.Pt() > 40.:  tau3pthigh = True
 
                 tau4pt20, tau4pt25, tau4pt30, tau4pt35, tau4pthigh = False, False, False, False, False
-		if 'pt20to25' in systematic and  tauV4uncor.Pt() > 20 and  tauV4uncor.Pt() < 25 : tau4pt20 = True
-		if 'pt25to30' in systematic and  tauV4uncor.Pt() > 25 and  tauV4uncor.Pt() < 30 : tau4pt25 = True
-		if 'pt30to35' in systematic and  tauV4uncor.Pt() > 30 and  tauV4uncor.Pt() < 35 : tau4pt30 = True
-		if 'pt35to40' in systematic and  tauV4uncor.Pt() > 35 and  tauV4uncor.Pt() < 40 : tau4pt35 = True
-		if 'ptgt40' in systematic and  tauV4uncor.Pt() > 40:  tau4pthigh = True
+		if 'pt20to25' in systematic and  tauV4uncor.Pt() > 20. and  tauV4uncor.Pt() < 25. : tau4pt20 = True
+		if 'pt25to30' in systematic and  tauV4uncor.Pt() > 25. and  tauV4uncor.Pt() < 30. : tau4pt25 = True
+		if 'pt30to35' in systematic and  tauV4uncor.Pt() > 30. and  tauV4uncor.Pt() < 35. : tau4pt30 = True
+		if 'pt35to40' in systematic and  tauV4uncor.Pt() > 35. and  tauV4uncor.Pt() < 40. : tau4pt35 = True
+		if 'ptgt40' in systematic and  tauV4uncor.Pt() > 40.:  tau4pthigh = True
+
+		if  cat[2:] == 'et' :
+			
+		    if e.gen_match_4 in [1,3]:
+			weightTID *= antiEleSFToolT.getSFvsEta(e.eta_4,e.gen_match_4)
+
+		    if e.gen_match_4  in [2,4]:
+                        weightTID *= antiMuSFToolVL.getSFvsEta(e.eta_4,e.gen_match_4)
+
+		if  cat[2:] == 'mt' :
+
+		    if e.gen_match_4 in [1,3]:
+                        weightTID *= antiEleSFToolVL.getSFvsEta(e.eta_4,e.gen_match_4)
+
+		    if e.gen_match_4 in [2,4]:
+                        weightTID *= antiMuSFToolT.getSFvsEta(e.eta_4,e.gen_match_4)
+
+		if  cat[2:] == 'tt' :
+
+
+		    #muon faking _3 tau
+		    if e.gen_match_3 in [2,4]:
+                        weightTID *= antiMuSFToolVL.getSFvsEta(e.eta_3,e.gen_match_3)
+
+		    if e.gen_match_4 in [2,4]:
+                        weightTID *= antiMuSFToolVL.getSFvsEta(e.eta_4,e.gen_match_4)
+
+		    if e.gen_match_3 in [1,3]:
+			weightTID *= antiEleSFToolVL.getSFvsEta(e.eta_3,e.gen_match_3)
+
+		    if e.gen_match_4 in [1,3]:
+		        weightTID *= antiEleSFToolVL.getSFvsEta(e.eta_4,e.gen_match_4)
+
+		    if e.gen_match_3 == 5 : 
+			if  (tau3pt20 or tau3pt25 or tau3pt30 or tau3pt35 or tau3pthigh) :
+                            #print ''
+                            #print 'got a tau pt ', tau3pt20, tau3pt25, tau3pt30, tau3pt35, tau3pthigh, e.gen_match_3, tauV3uncor.Pt()  
+			    weightTID *= tauSFTool.getSFvsPT(tauV3uncor.Pt(),e.gen_match_3, unc=varTID)
+                        else : 
+			    weightTID *= tauSFTool.getSFvsPT(tauV3uncor.Pt(),e.gen_match_3)
+			#print ''
+			#if varTID!='' : print 'some here for 3 tau', tauSFTool.getSFvsPT(tauV3uncor.Pt(),e.gen_match_3, unc=varTID), tauSFTool.getSFvsPT(tauV3uncor.Pt(),e.gen_match_3), e.gen_match_3, tau3pt20, tau3pt25, tau3pt30, tau3pt35, tau3pthigh, tauV3uncor.Pt() , e.eta_3, systematic, varTID , weightTID
+			#else : print 'some here for 3 tau', tauSFTool.getSFvsPT(tauV3uncor.Pt(),e.gen_match_3), e.gen_match_3, tau3pt20, tau3pt25, tau3pt30, tau3pt35, tau3pthigh, tauV3uncor.Pt() , e.eta_3, systematic, varTID , weightTID
+
+		if  cat[2:] == 'tt'  or cat[2:] == 'mt' or cat[2:] == 'et' :
+
+
+		    if e.gen_match_4 == 5 : 
+	                if  (tau4pt20 or tau4pt25 or tau4pt30 or tau4pt35 or tau4pthigh) : 
+			    weightTID *= tauSFTool.getSFvsPT(tauV4uncor.Pt(),e.gen_match_4, unc=varTID) 
+                        else : 
+			    weightTID *= tauSFTool.getSFvsPT(tauV4uncor.Pt(),e.gen_match_4)
+                        #print 'some here for 4 tau', tauSFTool.getSFvsPT(tauV4uncor.Pt(),e.gen_match_4, unc=varTID), tauSFTool.getSFvsPT(tauV4uncor.Pt(),e.gen_match_4), e.gen_match_4, tau4pt20, tau4pt25, tau4pt30, tau4pt35, tau4pthigh, tauV4uncor.Pt() , e.eta_4, systematic, varTID, weightTID
+
+
                 
+                '''
 		if  cat[2:] == 'et' :
 			
 		    if e.gen_match_4 == 1 or e.gen_match_4 == 3 :  
 			if  (tau4pt20 or tau4pt25 or tau4pt30 or tau4pt35 or tau4pthigh) :  
+                            #print 'will take the varTID', varTID
 			    weightTID *= antiEleSFToolT.getSFvsEta(e.eta_4,e.gen_match_4, unc=varTID)
                         else : 
+                            #print 'will take the nominal'
 			    weightTID *= antiEleSFToolT.getSFvsEta(e.eta_4,e.gen_match_4)
+                        #print 'cat', e.gen_match_4, e.gen_match_4, 'wTID', antiEleSFToolT.getSFvsEta(e.eta_4,e.gen_match_4, unc=varTID), 'wNom', antiEleSFToolT.getSFvsEta(e.eta_4,e.gen_match_4), tau4pt20, tau4pt25, tau4pt30, tau4pt35, tau4pthigh, 'pT:', tauV4uncor.Pt() , e.eta_4, antiEleSFToolT.getSFvsEta(abs(e.eta_4),e.gen_match_4, unc=varTID)
+                        #print ''
 
 		    if e.gen_match_4 == 2 or e.gen_match_4 == 4 :  
 			if  (tau4pt20 or tau4pt25 or tau4pt30 or tau4pt35 or tau4pthigh) :  
@@ -2045,7 +2119,6 @@ for ig, group in enumerate(groups) :
 
 
 		if  cat[2:] == 'tt' :
-
 		    #muon faking _3 tau
 		    if e.gen_match_3 == 2 or e.gen_match_3 == 4 : 
 			if  (tau3pt20 or tau3pt25 or tau3pt30 or tau3pt35 or tau3pthigh) :  
@@ -2070,21 +2143,14 @@ for ig, group in enumerate(groups) :
 		            weightTID *= antiEleSFToolVL.getSFvsEta(e.eta_4,e.gen_match_4, unc=varTID)
                         else : 
 		            weightTID *= antiEleSFToolVL.getSFvsEta(e.eta_4,e.gen_match_4)
-
 		    if e.gen_match_3 == 5 : 
 			if  (tau3pt20 or tau3pt25 or tau3pt30 or tau3pt35 or tau3pthigh) :  
 			    weightTID *= tauSFTool.getSFvsPT(tauV3uncor.Pt(),e.gen_match_3, unc=varTID)
                         else : 
 			    weightTID *= tauSFTool.getSFvsPT(tauV3uncor.Pt(),e.gen_match_3)
+                '''
 
 
-		if  cat[2:] == 'tt'  or cat[2:] == 'mt' or cat[2:] == 'et' :
-
-		    if e.gen_match_4 == 5 : 
-	                if  (tau4pt20 or tau4pt25 or tau4pt30 or tau4pt35 or tau4pthigh) : 
-			    weightTID *= tauSFTool.getSFvsPT(tauV4uncor.Pt(),e.gen_match_4, unc=varTID)
-                        else : 
-			    weightTID *= tauSFTool.getSFvsPT(tauV4uncor.Pt(),e.gen_match_4)
 
 		#if  cat[2:] and (e.gen_match_4 == 5 or e.gen_match_3 == 5 ) and (e.decayMode_3 ==11 or e.decayMode_4==1): 
 		#    print e.evt, 'varTID:', varTID,  'w:', weight, 'wTID:', weightTID, 'pT_3:', e.pt_3, e.gen_match_3, 'pt_4', e.pt_4, e.gen_match_4
@@ -2092,7 +2158,7 @@ for ig, group in enumerate(groups) :
 
 
                 #if e.evt == 2496649 : print 'third', weight, weightTID
-
+                #ifa cat[2:] == 'tt' : print 'some stats', weightTID, e.run, e.lumi, e.evt, tau3pthigh, tau4pthigh
                 weight *= weightTID
                 weightFM *= weightTID * ww
 
