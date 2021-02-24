@@ -107,11 +107,12 @@ class Weights() :
 	rvec.SetPtEtaPhiM(vec.Pt(), 0, vec.Phi(), 0)
 	return rvec
         
-    def correctallMET(self,entry, allmets, leptV, year, corr):
+    def correctallMET(self,entry, allmets, year, CorList, LeptList):
         
         list_of_arrays=[]
         list_of_arraysPhi=[]
         tryV=TLorentzVector()
+        leptV=TLorentzVector()
 	for i, v in enumerate(allmets) :
 
 	    if str(year)=='2017' :
@@ -124,16 +125,22 @@ class Weights() :
                 j = getattr(entry, "{0:s}".format(str(v)))
                 vphi= v.replace('_pt','_phi')
                 jphi = getattr(entry, "{0:s}".format(str(vphi)))
- 
                 tryV.SetPx(j*cos(jphi))
                 tryV.SetPy(j*sin(jphi))
-               
-                tryV += (leptV-leptV*corr)
-                #setattr(entry, "{0:s}".format(str(v)), tryV.Pt())
-                #setattr(entry, "{0:s}".format(str(jphi)), tryV.Phi())
+                #if i==0 : print 'Correction LISTTTTTTTTTTTTTTT', CorList, LeptList
+                for j,ic in enumerate(LeptList) :
+                    mass = entry.Tau_mass[ic]
+                    gen_match = ord(entry.Tau_genPartFlav[ic])
+                    if entry.Tau_decayMode[ic] == 0 and gen_match==5 : mass = 0.13960
+                    leptV.SetPtEtaPhiM(entry.Tau_pt[ic], entry.Tau_eta[ic], entry.Tau_phi[ic], mass)
+                    
+                    tryV += (leptV-leptV*CorList[j])
+                    #if i==0 : print 'correction for lepton', ic,  CorList[j], entry.nTau
+
                 #if entry.event==8904 and 'pt_jerUp' in v : print 'correct pt', tryV.Pt(), entry.event, v, 'from ttree', j
                 list_of_arrays.append(tryV.Pt())
                 list_of_arraysPhi.append(tryV.Phi())
+                #if i==0 or i==24 or i==25 : print 'inside all MET',  i, v, 'nomMET', entry.MET_T1_pt, 'sysMETuncor', j, 'sysMET_cor', tryV.Pt(), entry.event, entry.luminosityBlock, entry.run
             
 	    except AttributeError : 
                 setattr(entry, "{0:s}".format(str(v)), j)
@@ -154,7 +161,8 @@ class Weights() :
 
         sign = 1.
 
-
+        corList =[]
+        leptList=[]
         metlist=[]
         philist=[]
         if 'Down' in systematic : sign = -1.
@@ -164,7 +172,6 @@ class Weights() :
         #if 'Central' in systematic and 'scale_e' not in systematic and 'scale_m_' not in systematic: 
         #if systematic =='Central' : 
         if True : 
-            metcopy = self.MetV
 
 	    for j in range(entry.nTau):    
 	       
@@ -188,21 +195,18 @@ class Weights() :
 		if gen_match == 5 :
 
 		    tes = self.testool.getTES(pt,dm,gen_match)
-
-                    if systematic == 'Central' :
-                        metlist ,philist = self.correctallMET(entry,allMETs, self.LeptV,year,tes)
-
+                    #if systematic == 'Central' :
+                    #    metlist ,philist = self.correctallMET(entry,allMETs, self.LeptV,year,tes)
+                    corList.append(tes)
+                    leptList.append(j)
                     dirr=''
 		    if 'Up'  in systematic : dirr = 'Up'
 		    if 'Down' in systematic : dirr = 'Down'
 
                     if isDM0 or isDM1 or isDM10 or isDM11 : tes = self.testool.getTES(pt,dm,gen_match, unc=dirr)
 
-                    #oldMET = self.MetV.Pt()
-                    #oldphi = self.MetV.Phi()
-                    #oldpt = self.LeptV.Pt()
-                    #oldphii = self.LeptV.Phi()
                     self.MetV +=( self.LeptV - self.LeptV*tes)
+
                     self.LeptV *= tes          
                     #if 'prong' in systematic : print '----------------------------- inside for tau with gen_match=5', j, tes , oldMET, self.MetV.Pt(), oldphi, self.MetV.Phi(), systematic, entry.event, oldpt, self.LeptV.Pt(), oldphii, self.LeptV.Phi()
 
@@ -217,10 +221,13 @@ class Weights() :
 		if gen_match == 2 or gen_match == 4 :
 
                     cor=1+self.weights_muTotauES[dmm]*0.01
-                    if systematic == 'Central' :
-                        metlist,philist = self.correctallMET(entry,allMETs, self.LeptV,year,cor)
+                    #if systematic == 'Central' :
+                    #    metlist,philist = self.correctallMET(entry,allMETs, self.LeptV,year,cor)
+                    corList.append(cor)
+                    leptList.append(j)
 
 		    self.MetV += ( self.LeptV - self.LeptV *(1 + self.weights_muTotauES[dmm]*0.01))
+
 		    self.LeptV *=  (1 + self.weights_muTotauES[dmm]*0.01)
 		    if printOn : print 'will correct for  muon_faking_tau ES', self.weights_muTotauES[dmm]*0.01,  metPtPhi[0], '---->', self.MetV.Pt()
 		
@@ -228,10 +235,13 @@ class Weights() :
 		if gen_match == 1 or gen_match == 3 :
 
 		    fes = self.festool.getFES(eta,dm,gen_match)
-                    if systematic == 'Central' :
-                        metlist,philist = self.correctallMET(entry,allMETs, self.LeptV,year,fes)
+                    #if systematic == 'Central' :
+                    #    metlist,philist = self.correctallMET(entry,allMETs, self.LeptV,year,fes)
+                    corList.append(fes)
+                    leptList.append(j)
 		   
 		    self.MetV +=( self.LeptV - self.LeptV*fes)
+
 		    self.LeptV *= fes          
 		    if printOn : print 'will correct for  electron_faking_tau ES', cor,  metPtPhi[0], '---->',self.MetV.Pt()
 
@@ -298,6 +308,10 @@ class Weights() :
                 #if printOn : print 'scale_e systematic ', systematic, entry.event, 'uncorrected met', uncormet, 'corrected met', self.MetV.Pt(),  'met fed in', metpt
 
 
+	if systematic == 'Central' :
+	    metlist ,philist = self.correctallMET(entry,allMETs, year,corList, leptList)
+
+	#if systematic == 'Central' : print 'returning---------------->pt ', self.MetV.Pt(), 'phi ', self.MetV.Phi(), 'uncorrected values', entry.MET_T1_pt, entry.MET_T1_phi, systematic,  entry.event
 	return self.MetV.Pt(), self.MetV.Phi(), metlist , philist
 	#return self.MetV.Pt(), self.MetV.Phi()
 

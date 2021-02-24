@@ -219,6 +219,26 @@ dataDriven = not args.MConly
 dataDriven = True
 
 
+#PUevents, UWevents = {}, {}
+PUevents, UWevents = [], []
+lumiss=[]
+#for cat in cats.values() :
+#    PUevents[cat] = {}
+#    #UWevents[cat] = {}
+'''
+for cat in cats.values() :
+    for line in open('UW_qqZHTT_2018_list'.format(cat),'r').readlines() :
+    #for line in open('UW_data2017'.format(cat),'r').readlines() :
+        vals = line.split()
+        if len(vals) < 3 : continue 
+        #cat, run, LS, event = vals[0], int(vals[1]), int(vals[2]), int(vals[3])
+        cat, LS, run, event = vals[0], int(vals[1]), int(vals[2]), int(vals[3])
+        LSrunEvent = "{0:s}:{1:d}:{2:d}:{3:d}".format(cat,LS,run,event) 
+        #UWevents[cat][LSrunEvent] = line 
+        UWevents.append(LSrunEvent)
+        LSrunEvent = "{0:s}:{1:s}:{2:s}:{3:s}".format(str(cat),str(LS),str(run),str(event)) 
+        lumiss.append(str(LSrunEvent))
+'''
 
 Pblumi = 1000.
 tauID_w = 1.
@@ -284,6 +304,9 @@ systematic=str(args.inSystematics)
 varTID =''
 if 'tauid' in systematic  and 'Up' in systematic : varTID = 'Up'
 if 'tauid' in systematic  and 'Down' in systematic : varTID = 'Down'
+
+
+print 'Will run for systematic----------------------->', systematic, varTID
 
 
 dobtag = str(args.doBTAG.lower()) == 'yes' or str(args.doBTAG) == '1' 
@@ -405,6 +428,9 @@ hm_sv_new_jBC = {}
 
 # m_sv_new_FMjall is the main variable to be used for m_sv
 hm_sv_new_FMjall = {}
+hm_sv_new_LowZpT_FMjall = {}
+hm_sv_new_MedZpT_FMjall = {}
+hm_sv_new_HighZpT_FMjall = {}
 hm_sv_new_FMjallv2 = {}
 
 hm_sv_new_lep_FWDH_htt125= {}
@@ -593,7 +619,7 @@ for line in open(args.inFileName,'r').readlines() :
 
 
         if nickName == 'ZHToTauTau' : totalWeight[nickName] *= float(3*0.033658)
-        if nickName == 'HZJ_HToWW' : totalWeight[nickName] *= float(3*0.033658)
+        #if nickName == 'HZJ_HToWW' : totalWeight[nickName] *= float(3*0.033658)
         print '----------------======================================================', totalWeight[nickName]
 	sampleWeight[nickName]= Pblumi*weights['lumi']*xsec[nickName]/totalWeight[nickName]
     else : 
@@ -668,12 +694,14 @@ plotSettings = { # [nBins,xMin,xMax,units]
 
 }
 
-wpp = 'Medium'
-if str(args.workingPoint=='16') : wpp = 'Medium'
-if str(args.workingPoint=='32') : wpp = 'Tight'
-if str(args.workingPoint=='64') : wpp = 'VTight'
-if str(args.workingPoint=='128') : wpp = 'VVTight'
+if args.workingPoint==16 : wpp = 'Medium'
+if args.workingPoint==32 : wpp = 'Tight'
+if args.workingPoint==64 : wpp = 'VTight'
+if args.workingPoint==128 : wpp = 'VVTight'
 
+wpp = 'Medium'
+
+print 'TauSFTool------------------>', campaign[args.year], wpp
 tauSFTool = TauIDSFTool(campaign[args.year],'DeepTau2017v2p1VSjet',wpp)
 testool = TauESTool(campaign[args.year],'DeepTau2017v2p1VSjet', TESSF['dir'])
 festool = TauFESTool(campaign[args.year],'DeepTau2017v2p1VSe', FESSF['dir'])
@@ -787,6 +815,9 @@ for ig, group in enumerate(groups) :
 
     hm_sv_new_FMjA[group] = {}
     hm_sv_new_FMjall[group] = {}
+    hm_sv_new_LowZpT_FMjall[group] = {}
+    hm_sv_new_MedZpT_FMjall[group] = {}
+    hm_sv_new_HighZpT_FMjall[group] = {}
     hm_sv_new_FMjallv2[group] = {}
 
     hm_sv_new_FMjB[group] = {}
@@ -851,6 +882,9 @@ for ig, group in enumerate(groups) :
 
 	hm_sv_new_FMjA[group][cat] = {}
 	hm_sv_new_FMjall[group][cat] = {}
+	hm_sv_new_LowZpT_FMjall[group][cat] = {}
+	hm_sv_new_MedZpT_FMjall[group][cat] = {}
+	hm_sv_new_HighZpT_FMjall[group][cat] = {}
 	hm_sv_new_FMjallv2[group][cat] = {}
 
 	hm_sv_new_FMjB[group][cat] = {}
@@ -916,6 +950,19 @@ for ig, group in enumerate(groups) :
 	hName = 'h{0:s}_{1:s}_m_sv_new_FMjall'.format(group,cat)
 	hm_sv_new_FMjall[group][cat] = TH1D(hName ,hName, 21,0,21)
 	hm_sv_new_FMjall[group][cat].SetDefaultSumw2()
+
+	hName = 'h{0:s}_{1:s}_m_sv_new_LowZpT_FMjall'.format(group,cat)
+	hm_sv_new_LowZpT_FMjall[group][cat] = TH1D(hName ,hName, 10,0,200)
+	hm_sv_new_LowZpT_FMjall[group][cat].SetDefaultSumw2()
+
+	hName = 'h{0:s}_{1:s}_m_sv_new_MedZpT_FMjall'.format(group,cat)
+	hm_sv_new_MedZpT_FMjall[group][cat] = TH1D(hName ,hName, 10,0,200)
+	hm_sv_new_MedZpT_FMjall[group][cat].SetDefaultSumw2()
+
+	hName = 'h{0:s}_{1:s}_m_sv_new_HighZpT_FMjall'.format(group,cat)
+	hm_sv_new_HighZpT_FMjall[group][cat] = TH1D(hName ,hName, 10,0,200)
+	hm_sv_new_HighZpT_FMjall[group][cat].SetDefaultSumw2()
+
 
 	hName = 'h{0:s}_{1:s}_m_sv_new_FMjallv2'.format(group,cat)
 	hm_sv_new_FMjallv2[group][cat] = TH1D(hName ,hName, 14,0,14)
@@ -1042,23 +1089,34 @@ for ig, group in enumerate(groups) :
 
         if chunck > 0 :
             print 'Will run for',  (chunck-1)*step,'---> to ', (chunck)*step,' events now....'
-        else :     print 'Will run for 0',  '---> to ', inTree.GetEntries(), ' events now....'
         printOn=False
         printDebug=False
-        lumiss=['509','1315','779','248','63','69','35']
-        if printOn : 
-            print 'cat \t lumi \t run \t  event  \t pt_1 \t pt_2 \t pt_3 \t pt_4 \t  met  \t  nbtag \t  btag_w \t pu_w \t gen_w \t prefire_w \t HTXS \t mll'
+
+	#lumiss=['509','1315','779','248','63','69','35']
+        #lumiss=['99','549','1344','1477','1448','1635','1795','609']
+        #if printOn : 
+        #    print 'cat \t lumi \t run \t  event  \t pt_1 \t pt_2 \t pt_3 \t pt_4 \t  met  \t  nbtag \t  btag_w \t pu_w \t gen_w \t prefire_w \t HTXS \t mll'
 
         for i, e in enumerate(inTree) :
 
             inTree.GetEntry(i)
+            #if e.lumi not in lumiss : continue
+
             #if str(e.lumi) in lumiss : printDebug = True
+            #if str(LSrunEvent) not in  : printDebug = True
+
+
             if chunck > 0 :
 		if i <   (chunck-1)*step: continue
 		if i >=  (chunck)*step: continue
 
             iCut=icut
- 
+            '''
+	    corpT_1 = e.pt_1/e.pt_uncor_1
+	    corpT_2 = e.pt_2/e.pt_uncor_2
+	    corpT_3 = e.pt_3/e.pt_uncor_3
+	    corpT_4 = e.pt_4/e.pt_uncor_4
+            '''
             hGroup = group
 
             trigw = 1.
@@ -1066,11 +1124,13 @@ for ig, group in enumerate(groups) :
             weightCF = 1.
 	    weightFM=1.
             weightTID = 1.
+            weightTID3 = 1.
+            weightTID4 = 1.
 	    ww = 1.
             btag_sfB = 1.
+            btag_sf = 1.
             btag_sfHF = 1.
             btag_sfLF = 1.
-            lepton_sf = 1.
             cat = cats[e.cat]
             icat = catToNumber(cat)
             tight1 = True
@@ -1083,7 +1143,18 @@ for ig, group in enumerate(groups) :
 	    #p4 = e.pt_4
 
 	    if cat[2:] == 'em'  : continue
+
+            #LSrunEvent = "{0:s}:{1:s}:{2:s}:{3:s}".format(cat,str(e.lumi),str(e.run),str(e.evt))
+            #print LSrunEvent, lumiss[0]
+            #if str(LSrunEvent) not in lumiss : continue
+
+            #if printOn  : print '{0:s} \t {1:d} \t  {2:d}  \t {3:d}  \t {4:.3f} \t {5:.3f} \t {6:.3f} \t {7:.3f} \t {8:.3f} \t {9:.3f} '.format(cat, e.lumi, e.run, e.evt, e.pt_1, e.pt_2, e.pt_3, e.pt_4, e.mll, e.m_sv)
+
+            #" "<<aweight*weight2<<" "<<weight<<" "<<aMCatNLO_weight<<" <puweight<<" "<<prefiring_weight<<" "<<lepton_sf<<" "<<trigger_sf<<" 1.0 "<<bweight<<" NAN NAN NAN NAN "<<0.001*3*(26.66*nlo_corr+0.31+0.11)<<" 1.0 "<<tauid_sf<<" "<<Rivet_stage1_1_cat_pTjet30GeV
         
+              #total_weight,  mc_w (=xsec*lumi/(SumOfWeigh),  gen_w, PU_w,  prefire_w, lepton_sf, trigger_sf, tracking_sf, btag_weight, btag_sfB, btag_sfHF, btag_sfLF, flavour_leading_jet,   NLOweight( should be=1 for other than ZH125),   weight_tauID_3(==1 for mt, et), weight_tauID_4, HTXS_Rivet_cat
+
+
 	    #if ('ZZTo4' in inFileName or 'ZH' in inFileName) and  i > 2000 : continue
 	    #if hGroup != 'data' and i > 1000:continue
             if i % 5000 ==0: print i, 'from ', nentries
@@ -1143,20 +1214,19 @@ for ig, group in enumerate(groups) :
 
 
             #if e.isTrig_1 == 0 and e.isDoubleTrig==0 : continue  
-            if printDebug:
-		if e.isTrig_1 == 0 : print 'failed trigger', cat, e.lumi, e.run, e.evt, e.isTrig_1, e.whichTriggerWord, e.whichTriggerWordSubL
-		if e.q_1*e.q_2 > 0 : print 'failed q_1*q_2', cat, e.lumi, e.run, e.evt, e.q_1*e.q_2
-		if args.sign == 'SS':
-		   if e.q_3*e.q_4 < 0. : continue
-		else :
-		    if e.q_3*e.q_4 > 0. : print 'failed q_3*q_4', cat, e.lumi, e.run, e.evt, e.q_3*e.q_4
             
-            if e.isTrig_1 == 0 : continue  
-            if e.q_1*e.q_2 > 0 : continue
+            if e.isTrig_1 == 0 : 
+                if printDebug: print 'failed trigger', cat, e.lumi, e.run, e.evt, e.isTrig_1, e.whichTriggerWord, e.whichTriggerWordSubL
+                continue
+            if e.q_1*e.q_2 > 0 : 
+                if printDebug: print 'failed Zll OS ', cat, e.lumi, e.run, e.evt, e.q_1, e.q_2
+                continue
             if args.sign == 'SS':
                if e.q_3*e.q_4 < 0. : continue
             else :
-                if e.q_3*e.q_4 > 0. : continue
+                if e.q_3*e.q_4 > 0. : 
+                    if printDebug: print 'failed tau pair OS ', cat, e.lumi, e.run, e.evt, e.q_3, e.q_4
+                    continue
 
             '''
             if WJets and not WIncl_only: 
@@ -1202,30 +1272,41 @@ for ig, group in enumerate(groups) :
 
             ##############good ISO
 
-            isSS = nbtagM==0 and nbtagL<2 and str(args.sign) == 'SS'
-            isSR = nbtagM==0 and nbtagL<2 and str(args.sign) == 'OS'
-            #isSR = nbtagM==0 and str(args.sign) == 'OS'
-            isLSR = nbtagM==0 and nbtagL<2 and str(args.sign) == 'OSS'
+            #isSS = nbtagM==0 and nbtagL<2 and str(args.sign) == 'SS'
+            #isSR = nbtagM==0 and nbtagL<2 and str(args.sign) == 'OS'
+            #isLSR = nbtagM==0 and nbtagL<2 and str(args.sign) == 'OSS'
+            isSR = nbtagM==0 and str(args.sign) == 'OS'
+            isSS = nbtagM==0  and str(args.sign) == 'SS'
+            isLSR = nbtagM==0 and str(args.sign) == 'OSS'
 
-            if printDebug :
-		if cat[:2] == 'mm' :  
-			if (e.iso_1 > mu_iso or e.iso_2 > mu_iso) : print 'failed mu_iso', cat, e.lumi, e.run, e.iso_1, e.iso_2
-			if (abs(e.eta_1) > mu_eta or abs(e.eta_2) > mu_eta) : print 'failed mu_eta', cat, e.lumi, e.run, e.eta_1, e.eta_2
-			if (e.mediumId_1 < 1 or e.mediumId_2 < 1) : print 'failed mu_Id', cat, e.lumi, e.run, e.mediumId_1, e.mediumId_2
-			if (e.isGlobal_1 < 1 and e.isTracker_1 < 1) : print 'failed eGl_1 and isTrack_1', cat, e.lumi, e.run, e.isGlobal_1, e.isTracker_1
-			if (e.isGlobal_2 < 1 and e.isTracker_2 < 1) : print 'failed eGl_2 and isTrack_2', cat, e.lumi, e.run, e.isGlobal_2, e.isTracker_2
 
 	    if cat[:2] == 'mm' :  
-                    if (e.iso_1 > mu_iso or e.iso_2 > mu_iso) : continue
-                    if (abs(e.eta_1) > mu_eta or abs(e.eta_2) > mu_eta) : continue
-                    if (e.mediumId_1 < 1 or e.mediumId_2 < 1) : continue
-                    if (e.isGlobal_1 < 1 and e.isTracker_1 < 1) : continue
-                    if (e.isGlobal_2 < 1 and e.isTracker_2 < 1) : continue
+                    if (e.iso_1 > mu_iso or e.iso_2 > mu_iso) : 
+                        if printDebug : print 'failed mm iso', cat, e.lumi, e.run, e.evt, e.iso_1, e.iso_2
+                        continue
+                    if (abs(e.eta_1) > mu_eta or abs(e.eta_2) > mu_eta) : 
+                        if printDebug : print 'failed mm eta', cat, e.lumi, e.run, e.evt, e.eta_1, e.eta_2
+                        continue
+                    if (e.mediumId_1 < 1 or e.mediumId_2 < 1) : 
+                        if printDebug : print 'failed mm mediumId', cat, e.lumi, e.run, e.evt, e.mediumId_1, e.mediumId_2
+                        continue
+                    if (e.isGlobal_1 < 1 and e.isTracker_1 < 1) : 
+                        if printDebug : print 'failed mm isTracker1', cat, e.lumi, e.run, e.evt, e.isGlobal_1, e.isTracker_1
+                        continue
+                    if (e.isGlobal_2 < 1 and e.isTracker_2 < 1) : 
+                        if printDebug : print 'failed mm isTracker2', cat, e.lumi, e.run, e.evt, e.isGlobal_2, e.isTracker_2
+                        continue
 
 	    if cat[:2] == 'ee' :
-                if e.iso_1 > el_iso or e.iso_2 > el_iso : continue
-                if (abs(e.eta_1) > el_eta or abs(e.eta_2) > el_eta) : continue
-	        if e.Electron_mvaFall17V2noIso_WP90_1 < 1 or e.Electron_mvaFall17V2noIso_WP90_2 < 1 : continue
+                if e.iso_1 > el_iso or e.iso_2 > el_iso : 
+                    if printDebug : print 'failed ee iso', cat, e.lumi, e.run, e.evt, e.iso_1, e.iso_2
+                    continue
+                if (abs(e.eta_1) > el_eta or abs(e.eta_2) > el_eta) : 
+                    if printDebug : print 'failed mm eta', cat, e.lumi, e.run, e.evt, e.eta_1, e.eta_2
+                    continue
+	        if e.Electron_mvaFall17V2noIso_WP90_1 < 1 or e.Electron_mvaFall17V2noIso_WP90_2 < 1 : 
+                    if printDebug : print 'failed ee iD ', cat, e.lumi, e.run, e.evt, e.Electron_mvaFall17V2noIso_WP90_1, e.Electron_mvaFall17V2noIso_WP90_2
+                    continue
 
 
             # and now tauWP cuts
@@ -1244,33 +1325,33 @@ for ig, group in enumerate(groups) :
 		#    print("Event={0:8d} em iso_3={1:.3f} iso_4={2:.3f} WP90={3}".format(e.evt,e.iso_3,e.iso_4, e.Electron_mvaFall17V2noIso_WP90_3))
  
             if not tight1 or not tight2 : 
-                if printDebug : print 'failed tight1 or tight2', cat, e.lumi, e.run, tight1, tight2
+                if printDebug : print 'failed tight1 or tight2', cat, e.lumi, e.run, e.evt, tight1, tight2
                 continue
 
 	    if cat[2:] == 'mt':
                 if isSR and (e.isGlobal_3 < 1 and e.isTracker_3 < 1) : 
-                    if printDebug : print 'failed isGl_3 and isTrack', cat, e.lumi, e.run, e.isGlobal_3, e.isTracker_3
+                    if printDebug : print 'failed isGl_3 and isTrack', cat, e.lumi, e.run, e.evt, e.isGlobal_3, e.isTracker_3
                     tight3 = False
                 if isSR and e.iso_3 > mu_iso  : 
-                    if printDebug : print 'failed iso_3', cat, e.lumi, e.run, e.iso_3
+                    if printDebug : print 'failed iso_3', cat, e.lumi, e.run, e.evt, e.iso_3, e.iso_3*corpT_3, e.pt_3, e.pt_uncor_3
                     tight3 = False
                 if e.mediumId_3  <1 : 
-                    if printDebug : print 'failed mID_3', cat, e.lumi, e.run, e.mediumId_3
+                    if printDebug : print 'failed mID_3', cat, e.lumi, e.run, e.evt, e.mediumId_3
                     tight3 = False
                 if abs(e.eta_3) > mu_eta : 
-                    if printDebug : print 'failed eta_3', cat, e.lumi, e.run, e.eta_3
+                    if printDebug : print 'failed eta_3', cat, e.lumi, e.run, e.evt, e.run, e.eta_3
                     tight3 = False
 
 	    if (cat[2:] == 'et') :
                 if e.Electron_mvaFall17V2noIso_WP90_3 < 1 : 
                     
-                    if printDebug : print 'failed tight3 mva', cat, e.lumi, e.run, e.Electron_mvaFall17V2noIso_WP90_3
+                    if printDebug : print 'failed tight3 mva', cat, e.lumi, e.run, e.evt, e.Electron_mvaFall17V2noIso_WP90_3
                     tight3 = False
                 if isSR and e.iso_3 > el_iso : 
-                    if printDebug : print 'failed iso_3', cat, e.lumi, e.run, e.iso_3
+                    if printDebug : print 'failed iso_3', cat, e.lumi, e.run, e.evt, e.iso_3, e.iso_3*corpT_3
                     tight3 = False
                 if abs(e.eta_3) > el_eta : 
-                    if printDebug : print 'failed eta_3', cat, e.lumi, e.run, e.eta_3
+                    if printDebug : print 'failed eta_3', cat, e.lumi, e.run, e.evt, e.eta_3
                     tight3 = False
 
             
@@ -1311,18 +1392,18 @@ for ig, group in enumerate(groups) :
                 #if isSS : tight4  = e.idDeepTau2017v2p1VSjet_4 ==1  
 	    if cat[2:] == 'tt' :
 	        if e.decayMode_3 == 5 or e.decayMode_3 == 6  : 
-                    if printDebug : print 'failed decayMode ', cat, e.lumi, e.run, e.decayMode_4
+                    if printDebug : print 'failed decayMode ', cat, e.lumi, e.run, e.evt, e.decayMode_4
                     continue
 	        if e.decayMode_4 == 5 or e.decayMode_4 == 6  : 
-                    if printDebug : print 'failed decayMode ', cat, e.lumi, e.run, e.decayMode_4
+                    if printDebug : print 'failed decayMode ', cat, e.lumi, e.run, e.evt, e.decayMode_4
                     continue
 
 	    if cat[2:] == 'mt' or cat[2:] == 'et' : 
 	        if e.decayMode_4 == 5 or e.decayMode_4 == 6  : 
-                    if printDebug : print 'failed decayMode ', cat, e.lumi, e.run, e.decayMode_4
+                    if printDebug : print 'failed decayMode ', cat, e.lumi, e.run, e.evt, e.decayMode_4
                     continue
 
-            if printDebug and isSR and (not tight3 or not tight4): print 'failed tight3 or tight4', cat, e.lumi, e.run, e.pt_1, e.pt_2, e.pt_3, e.pt_4, e.mll, e.m_sv, 'tight3', tight3, 'VSjet', e.idDeepTau2017v2p1VSjet_3, 'VSmu', e.idDeepTau2017v2p1VSmu_3, 'VSe', e.idDeepTau2017v2p1VSe_3, 'tight4', tight4, 'VSjet', e.idDeepTau2017v2p1VSjet_4, 'VSmu', e.idDeepTau2017v2p1VSmu_4, 'VSe', e.idDeepTau2017v2p1VSe_4
+            if printDebug and isSR and (not tight3 or not tight4): print 'failed tight3 or tight4', cat, e.lumi, e.run, e.evt, e.pt_1, e.pt_2, e.pt_3, e.pt_4, e.mll, e.m_sv, 'tight3', tight3, 'VSjet', e.idDeepTau2017v2p1VSjet_3, 'VSmu', e.idDeepTau2017v2p1VSmu_3, 'VSe', e.idDeepTau2017v2p1VSe_3, 'tight4', tight4, 'VSjet', e.idDeepTau2017v2p1VSjet_4, 'VSmu', e.idDeepTau2017v2p1VSmu_4, 'VSe', e.idDeepTau2017v2p1VSe_4
 
             '''
 	    if cat[2:] == 'tt' :
@@ -1414,8 +1495,8 @@ for ig, group in enumerate(groups) :
                 continue
 	    #try :
 	    #if nbtag > 0 and str(args.sign) == 'OS': continue #commented this
-	    if nbtagM > 0 or nbtagL>1: 
-	    #if nbtagM > 0 : 
+	    #if nbtagM > 0 or nbtagL>1: 
+	    if nbtagM > 0 : 
 		if printDebug: print 'failed btag cut', cat, e.lumi, e.run, e.evt, nbtagL, nbtagM
                 continue #commented this
 	    #except TypeError :
@@ -1450,10 +1531,11 @@ for ig, group in enumerate(groups) :
                         try : 
                             #print 'njets', nj, ib, reader_b.eval_auto_bounds( 'central', 0,    abs(jeta[ib]), jpt[ib], jCSV[ib]),  reader_b.eval_auto_bounds( 'central', 1,    abs(jeta[ib]), jpt[ib], jCSV[ib]), reader_b.eval_auto_bounds( 'central', 2,    abs(jeta[ib]), jpt[ib], jCSV[ib]), 'eta:', abs(jeta[ib]), 'pt:', jpt[ib], 'dCSV:', jCSV[ib], 'flavour:', abs(jflavour[ib]), e.lumi, e.run, e.evt
 			    if abs(jflavour[ib]) == 5 : 
-				btag_sfB = reader_b.eval_auto_bounds( 'central', 0,    abs(jeta[ib]), jpt[ib], jCSV[ib])  
+				btag_sfB *= reader_b.eval_auto_bounds( 'central', 0,    abs(jeta[ib]), jpt[ib], jCSV[ib])  
                                 if btag_sfB !=0 : 
                                     weight *=btag_sfB 
                                     weightFM *=btag_sfB 
+                                    btag_sf *=btag_sfB
 
 				#if reader_b.eval_auto_bounds( 'central', 0,    abs(jeta[ib]), jpt[ib], jCSV[ib]) !=0 : btag_sfB = reader_b.eval_auto_bounds( 'central', 0,    abs(jeta[ib]), jpt[ib], jCSV[ib])
 
@@ -1462,12 +1544,14 @@ for ig, group in enumerate(groups) :
                                 if btag_sfHF !=0 : 
                                     weight *=btag_sfHF
                                     weightFM *=btag_sfHF
+                                    btag_sf *=btag_sfHF
 			    else:
 				if abs(jflavour[ib]) != 0 and  abs(jflavour[ib]) != 5 and  abs(jflavour[ib]) != 4 and  jflavour[ib] > -9 : 
 				    btag_sfLF = reader_b.eval_auto_bounds( 'central', 2,    abs(jeta[ib]), jpt[ib], jCSV[ib])  
 				    if btag_sfLF !=0 : 
                                         weight *= btag_sfLF
                                         weightFM *= btag_sfLF
+                                        btag_sf *=btag_sfLF
                                 
 
                         except IndexError : print 'something wrong with btag...'
@@ -1710,6 +1794,8 @@ for ig, group in enumerate(groups) :
             trigw2=1
             tracking_sf = 1.
             lepton_sf = 1.
+            lepton_sf3 = 1.
+            tracking_sf3 = 1.
              
             #L1uncor = L1
             #L2uncor = L2
@@ -1729,7 +1815,7 @@ for ig, group in enumerate(groups) :
 
 		    if e.isTrig_1==-1 : 
 			wspace.var("m_pt").setVal(L2uncor.Pt())
-			wspace.var("m_eta").setVal(L2uncor.Pt())
+			wspace.var("m_eta").setVal(e.eta_2)
 			trigw *=  wspace.function("m_trg_ic_ratio").getVal()
 
 		    if  e.isTrig_1==2 : 
@@ -1794,16 +1880,20 @@ for ig, group in enumerate(groups) :
 		    wspace.var("e_eta").setVal(tauV3uncor.Eta())
 		    lepton_sf *= wspace.function("e_idiso_ic_ratio").getVal()
 		    tracking_sf *= wspace.function("e_trk_ratio").getVal()
+                    lepton_sf3 = wspace.function("e_idiso_ic_ratio").getVal()
+                    tracking_sf3 = wspace.function("e_idiso_ic_ratio").getVal()
 
 		if cat[2:] =='mt' : 
 		    wspace.var("m_pt").setVal(tauV3uncor.Pt())
 		    wspace.var("m_eta").setVal(tauV3uncor.Eta())
 		    lepton_sf *= wspace.function("m_idiso_ic_ratio").getVal()
 		    tracking_sf *= wspace.function("m_trk_ratio").getVal()
+                    lepton_sf3 = wspace.function("m_idiso_ic_ratio").getVal()
+                    tracking_sf3 = wspace.function("m_trk_ratio").getVal()
 
-		if cat[2:] =='et' or cat[2:] =='mt' or cat[2:] =='tt': 
-		    wspace.var("t_pt").setVal(tauV4uncor.Pt())
-		    wspace.var("t_eta").setVal(tauV4uncor.Eta())
+		#if cat[2:] =='et' or cat[2:] =='mt' or cat[2:] =='tt': 
+		#    wspace.var("t_pt").setVal(tauV4uncor.Pt())
+		#    wspace.var("t_eta").setVal(tauV4uncor.Eta())
 
 		if cat[2:] =='em' : 
 		    wspace.var("e_pt").setVal(tauV3uncor.Pt())
@@ -2007,11 +2097,10 @@ for ig, group in enumerate(groups) :
 
             '''
 
-            if group != 'data' and (cat[2:]  != 'tt') : continue
+            #if group != 'data' and (cat[2:]  != 'tt') : continue
 
-            if e.gen_match_3 !=5 or e.gen_match_4!=5 : continue
+            #if e.gen_match_3 !=5 or e.gen_match_4!=5 : continue
 
-		# leptons faking taus // muon->tau
             if group != 'data' and (cat[2:] == 'et' or cat[2:]  == 'mt' or cat[2:]  == 'tt') :
 
                 tau3pt20, tau3pt25, tau3pt30, tau3pt35, tau3pthigh = False, False, False, False, False
@@ -2031,42 +2120,47 @@ for ig, group in enumerate(groups) :
 		if  cat[2:] == 'et' :
 			
 		    if e.gen_match_4 in [1,3]:
-			weightTID *= antiEleSFToolT.getSFvsEta(e.eta_4,e.gen_match_4)
+			weightTID4 *= antiEleSFToolT.getSFvsEta(e.eta_4,e.gen_match_4)
 
 		    if e.gen_match_4  in [2,4]:
-                        weightTID *= antiMuSFToolVL.getSFvsEta(e.eta_4,e.gen_match_4)
+                        weightTID4 *= antiMuSFToolVL.getSFvsEta(e.eta_4,e.gen_match_4)
 
 		if  cat[2:] == 'mt' :
 
 		    if e.gen_match_4 in [1,3]:
-                        weightTID *= antiEleSFToolVL.getSFvsEta(e.eta_4,e.gen_match_4)
+                        weightTID4 *= antiEleSFToolVL.getSFvsEta(e.eta_4,e.gen_match_4)
 
 		    if e.gen_match_4 in [2,4]:
-                        weightTID *= antiMuSFToolT.getSFvsEta(e.eta_4,e.gen_match_4)
+                        weightTID4 *= antiMuSFToolT.getSFvsEta(e.eta_4,e.gen_match_4)
 
 		if  cat[2:] == 'tt' :
 
-
 		    #muon faking _3 tau
 		    if e.gen_match_3 in [2,4]:
-                        weightTID *= antiMuSFToolVL.getSFvsEta(e.eta_3,e.gen_match_3)
+                        weightTID3 *= antiMuSFToolVL.getSFvsEta(e.eta_3,e.gen_match_3)
 
 		    if e.gen_match_4 in [2,4]:
-                        weightTID *= antiMuSFToolVL.getSFvsEta(e.eta_4,e.gen_match_4)
+                        weightTID4 *= antiMuSFToolVL.getSFvsEta(e.eta_4,e.gen_match_4)
 
 		    if e.gen_match_3 in [1,3]:
-			weightTID *= antiEleSFToolVL.getSFvsEta(e.eta_3,e.gen_match_3)
+			weightTID3 *= antiEleSFToolVL.getSFvsEta(e.eta_3,e.gen_match_3)
 
 		    if e.gen_match_4 in [1,3]:
-		        weightTID *= antiEleSFToolVL.getSFvsEta(e.eta_4,e.gen_match_4)
+		        weightTID4 *= antiEleSFToolVL.getSFvsEta(e.eta_4,e.gen_match_4)
+
 
 		    if e.gen_match_3 == 5 : 
 			if  (tau3pt20 or tau3pt25 or tau3pt30 or tau3pt35 or tau3pthigh) :
+                        
                             #print ''
                             #print 'got a tau pt ', tau3pt20, tau3pt25, tau3pt30, tau3pt35, tau3pthigh, e.gen_match_3, tauV3uncor.Pt()  
-			    weightTID *= tauSFTool.getSFvsPT(tauV3uncor.Pt(),e.gen_match_3, unc=varTID)
+			    weightTID3 *= tauSFTool.getSFvsPT(tauV3uncor.Pt(),e.gen_match_3, unc=varTID)
                         else : 
-			    weightTID *= tauSFTool.getSFvsPT(tauV3uncor.Pt(),e.gen_match_3)
+                        
+			    weightTID3 *= tauSFTool.getSFvsPT(tauV3uncor.Pt(),e.gen_match_3)
+
+
+			#weightTID *= tauSFTool.getSFvsPT(tauV3uncor.Pt(),e.gen_match_3)
 			#print ''
 			#if varTID!='' : print 'some here for 3 tau', tauSFTool.getSFvsPT(tauV3uncor.Pt(),e.gen_match_3, unc=varTID), tauSFTool.getSFvsPT(tauV3uncor.Pt(),e.gen_match_3), e.gen_match_3, tau3pt20, tau3pt25, tau3pt30, tau3pt35, tau3pthigh, tauV3uncor.Pt() , e.eta_3, systematic, varTID , weightTID
 			#else : print 'some here for 3 tau', tauSFTool.getSFvsPT(tauV3uncor.Pt(),e.gen_match_3), e.gen_match_3, tau3pt20, tau3pt25, tau3pt30, tau3pt35, tau3pthigh, tauV3uncor.Pt() , e.eta_3, systematic, varTID , weightTID
@@ -2075,10 +2169,20 @@ for ig, group in enumerate(groups) :
 
 
 		    if e.gen_match_4 == 5 : 
+
+	                isS =  (tau4pt20 or tau4pt25 or tau4pt30 or tau4pt35 or tau4pthigh) 
 	                if  (tau4pt20 or tau4pt25 or tau4pt30 or tau4pt35 or tau4pthigh) : 
-			    weightTID *= tauSFTool.getSFvsPT(tauV4uncor.Pt(),e.gen_match_4, unc=varTID) 
+			    weightTID4 *= tauSFTool.getSFvsPT(tauV4uncor.Pt(),e.gen_match_4, unc=varTID) 
                         else : 
-			    weightTID *= tauSFTool.getSFvsPT(tauV4uncor.Pt(),e.gen_match_4)
+
+			    #wspace.var("t_pt").setVal(tauV4uncor.Pt())
+			    #wspace.function("m_trg_ic_ratio").getVal()
+			    weightTID4 *= tauSFTool.getSFvsPT(tauV4uncor.Pt(),e.gen_match_4)
+                        if printOn : print '----------------->', cat, e.lumi, e.run, e.evt, 'wTID4:', weightTID4, tauV4uncor.Pt(), 'dm:', e.decayMode_4, 'tID_nom:', tauSFTool.getSFvsPT(tauV4uncor.Pt(),e.gen_match_4),  systematic, varTID, isS, tau4pt20, tau4pt25, tau4pt30, tau4pt35, tau4pthigh
+
+                            #if tauV4uncor.Pt() > 40 : print '----------------->', cat, e.lumi, e.run, e.evt, weightTID4, tauV4uncor.Pt(), e.gen_match_4, e.decayMode_4, tauSFTool.getSFvsDM(tauV4uncor.Pt(),e.decayMode_4,e.gen_match_4)
+
+			#weightTID *= tauSFTool.getSFvsPT(tauV4uncor.Pt(),e.gen_match_4)
                         #print 'some here for 4 tau', tauSFTool.getSFvsPT(tauV4uncor.Pt(),e.gen_match_4, unc=varTID), tauSFTool.getSFvsPT(tauV4uncor.Pt(),e.gen_match_4), e.gen_match_4, tau4pt20, tau4pt25, tau4pt30, tau4pt35, tau4pthigh, tauV4uncor.Pt() , e.eta_4, systematic, varTID, weightTID
 
 
@@ -2156,9 +2260,9 @@ for ig, group in enumerate(groups) :
 		#    print e.evt, 'varTID:', varTID,  'w:', weight, 'wTID:', weightTID, 'pT_3:', e.pt_3, e.gen_match_3, 'pt_4', e.pt_4, e.gen_match_4
 
 
-
                 #if e.evt == 2496649 : print 'third', weight, weightTID
-                #ifa cat[2:] == 'tt' : print 'some stats', weightTID, e.run, e.lumi, e.evt, tau3pthigh, tau4pthigh
+                #if cat[2:] == 'tt' : print 'some stats', weightTID, e.run, e.lumi, e.evt, tau3pthigh, tau4pthigh
+                weightTID = weightTID3*weightTID4
                 weight *= weightTID
                 weightFM *= weightTID * ww
 
@@ -2204,13 +2308,15 @@ for ig, group in enumerate(groups) :
             aweight, ratio_nlo_up, ratio_nlo_down = 1. ,1., 1.
 
 	    #if  nickName == 'ZHToTauTau' : 
-            if group == 'ZH' or group == 'HWW' :  
+            #if group == 'ZH' or group == 'HWW' :  
+            if group == 'ZH'  :  
                 ewkweight = EWK.getEWKWeight(ZPt, "central")
                 ewkweightUp = EWK.getEWKWeight(ZPt, "up")
                 ewkweightDown = EWK.getEWKWeight(ZPt, "down")
                 #print cat, ZPt, ZPtMC
 
                 aweight = 0.001*3*(26.66 * ewkweight +0.31+0.11)
+                #aweight = (26.66 * ewkweight +0.31+0.11)/(26.66*(1-0.053)+0.31+0.11)
                 ratio_nlo_up = (26.66 * ewkweightUp +0.31+0.11)/(26.66 * ewkweight +0.31+0.11)
                 ratio_nlo_down = (26.66 * ewkweightDown +0.31+0.11)/(26.66 * ewkweight +0.31+0.11)
 
@@ -2268,7 +2374,7 @@ for ig, group in enumerate(groups) :
             #new_jA,jB,jC : hold the ZpT<75, 75<ZpT<150, ZpT>150
             # jBC is filled for ZpT >75
 
-            if fastMTTmass >290 and printDebug : print 'failed fastMTT 290 value', cat, e.lumi, e.run, fastMTTmass
+            if fastMTTmass >290 and printDebug : print 'failed fastMTT 290 value {1:d} \t  {2:d}  \t {3:d}  \t {4:.3f} \t {5:.3f} \t {6:.3f} \t {7:.3f} \t {8:.3f} \t {9:.3f} \t {10:.3f}'.format(cat, e.lumi, e.run, e.evt, e.pt_1, e.pt_2, e.pt_3, e.pt_4, MetV.Pt(),  e.mll, fastMTTmass)
 
             if fastMTTmass <290 : 
 		if hGroup != 'data' : 
@@ -2358,8 +2464,9 @@ for ig, group in enumerate(groups) :
 				hm_sv_new_jC[hGroup][cat].Fill(fastMTTmass,weight )
 				hm_sv_new_jBC[hGroup][cat].Fill(fastMTTmass,weight )
 
-			    if printOn : 
-				print '{0:s} \t {1:d} \t  {2:d}  \t {3:d}  \t {4:.3f} \t {5:.3f} \t {6:.3f} \t {7:.3f} \t {8:.3f} \t {9:.3f} \t {10:.3f}'.format(cat, e.lumi, e.run, e.evt, e.pt_1, e.pt_2, e.pt_3, e.pt_4, MetV.Pt(),  e.mll, fastMTTmass), weight, systematic
+			    #if printOn : 
+                            if printOn : print cat, e.lumi, e.run, e.evt, e.pt_1, e.pt_2, e.pt_3, e.pt_4, MetV.Pt(), fastMTTmass, ZPt, e.mll, weight, weight*aweight, sWeight, e.Generator_weight, e.weightPUtrue, e.weightPU, weight_pref, lepton_sf*tracking_sf, trigw, btag_sf, aweight, lepton_sf3, tracking_sf3, weightTID3, weightTID4, weightTID, e.HTXS_Higgs_cat
+			    #	print '{0:s} \t {1:d} \t  {2:d}  \t {3:d}  \t {4:.3f} \t {5:.3f} \t {6:.3f} \t {7:.3f} \t {8:.3f} \t {9:.3f} \t {10:.3f}'.format(cat, e.lumi, e.run, e.evt, e.pt_1, e.pt_2, e.pt_3, e.pt_4, MetV.Pt(),  e.mll, fastMTTmass)
 
 			    hm_sv_new_FM[hGroup][cat].Fill(fastMTTmass,weight )
 			    hm_sv_new_FMext[hGroup][cat].Fill(fastMTTmass,weight )
@@ -2375,6 +2482,17 @@ for ig, group in enumerate(groups) :
                              
                             #print 'first check here', cat, tight1, tight2, weight, ww, group, hGroup
                             hm_sv_new_FMjall[hGroup][cat].Fill(iBin,weight)
+
+                            #if cat[2:]=='tt' : 
+			    #if e.gen_match_3 == 5 :
+			    if ZPt<75 : hm_sv_new_LowZpT_FMjall[hGroup][cat].Fill(tauV3uncor.Pt(),weight)
+			    if ZPt>75 and ZPt<150 : hm_sv_new_MedZpT_FMjall[hGroup][cat].Fill(tauV3uncor.Pt(),weight)
+			    if ZPt>150 : hm_sv_new_HighZpT_FMjall[hGroup][cat].Fill(tauV3uncor.Pt(),weight)
+			    #if e.gen_match_4 == 5 :
+			    if ZPt<75 : hm_sv_new_LowZpT_FMjall[hGroup][cat].Fill(tauV4uncor.Pt(),weight)
+			    if ZPt>75 and ZPt<150 : hm_sv_new_MedZpT_FMjall[hGroup][cat].Fill(tauV4uncor.Pt(),weight)
+			    if ZPt>150 : hm_sv_new_HighZpT_FMjall[hGroup][cat].Fill(tauV4uncor.Pt(),weight)
+
                             #hm_sv_new_FMjall[hGroup][cat].SetBinContent(iBin,hm_sv_new_FMjall[hGroup][cat].GetBinContent(iBin)+weight)
                             #hm_sv_new_FMjall[hGroup][cat].SetBinError(iBin, sqrt(abs(hm_sv_new_FMjall[hGroup][cat].GetBinError(iBin)**2 + weight**2)))
 
@@ -2587,6 +2705,9 @@ for group in ngroups:
 
 
         hm_sv_new_FMjall[group][cat].Write()
+        hm_sv_new_LowZpT_FMjall[group][cat].Write()
+        hm_sv_new_MedZpT_FMjall[group][cat].Write()
+        hm_sv_new_HighZpT_FMjall[group][cat].Write()
         hm_sv_new_FMjallv2[group][cat].Write()
 
         hm_sv_new_FMjA[group][cat].Write()
