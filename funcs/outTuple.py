@@ -1051,7 +1051,7 @@ class outTuple() :
 	    try:
 		self.L1PreFiringWeight_Nom[0] = entry.L1PreFiringWeight_Nom
 		self.L1PreFiringWeight_Up[0] = entry.L1PreFiringWeight_Up
-		self.L1PreFiringWeight_Down[0] = entry.L1PreFiringWeight_Down
+		self.L1PreFiringWeight_Down[0] = entry.L1PreFiringWeight_Dn
 	    except AttributeError : 
 		self.L1PreFiringWeight_Nom[0] = 1
 		self.L1PreFiringWeight_Up[0] = 1
@@ -1649,7 +1649,6 @@ class outTuple() :
         
         # MET variables  at this point this is the TauES corrected MET
 
-        #if channel == 'tt' : 
         #print 'let see', channel, self.pt_uncor_3[0], self.pt_3[0], self.pt_uncor_4[0], self.pt_4[0], entry.event, SystIndex
 
 	if str(era) != '2017' : 
@@ -1664,6 +1663,7 @@ class outTuple() :
         if met_pt != -99 : 
 	    self.met[0]         = met_pt 
 	    self.metphi[0]      = met_phi
+            #if SystIndex==0 : print 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAa------------------------------>met corrected TES inside', met_pt, 'noTES corr', entry.MET_T1_pt, entry.event, entry.luminosityBlock, entry.run
           
         else : 
 	    if not doUncertainties : 
