@@ -225,21 +225,28 @@ lumiss=[]
 #for cat in cats.values() :
 #    PUevents[cat] = {}
 #    #UWevents[cat] = {}
-'''
-for cat in cats.values() :
-    for line in open('UW_qqZHTT_2018_list'.format(cat),'r').readlines() :
-    #for line in open('UW_data2017'.format(cat),'r').readlines() :
-        vals = line.split()
-        if len(vals) < 3 : continue 
-        #cat, run, LS, event = vals[0], int(vals[1]), int(vals[2]), int(vals[3])
-        cat, LS, run, event = vals[0], int(vals[1]), int(vals[2]), int(vals[3])
-        LSrunEvent = "{0:s}:{1:d}:{2:d}:{3:d}".format(cat,LS,run,event) 
-        #UWevents[cat][LSrunEvent] = line 
-        UWevents.append(LSrunEvent)
-        LSrunEvent = "{0:s}:{1:s}:{2:s}:{3:s}".format(str(cat),str(LS),str(run),str(event)) 
-        lumiss.append(str(LSrunEvent))
-'''
+#for cat in cats.values() :
 
+#for line in open('UW_qqZHTT_2018_list'.format(cat),'r').readlines() :
+#for line in open('UW_data2017'.format(cat),'r').readlines() :
+#for line in open('UWlist'.format(cat),'r').readlines() :
+'''
+for line in open('UWlist','r').readlines() :
+    vals = line.split()
+    if len(vals) < 3 : continue 
+    #cat, run, LS, event = vals[0], int(vals[1]), int(vals[2]), int(vals[3])
+    cat, LS, run, event = vals[0], int(vals[1]), int(vals[2]), int(vals[3])
+    LSrunEvent = "{0:s}:{1:d}:{2:d}:{3:d}".format(cat,LS,run,event) 
+    #UWevents[cat][LSrunEvent] = line 
+    UWevents.append(LSrunEvent)
+    LSrunEvent = "{0:s}:{1:s}:{2:s}:{3:s}".format(str(cat),str(LS),str(run),str(event)) 
+    LSrunEvent = "{0:s}:{1:s}:{2:s}".format(str(cat),str(LS),str(run)) 
+    #if (event)<0 : LSrunEvent = "{0:s}:{1:s}:{2:s}".format(str(cat),str(LS),str(run))
+    lumiss.append(str(LSrunEvent))
+    #lumiss.append(str(LS))
+
+print lumiss
+'''
 Pblumi = 1000.
 tauID_w = 1.
 
@@ -501,7 +508,7 @@ tauV4uncor.SetXYZM(0,0,0,0)
 tauV.SetXYZM(0,0,0,0)
 
 # dictionary where the nickName is the key
-nickNames, xsec, totalWeight, sampleWeight = {}, {}, {}, {}
+nickNames, xsec, totalWeight, sampleWeight, stxsWeightUp, stxsWeightDown = {}, {}, {}, {},{},{}
 
 groups = ['Reducible','fakes','f1', 'f2','gfl1','bfl1', 'lfl1','lfl2','ljfl1', 'cfl1','jfl1','bfl2', 'ljfl2', 'cfl2','jfl2','jft1', 'jft2']
 groups = ['Reducible','fakes','f1', 'f2']
@@ -509,6 +516,13 @@ ngroups = ['Reducible', 'fakes','f1', 'f2','gfl1','bfl1', 'lfl1','lfl2','ljfl1',
 ngroups = ['Reducible', 'fakes','f1', 'f2','gfl1','bfl1', 'lfl1','lfl2','ljfl1', 'cfl1','jfl1','bfl2', 'ljfl2', 'cfl2','jfl2','jft1', 'jft2','Other','ZZ','ZH']
 
 
+## A=FWDH, B=0-75. C=75-150 , D=PTV_150_250_0J, E=PTV_150_250_GE1J, F=PTV_GT250
+list=['A','B','C','D','E','F']
+for ic,i in enumerate(list) : 
+    stxsWeightUp[ic]=[]
+    stxsWeightDown[ic]=[]
+
+print stxsWeightUp , stxsWeightDown
 groups = []
 ngroups = []
 
@@ -615,8 +629,18 @@ for line in open(args.inFileName,'r').readlines() :
 	#totalWeight[nickName] = float(vals[4])
 	fIn = TFile.Open(filein,"READ")
 	totalWeight[nickName] = float(fIn.Get("hWeights").GetSumOfWeights())
+        if  'ZH' in nickName or 'HToWW' in nickName:
+	    ##A=FWDH, B=0-75. C=75-150 , D=PTV_150_250_0J, E=PTV_150_250_GE1J, F=PTV_GT250
+	    #list=['A','B','C','D','E']
+            print fIn.Get("hWeightsScaleSTXS").GetSum(), fIn.Get("hWeightsScaleSTXSUp").GetSum(), fIn.Get("hWeightsScaleSTXSDown").GetSum()
+	    for ic, i in enumerate (list) :
+                stxsWeightDown[ic] = 1
+                if fIn.Get("hWeightsScaleSTXSUp").GetBinContent(1+ic) > 0 : stxsWeightUp[ic]= float( fIn.Get("hWeightsScaleSTXS").GetBinContent(1+ic) /fIn.Get("hWeightsScaleSTXSUp").GetBinContent(1+ic) ) 
+                if fIn.Get("hWeightsScaleSTXSDown").GetBinContent(1+ic) > 0 : stxsWeightUp[ic]= float( fIn.Get("hWeightsScaleSTXS").GetBinContent(1+ic) /fIn.Get("hWeightsScaleSTXSDown").GetBinContent(1+ic) ) 
+		#stxsWeightDown[ic]=float( fIn.Get("hWeightsScaleSTXS").GetBinContent(1+ic) /fIn.Get("hWeightsScaleSTXSDown").GetBinContent(1+ic) ) 
 
-
+        print stxsWeightUp
+        #for i in range(1,8) : print fIn.Get("hWeightsScaleSTXS").GetBinContent(i) , i
 
         if nickName == 'ZHToTauTau' : totalWeight[nickName] *= float(3*0.033658)
         #if nickName == 'HZJ_HToWW' : totalWeight[nickName] *= float(3*0.033658)
@@ -1100,23 +1124,16 @@ for ig, group in enumerate(groups) :
         for i, e in enumerate(inTree) :
 
             inTree.GetEntry(i)
-            #if e.lumi not in lumiss : continue
+            #if str(e.lumi) not in lumiss : continue
 
             #if str(e.lumi) in lumiss : printDebug = True
             #if str(LSrunEvent) not in  : printDebug = True
-
 
             if chunck > 0 :
 		if i <   (chunck-1)*step: continue
 		if i >=  (chunck)*step: continue
 
             iCut=icut
-            '''
-	    corpT_1 = e.pt_1/e.pt_uncor_1
-	    corpT_2 = e.pt_2/e.pt_uncor_2
-	    corpT_3 = e.pt_3/e.pt_uncor_3
-	    corpT_4 = e.pt_4/e.pt_uncor_4
-            '''
             hGroup = group
 
             trigw = 1.
@@ -1145,8 +1162,10 @@ for ig, group in enumerate(groups) :
 	    if cat[2:] == 'em'  : continue
 
             #LSrunEvent = "{0:s}:{1:s}:{2:s}:{3:s}".format(cat,str(e.lumi),str(e.run),str(e.evt))
+            LSrunEvent = "{0:s}:{1:s}:{2:s}".format(str(cat),str(e.lumi),str(e.run))
             #print LSrunEvent, lumiss[0]
             #if str(LSrunEvent) not in lumiss : continue
+            #else : printDebug = True
 
             #if printOn  : print '{0:s} \t {1:d} \t  {2:d}  \t {3:d}  \t {4:.3f} \t {5:.3f} \t {6:.3f} \t {7:.3f} \t {8:.3f} \t {9:.3f} '.format(cat, e.lumi, e.run, e.evt, e.pt_1, e.pt_2, e.pt_3, e.pt_4, e.mll, e.m_sv)
 
@@ -1243,7 +1262,8 @@ for ig, group in enumerate(groups) :
             if group != 'data' :
 		# the pu weight is the e.weight in the ntuples
 		#print 'weights', group, nickName, e.Generator_weight, e.weight, i
-                weight_pref = e.L1PreFiringWeight_Nom
+                try:weight_pref = e.L1PreFiringWeight_Nom
+                except AttributeError : weight_pref = 1.
 
                 if 'prefireup' in systematic.lower() :  
                     try : weight_pref = e.L1PreFiringWeight_Up
@@ -1252,7 +1272,7 @@ for ig, group in enumerate(groups) :
                 if 'prefiredown' in systematic.lower() : 
                     try : weight_pref = e.L1PreFiringWeight_Down ## <------- This will change to _Down
                     except AttributeError : weight_pref = 1.
-                #if e.evt == 2496649 : print 'first', e.weightPUtrue ,  e.Generator_weight , sWeight,  weight_pref
+                if era == "2018" :  weight_pref = 1.
 		weight = e.weightPUtrue * e.Generator_weight *sWeight * weight_pref
 		weightFM = e.weightPUtrue * e.Generator_weight *sWeight * weight_pref
 
@@ -1277,6 +1297,7 @@ for ig, group in enumerate(groups) :
             #isLSR = nbtagM==0 and nbtagL<2 and str(args.sign) == 'OSS'
             isSR = nbtagM==0 and str(args.sign) == 'OS'
             isSS = nbtagM==0  and str(args.sign) == 'SS'
+            #isSS = str(args.sign) == 'SS'
             isLSR = nbtagM==0 and str(args.sign) == 'OSS'
 
 
@@ -1329,11 +1350,12 @@ for ig, group in enumerate(groups) :
                 continue
 
 	    if cat[2:] == 'mt':
-                if isSR and (e.isGlobal_3 < 1 and e.isTracker_3 < 1) : 
+                #if isSR and (e.isGlobal_3 < 1 and e.isTracker_3 < 1) : 
+                if  isSR and (e.isGlobal_3 < 1 and e.isTracker_3 < 1) : 
                     if printDebug : print 'failed isGl_3 and isTrack', cat, e.lumi, e.run, e.evt, e.isGlobal_3, e.isTracker_3
                     tight3 = False
                 if isSR and e.iso_3 > mu_iso  : 
-                    if printDebug : print 'failed iso_3', cat, e.lumi, e.run, e.evt, e.iso_3, e.iso_3*corpT_3, e.pt_3, e.pt_uncor_3
+                    if printDebug : print 'failed iso_3', cat, e.lumi, e.run, e.evt, e.iso_3, e.iso_3, e.pt_3, e.pt_uncor_3
                     tight3 = False
                 if e.mediumId_3  <1 : 
                     if printDebug : print 'failed mID_3', cat, e.lumi, e.run, e.evt, e.mediumId_3
@@ -1348,7 +1370,7 @@ for ig, group in enumerate(groups) :
                     if printDebug : print 'failed tight3 mva', cat, e.lumi, e.run, e.evt, e.Electron_mvaFall17V2noIso_WP90_3
                     tight3 = False
                 if isSR and e.iso_3 > el_iso : 
-                    if printDebug : print 'failed iso_3', cat, e.lumi, e.run, e.evt, e.iso_3, e.iso_3*corpT_3
+                    if printDebug : print 'failed iso_3', cat, e.lumi, e.run, e.evt, e.iso_3, e.iso_3
                     tight3 = False
                 if abs(e.eta_3) > el_eta : 
                     if printDebug : print 'failed eta_3', cat, e.lumi, e.run, e.evt, e.eta_3
@@ -1382,17 +1404,19 @@ for ig, group in enumerate(groups) :
 
 	    if cat[2:] == 'mt' : 
                 if isSR : tight4 = e.idDeepTau2017v2p1VSjet_4 >=  WPSR and e.idDeepTau2017v2p1VSmu_4 >= mt_tau_vsmu and  e.idDeepTau2017v2p1VSe_4 >= mt_tau_vse
-                if isSS : tight4 = e.idDeepTau2017v2p1VSjet_4 >0 and  e.idDeepTau2017v2p1VSmu_4 >= mt_tau_vsmu and  e.idDeepTau2017v2p1VSe_4 >= mt_tau_vse
+                #if isSS : tight4 = e.idDeepTau2017v2p1VSjet_4 >0 and  e.idDeepTau2017v2p1VSmu_4 >= mt_tau_vsmu and  e.idDeepTau2017v2p1VSe_4 >= mt_tau_vse
+                #if isSS : tight4 = e.idDeepTau2017v2p1VSjet_4 >0 and  e.idDeepTau2017v2p1VSmu_4 >= tt_tau_vsmu and  e.idDeepTau2017v2p1VSe_4 >= tt_tau_vse
+                if isSS : tight4 = e.idDeepTau2017v2p1VSjet_4 >0 
 
                 #if isSS : tight4 = e.idDeepTau2017v2p1VSjet_4 ==1 
 	    if cat[2:] == 'et' : 
                 if isSR : tight4  = e.idDeepTau2017v2p1VSjet_4 >= WPSR and e.idDeepTau2017v2p1VSmu_4 >= et_tau_vsmu and  e.idDeepTau2017v2p1VSe_4 >= et_tau_vse
-                if isSS : tight4  = e.idDeepTau2017v2p1VSjet_4 >0   and e.idDeepTau2017v2p1VSmu_4 >= et_tau_vsmu and  e.idDeepTau2017v2p1VSe_4 >= et_tau_vse
+                #if isSS : tight4  = e.idDeepTau2017v2p1VSjet_4 >0   and e.idDeepTau2017v2p1VSmu_4 >= et_tau_vsmu and  e.idDeepTau2017v2p1VSe_4 >= et_tau_vse
+                if isSS : tight4  = e.idDeepTau2017v2p1VSjet_4 >0   and e.idDeepTau2017v2p1VSmu_4 >= tt_tau_vsmu and  e.idDeepTau2017v2p1VSe_4 >= tt_tau_vse
 
-                #if isSS : tight4  = e.idDeepTau2017v2p1VSjet_4 ==1  
 	    if cat[2:] == 'tt' :
 	        if e.decayMode_3 == 5 or e.decayMode_3 == 6  : 
-                    if printDebug : print 'failed decayMode ', cat, e.lumi, e.run, e.evt, e.decayMode_4
+                    if printDebug : print 'failed decayMode ', cat, e.lumi, e.run, e.evt, e.decayMode_3
                     continue
 	        if e.decayMode_4 == 5 or e.decayMode_4 == 6  : 
                     if printDebug : print 'failed decayMode ', cat, e.lumi, e.run, e.evt, e.decayMode_4
@@ -1425,7 +1449,7 @@ for ig, group in enumerate(groups) :
                     #Flavour of genParticle for MC matching to status==1 electrons or photons: 1 = prompt electron (including gamma*->mu mu), 15 = electron from prompt tau, 22 = prompt photon (likely conversion), 5 = electron from b, 4 = electron from c, 3 = electron from light or unknown, 0 = unmatched
                     if cat[2:]=='mt' :
                         if tight3 and (e.gen_match_3 == 15  or e.gen_match_3 ==1)  : isL3L = True
-                        #if tight3 and (e.gen_match_3 != 15  )  : isL3L = True
+                        #if tight3 and (e.gen_match_3 == 15  )  : isL3L = True
                         #if tight3 and (e.gen_match_3 == 15  )  : isL3L = True
                         if tight4 and e.gen_match_4 != 0  : isL4L = True
                         #if tight3 and (e.gen_match_3 != 15 and e.gen_match_3 !=1 )  : isL3L = True
@@ -1476,8 +1500,12 @@ for ig, group in enumerate(groups) :
                 if  (not tight1 or not tight2) : continue
                 if  (not tight3 or not tight4) : continue
 
-            if not dataDriven and (not tight1 or not tight2) : continue
-            if not dataDriven and (not tight3 or not tight4) : continue
+            if not dataDriven and (not tight1 or not tight2) : 
+		if printDebug : print 'failed tight1 or tight2', cat, e.lumi, e.run, e.evt, tight1, tight2
+		continue
+            if not dataDriven and (not tight3 or not tight4) : 
+		if printDebug : print 'failed tight3 or tight4', cat, e.lumi, e.run, e.evt, tight3, tight4
+		continue
 
 
             #if cat[2:] =='tt' : print e.idDeepTau2017v2p1VSjet_3, WPSR , e.idDeepTau2017v2p1VSmu_3, tt_tau_vsmu, e.idDeepTau2017v2p1VSe_3, tt_tau_vse, tight1, tight2
@@ -1495,8 +1523,8 @@ for ig, group in enumerate(groups) :
                 continue
 	    #try :
 	    #if nbtag > 0 and str(args.sign) == 'OS': continue #commented this
-	    #if nbtagM > 0 or nbtagL>1: 
-	    if nbtagM > 0 : 
+	    if nbtagM > 0 or nbtagL>1: 
+	    #if (isSR or isLSR) and nbtagM > 0 : 
 		if printDebug: print 'failed btag cut', cat, e.lumi, e.run, e.evt, nbtagL, nbtagM
                 continue #commented this
 	    #except TypeError :
@@ -1515,7 +1543,7 @@ for ig, group in enumerate(groups) :
             #if group == 'data' :
             
             if DD[cat].checkEvent(e,cat) : 
-		if printDebug: print 'failed DD check', cat, e.lumi, e.run, e.evt, e.mll
+		if printDebug: print 'failed DD check', cat, e.lumi, e.run, e.evt, e.pt_1, e.pt_2, e.pt_3, e.pt_4
                 continue 
 
             if isSS : hGroup = 'SSR'
@@ -1608,7 +1636,7 @@ for ig, group in enumerate(groups) :
 	    cor1, cor2 = 1., 1.
 
 
-
+            '''
             #if doCorrectTES and group != 'data' and (cat[2:] == 'et' or cat[2:]  == 'mt' or cat[2:]  == 'tt') :
             if doCorrectTES and group != 'data' and (cat[2:] == 'et' or cat[2:]  == 'mt' or cat[2:]  == 'tt') :
 
@@ -1783,7 +1811,7 @@ for ig, group in enumerate(groups) :
 	       
                 met = MetV.Pt()
                 metphi = MetV.Phi()
-                
+            '''               
             H_LT = tauV3uncor.Pt() + tauV4uncor.Pt()
             if cat[2:] == 'tt' and H_LT < 60 : 
                 if printDebug: print 'failed H_LT cut ', cat, e.lumi, e.run, e.evt, H_LT
@@ -1962,15 +1990,18 @@ for ig, group in enumerate(groups) :
 
                     if isSR: 
 			if not tight3 and tight4 : 
+			    weight *= fW1          
 			    ww = fW1          
 			    hGroup = 'f1'
 			    hGroup = 'Reducible'
 			elif tight3 and not tight4 : 
+			    weight *= fW2
 			    ww = fW2
 			    hGroup = 'f2'
 			    hGroup = 'Reducible'
 			elif not tight3 and not tight4 : 
-			    ww = -fW0
+			    weight *= -fW0
+			    ww = -fW1          
 			    hGroup = 'fakes'
 			    hGroup = 'Reducible'
 			else : 
@@ -2023,9 +2054,9 @@ for ig, group in enumerate(groups) :
                         '''
 			
 		    if cat[2:] == 'et' or cat[2:] == 'mt' :
-			if e.gen_match_3 != 15  and e.gen_match_3 !=1 and 'noL' in extratag: isfakemc1 = True
+			if e.gen_match_3 != 15  and e.gen_match_3 !=1 : isfakemc1 = True
 			#if e.gen_match_3 != 15 and e.gen_match_3 !=1  and 'wL' in extratag: isfakemc1 = True
-			if e.gen_match_3 != 15   and 'wL' in extratag: isfakemc1 = True
+			#if e.gen_match_3 != 15   and 'wL' in extratag: isfakemc1 = True
 
                         '''
 			if  e.gen_match_3 == 0 : hGroup = 'jfl1'
@@ -2377,32 +2408,54 @@ for ig, group in enumerate(groups) :
             if fastMTTmass >290 and printDebug : print 'failed fastMTT 290 value {1:d} \t  {2:d}  \t {3:d}  \t {4:.3f} \t {5:.3f} \t {6:.3f} \t {7:.3f} \t {8:.3f} \t {9:.3f} \t {10:.3f}'.format(cat, e.lumi, e.run, e.evt, e.pt_1, e.pt_2, e.pt_3, e.pt_4, MetV.Pt(),  e.mll, fastMTTmass)
 
             if fastMTTmass <290 : 
+		if printDebug : 
+		    print "registering event", cat , e.lumi, e.run, e.pt_1, e.pt_2, e.pt_3, e.pt_4
 		if hGroup != 'data' : 
 
 
                     if 'SSR' in hGroup  and 'data' not in group : weight *=-1
 
 		    if 'ZH' in group or 'HWW' in group: 
+                        lowW = 1.
+                        if 'lowpt' in systematic and 'Up' in systematic: 
+                            if e.HTXS_Higgs_cat == 400  or e.HTXS_Higgs_cat == 500 : lowW = stxsWeightUp[0]
+                            if e.HTXS_Higgs_cat == 401  or e.HTXS_Higgs_cat == 501 : lowW = stxsWeightUp[1]
+                            if e.HTXS_Higgs_cat == 402  or e.HTXS_Higgs_cat == 502 : lowW =stxsWeightUp[2]
+                            if e.HTXS_Higgs_cat == 403  or e.HTXS_Higgs_cat == 503 : lowW =stxsWeightUp[3]
+                            if e.HTXS_Higgs_cat == 404  or e.HTXS_Higgs_cat == 504 : lowW =stxsWeightUp[4]
+                        if 'highpt' in systematic and 'Up' in systematic: 
+                            if e.HTXS_Higgs_cat == 405  or e.HTXS_Higgs_cat == 505 : lowW =stxsWeightUp[5]
 
+                        if 'lowpt' in systematic and 'Down' in systematic: 
+                            if e.HTXS_Higgs_cat == 400  or e.HTXS_Higgs_cat == 500 : lowW =stxsWeightDown[0]
+                            if e.HTXS_Higgs_cat == 401  or e.HTXS_Higgs_cat == 501 : lowW =stxsWeightDown[1]
+                            if e.HTXS_Higgs_cat == 402  or e.HTXS_Higgs_cat == 502 : lowW =stxsWeightDown[2]
+                            if e.HTXS_Higgs_cat == 403  or e.HTXS_Higgs_cat == 503 : lowW =stxsWeightDown[3]
+                            if e.HTXS_Higgs_cat == 404  or e.HTXS_Higgs_cat == 504 : lowW =stxsWeightDown[4]
+                        if 'highpt' in systematic and 'Down' in systematic: 
+                            if e.HTXS_Higgs_cat == 405  or e.HTXS_Higgs_cat == 505 : lowW = stxsWeightDown[5]
+
+                        
                         if 'lowpt' in systematic : 
-                            if (e.HTXS_Higgs_cat >= 400 and e.HTXS_Higgs_cat< 405) or (e.HTXS_Higgs_cat >= 500 and e.HTXS_Higgs_cat< 505) :
-                                if 'Up' in systematic : weight *= e.LHEScaleWeights[8]
-                                if 'Down' in systematic : weight *= e.LHEScaleWeights[0]
+                            #print 'group', group, nickName, lowW , e.HTXS_Higgs_cat , stxsWeightUp , len(stxsWeightUp) , e.LHEScaleWeights[8]  ,  lowW , e.LHEScaleWeights[8] *lowW
+			    if (e.HTXS_Higgs_cat >= 400 and e.HTXS_Higgs_cat< 405) or (e.HTXS_Higgs_cat >= 500 and e.HTXS_Higgs_cat< 505) :
+				if 'Up' in systematic : weight *= e.LHEScaleWeights[8] * lowW 
+				if 'Down' in systematic : weight *= e.LHEScaleWeights[0] * lowW
 
                         if 'highpt' in systematic : 
                             if (e.HTXS_Higgs_cat == 405) or (e.HTXS_Higgs_cat == 505 ) :
-                                if 'Up' in systematic : weight *= e.LHEScaleWeights[8]
-                                if 'Down' in systematic : weight *= e.LHEScaleWeights[0]
+                                if 'Up' in systematic : weight *= e.LHEScaleWeights[8] * lowW
+                                if 'Down' in systematic : weight *= e.LHEScaleWeights[0] * lowW
 
+                    #print 'group', group, nickName, lowW , e.HTXS_Higgs_cat , stxsWeightUp , len(stxsWeightUp) , e.LHEScaleWeights[8]  ,  lowW , e.LHEScaleWeights[8] *lowW
 
 		    if hGroup !='fakes' and hGroup !='f1' and hGroup != 'f2' and hGroup !='Reducible' : 
 
                         if 'ZH' in group or ' HWW' in group : 
 
-			    if 'lep_scaleDown' in systematic : weight *= e.LHEScaleWeights[0]
-			    if 'lep_scaleUp' in systematic : weight *= e.LHEScaleWeights[8]
+			    if 'lep_scaleUp' in systematic : weight *= e.LHEScaleWeights[8] * lowW
+			    if 'lep_scaleDown' in systematic : weight *= e.LHEScaleWeights[0] * lowW
 
-                           
 			hm_sv_new[hGroup][cat].Fill(fastMTTmass,weight )
 			hmt_sv_new[hGroup][cat].Fill(fastMTTtransverseMass,weight )
 			hH_LT[hGroup][cat].Fill(H_LT,weight )
@@ -2432,7 +2485,6 @@ for ig, group in enumerate(groups) :
 
 			    if group =='ggZH' or group == 'ggHWW': 
 
-                                print 'filling', cat, group, e.HTXS_Higgs_cat, iBin, weight, fastMTTmass, ZPt
 				if e.HTXS_Higgs_cat == 500 : hm_sv_new_lep_FWDH_htt125[group][cat].Fill(iBin,weight )
 				if e.HTXS_Higgs_cat == 501 : hm_sv_new_lep_PTV_0_75_htt125[group][cat].Fill(iBin,weight )
 				if e.HTXS_Higgs_cat == 502 : hm_sv_new_lep_PTV_75_150_htt125[group][cat].Fill(iBin,weight )
@@ -2466,6 +2518,7 @@ for ig, group in enumerate(groups) :
 
 			    #if printOn : 
                             if printOn : print cat, e.lumi, e.run, e.evt, e.pt_1, e.pt_2, e.pt_3, e.pt_4, MetV.Pt(), fastMTTmass, ZPt, e.mll, weight, weight*aweight, sWeight, e.Generator_weight, e.weightPUtrue, e.weightPU, weight_pref, lepton_sf*tracking_sf, trigw, btag_sf, aweight, lepton_sf3, tracking_sf3, weightTID3, weightTID4, weightTID, e.HTXS_Higgs_cat
+                            #print cat, e.lumi, e.run, e.evt, e.pt_1, e.pt_2, e.pt_3, e.pt_4, MetV.Pt(), fastMTTmass, ZPt, e.mll, weight, weight*aweight, sWeight, e.Generator_weight, e.weightPUtrue, e.weightPU, weight_pref, lepton_sf*tracking_sf, trigw, btag_sf, aweight, lepton_sf3, tracking_sf3, weightTID3, weightTID4, weightTID, e.HTXS_Higgs_cat, 'prefire', weight_pref
 			    #	print '{0:s} \t {1:d} \t  {2:d}  \t {3:d}  \t {4:.3f} \t {5:.3f} \t {6:.3f} \t {7:.3f} \t {8:.3f} \t {9:.3f} \t {10:.3f}'.format(cat, e.lumi, e.run, e.evt, e.pt_1, e.pt_2, e.pt_3, e.pt_4, MetV.Pt(),  e.mll, fastMTTmass)
 
 			    hm_sv_new_FM[hGroup][cat].Fill(fastMTTmass,weight )
@@ -2509,7 +2562,7 @@ for ig, group in enumerate(groups) :
 
 		    if hGroup =='fakes' or hGroup =='f1' or hGroup == 'f2' or 'Reducible' in hGroup :  
 
-                        if isData :   weight = ww
+                        #if isData :   weight = ww
 
                         #print 'check event', tight1, tight2, tight3, tight4, weight, fW1, fW2, fW0, group, hGroup
 
@@ -2607,9 +2660,10 @@ fOut.cd()
 for group in ngroups:
     for icat, cat in cats.items()[0:8] :
         
-	for i in range(len(hLabels)) : 
-	    hCutFlowPerGroup[group][cat].GetXaxis().SetBinLabel(i+1, hLabels[i])
-	    hCutFlowPerGroupFM[group][cat].GetXaxis().SetBinLabel(i+1, hLabels[i])
+        if  str(args.sign) == 'OS':
+	    for i in range(len(hLabels)) : 
+		hCutFlowPerGroup[group][cat].GetXaxis().SetBinLabel(i+1, hLabels[i])
+		hCutFlowPerGroupFM[group][cat].GetXaxis().SetBinLabel(i+1, hLabels[i])
 
 	for inick,nickName in enumerate(nickNames[group]) :
 	    #for i in range(1, hCutFlowN[cat][nickName].GetNbinsX()) : 
@@ -2618,11 +2672,13 @@ for group in ngroups:
 		#if 'DY' in nickName : print 'content now', i, hCutFlowN[cat][nickName].GetBinContent(i), 'for cat and nickName', cat, nickName, hCutFlowPerGroup[group][cat].GetXaxis().GetBinLabel(i), 'weight is ', weight 
 	        #for i in range(len(hLabels)) :
 
-	    for i in range(len(hLabels)) : 
-		hCutFlowN[cat][nickName].GetXaxis().SetBinLabel(i+1, hLabels[i])
-		hCutFlowFM[cat][nickName].GetXaxis().SetBinLabel(i+1, hLabels[i])
-		hCutFlowPerGroup[group][cat].GetXaxis().SetBinLabel(i+1, hLabels[i])
-		hCutFlowPerGroupFM[group][cat].GetXaxis().SetBinLabel(i+1, hLabels[i])
+        
+            if  str(args.sign) == 'OS':
+		for i in range(len(hLabels)) : 
+		    hCutFlowN[cat][nickName].GetXaxis().SetBinLabel(i+1, hLabels[i])
+		    hCutFlowFM[cat][nickName].GetXaxis().SetBinLabel(i+1, hLabels[i])
+		    hCutFlowPerGroup[group][cat].GetXaxis().SetBinLabel(i+1, hLabels[i])
+		    hCutFlowPerGroupFM[group][cat].GetXaxis().SetBinLabel(i+1, hLabels[i])
 
             #if  'data' not in nickName: 
                 #hCutFlowN[cat][nickName].Scale(weight)

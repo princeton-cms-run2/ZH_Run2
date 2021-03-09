@@ -46,6 +46,7 @@ for i, sys in enumerate(scale) :
     scaleSyst.append(sys+'Down')
 
 jes=['jesAbsolute', 'jesAbsolute_{0:s}'.format(str(era)), 'jesBBEC1', 'jesBBEC1_{0:s}'.format(str(era)), 'jesEC2', 'jesEC2_{0:s}'.format(str(era)), 'jesFlavorQCD', 'jesHF', 'jesHF_{0:s}'.format(str(era)), 'jesRelativeBal', 'jesRelativeSample_{0:s}'.format(str(era)), 'jesHEMIssue', 'jesTotal', 'jer']
+jes=['jesAbsolute', 'jesAbsolute_{0:s}'.format(str(era)), 'jesBBEC1', 'jesBBEC1_{0:s}'.format(str(era)), 'jesEC2', 'jesEC2_{0:s}'.format(str(era)), 'jesFlavorQCD', 'jesHF', 'jesHF_{0:s}'.format(str(era)), 'jesRelativeBal', 'jesRelativeSample_{0:s}'.format(str(era)), 'jesTotal', 'jer']
 
 jesSyst=[]
 for i, sys in enumerate(jes) :
@@ -93,13 +94,15 @@ for line in open(args.inFileName,'r').readlines() :
     parts=1
     #if 'ggZH_HToTauTau_ZToLL' not in ds :  continue
 
+    if 'ZZT' in ds  and 'ext' in ds: parts = 10 
     if 'ggZH_HToTauTau_ZToLL' in ds : 
-	fin='../MC/condor/ZH/ggZH_HToTauTau_ZToLL_{0:s}/ggZH_HToTauTau_ZToLL_{0:s}.root'.format(era)
-	ff = TFile(fin,'read')
-	ttree = ff.Get("Events")
-	ev = ttree.GetEntries()
-	parts = ev/25000 +1
-	print 'for ds', ds,' will make ', parts, ev
+	#fin='../MC/condor/ZH/ggZH_HToTauTau_ZToLL_{0:s}/ggZH_HToTauTau_ZToLL_{0:s}.root'.format(era)
+	#ff = TFile(fin,'read')
+	#ttree = ff.Get("Events")
+	#ev = ttree.GetEntries()
+	#parts = ev/25000 +1
+        parts=20
+	#print 'for ds', ds,' will make ', parts, ev
 
     for ic, sys in enumerate(sysall) :
 

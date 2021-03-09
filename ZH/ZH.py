@@ -51,7 +51,7 @@ cutCounterGenWeight = {}
 
 doJME  = args.doSystematics.lower() == 'true' or args.doSystematics.lower() == 'yes' or args.doSystematics == '1'
 
-doJME = True
+#doJME = True
 
 cats = ['eeet','eemt','eett','eeem','mmet','mmmt','mmtt','mmem']
 
@@ -110,13 +110,68 @@ if MC :
 	    hDYxGenweightsArr.append(TH1D("DY"+str(i)+"genWeights",\
 		    "DY"+str(i)+"genWeights",1,-0.5,0.5))
 
+isZH = 'ZH' in outFileName or 'HZJ' in outFileName
 
 if args.weights > 0 :
     hWeight = TH1D("hWeights","hWeights",1,-0.5,0.5)
     hWeight.Sumw2()
+    hWeightScaleUp = TH1D("hWeightsScaleUp","hWeightsScaleUp",1,-0.5,0.5)
+    hWeightScaleUp.Sumw2()
+    hWeightScaleDown = TH1D("hWeightsScaleDown","hWeightsScaleDown",1,-0.5,0.5)
+    hWeightScaleDown.Sumw2()
+
+
+    hWeightScaleSTXS = TH1D("hWeightsScaleSTXS","hWeightsScaleSTXS",11,-0.5,10.5)
+    hWeightScaleSTXS.Sumw2()
+    hWeightScaleSTXSUp = TH1D("hWeightsScaleSTXSUp","hWeightsScaleSTXSUp",11,-0.5,10.5)
+    hWeightScaleSTXSUp.Sumw2()
+    hWeightScaleSTXSDown = TH1D("hWeightsScaleSTXSDown","hWeightsScaleSTXSDown",11,-0.5,10.5)
+    hWeightScaleSTXSDown.Sumw2()
+
+
 
     for count, e in enumerate(inTree) :
         hWeight.Fill(0, e.genWeight)
+        if isZH : 
+	    hWeightScaleUp.Fill(0, e.genWeight*e.LHEScaleWeight[8])
+	    hWeightScaleDown.Fill(0, e.genWeight*e.LHEScaleWeight[0])
+
+	    hWeightScaleSTXS.Fill(0, e.genWeight)
+	    hWeightScaleSTXSUp.Fill(0, e.genWeight*e.LHEScaleWeight[8])
+	    hWeightScaleSTXSDown.Fill(0, e.genWeight*e.LHEScaleWeight[0])
+
+	    if e.HTXS_stage1_1_cat_pTjet30GeV == 300 or e.HTXS_stage1_1_cat_pTjet30GeV == 400 or e.HTXS_stage1_1_cat_pTjet30GeV == 500 : 
+	       hWeightScaleSTXS.Fill(1, e.genWeight)
+	       hWeightScaleSTXSUp.Fill(1, e.genWeight*e.LHEScaleWeight[8])
+	       hWeightScaleSTXSDown.Fill(1, e.genWeight*e.LHEScaleWeight[0])
+
+	    if e.HTXS_stage1_1_cat_pTjet30GeV == 301 or e.HTXS_stage1_1_cat_pTjet30GeV == 401 or e.HTXS_stage1_1_cat_pTjet30GeV == 501 : 
+	       hWeightScaleSTXS.Fill(2, e.genWeight)
+	       hWeightScaleSTXSUp.Fill(2, e.genWeight*e.LHEScaleWeight[8])
+	       hWeightScaleSTXSDown.Fill(2, e.genWeight*e.LHEScaleWeight[0])
+
+	    if e.HTXS_stage1_1_cat_pTjet30GeV == 302 or e.HTXS_stage1_1_cat_pTjet30GeV == 402 or e.HTXS_stage1_1_cat_pTjet30GeV == 502 : 
+	       hWeightScaleSTXS.Fill(3, e.genWeight)
+	       hWeightScaleSTXSUp.Fill(3, e.genWeight*e.LHEScaleWeight[8])
+	       hWeightScaleSTXSDown.Fill(3, e.genWeight*e.LHEScaleWeight[0])
+
+	    if e.HTXS_stage1_1_cat_pTjet30GeV == 303 or e.HTXS_stage1_1_cat_pTjet30GeV == 403 or e.HTXS_stage1_1_cat_pTjet30GeV == 503 : 
+	       hWeightScaleSTXS.Fill(4, e.genWeight)
+	       hWeightScaleSTXSUp.Fill(4, e.genWeight*e.LHEScaleWeight[8])
+	       hWeightScaleSTXSDown.Fill(4, e.genWeight*e.LHEScaleWeight[0])
+
+	    if e.HTXS_stage1_1_cat_pTjet30GeV == 304 or e.HTXS_stage1_1_cat_pTjet30GeV == 404 or e.HTXS_stage1_1_cat_pTjet30GeV == 504 : 
+	       hWeightScaleSTXS.Fill(5, e.genWeight)
+	       hWeightScaleSTXSUp.Fill(5, e.genWeight*e.LHEScaleWeight[8])
+	       hWeightScaleSTXSDown.Fill(5, e.genWeight*e.LHEScaleWeight[0])
+
+
+	    if e.HTXS_stage1_1_cat_pTjet30GeV == 305 or e.HTXS_stage1_1_cat_pTjet30GeV == 405 or e.HTXS_stage1_1_cat_pTjet30GeV == 505 : 
+	       hWeightScaleSTXS.Fill(6, e.genWeight)
+	       hWeightScaleSTXSUp.Fill(6, e.genWeight*e.LHEScaleWeight[8])
+	       hWeightScaleSTXSDown.Fill(6, e.genWeight*e.LHEScaleWeight[0])
+
+
     
 
         if "WJetsToLNu" in outFileName and 'TWJets' not in outFileName:
@@ -140,7 +195,12 @@ if args.weights > 0 :
             hDYxGenweightsArr[i].Write()
 
     hWeight.Write()
-    if args.weights == 2 : 
+    hWeightScaleUp.Write()
+    hWeightScaleDown.Write()
+    hWeightScaleSTXS.Write()
+    hWeightScaleSTXSUp.Write()
+    hWeightScaleSTXSDown.Write()
+    if args.weights > 1 : 
         fW.Close()
         sys.exit()
 
