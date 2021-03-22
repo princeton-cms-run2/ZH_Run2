@@ -93,8 +93,8 @@ for line in open(args.inFileName,'r').readlines() :
     #    if 'ZH' not in nickName and 'WH' not in nickName : continue
     parts=1
     #if 'ggZH_HToTauTau_ZToLL' not in ds :  continue
-
-    if 'ZZT' in ds  and 'ext' in ds: parts = 10 
+    splitThat = ('ZZTo' in ds and 'ext' in ds ) or 'ggZH_HToTauTau_ZToLL' in ds
+    if 'ZZTo' in ds and 'ext' in ds : parts = 10 
     if 'ggZH_HToTauTau_ZToLL' in ds : 
 	#fin='../MC/condor/ZH/ggZH_HToTauTau_ZToLL_{0:s}/ggZH_HToTauTau_ZToLL_{0:s}.root'.format(era)
 	#ff = TFile(fin,'read')
@@ -134,7 +134,8 @@ for line in open(args.inFileName,'r').readlines() :
 	    cff = os.path.isfile('/eos/uscms/store/user/alkaloge/ZH/nAODv7/out_{4:s}/{2:s}_{8:s}/NormZZ/{3:s}_{2:s}_sys{5:s}_{6:s}.root'.format(eospath,sel,era,ds,tag,sys,str(part),str(parts),str(sign)))
 
 
-            if 'ggZH_HToTauTau_ZToLL' not in ds : 
+            #if 'ggZH_HToTauTau_ZToLL' not in ds and : 
+            if not splitThat : 
 		filejdl = 'condor_{0:s}_{1:s}_{2:s}_{3:s}_sys{4:s}_{7:s}.jdl'.format(ds,era,sel,tag, sys,str(part),str(parts),str(sign))
 	        filesh = filejdl.replace('jdl','sh')
 
@@ -186,14 +187,17 @@ for line in open(args.inFileName,'r').readlines() :
   	        subprocess.call(["sed -i  's/SINGHERE/{1:s}/g' {0:s}".format(filesh,str(sign))], shell=True)
   	        subprocess.call(["sed -i  's/SINGHERE/{1:s}/g' {0:s}".format(filejdl,str(sign))], shell=True)
 
-                if 'ggZH_HToTauTau_ZToLL' in ds : 
+                #if 'ggZH_HToTauTau_ZToLL' in ds : 
+                if splitThat : 
 		    subprocess.call(["sed -i  's/RANGEHERE/{1:s}/g' {0:s}".format(filesh,str(part))], shell=True)
 		    subprocess.call(["sed -i  's/PARTHERE/{1:s}/g' {0:s}".format(filejdl,str(part))], shell=True)
 		    subprocess.call(["sed -i  's/PARTSHERE/{1:s}/g' {0:s}".format(filejdl,str(parts))], shell=True)
+		    subprocess.call(["sed -i  's/PARTSHERE/{1:s}/g' {0:s}".format(filesh,str(parts))], shell=True)
                 else :  
 		    subprocess.call(["sed -i  's/RANGEHERE/0/g' {0:s}".format(filesh)], shell=True)
 		    subprocess.call(["sed -i  's/_PARTHERE//g' {0:s}".format(filejdl,str(part))], shell=True)
 		    subprocess.call(["sed -i  's/ofPARTSHERE//g' {0:s}".format(filejdl,str(parts))], shell=True)
+		    subprocess.call(["sed -i  's/PARTSHERE/1/g' {0:s}".format(filesh,str(parts))], shell=True)
 
 
 		#outLines = []

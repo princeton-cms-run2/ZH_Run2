@@ -26,7 +26,7 @@ xrdcp root://cmseos.fnal.gov//store/user/alkaloge/CHANNEL/nAODv7/YEAR/FILEIN_YEA
 #python makeAllPlotsCHANNELCondor.py -f FILEIN_YEAR_CHANNEL_TAG.txt  -a CHANNEL -s OS --MConly --looseCuts -y YEAR  -r yes -w 16 -b 16 -e TAG -j none
 
 
-python runLocal.py YEAR FILEIN NICKNAME 0 SYSTEMATICHERE yes RANGEHERE SINGHERE 
+python runLocal.py YEAR FILEIN NICKNAME 0 SYSTEMATICHERE yes RANGEHERE PARTSHERE SINGHERE  
 
 rm Fakes*root
 

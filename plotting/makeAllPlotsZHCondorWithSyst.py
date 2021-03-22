@@ -109,6 +109,7 @@ def getArgs() :
     parser.add_argument("-i", "--isLocal",type=str, default=0,help='local or condor')
     parser.add_argument("-t", "--gType",type=str, default='',help='type : data, Signal, Other')
     parser.add_argument("-x", "--subRange",type=int, default=0,help='run on a subrange of events')
+    parser.add_argument("-X", "--Chunk",type=int, default=1,help='run on a subrange of events')
     
     return parser.parse_args()
 
@@ -635,8 +636,8 @@ for line in open(args.inFileName,'r').readlines() :
             print fIn.Get("hWeightsScaleSTXS").GetSum(), fIn.Get("hWeightsScaleSTXSUp").GetSum(), fIn.Get("hWeightsScaleSTXSDown").GetSum()
 	    for ic, i in enumerate (list) :
                 stxsWeightDown[ic] = 1
-                if fIn.Get("hWeightsScaleSTXSUp").GetBinContent(1+ic) > 0 : stxsWeightUp[ic]= float( fIn.Get("hWeightsScaleSTXS").GetBinContent(1+ic) /fIn.Get("hWeightsScaleSTXSUp").GetBinContent(1+ic) ) 
-                if fIn.Get("hWeightsScaleSTXSDown").GetBinContent(1+ic) > 0 : stxsWeightUp[ic]= float( fIn.Get("hWeightsScaleSTXS").GetBinContent(1+ic) /fIn.Get("hWeightsScaleSTXSDown").GetBinContent(1+ic) ) 
+                if fIn.Get("hWeightsScaleSTXSUp").GetBinContent(2+ic) > 0 : stxsWeightUp[ic]= float( fIn.Get("hWeightsScaleSTXS").GetBinContent(2+ic) /fIn.Get("hWeightsScaleSTXSUp").GetBinContent(2+ic) ) 
+                if fIn.Get("hWeightsScaleSTXSDown").GetBinContent(2+ic) > 0 : stxsWeightUp[ic]= float( fIn.Get("hWeightsScaleSTXS").GetBinContent(2+ic) /fIn.Get("hWeightsScaleSTXSDown").GetBinContent(2+ic) ) 
 		#stxsWeightDown[ic]=float( fIn.Get("hWeightsScaleSTXS").GetBinContent(1+ic) /fIn.Get("hWeightsScaleSTXSDown").GetBinContent(1+ic) ) 
 
         print stxsWeightUp
@@ -1109,7 +1110,7 @@ for ig, group in enumerate(groups) :
 	el_eta = 2.5
 
         chunck = int(args.subRange)
-        step=25000
+        step= nentries/args.Chunk
 
         if chunck > 0 :
             print 'Will run for',  (chunck-1)*step,'---> to ', (chunck)*step,' events now....'
@@ -1121,11 +1122,14 @@ for ig, group in enumerate(groups) :
         #if printOn : 
         #    print 'cat \t lumi \t run \t  event  \t pt_1 \t pt_2 \t pt_3 \t pt_4 \t  met  \t  nbtag \t  btag_w \t pu_w \t gen_w \t prefire_w \t HTXS \t mll'
 
+        #for i, e in enumerate(inTree) :
+        start= 0
+        if chunck>0 : start =  (chunck-1)*step
+        #for i, e in enumerate(inTree, start) :
         for i, e in enumerate(inTree) :
 
             inTree.GetEntry(i)
             #if str(e.lumi) not in lumiss : continue
-
             #if str(e.lumi) in lumiss : printDebug = True
             #if str(LSrunEvent) not in  : printDebug = True
 
@@ -1442,33 +1446,37 @@ for ig, group in enumerate(groups) :
 	    isL4L = False
 
 	    if  isLSR :
-		if group == 'Other' or group =='ZZ' :
+                if group == 'Other' or group =='ZZ' :
                     
 		    dm3=e.decayMode_3
 		    dm4=e.decayMode_4
                     #Flavour of genParticle for MC matching to status==1 electrons or photons: 1 = prompt electron (including gamma*->mu mu), 15 = electron from prompt tau, 22 = prompt photon (likely conversion), 5 = electron from b, 4 = electron from c, 3 = electron from light or unknown, 0 = unmatched
                     if cat[2:]=='mt' :
                         if tight3 and (e.gen_match_3 == 15  or e.gen_match_3 ==1)  : isL3L = True
-                        #if tight3 and (e.gen_match_3 == 15  )  : isL3L = True
-                        #if tight3 and (e.gen_match_3 == 15  )  : isL3L = True
                         if tight4 and e.gen_match_4 != 0  : isL4L = True
+                        #if tight3 and (e.gen_match_3 == 15)  : isL3L = True
+                        #if tight3 and (e.gen_match_3 == 15  )  : isL3L = True
+                        #if tight3 and (e.gen_match_3 == 15  )  : isL3L = True
+                        #if tight4 and e.gen_match_4 == 15  : isL4L = True
                         #if tight3 and (e.gen_match_3 != 15 and e.gen_match_3 !=1 )  : isL3L = True
 
                     if cat[2:]=='et' :
                         if tight3 and (e.gen_match_3 == 15  or e.gen_match_3 ==1)  : isL3L = True
-                        #if tight3 and (e.gen_match_3 == 15  )  : isL3L = True
                         if tight4 and e.gen_match_4 != 0  : isL4L = True
+                        #if tight3 and (e.gen_match_3 == 15  )  : isL3L = True
+                        #if tight4 and e.gen_match_4 == 15  : isL4L = True
                         #if tight3 and (e.gen_match_3 != 15 and e.gen_match_3 !=1 )  : isL3L = True
 
                     if cat[2:]=='tt' :
                         if tight3 and e.gen_match_3 != 0  : isL3L = True
                         if tight4 and e.gen_match_4 != 0  : isL4L = True
-                        #if tight3 and e.gen_match_3 == 0  : isL3L = True
-
+                        #if tight3 and e.gen_match_3 == 15  : isL3L = True
+                        #if tight4 and e.gen_match_4 == 15  : isL4L = True
 
 		    #print cat, tight3, e.gen_match_3, tight4, e.gen_match_4
 		    if isL3L or isL4L :
-                        if weight< 0. : weight=0
+
+                        #if weight< 0. : weight=0
 			hGroup='Reducible'
                         fW1, fW2, fW0 = FF.getFakeWeightsvspTvsDM(cat[2:], e.pt_3, e.pt_4, WP, dm3, dm4)
 
@@ -1480,12 +1488,16 @@ for ig, group in enumerate(groups) :
 
 			if isL3L and  isL4L :
 			    weight *=fW0
+                    
                         #print group, hGroup, isL3L, isL4L, fW1, fW2, fW0, nbtag
+		        #if isL3L or isL4L : 
+		    	#hGroup='Reducible'
+                        #weight *=-1
                     
 
             #if not isSS and not isSR : continue
 
-            if group!='data' and hGroup!='Reducible' and  isLSR : continue
+            if group!='data' and hGroup!='Reducible' and isLSR : continue
  
             if group != 'data' :
                 if  isSR or isLSR :
